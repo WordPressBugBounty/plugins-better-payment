@@ -1,0 +1,128 @@
+{
+    "packages": [
+        {
+            "name": "league/csv",
+            "version": "9.8.0",
+            "version_normalized": "9.8.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/csv.git",
+                "reference": "9d2e0265c5d90f5dd601bc65ff717e05cec19b47"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/csv/zipball/9d2e0265c5d90f5dd601bc65ff717e05cec19b47",
+                "reference": "9d2e0265c5d90f5dd601bc65ff717e05cec19b47",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "ext-dom": "*",
+                "friendsofphp/php-cs-fixer": "^v3.4.0",
+                "phpstan/phpstan": "^1.3.0",
+                "phpstan/phpstan-phpunit": "^1.0.0",
+                "phpstan/phpstan-strict-rules": "^1.1.0",
+                "phpunit/phpunit": "^9.5.11"
+            },
+            "suggest": {
+                "ext-dom": "Required to use the XMLConverter and or the HTMLConverter classes",
+                "ext-iconv": "Needed to ease transcoding CSV using iconv stream filters"
+            },
+            "time": "2022-01-04T00:13:07+00:00",
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "9.x-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "src/functions_include.php"
+                ],
+                "psr-4": {
+                    "League\\Csv\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ignace Nyamagana Butera",
+                    "email": "nyamsprod@gmail.com",
+                    "homepage": "https://github.com/nyamsprod/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "CSV data manipulation made easy in PHP",
+            "homepage": "https://csv.thephpleague.com",
+            "keywords": [
+                "convert",
+                "csv",
+                "export",
+                "filter",
+                "import",
+                "read",
+                "transform",
+                "write"
+            ],
+            "support": {
+                "docs": "https://csv.thephpleague.com",
+                "issues": "https://github.com/thephpleague/csv/issues",
+                "rss": "https://github.com/thephpleague/csv/releases.atom",
+                "source": "https://github.com/thephpleague/csv"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/nyamsprod",
+                    "type": "github"
+                }
+            ],
+            "install-path": "../league/csv"
+        },
+        {
+            "name": "priyomukul/wp-notice",
+            "version": "v2.x-dev",
+            "version_normalized": "2.9999999.9999999.9999999-dev",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:priyomukul/wp-notice.git",
+                "reference": "5471f3262e583ebcba56062d84faecc910bd04d6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/priyomukul/wp-notice/zipball/5471f3262e583ebcba56062d84faecc910bd04d6",
+                "reference": "5471f3262e583ebcba56062d84faecc910bd04d6",
+                "shasum": ""
+            },
+            "time": "2023-12-27T06:49:41+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "PriyoMukul\\WPNotice\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "Priyo Mukul",
+                    "email": "17237437+priyomukul@users.noreply.github.com"
+                }
+            ],
+            "support": {
+                "source": "https://github.com/priyomukul/wp-notice/tree/v2",
+                "issues": "https://github.com/priyomukul/wp-notice/issues"
+            },
+            "install-path": "../priyomukul/wp-notice"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}
