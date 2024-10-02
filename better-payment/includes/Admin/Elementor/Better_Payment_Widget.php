@@ -92,7 +92,7 @@ class Better_Payment_Widget extends Widget_Base {
         );
         
         do_action('better_payment/elementor/editor/layouts_payment_settings_section', $this);
-
+        
         $this->add_control(
             'better_payment_form_layout',
             [
@@ -107,12 +107,13 @@ class Better_Payment_Widget extends Widget_Base {
             'better_payment_form_payment_type',
             [
                 'label'      => esc_html__( 'Payment Type', 'better-payment' ),
-                'description' => esc_html__( 'Recurring payment is available for Stripe only at the moment!', 'better-payment' ),
+                'description' => esc_html__( 'Recurring and Split Payment is available for Stripe only at the moment!', 'better-payment' ),
                 'type'       => Controls_Manager::SELECT,
                 'default'    => 'one-time',
                 'options'    => [
                     'one-time' => 'One Time',
                     'recurring' => 'Recurring',
+                    'split-payment' => 'Split Payment',
                 ],
                 'condition'   => [
                     'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
@@ -123,10 +124,10 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control(
             'better_payment_form_recurring_price_id',
             [
-                'label'       => esc_html__( 'Price ID', 'better-payment' ),
+                'label'       => esc_html__( 'Default Price ID', 'better-payment' ),
                 'type'        => Controls_Manager::TEXT,
                 'description' => sprintf( 
-                    __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the price id.</a></p>', 'better-payment' ), 
+                    __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p>', 'better-payment' ), 
                     esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
                 ),
                 'placeholder' => 'price_G0FvDp6vZvdwRZ',
@@ -135,7 +136,102 @@ class Better_Payment_Widget extends Widget_Base {
                     'active' => false,
                 ],
                 'condition'   => [
-                    'better_payment_form_payment_type' => 'recurring',
+                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+                'separator' => 'before',
+            ]
+        );
+
+        $repeater_split_payment = new Repeater();
+
+        $repeater_split_payment->add_control(
+            'better_payment_split_installment_name',
+            [
+                'label' => esc_html__( 'Installment Name', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => '3 Months',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+        
+        $repeater_split_payment->add_control(
+            'better_payment_split_installment_price_id',
+            [
+                'label' => esc_html__( 'Price ID', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => 'price_G0FvDp6vZvdwRZ',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $repeater_split_payment->add_control(
+            'better_payment_split_installment_iteration',
+            [
+                'label' => esc_html__( 'Iterations', 'better-payment' ),
+                'type'  => Controls_Manager::NUMBER,
+                'min'   => 1,
+                'max'   => 36,
+            ]
+        );
+        
+        $this->add_control(
+            'better_payment_split_installment_price_ids_note',
+            [
+                'type'        => Controls_Manager::RAW_HTML,
+                'raw' => sprintf( 
+                    __( '<p>Now add more prices to the product from Stripe dashboard and <a href="%1$s" target="_blank">get the price id for each installment.</a></p>', 'better-payment' ), 
+                    esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
+                ),
+                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition'   => [
+                    'better_payment_form_payment_type' => 'split-payment',
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_split_installment_price_ids',
+            [
+                'label'       => esc_html__( 'Installments', 'better-payment' ),
+                'type'        => Controls_Manager::REPEATER,
+                'separator'   => 'after',
+                'default'     => [
+                    [
+                        'better_payment_split_installment_name' => '3 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 3,
+                    ],
+                    [
+                        'better_payment_split_installment_name' => '6 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 6,
+                    ],
+                    [
+                        'better_payment_split_installment_name' => '9 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 9,
+                    ],
+                    [
+                        'better_payment_split_installment_name' => '12 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 12,
+                    ],
+                ],
+                'fields'      => $repeater_split_payment->get_controls(),
+                'title_field' => '<i class="{{ better_payment_split_installment_name }}" aria-hidden="true"></i> {{{ better_payment_split_installment_name }}}',
+                'condition'   => [
+                    'better_payment_form_payment_type' => 'split-payment',
                     'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
                 ],
             ]
@@ -156,7 +252,7 @@ class Better_Payment_Widget extends Widget_Base {
                     'active' => false,
                 ],
                 'condition'   => [
-                    'better_payment_form_payment_type' => 'recurring',
+                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
                     'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
                 ],
             ]
@@ -176,7 +272,7 @@ class Better_Payment_Widget extends Widget_Base {
                     'active' => false,
                 ],
                 'condition'   => [
-                    'better_payment_form_payment_type' => 'recurring',
+                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
                     'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
                 ],
             ]
@@ -282,6 +378,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'return_value' => 'yes',
                 'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paypal']), //yes or no
                 'separator'    => 'before',
+                'condition' => [
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
+                ],
             ]
         );
 
@@ -344,6 +443,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label_off'    => __( 'No', 'better-payment' ),
                 'return_value' => 'yes',
                 'default'      => ! empty( $this->better_payment_global_settings['better_payment_settings_general_general_paystack'] ) ? esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paystack']) : 'no', //yes or no
+                'condition' => [
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
+                ],
             ]
         );
 
@@ -773,7 +875,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
 				'type' => Controls_Manager::RAW_HTML,
 				'raw' => sprintf(
-					esc_html__( 'Field is hidden if payment source is WooCommerce or payment type is recurring or field dynamic value is enabled.', 'better-payment' ),
+					esc_html__( 'Field is hidden if payment source is WooCommerce or payment type is recurring/split payment or field dynamic value is enabled.', 'better-payment' ),
 				),
 				'content_classes' => 'elementor-descriptor',
                 'condition'    => [
@@ -1128,7 +1230,6 @@ class Better_Payment_Widget extends Widget_Base {
                 'condition' => [
                     'better_payment_form_payment_source!' => 'woocommerce',
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                    'better_payment_form_payment_type!' => 'recurring',
                 ],
             ]
         );
@@ -1144,7 +1245,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'default'      => 'yes',
                 'condition' => [
                     'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                    'better_payment_form_payment_type!' => 'recurring',
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
                 ],
             ]
         );
@@ -1173,7 +1274,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'condition'   => [
                     'better_payment_show_amount_list' => 'yes',
                     'better_payment_form_payment_source!' => 'woocommerce',
-                    'better_payment_form_payment_type!' => 'recurring',
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
             ]
@@ -1205,7 +1306,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{{ better_payment_amount_val }}}',
                 'condition'   => [
                     'better_payment_show_amount_list_layout_4_5_6' => 'yes',
-                    'better_payment_form_payment_type!' => 'recurring',
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
                     'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
             ]

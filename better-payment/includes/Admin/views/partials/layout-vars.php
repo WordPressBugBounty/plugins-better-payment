@@ -11,8 +11,9 @@ $layout_form_transaction_details_product_title = !empty($settings["better_paymen
 $layout_form_transaction_details_amount_text = !empty($settings["better_payment_form_transaction_details_amount_text"]) ? $settings["better_payment_form_transaction_details_amount_text"] : '';
 $is_payment_type_woocommerce = !empty($settings["better_payment_form_payment_source"]) && 'woocommerce' === $settings["better_payment_form_payment_source"] ? true : false;
 $is_payment_recurring = ! empty( $settings["better_payment_form_payment_type"] ) && 'recurring' === $settings["better_payment_form_payment_type"] ? 1 : 0;
+$is_payment_split_payment = ! empty( $settings["better_payment_form_payment_type"] ) && 'split-payment' === $settings["better_payment_form_payment_type"] ? 1 : 0;
 $payment_type_text = ! empty( $settings["better_payment_form_payment_type"] ) ? sanitize_text_field( $settings["better_payment_form_payment_type"] ) : 'One Time';
-$layout_put_amount_field_hide_show = $is_payment_recurring ? 'is-hidden' : $layout_put_amount_field_hide_show;
+$layout_put_amount_field_hide_show = ( $is_payment_recurring || $is_payment_split_payment ) ? 'is-hidden' : $layout_put_amount_field_hide_show;
 $is_layout_for_woocommerce = ! empty( $settings["better_payment_form_layout"] ) && in_array( $settings["better_payment_form_layout"], ['layout-6-pro'] ) ? 1 : 0;
 
 $layout_form_currency = !empty($settings["better_payment_form_currency"]) ? $settings["better_payment_form_currency"] : '';

@@ -290,7 +290,15 @@ class Handler extends Controller{
                 ];
                 $form_fields_info = maybe_unserialize($results->form_fields_info);
                 $is_payment_recurring = ! empty( $form_fields_info['mode'] ) && 'subscription' === $form_fields_info['mode'];
+                $is_payment_split_payment = ! empty( $form_fields_info['mode'] ) && 'subscription' === $form_fields_info['mode'];
                 
+                $action_data = [
+                    'form_fields_info' => $form_fields_info,
+                    'is_payment_recurring' => $is_payment_recurring,
+                    'is_payment_split_payment' => $is_payment_split_payment,
+                    'checkout_session_id' => $results->obj_id,
+                ];
+
                 $response = wp_safe_remote_post(
                     'https://api.stripe.com/v1/checkout/sessions/' . $results->obj_id,
                     array(
@@ -339,6 +347,8 @@ class Handler extends Controller{
                     ),
                     array( 'ID' => $results->id )
                 );
+
+                do_action('better_payment/stripe_payment/success', $action_data);
 
                 if ( false !== $updated ) {
                     //Send email notification
@@ -856,8 +866,18 @@ class Handler extends Controller{
         $content = ''. $line_break;
         
         foreach ( $form_fields_info_arr as $key => $field ) {
+            if ( $key === 'is_payment_split_payment' ) {
+                $is_payment_split_payment = 1;
+            }
             //Hide few fields
-            if($key === 'referer_page_id' || $key === 'referer_widget_id' || $key === 'source' || $key === 'el_form_fields') {
+            if(
+                $key === 'referer_page_id' || $key === 'referer_widget_id' || $key === 'source' || $key === 'el_form_fields'
+                || $key === 'is_woo_layout'
+                || $key === 'is_payment_split_payment'
+                || $key === 'split_payment_total_amount'
+                || $key === 'split_payment_total_amount_price_id'
+                || $key === 'split_payment_installment_price_id'
+            ) {
                 if($key === 'referer_page_id'){
                     $referer_content_page_link = !empty($field) ? get_permalink( $field ) : $referer_content_page_link;
                 }
@@ -885,6 +905,10 @@ class Handler extends Controller{
             $key_formatted = self::better_title_case($key);
             if($key_formatted === 'Amount'){
                 $key_formatted = __('Paid', 'better-payment');
+
+                if ( ! empty( $is_payment_split_payment ) ) {
+                    $key_formatted = __('Product Price: ', 'better-payment');
+                }
             }
 
             $content .= "<tr>

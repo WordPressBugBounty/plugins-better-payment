@@ -186,7 +186,10 @@ class Actions {
             wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
         }
 
+        $is_payment_split_payment = ! empty( $el_settings["better_payment_form_payment_type"] ) && 'split-payment' === $el_settings["better_payment_form_payment_type"];
+        
         $amount = isset($_POST['fields']['primary_payment_amount']) ? floatval($_POST['fields']['primary_payment_amount']) : 0;
+        
         if ( empty( $_POST['fields']['primary_payment_amount'] ) && ! empty( $_POST['fields']['primary_payment_amount_radio'] ) ) {
             $amount = floatval($_POST['fields']['primary_payment_amount_radio']);
         }
@@ -211,7 +214,6 @@ class Actions {
         $order_id = 'stripe_' . uniqid();
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
-        $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
         
         if(!empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($settings['better_payment_form_currency_woocommerce'])){
@@ -263,7 +265,6 @@ class Actions {
             'amount' => $el_settings_currency_symbol . $amount,
             'referer_page_id' => $page_id,
             'referer_widget_id' => $widget_id,
-            'woo_product_id' => $woo_product_id,
             'source' => 'stripe',
             'amount_quantity' => ! empty( $amount_quantity ) ? $amount_quantity : '',
             'is_woo_layout' => $is_woo_layout,
@@ -292,17 +293,39 @@ class Actions {
 
         }
 
-        if ( $is_payment_recurring ) {
+        if ( $is_payment_split_payment ) {
+            $installment_price_id = ! empty($_POST['fields']['split_payment_installment']) ? sanitize_text_field($_POST['fields']['split_payment_installment']) : '';
+            $split_payment_installments_data = ! empty( $el_settings['better_payment_split_installment_price_ids'] ) ? $el_settings['better_payment_split_installment_price_ids'] : [];
+
+            if ( is_array( $split_payment_installments_data ) && count( $split_payment_installments_data ) ){
+                foreach( $split_payment_installments_data as $split_payment_installment_data ){
+                    $item_price_id = ! empty( $split_payment_installment_data[ 'better_payment_split_installment_price_id' ] ) ? sanitize_text_field( $split_payment_installment_data[ 'better_payment_split_installment_price_id' ] ) : '';
+                    
+                    if ( $installment_price_id === $item_price_id ) {
+                        $installment_price_iteration = ! empty( $split_payment_installment_data[ 'better_payment_split_installment_iteration' ] ) ? sanitize_text_field( $split_payment_installment_data[ 'better_payment_split_installment_iteration' ] ) : '';
+                        break;
+                    }
+                }
+            }
+
+            $better_form_fields['is_payment_split_payment'] = 1;
+            $better_form_fields['split_payment_installment_price_id'] = $installment_price_id;
+            $better_form_fields['split_payment_total_amount'] = $amount;
+            $better_form_fields['split_payment_total_amount_price_id'] = $recurring_price_id;
+            $better_form_fields['split_payment_installment_iteration'] = $installment_price_iteration ?? 1;
+        }
+        
+        if ( $is_payment_recurring || $is_payment_split_payment ) {
             $request['mode'] = 'subscription';
             unset($request['line_items'][0]);
             unset($request['payment_intent_data']);
-            $request['line_items'][0]['price'] = $recurring_price_id;
+            $request['line_items'][0]['price'] = $is_payment_split_payment && ! empty( $installment_price_id ) ? $installment_price_id : $recurring_price_id;
             $request['line_items'][0]['quantity'] = 1;
 
             $better_form_fields['mode'] = $request['mode'];
             $better_form_fields['recurring_price_id'] = $request['line_items'][0]['price'];
         }
-        
+
         #ToDo: Need to prefill name field on stripe checkout
         $response = wp_safe_remote_post(
             'https://api.stripe.com/v1/checkout/sessions',
