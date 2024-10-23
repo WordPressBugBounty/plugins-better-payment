@@ -38,6 +38,7 @@ class DB {
             'better_payment_settings_general_general_paypal' => esc_html__('yes', 'better-payment'),
             'better_payment_settings_general_general_stripe' => esc_html__('yes', 'better-payment'),
             'better_payment_settings_general_general_paystack' => esc_html__('', 'better-payment'),
+            'better_payment_settings_general_general_user_dashboard' => esc_html__('yes', 'better-payment'),
             'better_payment_settings_general_general_email' => esc_html__('yes', 'better-payment'),
             'better_payment_settings_general_general_currency' => esc_html__('USD', 'better-payment'),
 

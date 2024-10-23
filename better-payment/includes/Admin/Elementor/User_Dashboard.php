@@ -70,7 +70,7 @@ class User_Dashboard extends Widget_Base {
 
     public function get_custom_help_url()
     {
-        return 'https://wpdeveloper.com/docs-category/better-payment/';
+        return 'https://betterpayment.co/docs/user-dashboard-using-better-payment/';
     }
 
     public function get_style_depends() { 
@@ -152,6 +152,18 @@ class User_Dashboard extends Widget_Base {
 		);
 
         $this->add_control(
+			'better_payment_user_dashboard_transactions_show',
+			[
+				'label'        => __( 'Transactions', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+		
+		$this->add_control(
 			'better_payment_user_dashboard_subscriptions_show',
 			[
 				'label'        => __( 'Subscriptions', 'better-payment' ),
@@ -174,6 +186,8 @@ class User_Dashboard extends Widget_Base {
 				'default'      => 'yes',
 			]
 		);
+		
+		$this->get_transaction_layout_settings( $this );
 
         do_action('better_payment/elementor/user_dashboard/layout_settings_header_after', $this);
 
@@ -194,7 +208,17 @@ class User_Dashboard extends Widget_Base {
 			]
 		);
 
-        $this->add_control( 'better_payment_user_dashboard_subscription_label', [
+        $this->add_control( 'better_payment_user_dashboard_transaction_label', [
+			'label'       => esc_html__( 'Transactions', 'better-payment' ),
+			'type'        => Controls_Manager::TEXT,
+			'label_block' => false,
+			'default'     => esc_html__( 'Transactions', 'better-payment' ),
+			'ai' => [
+				'active' => false,
+			],
+		] );
+		
+		$this->add_control( 'better_payment_user_dashboard_subscription_label', [
 			'label'       => esc_html__( 'Subscriptions', 'better-payment' ),
 			'type'        => Controls_Manager::TEXT,
 			'label_block' => false,
@@ -213,6 +237,8 @@ class User_Dashboard extends Widget_Base {
 				'active' => false,
 			],
 		] );
+
+		$this->get_transaction_content_settings( $this );
 
         do_action('better_payment/elementor/user_dashboard/content_settings_no_items_after', $this);
 
@@ -1443,8 +1469,8 @@ class User_Dashboard extends Widget_Base {
         wp_enqueue_script( 'better-payment' );
 
         if( $this->pro_enabled ){
-            wp_enqueue_script( 'better-payment-pro-common-script' );
-            wp_enqueue_style( 'better-payment-pro-common-style' );
+            wp_enqueue_script( 'better-payment-common-script' );
+            wp_enqueue_style( 'better-payment-common-style' );
         }
 
         $action       = esc_url( admin_url( 'admin-post.php' ) );
@@ -1522,15 +1548,339 @@ class User_Dashboard extends Widget_Base {
         $bp_settings['sidebar_show']        = ! empty( $settings['better_payment_user_dashboard_sidebar_show']) && 'yes' === $settings['better_payment_user_dashboard_sidebar_show'];
         $bp_settings['avatar_show']         = $bp_settings['sidebar_show'] && ( ! empty( $settings['better_payment_user_dashboard_avatar_show']) && 'yes' === $settings['better_payment_user_dashboard_avatar_show'] );
         $bp_settings['username_show']       = $bp_settings['sidebar_show'] && ( ! empty( $settings['better_payment_user_dashboard_username_show']) && 'yes' === $settings['better_payment_user_dashboard_username_show'] );
+        $bp_settings['transactions_show']  = ! empty( $settings['better_payment_user_dashboard_transactions_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_show'];
         $bp_settings['subscriptions_show']  = ! empty( $settings['better_payment_user_dashboard_subscriptions_show']) && 'yes' === $settings['better_payment_user_dashboard_subscriptions_show'];
         $bp_settings['header_show']         = ! empty( $settings['better_payment_user_dashboard_header_show']) && 'yes' === $settings['better_payment_user_dashboard_header_show'];
         
+        $bp_settings['transaction_label']  = ! empty( $settings['better_payment_user_dashboard_transaction_label']) ? $settings['better_payment_user_dashboard_transaction_label'] : 'Transactions';
         $bp_settings['subscription_label']  = ! empty( $settings['better_payment_user_dashboard_subscription_label']) ? $settings['better_payment_user_dashboard_subscription_label'] : 'Subscriptions';
         $bp_settings['no_items_label']  = ! empty( $settings['better_payment_user_dashboard_no_items_label']) ? $settings['better_payment_user_dashboard_no_items_label'] : 'No subscriptions found!';
         
+		// Transaction
+        $bp_settings['transaction_table_name_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_name_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_name_show'];
+        $bp_settings['transaction_table_email_address_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_email_address_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_email_address_show'];
+        $bp_settings['transaction_table_amount_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_amount_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_amount_show'];
+		$bp_settings['transaction_table_payment_type_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_payment_type_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_payment_type_show'];
+        $bp_settings['transaction_table_transaction_id_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_transaction_id_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_transaction_id_show'];
+        $bp_settings['transaction_table_source_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_source_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_source_show'];
+        $bp_settings['transaction_table_status_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_status_show'];
+        $bp_settings['transaction_table_date_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_date_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_date_show'];
+        $bp_settings['transaction_table_action_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_action_show'];
+        
+        $bp_settings['transaction_table_name_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_name_label']) ? $settings['better_payment_user_dashboard_transactions_list_name_label'] : 'Name';
+        $bp_settings['transaction_table_email_address_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_email_address_label']) ? $settings['better_payment_user_dashboard_transactions_list_email_address_label'] : 'Email Address';
+        $bp_settings['transaction_table_amount_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_amount_label']) ? $settings['better_payment_user_dashboard_transactions_list_amount_label'] : 'Amount';
+		$bp_settings['transaction_table_payment_type_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_payment_type_label']) ? $settings['better_payment_user_dashboard_transactions_list_payment_type_label'] : 'Payment Type';
+        $bp_settings['transaction_table_transaction_id_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_transaction_id_label']) ? $settings['better_payment_user_dashboard_transactions_list_transaction_id_label'] : 'Transaction ID';
+		$bp_settings['transaction_table_source_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_source_label']) ? $settings['better_payment_user_dashboard_transactions_list_source_label'] : 'Source';
+        $bp_settings['transaction_table_status_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_label'] : 'Status';
+        $bp_settings['transaction_table_date_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_date_label']) ? $settings['better_payment_user_dashboard_transactions_list_date_label'] : 'Date';
+        $bp_settings['transaction_table_action_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_label'] : 'Action';
+        // $bp_settings['transaction_table_status_active_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_active_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_active_label'] : 'Active';
+        // $bp_settings['transaction_table_status_inactive_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_inactive_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_inactive_label'] : 'Inactive';
+        // $bp_settings['transaction_table_action_cancel_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_cancel_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_cancel_label'] : 'Cancel';
+		
         $bp_settings = apply_filters( 'better_payment/elementor/user_dashboard/bp_settings', $bp_settings, $settings );
 
         return $bp_settings;
+    }
+
+	public function get_transaction_layout_settings( $widgetObj ) {
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_layout_transactions_list_label',
+			[
+				'label' => esc_html__( 'Transactions List', 'better-payment' ),
+				'type'  => Controls_Manager::HEADING,
+                'separator' => 'before',
+			]
+		);
+
+        $widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_name_show',
+			[
+				'label'        => __( 'Name', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+		
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_email_address_show',
+			[
+				'label'        => __( 'Email Address', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_amount_show',
+			[
+				'label'        => __( 'Amount', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_payment_type_show',
+			[
+				'label'        => __( 'Payment Type', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_transaction_id_show',
+			[
+				'label'        => __( 'Transaction ID', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+        $widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_source_show',
+			[
+				'label'        => __( 'Source', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_status_show',
+			[
+				'label'        => __( 'Status', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+        $widgetObj->add_control(
+			'better_payment_user_dashboard_transactions_list_date_show',
+			[
+				'label'        => __( 'Date', 'better-payment' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => __( 'Show', 'better-payment' ),
+				'label_off'    => __( 'Hide', 'better-payment' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			]
+		);
+
+        // $widgetObj->add_control(
+		// 	'better_payment_user_dashboard_transactions_list_action_show',
+		// 	[
+		// 		'label'        => __( 'Action', 'better-payment' ),
+		// 		'type'         => Controls_Manager::SWITCHER,
+		// 		'label_on'     => __( 'Show', 'better-payment' ),
+		// 		'label_off'    => __( 'Hide', 'better-payment' ),
+		// 		'return_value' => 'yes',
+		// 		'default'      => 'yes',
+		// 	]
+		// );
+	}
+
+	public function get_transaction_content_settings( $widgetObj ) {
+		$widgetObj->add_control(
+			'better_payment_user_dashboard_content_transactions_list_label',
+			[
+				'label' => esc_html__( 'Transactions List', 'better-payment' ),
+				'type'  => Controls_Manager::HEADING,
+                'separator' => 'before',
+			]
+		);
+
+        $widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_name_label', 
+            [
+                'label'       => esc_html__( 'Name', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Name', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+
+        $widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_email_address_label', 
+            [
+                'label'       => esc_html__( 'Email Address', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Email Address', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+
+		$widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_amount_label', 
+            [
+                'label'       => esc_html__( 'Amount', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Amount', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+
+		$widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_payment_type_label', 
+            [
+                'label'       => esc_html__( 'Payment Type', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Payment Type', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+
+		$widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_transaction_id_label', 
+            [
+                'label'       => esc_html__( 'Transaction ID', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Transaction ID', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+
+        $widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_source_label', 
+            [
+                'label'       => esc_html__( 'Source', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Source', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+
+		$widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_status_label', 
+            [
+                'label'       => esc_html__( 'Status', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Status', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+        
+        $widgetObj->add_control( 
+            'better_payment_user_dashboard_transactions_list_date_label', 
+            [
+                'label'       => esc_html__( 'Date', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'label_block' => false,
+                'default'     => esc_html__( 'Date', 'better-payment' ),
+                'ai' => [
+                    'active' => false,
+                ],
+	    	] 
+        );
+        
+        // $widgetObj->add_control( 
+        //     'better_payment_user_dashboard_transactions_list_action_label', 
+        //     [
+        //         'label'       => esc_html__( 'Action', 'better-payment' ),
+        //         'type'        => Controls_Manager::TEXT,
+        //         'label_block' => false,
+        //         'default'     => esc_html__( 'Action', 'better-payment' ),
+        //         'ai' => [
+        //             'active' => false,
+        //         ],
+	    // 	]
+        // );
+
+        // $widgetObj->add_control( 
+        //     'better_payment_user_dashboard_transactions_list_status_active_label', 
+        //     [
+        //         'label'       => esc_html__( 'Status » Active', 'better-payment' ),
+        //         'type'        => Controls_Manager::TEXT,
+        //         'label_block' => false,
+        //         'default'     => esc_html__( 'Active', 'better-payment' ),
+        //         'ai' => [
+        //             'active' => false,
+        //         ],
+	    // 	]
+        // );
+        
+        // $widgetObj->add_control( 
+        //     'better_payment_user_dashboard_transactions_list_status_inactive_label', 
+        //     [
+        //         'label'       => esc_html__( 'Status » Inactive', 'better-payment' ),
+        //         'type'        => Controls_Manager::TEXT,
+        //         'label_block' => false,
+        //         'default'     => esc_html__( 'Inactive', 'better-payment' ),
+        //         'ai' => [
+        //             'active' => false,
+        //         ],
+	    // 	]
+        // );
+
+        // $widgetObj->add_control(
+        //     'better_payment_user_dashboard_transactions_list_action_cancel_label', 
+        //     [
+        //         'label'       => esc_html__( 'Action » Cancel', 'better-payment' ),
+        //         'type'        => Controls_Manager::TEXT,
+        //         'label_block' => false,
+        //         'default'     => esc_html__( 'Cancel', 'better-payment' ),
+        //         'ai' => [
+        //             'active' => false,
+        //         ],
+	    // 	]
+        // );
+	}
+
+	public function get_user_transactions( $email = '' ){
+        $current_user = wp_get_current_user();
+
+        if( empty($email) ) {
+            $email = $current_user->user_email;
+        }
+
+        $transactions = DB::get_transactions_by_email( $email );
+
+        return $transactions;
     }
 
 }

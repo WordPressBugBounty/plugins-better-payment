@@ -109,7 +109,7 @@ $currency_list = [
                                                         <h4><?php esc_html_e('PayPal', 'better-payment'); ?></h4>
                                                         <p>
                                                             <?php esc_html_e('Enable PayPal if you want to make transaction using PayPal.', 'better-payment'); ?>
-                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
+                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
                                                         </p>
                                                     </div>
                                                     <div class="active__status">
@@ -125,7 +125,7 @@ $currency_list = [
                                                         <h4><?php esc_html_e('Stripe', 'better-payment'); ?></h4>
                                                         <p>
                                                             <?php esc_html_e('Enable Stripe if you want to accept payment via Stripe.', 'better-payment'); ?>
-                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
+                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
                                                         </p>
                                                     </div>
                                                     <div class="active__status">
@@ -141,13 +141,30 @@ $currency_list = [
                                                         <h4><?php esc_html_e('Paystack', 'better-payment'); ?></h4>
                                                         <p>
                                                             <?php esc_html_e('Enable Paystack if you want to accept payment via Paystack.', 'better-payment'); ?>
-                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
+                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
                                                         </p>
                                                     </div>
                                                     <div class="active__status">
                                                         <label class="bp-switch">
                                                             <input type="hidden" name="better_payment_settings_general_general_paystack" value="no">
                                                             <input type="checkbox" name="better_payment_settings_general_general_paystack" value="yes" <?php echo isset($bp_admin_saved_settings['better_payment_settings_general_general_paystack']) && $bp_admin_saved_settings['better_payment_settings_general_general_paystack'] == 'yes' ? ' checked' : '' ?>>
+                                                            <span class="switch__btn"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="payment__option">
+                                                    <?php $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] = isset( $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] ) ? sanitize_text_field( $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] ) : 'yes'; ?>
+                                                    <div class="payment__option__content">
+                                                        <h4><?php esc_html_e('User Dashboard', 'better-payment'); ?></h4>
+                                                        <p>
+                                                            <?php esc_html_e('Enable User Dashboard widget. It shows list of transactions and subscriptions for the user.', 'better-payment'); ?>
+                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/user-dashboard-using-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
+                                                        </p>
+                                                    </div>
+                                                    <div class="active__status">
+                                                        <label class="bp-switch">
+                                                            <input type="hidden" name="better_payment_settings_general_general_user_dashboard" value="no">
+                                                            <input type="checkbox" name="better_payment_settings_general_general_user_dashboard" value="yes" <?php echo isset($bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard']) && $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] == 'yes' ? ' checked' : '' ?>>
                                                             <span class="switch__btn"></span>
                                                         </label>
                                                     </div>
@@ -369,7 +386,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Live Client ID', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('PayPal live client ID is required to do Refund via PayPal. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://developer.paypal.com/developer/applications">https://developer.paypal.com/developer/applications</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -381,7 +398,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Live Secret', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('PayPal live secret is required to do refund via PayPal. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://developer.paypal.com/developer/applications">https://developer.paypal.com/developer/applications</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -393,7 +410,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Test/Sandbox Client ID', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('PayPal test/sandbox client id is required to do refund via PayPal. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://developer.paypal.com/developer/applications">https://developer.paypal.com/developer/applications</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -405,7 +422,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Test/Sandbox Secret', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('PayPal test/sandbox secret is required to do refund via PayPal. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://developer.paypal.com/developer/applications">https://developer.paypal.com/developer/applications</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paypal-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -439,7 +456,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Live Public Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Stripe live public key is required to make payments via Stripe. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://stripe.com/docs/keys">https://stripe.com/docs/keys</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -451,7 +468,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Live Secret Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Stripe live secret key is required to make payments via Stripe. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://stripe.com/docs/keys">https://stripe.com/docs/keys</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -463,7 +480,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Test Public Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Stripe test public key is required to make payments via Stripe. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://stripe.com/docs/keys">https://stripe.com/docs/keys</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -475,7 +492,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Test Secret Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Stripe test secret key is required to make payments via Stripe. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://stripe.com/docs/keys">https://stripe.com/docs/keys</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-stripe-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -508,7 +525,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Live Public Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Paystack live public key is required to make payments via Paystack. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://dashboard.paystack.com/#/settings/developers">https://dashboard.paystack.com/#/settings/developers</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -520,7 +537,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Live Secret Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Paystack live secret key is required to make payments via Paystack. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://dashboard.paystack.com/#/settings/developers">https://dashboard.paystack.com/#/settings/developers</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -532,7 +549,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Test Public Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Paystack test public key is required to make payments via Paystack. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://dashboard.paystack.com/#/settings/developers">https://dashboard.paystack.com/#/settings/developers</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -544,7 +561,7 @@ $currency_list = [
                                                             <h4><?php esc_html_e('Test Secret Key', 'better-payment'); ?></h4>
                                                             <p>
                                                                 <?php esc_html_e('Paystack test secret key is required to make payments via Paystack. For more help visit', 'better-payment'); ?> <a class="color__themeColor" target="_blank" rel="nofollow" href="https://dashboard.paystack.com/#/settings/developers">https://dashboard.paystack.com/#/settings/developers</a> or
-                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//wpdeveloper.com/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
+                                                                <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/set-up-paystack-account-with-better-payment/'); ?>"><?php _e('see documentation.', 'better-payment'); ?></a>
                                                             </p>
                                                         </div>
                                                         <div class="active__status input__wrap">
@@ -623,7 +640,7 @@ $currency_list = [
                             </div>
                             <h3><?php esc_html_e('Documentation', 'better-payment'); ?></h3>
                             <p><?php esc_html_e('Get started by spending some time with the documentation to get familiar with Better Payment.', 'better-payment'); ?></p>
-                            <a href="//wpdeveloper.com/docs-category/better-payment/" class="button" target="_blank"><?php esc_html_e('Documentation', 'better-payment'); ?></a>
+                            <a href="//betterpayment.co/docs/" class="button" target="_blank"><?php esc_html_e('Documentation', 'better-payment'); ?></a>
                         </div>
                     </div>
                 </div>

@@ -539,8 +539,8 @@ class Actions {
         if ( $document ) {
             $elements    = \Elementor\Plugin::instance()->documents->get( $page_id )->get_elements_data();
             $widget_data = $this->find_element_recursive( $elements, $widget_id );
-            $widget      = \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data );
-            if ( $widget ) {
+            $widget      = ! empty( $widget_data ) && is_array( $widget_data ) ? \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data ) : '';
+            if ( ! empty( $widget ) ) {
                 $settings = $widget->get_settings_for_display();
             }
         }

@@ -161,6 +161,31 @@ class Admin extends Controller{
 			]
 		);
 
+        /**
+		 * Halloween Notice
+		 */
+        $crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
+		$halloween_notice_message = "<p>🎃 Manage Payment forms better with Better Payment PRO and grab a <strong>flat 25% OFF</strong> this Halloween.</p><a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/#pricing-plan' target='_blank'><img style='width:15px;' src='{$crown_icon}'/>Upgrade to PRO</a>";
+
+		$halloween_notice = [
+			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
+			'html'      => $halloween_notice_message,
+		];
+
+        $notices->add(
+			'halloween_notice',
+			$halloween_notice,
+			[
+				'start'       => $notices->time(),
+				// 'start'       => $notices->strtotime( '+7 day' ),
+				// 'recurrence'  => 30,
+				'expire'       => $notices->strtotime( '+10 days' ),
+				'refresh'     => BETTER_PAYMENT_VERSION,
+				'dismissible' => true,
+				'screens' => [ 'dashboard' ],
+			]
+		);
+
 	    self::$cache_bank->create_account( $notices );
 	    self::$cache_bank->calculate_deposits( $notices );
     }

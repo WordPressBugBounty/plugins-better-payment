@@ -246,6 +246,27 @@ span.coupon-code {
   vertical-align: middle;
 }
 
+/*
+* Halloween Notice css
+*/
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary,
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary:focus,
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary:hover {
+  background-color: #593dbd;
+  border-color: #593dbd;
+}
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 0;
+}
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper > p {
+  margin: 0 !important;
+  padding: 0;
+}
+
 #wpnotice-better-payment-review {
   padding: 15px;
 }
@@ -397,3 +418,8 @@ span.coupon-code {
 }
 
 /* Transaction Details Page : Ends */
+@media only screen and (max-width: 767px) {
+  .notice-better-payment-halloween_notice {
+    display: none !important;
+  }
+}

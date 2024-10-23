@@ -2,12 +2,15 @@
 
 namespace Better_Payment\Lite\Admin\Elementor;
 
+use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Payment_Amount_Field;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Payment_Amount_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Paypal_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Stripe_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Paystack_Integration;
 use Better_Payment\Lite\Classes\Handler;
+
+use function Better_Payment\Lite\Classes\better_payment_dd;
 
 /**
  * Exit if accessed directly
@@ -42,8 +45,13 @@ class EL_Integration {
      * @since 0.0.1
      */
     public function register_widget( $widgets_manager ) {
+		$bp_admin_saved_settings = DB::get_settings();
+        $is_user_dashboard_enabled = isset( $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] ) && 'yes' === sanitize_text_field( $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] ) ? 1 : 0;
         $widgets_manager->register_widget_type( new Better_Payment_Widget() );
-        $widgets_manager->register_widget_type( new User_Dashboard() );
+        
+        if ( $is_user_dashboard_enabled ) {
+            $widgets_manager->register_widget_type( new User_Dashboard() );
+        }
     }
 
     /**

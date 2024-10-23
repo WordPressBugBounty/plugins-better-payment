@@ -3050,6 +3050,48 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.better-payment .bp--table-wrapper .bp--table-header {
+  min-width: 1640px;
+}
+.better-payment .bp--table-wrapper .bp--table-header .th.details.email {
+  max-width: 200px;
+  min-width: 200px;
+}
+.better-payment .bp--table-wrapper .bp--table-header .th.details.transaction {
+  max-width: 200px;
+  min-width: 200px;
+}
+.better-payment .bp--table-wrapper .bp--table-body {
+  min-width: 1640px;
+}
+.better-payment .bp--table-wrapper .bp--table-body .td p {
+  align-items: center;
+  gap: 4px;
+}
+.better-payment .bp--table-wrapper .bp--table-body .td span {
+  font-size: 14px;
+  color: #48506d;
+}
+.better-payment .bp--table-wrapper .bp--table-body .td.details.email {
+  max-width: 200px;
+  min-width: 200px;
+}
+.better-payment .bp--table-wrapper .bp--table-body .td.details.email p span:first-child {
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.better-payment .bp--table-wrapper .bp--table-body .td.details.transaction {
+  max-width: 200px;
+  min-width: 200px;
+}
+.better-payment .bp--table-wrapper .bp--table-body .td.details.transaction p span:first-child {
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 @media only screen and (max-width: 1024px) {
   .better-payment .gap-2 {
     gap: 4px;

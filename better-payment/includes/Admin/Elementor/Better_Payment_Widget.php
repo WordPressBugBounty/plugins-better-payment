@@ -70,7 +70,7 @@ class Better_Payment_Widget extends Widget_Base {
 
     public function get_custom_help_url()
     {
-        return 'https://wpdeveloper.com/docs-category/better-payment/';
+        return 'https://betterpayment.co/docs/';
     }
 
     public function get_style_depends() { 
@@ -128,7 +128,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'type'        => Controls_Manager::TEXT,
                 'description' => sprintf( 
                     __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p>', 'better-payment' ), 
-                    esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
+                    esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'), 
                 ),
                 'placeholder' => 'price_G0FvDp6vZvdwRZ',
                 'label_block' => true,
@@ -187,7 +187,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'type'        => Controls_Manager::RAW_HTML,
                 'raw' => sprintf( 
                     __( '<p>Now add more prices to the product from Stripe dashboard and <a href="%1$s" target="_blank">get the price id for each installment.</a></p>', 'better-payment' ), 
-                    esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
+                    esc_url('//betterpayment.co/docs/configure-split-payment-into-subscriptions/'), 
                 ),
                 'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
                 'ai' => [
@@ -244,7 +244,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'type'        => Controls_Manager::TEXT,
                 'description' => sprintf( 
                     __( '<p>Create a webhook endpoint from Stripe dashboard and <a href="%1$s" target="_blank">get the webhook secret.</a></p>', 'better-payment' ), 
-                    esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
+                    esc_url('//betterpayment.co/docs/add-webhook-endpoint-recurring-better-payment/'), 
                 ),
                 'placeholder' => 'whsec_...',
                 'label_block' => true,
