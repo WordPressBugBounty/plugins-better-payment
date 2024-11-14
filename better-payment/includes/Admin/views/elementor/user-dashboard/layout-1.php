@@ -3,6 +3,10 @@
 $current_user = wp_get_current_user();
 $username = '';
 
+if ( empty($current_user->user_email) ) {
+    return;
+}
+
 ?>
 
 <div class="better-payment">
@@ -24,7 +28,8 @@ $username = '';
                 <?php endif; ?>
             </div>
             <div class="bp--sidebar-nav-list">
-                <div class="bp--sidebar-nav d-none">
+                <?php if ( $bp_settings['dashboard_show'] ) : ?>
+                <div class="bp--sidebar-nav dashboard-tab active" data-tab="dashboard">
                     <span class="bp--nav-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <g clip-path="url(#clip0_400_549)">
@@ -49,11 +54,12 @@ $username = '';
                             </defs>
                         </svg>
                     </span>
-                    <span class="bp--nav-text">Dashboard</span>
+                    <span class="bp--nav-text"><?php esc_html_e($bp_settings['dashboard_label'], 'better-payment'); ?></span>
                 </div>
+                <?php endif; ?>
 
                 <?php if ( $bp_settings['transactions_show'] ) : ?>
-                <div class="bp--sidebar-nav transactions-tab active" data-tab="transactions">
+                <div class="bp--sidebar-nav transactions-tab <?php echo esc_attr( ! $bp_settings['dashboard_show'] ? 'active' : ''); ?>" data-tab="transactions">
                     <span class="bp--nav-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path 
@@ -96,7 +102,7 @@ $username = '';
                 <?php endif; ?>
 
                 <?php if ( $bp_settings['subscriptions_show'] ) : ?>
-                <div class="bp--sidebar-nav subscriptions-tab" data-tab="subscriptions">
+                <div class="bp--sidebar-nav subscriptions-tab <?php echo esc_attr( ( $bp_settings['dashboard_show'] || $bp_settings['transactions_show'] ) ? '' : 'active'); ?>" data-tab="subscriptions">
                     <span class="bp--nav-icon">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <g clip-path="url(#clip0_400_558)">
@@ -125,14 +131,22 @@ $username = '';
         <?php endif; ?>
 
         <div class="bp--db-main-wrapper">
-            <div class="bp--tab-conetnt-wrapper transactions-tab-wrapper">
+            <?php if ( $bp_settings['dashboard_show'] ) : ?>
+            <div class="bp--tab-conetnt-wrapper dashboard-tab-wrapper">
+		        <?php include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/elementor/user-dashboard/template-dashboard-tab.php"; ?>
+            </div>
+            <?php endif; ?>
+            
+            <?php if ( $bp_settings['transactions_show'] ) : ?>
+            <div class="bp--tab-conetnt-wrapper transactions-tab-wrapper <?php echo esc_attr( ! $bp_settings['dashboard_show'] ? '' : 'd-none'); ?>">
 		        <?php include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/elementor/user-dashboard/template-transactions-tab.php"; ?>
             </div>    
+            <?php endif; ?>
             
             <?php if ( $bp_settings['subscriptions_show'] ) : ?>
-                <div class="bp--tab-conetnt-wrapper subscriptions-tab-wrapper d-none">
+                <div class="bp--tab-conetnt-wrapper subscriptions-tab-wrapper <?php echo esc_attr( ( $bp_settings['dashboard_show'] || $bp_settings['transactions_show'] ) ? 'd-none' : ''); ?>">
                     <?php if ( ( ! $this->pro_enabled ) ) : ?>
-                    <p class="d-none">
+                    <p>
                         <a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro">
                             <img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/' . 'user-dashboard-subscription-pro-banner.png'); ?>" alt="subscription-pro-banner">
                         </a>

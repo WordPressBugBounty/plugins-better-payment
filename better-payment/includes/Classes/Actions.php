@@ -215,8 +215,8 @@ class Actions {
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         
-        if(!empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-        !empty($settings['better_payment_form_currency_woocommerce'])){
+        if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
+        !empty($el_settings['better_payment_form_currency_woocommerce'])){
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
         }
 

@@ -723,11 +723,11 @@ class Better_Payment_Widget extends Widget_Base {
                     'operator' => '!=',
                     'value' => 'layout-5-pro',
                 ],
-                [
-                    'name' => 'better_payment_form_layout',
-                    'operator' => '!=',
-                    'value' => 'layout-6-pro',
-                ],
+                // [
+                //     'name' => 'better_payment_form_layout',
+                //     'operator' => '!=',
+                //     'value' => 'layout-6-pro',
+                // ],
             ],
         ];
 
@@ -1921,14 +1921,48 @@ class Better_Payment_Widget extends Widget_Base {
         ]);
 
         $this->add_control(
+			'better_payment_form_email_attachment_pdf_show',
+			[
+				'label'        => __('PDF Attachment?', 'better-payment'),
+				'type'         => Controls_Manager::SWITCHER,
+				'default'      => '',
+				'label_on'     => __('Yes', 'better-payment'),
+				'label_off'    => __('No', 'better-payment'),
+				'return_value' => 'yes',
+			]
+		);
+
+        $this->add_control(
             'better_payment_form_email_attachment',
             [
                 'label' => __('Attachment', 'better-payment'),
-                'description' => __('Allowed file types: jpg, jpeg, png, pdf ', 'better-payment'),
+                'description' => __('Allowed file types: jpg, jpeg, png', 'better-payment'),
                 'type' => Controls_Manager::MEDIA,
                 'label_block' => true,
                 'ai' => [
                     'active' => false,
+                ],
+                'condition' => [
+                    'better_payment_form_email_attachment_pdf_show!' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_email_attachment_pdf',
+            [
+                'label' => __('PDF', 'better-payment'),
+                'description' => __('Allowed file types: pdf', 'better-payment'),
+                'type' => Controls_Manager::MEDIA,
+                'media_types' => [
+                    'application/pdf'
+				],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition' => [
+                    'better_payment_form_email_attachment_pdf_show' => 'yes',
                 ],
             ]
         );

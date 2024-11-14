@@ -118,7 +118,9 @@ use Better_Payment\Lite\Classes\Helper;
                                         <li><span><?php esc_html_e('Name:', 'better-payment'); ?></span> <?php echo esc_html($td_first_name) . ' ' . esc_html($td_last_name); ?> </li>
                                         <li>
                                             <span><?php esc_html_e('Email Address:', 'better-payment'); ?></span>                                        
-                                            <span id="bp_email_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($td_email); ?></span> <span id="bp_email_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-email-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span>
+                                            <span id="bp_email_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($td_email); ?></span> 
+                                            <span id="bp_email_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-email-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span>
+                                            <span id="bp_email_copy_clipboard_info_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-email-copy-clipboard-info is-hidden" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" >Copied!</span> 
                                         </li>
                                         <?php if ( ! empty( $td_amount_quantity ) && ! $is_woo_layout ) : ?>
                                             <li><span><?php esc_html_e('Single Amount:', 'better-payment'); ?></span> <?php echo esc_html( floatval( $td_amount_numer / $td_amount_quantity ) ) . ' ' . esc_html( $bp_admin_transaction->currency ); ?> </li>
@@ -135,6 +137,9 @@ use Better_Payment\Lite\Classes\Helper;
                                                 <span id="bp_copy_clipboard_input_<?php echo esc_attr($bp_txn_counter); ?>"><?php echo esc_html($bp_transaction_id); ?></span> 
                                                 
                                                 <span id="bp_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span>
+                                                
+                                                <span id="bp_copy_clipboard_info_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-copy-clipboard-info is-hidden" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" >Copied!</span> 
+                                                
                                             <?php endif; ?>
                                         </li>
                                         <li class="source"><span><?php esc_html_e('Source:', 'better-payment'); ?></span> <img src="<?php echo esc_url($td_source_image_url) ?>" title="<?php echo esc_attr( $td_source_image_alt ); ?>" alt="<?php echo esc_attr( $td_source_image_alt ); ?>"></li>
@@ -188,7 +193,12 @@ use Better_Payment\Lite\Classes\Helper;
                                         <?php endif; ?>
                                     </div>
                                     <?php $bp_txn_counter = 2; ?>
-                                    <p class="single-transaction-id-copy-wrap"><?php esc_html_e('Transaction ID:', 'better-payment'); ?> <span id="bp_copy_clipboard_input_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-text-black"><?php echo esc_html($bp_transaction_id); ?></span><span id="bp_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-copy-clipboard has-text-black-fix" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span></p>
+                                    <p class="single-transaction-id-copy-wrap">
+                                        <?php esc_html_e('Transaction ID:', 'better-payment'); ?> 
+                                        <span id="bp_copy_clipboard_input_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-text-black"><?php echo esc_html($bp_transaction_id); ?></span>
+                                        <span id="bp_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-copy-clipboard has-text-black-fix" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span>
+                                        <span id="bp_copy_clipboard_info_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-copy-clipboard-info is-hidden" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" >Copied!</span>
+                                    </p>
                                 </div>
                                 <div class="email__activity">
                                     <h4 class="title"><i class="bp-icon bp-wave"></i> <?php esc_html_e('Email Activity', 'better-payment'); ?></h4>

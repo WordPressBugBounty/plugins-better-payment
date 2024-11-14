@@ -1,15 +1,15 @@
 === Better Payment - Instant Payments Through PayPal & Stripe ===
 Contributors: wpdevteam, re_enter_rupok, asif2bd, robinwpdeveloper
 Donate link: https://wpdeveloper.com
-Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments, Custom form Builder, recurring payment, Elementor, Payments, donate, credit card, fundraising, payment gateway
+Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
 Requires at least: 6.0
-Tested up to: 6.6
+Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Better Payment allows you to automate payment transactions to manage donations, subscriptions, make payments, sell products, and more on your Elementor website.
+Better Payment allows you to automate payment transactions to manage payments, donations, subscriptions, sell products, etc on your Elementor website.
 
 == Description ==
 
@@ -87,11 +87,10 @@ Clear and short report or analytics on any type of Better Payment transaction th
 ## ⚡ COMING SOON
 Better Payment reign doesn’t stop here; more advanced and exclusive features are coming soon. Have a glimpse of the Better Payment roadmap here.
 
-- Pay later facility
 - Advanced email templates
 - Coupon management
-- Split payments
 - Generate invoices
+- Fundraising campaigns
 
 🙌 After reading this feature list, you can probably imagine that Better Payment is the best WordPress payment plugin on the market. So, do you want to unlock the advanced features? [Upgrade to our Pro version](https://wpdeveloper.com/better-payment/#pricing).
 
@@ -163,6 +162,17 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.2.3 - 14/11/2024 =
+- Added: WordPress 6.7 compatibility. 
+- Added: User Dashboard | Dashboard tab added
+- Added: Widget Email Settings | PDF support added for customer attachment
+- Revamped: Copy to Clipboard feature 
+- Fixed: Use Woo Currency dropdown selection not working
+- Fixed: User Dashboard | Table extra spacing issues
+- Fixed: Email Notification | Plain content type email shows extra stylesheets and markups
+- Fixed: Email Notification | Message typography issues
+- Few minor bug fixes & improvements
 
 = 1.2.2 - 23/10/2024 =
 - Added: User Dashboard | Transactions tab added

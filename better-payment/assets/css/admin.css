@@ -22,6 +22,9 @@
 .better-payment.notice.notice-info {
   border-left-color: #6e58f7;
 }
+.better-payment.notice.notice-info.notice-better-payment-black_friday_notice {
+  border-left-color: #000;
+}
 
 #wpnotice-better-payment-black_friday_notice .wpnotice-content-wrapper {
   padding: 0 !important;
@@ -233,7 +236,6 @@ span.coupon-code {
 }
 
 .notice-better-payment-black_friday_notice {
-  border-left-color: #3557FF;
   padding: 10px;
 }
 
@@ -251,20 +253,32 @@ span.coupon-code {
 */
 .notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary,
 .notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary:focus,
-.notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary:hover {
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper > a.button-primary:hover,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > a.button-primary,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > a.button-primary:focus,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > a.button-primary:hover {
   background-color: #593dbd;
   border-color: #593dbd;
 }
-.notice-better-payment-halloween_notice .wpnotice-content-wrapper {
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   padding: 10px 0;
 }
-.notice-better-payment-halloween_notice .wpnotice-content-wrapper > p {
+.notice-better-payment-halloween_notice .wpnotice-content-wrapper > p,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > p {
   margin: 0 !important;
   padding: 0;
+}
+
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > a.button-primary,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > a.button-primary:focus,
+.notice-better-payment-black_friday_notice .wpnotice-content-wrapper > a.button-primary:hover {
+  background-color: #5626E7;
+  border-color: #5626E7;
 }
 
 #wpnotice-better-payment-review {
@@ -419,7 +433,8 @@ span.coupon-code {
 
 /* Transaction Details Page : Ends */
 @media only screen and (max-width: 767px) {
-  .notice-better-payment-halloween_notice {
+  .notice-better-payment-halloween_notice,
+  .notice-better-payment-black_friday_notice {
     display: none !important;
   }
 }

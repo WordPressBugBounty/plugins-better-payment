@@ -99,7 +99,11 @@ $transaction_filter_per_page = !empty($args['per_page']) ? $args['per_page'] : 2
                         <p><?php if ( $is_imported ) : ?> <span title="<?php esc_attr_e('Imported', 'better-payment'); ?>" class="bp-icon bp-imported imported-icon"></span> <?php endif; ?> <?php echo esc_html( $bp_transaction_customer_name ); ?> </p>
                     </div>
                     <div class="table__col col__email">
-                        <p> <span id="bp_email_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($bp_transaction_customer_email); ?></span> <span id="bp_email_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-email-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span> </p>
+                        <p> 
+                            <span id="bp_email_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($bp_transaction_customer_email); ?></span> 
+                            <span id="bp_email_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-email-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span> 
+                            <span id="bp_email_copy_clipboard_info_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-email-copy-clipboard-info is-hidden" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" >Copied!</span> 
+                        </p>
                     </div>
                     <div class="table__col col__amount">
                         <p> <?php echo esc_html($bp_transaction->currency) . ' ' . esc_html( floatval( $bp_transaction->amount ) ); ?> </p>
@@ -112,7 +116,11 @@ $transaction_filter_per_page = !empty($args['per_page']) ? $args['per_page'] : 2
                         <?php $bp_transaction_id = sanitize_text_field($bp_transaction->transaction_id);  ?>
                         
                         <?php if( !empty($bp_transaction_id) ) : ?>
-                            <p> <span id="bp_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($bp_transaction_id); ?></span> <span id="bp_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span> </p>
+                            <p> 
+                                <span id="bp_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($bp_transaction_id); ?></span> 
+                                <span id="bp_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span> 
+                                <span id="bp_copy_clipboard_info_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-copy-clipboard-info is-hidden" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" >Copied!</span> 
+                            </p>
                         <?php endif; ?>
                     </div>
                     <div class="table__col col__source">

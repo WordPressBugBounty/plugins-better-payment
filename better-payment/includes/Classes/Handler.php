@@ -618,8 +618,8 @@ class Handler extends Controller{
         $args['email_content_to_section_show'] = ! empty( $settings['better_payment_email_content_to_section'] ) && 'yes' === $settings['better_payment_email_content_to_section'] ? 1 : 0;
         $args['email_content_transaction_summary_show'] = ! empty( $settings['better_payment_email_content_transaction_summary'] ) && 'yes' === $settings['better_payment_email_content_transaction_summary'] ? 1 : 0;
         $args['email_content_footer_text_show'] = ! empty( $settings['better_payment_email_content_footer_text'] ) && 'yes' === $settings['better_payment_email_content_footer_text'] ? 1 : 0;
-        $args['email_content_customer'] = ! empty( $settings['better_payment_email_content_customer'] ) ? sanitize_textarea_field( $settings['better_payment_email_content_customer'] ) : '';
-        $args['email_content_admin'] = ! empty( $settings['better_payment_email_content'] ) ? sanitize_textarea_field( $settings['better_payment_email_content'] ) : '';
+        $args['email_content_customer'] = ! empty( $settings['better_payment_email_content_customer'] ) ? $settings['better_payment_email_content_customer'] : '';
+        $args['email_content_admin'] = ! empty( $settings['better_payment_email_content'] ) ? $settings['better_payment_email_content'] : '';
         $args['is_elementor_form'] = $is_elementor_form;
 
         if ( ! empty( $settings['better_payment_email_content_greeting'] ) ) {
@@ -632,6 +632,11 @@ class Handler extends Controller{
         
         if ( ! empty( $settings['better_payment_form_email_attachment']['id'] ) ) {
             $args['email_attachment_id'] = intval( $settings['better_payment_form_email_attachment']['id'] );
+            $args['email_attachment_path'] = get_attached_file( $args['email_attachment_id'] );
+        }
+        
+        if ( ! empty( $settings['better_payment_form_email_attachment_pdf_show'] ) && ! empty( $settings['better_payment_form_email_attachment_pdf']['id'] ) ) {
+            $args['email_attachment_id'] = intval( $settings['better_payment_form_email_attachment_pdf']['id'] );
             $args['email_attachment_path'] = get_attached_file( $args['email_attachment_id'] );
         }
 
@@ -654,6 +659,9 @@ class Handler extends Controller{
         if(isset($settings['better_payment_email_content_type_customer'])){
             $better_payment_email_content_type_customer = sanitize_text_field($settings['better_payment_email_content_type_customer']);
         }
+
+        $args['email_content_type'] = $better_payment_email_content_type;
+        $args['email_content_type_customer'] = $better_payment_email_content_type_customer;
 
 		$line_break = $better_payment_email_content_type == 'html' ? '<br>' : "\n";
 		$line_break_customer = $better_payment_email_content_type_customer == 'html' ? '<br>' : "\n";
@@ -732,6 +740,9 @@ class Handler extends Controller{
 
         if($better_payment_email_content_type == 'html'){
             $better_payment_email_headers[] = 'Content-Type: text/html; charset=UTF-8';
+        }
+        
+        if($better_payment_email_content_type_customer == 'html'){
             $better_payment_email_headers_customer[] = 'Content-Type: text/html; charset=UTF-8';
         }
 
@@ -983,9 +994,11 @@ class Handler extends Controller{
             'email_content_to_section_show' => intval( $args['email_content_to_section_show'] ),
             'email_content_transaction_summary_show' => intval( $args['email_content_transaction_summary_show'] ),
             'email_content_footer_text_show' => intval( $args['email_content_footer_text_show'] ),
-            'email_content_customer' => $args['email_content_customer'],
-            'email_content_admin' => $args['email_content_admin'],
+            'email_content_customer' => wp_kses_post( $args['email_content_customer'] ),
+            'email_content_admin' => wp_kses_post( $args['email_content_admin'] ),
             'is_elementor_form' => intval( $args['is_elementor_form'] ),
+            'email_content_type' => $args['email_content_type'] ?? 'html',
+            'email_content_type_customer' => $args['email_content_type_customer'] ?? 'html',
         ];
 
         $bp_form_fields_html_body = $content;
@@ -999,7 +1012,9 @@ class Handler extends Controller{
         $form_name = 
 
         ob_start();
-    	include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/template-email-notification.php";
+
+        include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/template-email-notification.php";
+        
         $email_body = ob_get_contents();
         ob_end_clean();
 

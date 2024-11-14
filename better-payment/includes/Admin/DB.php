@@ -4,6 +4,8 @@ namespace Better_Payment\Lite\Admin;
 
 use Better_Payment\Lite\Classes\Helper;
 
+use function Better_Payment\Lite\Classes\better_payment_dd;
+
 /**
  * Exit if accessed directly
  */
@@ -320,10 +322,54 @@ class DB {
 
         $incomplete_statuses = $better_payment_db_obj->allowed_statuses('incomplete', 'v2');
         $incomplete_transactions = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'count', 1, $filtered_transactions );
+        
+        $transaction_analytics['total_transactions']        = $total_transactions;
+        $transaction_analytics['completed_transactions']    = $completed_transactions;
+        $transaction_analytics['incomplete_transactions']   = $incomplete_transactions;
+        
+        return $transaction_analytics;
+    }
 
-        $transaction_analytics['total_transactions'] = $total_transactions;
-        $transaction_analytics['completed_transactions'] = $completed_transactions;
-        $transaction_analytics['incomplete_transactions'] = $incomplete_transactions;
+    /**
+     * Get transactions analytics
+     *
+     * @return int
+     * @since 0.0.1
+     */
+    public static function get_transactions_analytics_dashboard($filtered_transactions = array())
+    {
+        global $wpdb;
+        $transaction_analytics = [];
+
+        $table = self::get_table_name();
+        $better_payment_db_obj = new DB();
+
+        $total_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'count', 1, $filtered_transactions );
+        $total_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'amount', 1, $filtered_transactions );
+
+        $completed_statuses = $better_payment_db_obj->allowed_statuses('completed', 'v2');
+        $completed_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'count', 0, $filtered_transactions );
+        $completed_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'amount', 0, $filtered_transactions );
+
+        $incomplete_statuses = $better_payment_db_obj->allowed_statuses('incomplete', 'v2');
+        $incomplete_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'count', 1, $filtered_transactions );
+        $incomplete_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'amount', 1, $filtered_transactions );
+        
+        $refunded_statuses = $better_payment_db_obj->allowed_statuses('refunded', 'v2');
+        $refunded_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'count', 0, $filtered_transactions );
+        $refunded_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'amount', 0, $filtered_transactions );
+
+        $transaction_analytics['total_transactions_count']        = $total_transactions_count;
+        $transaction_analytics['completed_transactions_count']    = $completed_transactions_count;
+        $transaction_analytics['incomplete_transactions_count']   = $incomplete_transactions_count;
+        $transaction_analytics['refunded_transactions_count']     = $refunded_transactions_count;
+        
+        $transaction_analytics['total_transactions_amount']        = $total_transactions_amount;
+        $transaction_analytics['completed_transactions_amount']    = $completed_transactions_amount;
+        $transaction_analytics['incomplete_transactions_amount']   = $incomplete_transactions_amount;
+        $transaction_analytics['refunded_transactions_amount']     = $refunded_transactions_amount;
+
+        // Recent transactions
         
         return $transaction_analytics;
     }
@@ -449,15 +495,15 @@ class DB {
 
         if(!empty($payment_date_from) && !empty($payment_date_to)){
             $amount = $wpdb->get_results(
-                "SELECT amount, payment_date FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
+                "SELECT amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
             );
         } else if(!empty($payment_date_from) && empty($payment_date_to)){
             $amount = $wpdb->get_results(
-                "SELECT amount, payment_date FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date >= '" . esc_sql($payment_date_from) . "'"
+                "SELECT amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date >= '" . esc_sql($payment_date_from) . "'"
             );
         } else {
             $amount = $wpdb->get_results(
-                "SELECT amount, payment_date FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " )" 
+                "SELECT amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " )" 
             );
         }
 
@@ -494,16 +540,22 @@ class DB {
 
         if( is_array($filtered_transactions) && count($filtered_transactions) ){
             $filtered_transactions_by_statuses = array();
-
+            $filtered_transactions_amount = 0;
+            
             foreach($filtered_transactions as $filtered_transaction) {
                 if( in_array($filtered_transaction->status, $statuses_original) ) {
                     $filtered_transactions_by_statuses[] = $filtered_transaction->id;
+                    $filtered_transactions_amount += ! empty( $filtered_transaction->amount ) ? floatval( $filtered_transaction->amount ) : 0;
                 }
             } 
 
             if($count_or_amount == 'count'){
                 $filtered_transactions_by_statuses_count = count($filtered_transactions_by_statuses);
                 return $filtered_transactions_by_statuses_count;
+            }
+            
+            if($count_or_amount == 'amount'){
+                return $filtered_transactions_amount;
             }
         }
         if($count_or_amount == 'count') {
@@ -520,6 +572,7 @@ class DB {
             );
         }else {
             $amount = $wpdb->get_var(
+                // #TODO Amount based on filtered transactions
                 "SELECT sum(amount) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ")"
             );
         }

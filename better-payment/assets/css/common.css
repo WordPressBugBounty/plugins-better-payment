@@ -3092,6 +3092,575 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.better-payment .bp-copy-clipboard-info,
+.better-payment .bp-email-copy-clipboard-info {
+  color: rgb(110, 88, 247) !important;
+}
+.better-payment .better-payment-user-dashboard-container h1,
+.better-payment .better-payment-user-dashboard-container h2,
+.better-payment .better-payment-user-dashboard-container h3,
+.better-payment .better-payment-user-dashboard-container h4,
+.better-payment .better-payment-user-dashboard-container h5,
+.better-payment .better-payment-user-dashboard-container h6,
+.better-payment .better-payment-user-dashboard-container p {
+  margin: 0;
+  padding: 0;
+}
+.better-payment .bp-logo {
+  margin-bottom: 55px;
+  text-align: center;
+}
+.better-payment .bp-logo img {
+  max-height: 36px;
+  width: auto;
+}
+.better-payment .bp-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -12px;
+  margin-right: -12px;
+}
+.better-payment .bp-col {
+  position: relative;
+  width: 100%;
+  min-height: 1px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.better-payment .bp-col1 {
+  width: 8.333333333%;
+}
+.better-payment .bp-col_2 {
+  width: 16.66666666%;
+}
+.better-payment .bp-col_3 {
+  width: 20%;
+}
+.better-payment .bp-col_4 {
+  width: 25%;
+}
+.better-payment .bp-col_5 {
+  width: 33.333333333%;
+}
+.better-payment .bp-col_6 {
+  width: 41.3333333%;
+}
+.better-payment .bp-col_7 {
+  width: 50%;
+}
+.better-payment .bp-col_8 {
+  width: 58.333333333%;
+}
+.better-payment .bp-col_9 {
+  width: 66.666666666%;
+}
+.better-payment .bp-col_10 {
+  width: 75%;
+}
+.better-payment .bp-col_11 {
+  width: 83.333333333%;
+}
+.better-payment .bp-col_12 {
+  width: 91.666666666%;
+}
+.better-payment .bp-col_13 {
+  width: 100%;
+}
+.better-payment .w-80 {
+  width: 80px;
+  text-align: left;
+}
+.better-payment .w-195 {
+  flex-basis: 195px;
+}
+.better-payment .w-325 {
+  flex-basis: 325px;
+}
+.better-payment .w-214 {
+  flex-basis: 214px;
+}
+.better-payment .w-130 {
+  flex-basis: 130px;
+}
+.better-payment .w-140 {
+  flex-basis: 140px;
+}
+.better-payment .bp-amount_wrapper {
+  margin-bottom: 24px;
+}
+.better-payment .td-product_logo {
+  line-height: 0;
+  min-width: 24px;
+  max-width: 80px;
+}
+.better-payment .td-product_logo img {
+  object-fit: contain;
+  height: 30px;
+  width: 100%;
+}
+.better-payment .bp-dashboard_wrapper {
+  width: 100%;
+  padding: 40px 32px 32px 32px;
+  background-color: #FFFFFF;
+  border-top: 1px solid #EAECF0;
+  border-left: 1px solid #EAECF0;
+}
+.better-payment .bp-dashboard_wrapper .bp-dashboard_title {
+  font-size: 32px;
+  font-weight: 600;
+  text-align: left;
+  color: #2A3256;
+  margin-bottom: 36px;
+}
+.better-payment .bp-amount {
+  width: 100%;
+  height: auto;
+  padding: 0px;
+  border-radius: 12px;
+  border: 1px solid #EAECF0;
+  overflow: hidden;
+}
+.better-payment .bp-amount h4 {
+  margin: 16px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #667085;
+}
+.better-payment .bp-amount_price {
+  font-size: 40px;
+  font-weight: 600;
+  text-align: left;
+  color: #2A3256;
+  padding: 16px;
+}
+.better-payment .bp-transaction {
+  padding: 10px 16px;
+  background-color: #FAFAFC;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 400;
+  color: #667085;
+}
+.better-payment .bp-transaction_number {
+  font-weight: 500;
+  color: #6E58F7;
+}
+.better-payment .bp-chart_header .name h3 {
+  color: #2A3256;
+  font-size: 20px;
+  font-weight: 600;
+}
+.better-payment .bp-analytics_chart-wrapper {
+  margin-bottom: 24px;
+}
+.better-payment .bp-analytics_box {
+  background-color: #ffffff;
+  border: 1px solid #EAECF0;
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+.better-payment .bp-chart_header {
+  border-bottom: 1px solid #EAECF0;
+  padding-top: 8px;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+.better-payment .bp-form_control {
+  border: 1px solid #D9E1F4;
+  border-radius: 8px;
+  padding: 11px 16px;
+}
+.better-payment .bp-form_control option {
+  font-size: 14px;
+  font-weight: 500;
+  color: #48506D;
+}
+.better-payment .filter-btn {
+  padding: 8px 16px 8px 16px;
+  border-radius: 8px;
+}
+.better-payment .bp-recent_box {
+  background-color: #ffffff;
+  border: 1px solid #EAECF0;
+  border-radius: 16px;
+  padding: 0 16px;
+}
+.better-payment .bp-recent_header {
+  padding: 16px 0;
+  border-bottom: 1px solid #EAECF0;
+  margin-bottom: 16px;
+}
+.better-payment .bp-view_all-btn {
+  font-size: 14px;
+  font-weight: 500;
+  color: #48506D;
+  border: 1px solid #D9E1F4;
+  border-radius: 4px;
+  padding: 6px 16px;
+  text-decoration: none;
+}
+.better-payment .bp-recent_header-title {
+  color: #2A3256;
+  font-size: 16px;
+  font-weight: 600;
+}
+.better-payment .bp-th {
+  background-color: #FAFAFC;
+  border-radius: 4px;
+  padding: 9px 12px 9px 12px;
+  margin-bottom: 4px;
+}
+.better-payment .bp-th h5 {
+  font-size: 12px;
+  font-weight: 500;
+  color: #667085;
+}
+.better-payment .bp-recent_body {
+  padding-bottom: 16px;
+}
+.better-payment .bp-product_scroll {
+  min-height: 334px;
+  max-height: 334px;
+  overflow: auto;
+}
+.better-payment .td-product {
+  gap: 6px;
+  padding: 9px 11px;
+}
+.better-payment .td-product_name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #2A3256;
+  margin-bottom: 4px;
+}
+.better-payment .td-details {
+  font-size: 10px;
+  font-weight: 400;
+  color: #667085;
+}
+.better-payment .bp-subscription_box {
+  background-color: #ffffff;
+  border: 1px solid #EAECF0;
+  border-radius: 16px;
+  padding: 0 16px;
+}
+.better-payment .bp-subscription_box-th {
+  border-bottom: 1px solid #EAECF0;
+  padding: 16px 0;
+  margin-bottom: 20px;
+}
+.better-payment .bp-subscription_th {
+  padding: 12px;
+  background: #FAFAFC;
+  margin-bottom: 6px;
+}
+.better-payment .bp-subscription_title {
+  color: #2A3256;
+  font-size: 16px;
+  font-weight: 600;
+}
+.better-payment .bp-subscription_th h4 {
+  color: #667085;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+.better-payment .bp-subscription_td {
+  padding: 15px 0px 15px 12px;
+}
+.better-payment .bp-subscription_td .bp-plan_info h4 {
+  color: #2A3256;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 14px;
+  margin-bottom: 5px;
+}
+.better-payment .bp-subscription_td .bp-plan_info p {
+  color: #48506D;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 10px;
+}
+.better-payment .bp-subscription_td .starter-plan,
+.better-payment .bp-subscription_td .due-plan {
+  color: #797E90;
+  font-size: 14px;
+  font-weight: 400;
+}
+.better-payment .bp-subscription_td button {
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 5px 11px;
+  border: 1px solid #9DD0FF;
+  background: rgba(0, 133, 255, 0.1019607843);
+  color: #0085FF;
+}
+.better-payment .bp-subscription_td .active {
+  color: #00C679;
+  background: rgba(0, 198, 123, 0.1019607843);
+  border: 1px solid #A2ECCF;
+}
+.better-payment .bp-subscription_td .inactive {
+  border: 1px solid #FFEB91;
+  color: #EDAA00;
+  background-color: rgba(255, 209, 0, 0.1019607843);
+}
+.better-payment .bp-subscription_product-price {
+  display: flex;
+  align-items: end;
+  gap: 2px;
+}
+.better-payment .bp-subscription_product-td {
+  border-bottom: 1px solid rgba(110, 88, 247, 0.1);
+}
+.better-payment .bp-subscription_product-td:last-child {
+  border: none;
+}
+.better-payment .bp-subscription_product-price span:first-child {
+  color: #2B2748;
+  font-size: 18px;
+  font-weight: 500;
+}
+.better-payment .bp-subscription_product-price span:last-child {
+  color: #797E90;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 10.2px;
+  font-weight: 400;
+}
+.better-payment .bp-subscripthon_doughnut-box {
+  margin-bottom: 48px;
+  justify-content: center;
+}
+.better-payment .bp-total_title {
+  color: #667085;
+  font-size: 16px;
+  font-weight: 500;
+  position: absolute;
+}
+.better-payment .bp-total_count {
+  font-size: 56px;
+  font-weight: 600;
+  text-align: center;
+  position: absolute;
+}
+.better-payment .better-payment-user-dashboard-container .dashboard-tab-wrapper .bp-total_count {
+  margin-bottom: 35px;
+}
+.better-payment .bp-multi-graph {
+  width: 400px;
+  height: 200px;
+  position: relative;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.better-payment .bp-multi-graph:before {
+  content: "";
+  width: 400px;
+  height: 200px;
+  border: 30px solid rgba(0, 0, 0, 0.15);
+  border-bottom: none;
+  position: absolute;
+  box-sizing: border-box;
+  transform-origin: 50% 0%;
+  border-radius: 300px 300px 0 0;
+  left: 0;
+  top: 0;
+}
+.better-payment .bp-graph {
+  width: 400px;
+  height: 200px;
+  border: 30px solid var(--fill);
+  border-top: none;
+  position: absolute;
+  transform-origin: 50% 0%;
+  border-radius: 0 0 300px 300px;
+  left: 0;
+  top: 100%;
+  z-index: 5;
+  animation: 1s fillGraphAnimation ease-in;
+  transform: rotate(calc(1deg * var(--percentage) * 1.8));
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.better-payment .bp-graph:after {
+  content: attr(data-name) " " counter(varible) "%";
+  counter-reset: varible var(--percentage);
+  background: var(--fill);
+  box-sizing: border-box;
+  border-radius: 2px;
+  color: #fff;
+  font-weight: 200;
+  font-size: 12px;
+  height: 20px;
+  padding: 3px 5px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: rotate(calc(-1deg * var(--percentage) * 1.8)) translate(-30px, 0);
+  transition: 0.2s ease-in;
+  transform-origin: 0 50%;
+  opacity: 0;
+}
+@keyframes fillGraphAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+}
+.better-payment .bp-doughnut_info {
+  position: absolute;
+  width: 132px;
+  height: auto;
+  background-color: rgba(0, 0, 0, 0.8509803922);
+  border-radius: 2px;
+  padding: 12px;
+  left: 0;
+  top: 0;
+  z-index: 99;
+  opacity: 0;
+  cursor: pointer;
+  transition: all 0.5s;
+}
+.better-payment .bp-multi-graph:hover .bp-doughnut_info {
+  opacity: 1;
+}
+.better-payment .bp-doughnut_info .bp-doughnut_date {
+  font-size: 9.28px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 7px;
+}
+.better-payment .bp-doughnut_info .bp-dougnut_color-info {
+  color: #fff;
+  font-size: 7.95px;
+  font-weight: 500;
+}
+.better-payment .bp-doughnut_info .bp-dougnut_color-info div {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  background-color: #fff;
+  padding: 2px;
+  margin: 5px 5px 5px 0;
+}
+.better-payment .bp-doughnut_info div .color-B {
+  background-color: #8673FF;
+}
+.better-payment .bp-doughnut_info div .color-Y {
+  background-color: #FFCF66;
+}
+.better-payment .bp-doughnut_info div .color-R {
+  background-color: #FF5060;
+}
+.better-payment .p-0 {
+  padding: 0 !important;
+}
+.better-payment .mb-0 {
+  margin-bottom: 0 !important;
+}
+.better-payment .pb-0 {
+  padding-bottom: 0 !important;
+}
+.better-payment .pl-0 {
+  padding-left: 0 !important;
+}
+.better-payment .w-auto {
+  min-width: auto !important;
+  width: auto !important;
+}
+.better-payment .border-bottom_active {
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+}
+.better-payment .min-w_600 {
+  min-width: 580px !important;
+}
+.better-payment .line-height-0 {
+  line-height: 0;
+}
+@media only screen and (max-width: 1200px) {
+  .better-payment .bp-amount h4,
+  .better-payment .bp-transaction {
+    font-size: 14px;
+  }
+  .better-payment .bp-amount_price {
+    font-size: 32px;
+  }
+  .better-payment .bp-subscription_wrapper .bp-col_7 {
+    width: 100%;
+  }
+  .better-payment .bp-subscription_box {
+    margin-bottom: 24px;
+  }
+  .better-payment .bp-analytics_chart-wrapper .bp-col_10,
+  .better-payment .bp-analytics_chart-wrapper .bp-col_4 {
+    width: 100%;
+  }
+  .better-payment .bp-analytics_box {
+    margin-bottom: 24px;
+  }
+}
+@media only screen and (max-width: 1024px) {
+  .better-payment .bp-logo {
+    margin-bottom: 45px;
+  }
+  .better-payment .bp-amount_wrapper .bp-col_4 {
+    width: 50%;
+  }
+  .better-payment .bp-amount {
+    margin-bottom: 24px;
+  }
+  .better-payment .bp-chart_header .name h3 {
+    font-size: 16px;
+  }
+  .better-payment .bp-th,
+  .better-payment .bp-td {
+    justify-content: space-between;
+  }
+  .better-payment .bp-th {
+    padding: 9px 0px 9px 12px;
+  }
+}
+@media only screen and (max-width: 800px) {
+  .better-payment .flex-wrap {
+    flex-wrap: wrap !important;
+  }
+  .better-payment .bp-amount_wrapper .bp-col_4 {
+    width: 100% !important;
+  }
+  .better-payment .bp-multi-graph {
+    width: 200px !important;
+    height: 100px !important;
+  }
+  .better-payment .bp-multi-graph:before {
+    width: 200px !important;
+    height: 100px !important;
+  }
+  .better-payment .bp-graph {
+    width: 200px !important;
+    height: 100px !important;
+  }
+  .better-payment .better-payment-user-dashboard-container .dashboard-tab-wrapper .bp-total_count {
+    margin-bottom: 20px;
+  }
+  .better-payment .bp-total_count {
+    font-size: 28px !important;
+  }
+  .better-payment .bp-total_title {
+    font-size: 10px !important;
+  }
+}
 @media only screen and (max-width: 1024px) {
   .better-payment .gap-2 {
     gap: 4px;

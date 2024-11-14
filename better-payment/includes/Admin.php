@@ -164,22 +164,48 @@ class Admin extends Controller{
         /**
 		 * Halloween Notice
 		 */
-        $crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
-		$halloween_notice_message = "<p>🎃 Manage Payment forms better with Better Payment PRO and grab a <strong>flat 25% OFF</strong> this Halloween.</p><a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/#pricing-plan' target='_blank'><img style='width:15px;' src='{$crown_icon}'/>Upgrade to PRO</a>";
+        // $crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
+		// $halloween_notice_message = "<p>🎃 Manage Payment forms better with Better Payment PRO and grab a <strong>flat 25% OFF</strong> this Halloween.</p><a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/#pricing-plan' target='_blank'><img style='width:15px;' src='{$crown_icon}'/>Upgrade to PRO</a>";
 
-		$halloween_notice = [
+		// $halloween_notice = [
+		// 	'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
+		// 	'html'      => $halloween_notice_message,
+		// ];
+
+        // $notices->add(
+		// 	'halloween_notice',
+		// 	$halloween_notice,
+		// 	[
+		// 		'start'       => $notices->time(),
+		// 		// 'start'       => $notices->strtotime( '+7 day' ),
+		// 		// 'recurrence'  => 30,
+		// 		'expire'       => $notices->strtotime( '+10 days' ),
+		// 		'refresh'     => BETTER_PAYMENT_VERSION,
+		// 		'dismissible' => true,
+		// 		'screens' => [ 'dashboard' ],
+		// 	]
+		// );
+
+        /**
+		 * Black Friday Notice
+		 */
+        $crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
+		$black_friday_notice_message = "<p>🛍️ Manage Payment forms better with Better Payment PRO & grab <strong>up to 40% OFF</strong> this Black Friday.</p><a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/bfcm2024-pricing' target='_blank'><img style='width:15px;' src='{$crown_icon}'/>Upgrade to PRO</a>";
+
+		$black_friday_notice = [
 			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $halloween_notice_message,
+			'html'      => $black_friday_notice_message,
 		];
 
         $notices->add(
-			'halloween_notice',
-			$halloween_notice,
+			'black_friday_notice',
+			$black_friday_notice,
 			[
 				'start'       => $notices->time(),
 				// 'start'       => $notices->strtotime( '+7 day' ),
 				// 'recurrence'  => 30,
-				'expire'       => $notices->strtotime( '+10 days' ),
+				// 'expire'       => $notices->strtotime( '+10 days' ),
+				'expire'       => strtotime( '11:59:59pm 5th December, 2024' ),
 				'refresh'     => BETTER_PAYMENT_VERSION,
 				'dismissible' => true,
 				'screens' => [ 'dashboard' ],
