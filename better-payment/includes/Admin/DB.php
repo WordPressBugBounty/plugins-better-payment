@@ -344,20 +344,32 @@ class DB {
         $table = self::get_table_name();
         $better_payment_db_obj = new DB();
 
-        $total_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'count', 1, $filtered_transactions );
-        $total_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'amount', 1, $filtered_transactions );
+        $total_transactions_count = 0;
+        $completed_transactions_count = 0;
+        $incomplete_transactions_count = 0;
+        $refunded_transactions_count = 0;
 
-        $completed_statuses = $better_payment_db_obj->allowed_statuses('completed', 'v2');
-        $completed_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'count', 0, $filtered_transactions );
-        $completed_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'amount', 0, $filtered_transactions );
+        $total_transactions_amount = 0;
+        $completed_transactions_amount = 0;
+        $incomplete_transactions_amount = 0;
+        $refunded_transactions_amount = 0;
 
-        $incomplete_statuses = $better_payment_db_obj->allowed_statuses('incomplete', 'v2');
-        $incomplete_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'count', 1, $filtered_transactions );
-        $incomplete_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'amount', 1, $filtered_transactions );
-        
-        $refunded_statuses = $better_payment_db_obj->allowed_statuses('refunded', 'v2');
-        $refunded_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'count', 0, $filtered_transactions );
-        $refunded_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'amount', 0, $filtered_transactions );
+        if ( is_array( $filtered_transactions ) && count( $filtered_transactions ) ) {
+            $total_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'count', 1, $filtered_transactions );
+            $total_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'amount', 1, $filtered_transactions );
+    
+            $completed_statuses = $better_payment_db_obj->allowed_statuses('completed', 'v2');
+            $completed_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'count', 0, $filtered_transactions );
+            $completed_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'amount', 0, $filtered_transactions );
+    
+            $incomplete_statuses = $better_payment_db_obj->allowed_statuses('incomplete', 'v2');
+            $incomplete_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'count', 1, $filtered_transactions );
+            $incomplete_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'amount', 1, $filtered_transactions );
+            
+            $refunded_statuses = $better_payment_db_obj->allowed_statuses('refunded', 'v2');
+            $refunded_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'count', 0, $filtered_transactions );
+            $refunded_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'amount', 0, $filtered_transactions );
+        }
 
         $transaction_analytics['total_transactions_count']        = $total_transactions_count;
         $transaction_analytics['completed_transactions_count']    = $completed_transactions_count;
@@ -558,6 +570,7 @@ class DB {
                 return $filtered_transactions_amount;
             }
         }
+
         if($count_or_amount == 'count') {
             $count = (int) $wpdb->get_var(
                 "SELECT count(id) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " )"

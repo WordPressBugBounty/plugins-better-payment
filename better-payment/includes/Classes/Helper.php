@@ -180,6 +180,7 @@ class Helper extends Controller
             'ILS' => 'ILS',
             'JPY' => 'JPY',
             'MXN' => 'MXN',
+            'MYR' => 'MYR',
             'NOK' => 'NOK',
             'NZD' => 'NZD',
             'PHP' => 'PHP',

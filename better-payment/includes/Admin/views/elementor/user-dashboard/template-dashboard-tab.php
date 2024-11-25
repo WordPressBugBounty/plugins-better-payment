@@ -9,7 +9,6 @@ if ( empty($email) ) {
 }
 
 $user_transactions = DB::get_transactions_by_email( $email );
-
 $transactions_analytics = DB::get_transactions_analytics_dashboard( $user_transactions);
 
 $total_transactions_count = isset($transactions_analytics['total_transactions_count']) ? $transactions_analytics['total_transactions_count'] : 0;

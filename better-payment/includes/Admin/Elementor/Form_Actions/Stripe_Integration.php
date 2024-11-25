@@ -37,97 +37,99 @@ class Stripe_Integration extends Action_Base {
      * @param \Elementor\Widget_Base $widget
      */
     public function register_settings_section( $widget ) {
+        if ( current_user_can('manage_options') ) {
+            
+            $this->better_payment_global_settings = DB::get_settings();
 
-        $this->better_payment_global_settings = DB::get_settings();
+            $widget->start_controls_section(
+                'section_stripe_payment',
+                [
+                    'label'     => __( 'Stripe', 'better-payment' ),
+                    'condition' => [
+                        'submit_actions' => $this->get_name(),
+                        'better_payment_payment_amount_enable' => 'yes'
+                    ],
+                ]
+            );
 
-        $widget->start_controls_section(
-            'section_stripe_payment',
-            [
-                'label'     => __( 'Stripe', 'better-payment' ),
-                'condition' => [
-                    'submit_actions' => $this->get_name(),
-                    'better_payment_payment_amount_enable' => 'yes'
-                ],
-            ]
-        );
+            $better_payment_helper = new \Better_Payment\Lite\Classes\Helper();
 
-        $better_payment_helper = new \Better_Payment\Lite\Classes\Helper();
+            $widget->add_control(
+                'better_payment_form_stripe_currency',
+                [
+                    'label'   => esc_html__( 'Currency', 'better-payment' ),
+                    'type'    => Controls_Manager::SELECT,
+                    'default' => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_currency']),
+                    'options' => $better_payment_helper->get_currency_list(),
+                ]
+            );
 
-        $widget->add_control(
-            'better_payment_form_stripe_currency',
-            [
-                'label'   => esc_html__( 'Currency', 'better-payment' ),
-                'type'    => Controls_Manager::SELECT,
-                'default' => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_currency']),
-                'options' => $better_payment_helper->get_currency_list(),
-            ]
-        );
+            $widget->add_control(
+                'better_payment_form_currency_alignment_stripe',
+                [
+                    'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
+                    'type' => Controls_Manager::CHOOSE,
+                    'options' => [
+                        'left' => [
+                            'title' => esc_html__( 'Left', 'better-payment' ),
+                            'icon' => 'eicon-text-align-left',
+                        ],
+                        'right' => [
+                            'title' => esc_html__( 'Right', 'better-payment' ),
+                            'icon' => 'eicon-text-align-right',
+                        ],
+                    ],
+                ]
+            );
 
-        $widget->add_control(
-			'better_payment_form_currency_alignment_stripe',
-			[
-				'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
-				'type' => Controls_Manager::CHOOSE,
-				'options' => [
-					'left' => [
-						'title' => esc_html__( 'Left', 'better-payment' ),
-						'icon' => 'eicon-text-align-left',
-					],
-					'right' => [
-						'title' => esc_html__( 'Right', 'better-payment' ),
-						'icon' => 'eicon-text-align-right',
-					],
-				],
-			]
-		);
+            $better_payment_is_stripe_live = $this->better_payment_global_settings['better_payment_settings_payment_stripe_live_mode'] == 'yes' ? 1 : 0;
 
-        $better_payment_is_stripe_live = $this->better_payment_global_settings['better_payment_settings_payment_stripe_live_mode'] == 'yes' ? 1 : 0;
+            $widget->add_control(
+                'better_payment_stripe_public_key',
+                [
+                    'label'       => __( 'Public Key', 'better-payment' ),
+                    'type'        => Controls_Manager::TEXT,
+                    'dynamic'     => [
+                        'active' => true,
+                    ],
+                    'label_block' => true,
+                    'default'     => $better_payment_is_stripe_live ? esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_live_public']) : esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_test_public']),
+                    'ai' => [
+                        'active' => false,
+                    ],
+                ]
+            );
 
-        $widget->add_control(
-            'better_payment_stripe_public_key',
-            [
-                'label'       => __( 'Public Key', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'dynamic'     => [
-                    'active' => true,
-                ],
-                'label_block' => true,
-                'default'     => $better_payment_is_stripe_live ? esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_live_public']) : esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_test_public']),
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
+            $widget->add_control(
+                'better_payment_stripe_secret_key',
+                [
+                    'label'       => __( 'Secret Key', 'better-payment' ),
+                    'type'        => Controls_Manager::TEXT,
+                    'input_type'  => 'password',
+                    'dynamic'     => [
+                        'active' => true,
+                    ],
+                    'label_block' => true,
+                    'default'     => $better_payment_is_stripe_live ? esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_live_secret']) : esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_test_secret']),
+                    'ai' => [
+                        'active' => false,
+                    ],
+                ]
+            );
 
-        $widget->add_control(
-            'better_payment_stripe_secret_key',
-            [
-                'label'       => __( 'Secret Key', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'input_type'  => 'password',
-                'dynamic'     => [
-                    'active' => true,
-                ],
-                'label_block' => true,
-                'default'     => $better_payment_is_stripe_live ? esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_live_secret']) : esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_test_secret']),
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-
-        $widget->add_control(
-            'better_payment_stripe_live_mode',
-            [
-                'label'        => __( 'Live Mode', 'better-payment' ),
-                'type'         => Controls_Manager::SWITCHER,
-                'label_on'     => __( 'Yes', 'better-payment' ),
-                'label_off'    => __( 'No', 'better-payment' ),
-                'return_value' => 'yes',
-                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
-            ]
-        );
-        $widget->end_controls_section();
+            $widget->add_control(
+                'better_payment_stripe_live_mode',
+                [
+                    'label'        => __( 'Live Mode', 'better-payment' ),
+                    'type'         => Controls_Manager::SWITCHER,
+                    'label_on'     => __( 'Yes', 'better-payment' ),
+                    'label_off'    => __( 'No', 'better-payment' ),
+                    'return_value' => 'yes',
+                    'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
+                ]
+            );
+            $widget->end_controls_section();
+        }
     }
 
     /**

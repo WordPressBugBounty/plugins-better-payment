@@ -36,91 +36,94 @@ class Paypal_Integration extends Action_Base {
      * @param \Elementor\Widget_Base $widget
      */
     public function register_settings_section( $widget ) {
-        $this->better_payment_global_settings = DB::get_settings();
+        if ( current_user_can('manage_options') ) {
 
-        $widget->start_controls_section(
-            'section_paypal_payment',
-            [
-                'label'     => __( 'PayPal', 'better-payment' ),
-                'condition' => [
-                    'submit_actions' => $this->get_name(),
-                    'better_payment_payment_amount_enable' => 'yes'
-                ],
-            ]
-        );
+            $this->better_payment_global_settings = DB::get_settings();
 
-        $better_payment_helper = new \Better_Payment\Lite\Classes\Helper();
-
-        $widget->add_control(
-            'better_payment_form_paypal_currency',
-            [
-                'label'   => esc_html__( 'Currency', 'better-payment' ),
-                'type'    => Controls_Manager::SELECT,
-                'default' => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_currency']),
-                'options' => $better_payment_helper->get_currency_list(),
-            ]
-        );
-
-        $widget->add_control(
-			'better_payment_form_currency_alignment_paypal',
-			[
-				'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
-				'type' => Controls_Manager::CHOOSE,
-				'options' => [
-					'left' => [
-						'title' => esc_html__( 'Left', 'better-payment' ),
-						'icon' => 'eicon-text-align-left',
-					],
-					'right' => [
-						'title' => esc_html__( 'Right', 'better-payment' ),
-						'icon' => 'eicon-text-align-right',
-					],
-				],
-			]
-		);
-
-        $widget->add_control(
-            'better_payment_paypal_business_email',
-            [
-                'label'       => __( 'Business Email', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'dynamic'     => [
-                    'active' => true,
-                ],
-                'label_block' => true,
-                'default' => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_email']),
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-
-        $widget->add_control(
-            'better_payment_paypal_button_type',
-            [
-                'label'   => esc_html__( 'Button Type', 'better-payment' ),
-                'type'    => Controls_Manager::HIDDEN,
-                'default' => '_xclick',
-                'options' => [
-                    '_xclick'    => 'XCLICK',
-                    '_cart'      => 'CART',
-                    '_donations' => 'DONATIONS'
+            $widget->start_controls_section(
+                'section_paypal_payment',
+                [
+                    'label'     => __( 'PayPal', 'better-payment' ),
+                    'condition' => [
+                        'submit_actions' => $this->get_name(),
+                        'better_payment_payment_amount_enable' => 'yes'
+                    ],
                 ]
-            ]
-        );
+            );
 
-        $widget->add_control(
-            'better_payment_paypal_live_mode',
-            [
-                'label'        => __( 'Live Mode', 'better-payment' ),
-                'type'         => Controls_Manager::SWITCHER,
-                'label_on'     => __( 'Yes', 'better-payment' ),
-                'label_off'    => __( 'No', 'better-payment' ),
-                'return_value' => 'yes',
-                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
-            ]
-        );
-        $widget->end_controls_section();
+            $better_payment_helper = new \Better_Payment\Lite\Classes\Helper();
+
+            $widget->add_control(
+                'better_payment_form_paypal_currency',
+                [
+                    'label'   => esc_html__( 'Currency', 'better-payment' ),
+                    'type'    => Controls_Manager::SELECT,
+                    'default' => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_currency']),
+                    'options' => $better_payment_helper->get_currency_list(),
+                ]
+            );
+
+            $widget->add_control(
+                'better_payment_form_currency_alignment_paypal',
+                [
+                    'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
+                    'type' => Controls_Manager::CHOOSE,
+                    'options' => [
+                        'left' => [
+                            'title' => esc_html__( 'Left', 'better-payment' ),
+                            'icon' => 'eicon-text-align-left',
+                        ],
+                        'right' => [
+                            'title' => esc_html__( 'Right', 'better-payment' ),
+                            'icon' => 'eicon-text-align-right',
+                        ],
+                    ],
+                ]
+            );
+
+            $widget->add_control(
+                'better_payment_paypal_business_email',
+                [
+                    'label'       => __( 'Business Email', 'better-payment' ),
+                    'type'        => Controls_Manager::TEXT,
+                    'dynamic'     => [
+                        'active' => true,
+                    ],
+                    'label_block' => true,
+                    'default' => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_email']),
+                    'ai' => [
+                        'active' => false,
+                    ],
+                ]
+            );
+
+            $widget->add_control(
+                'better_payment_paypal_button_type',
+                [
+                    'label'   => esc_html__( 'Button Type', 'better-payment' ),
+                    'type'    => Controls_Manager::HIDDEN,
+                    'default' => '_xclick',
+                    'options' => [
+                        '_xclick'    => 'XCLICK',
+                        '_cart'      => 'CART',
+                        '_donations' => 'DONATIONS'
+                    ]
+                ]
+            );
+
+            $widget->add_control(
+                'better_payment_paypal_live_mode',
+                [
+                    'label'        => __( 'Live Mode', 'better-payment' ),
+                    'type'         => Controls_Manager::SWITCHER,
+                    'label_on'     => __( 'Yes', 'better-payment' ),
+                    'label_off'    => __( 'No', 'better-payment' ),
+                    'return_value' => 'yes',
+                    'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
+                ]
+            );
+            $widget->end_controls_section();
+        }
     }
 
     /**

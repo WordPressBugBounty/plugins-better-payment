@@ -454,6 +454,7 @@ class Handler extends Controller{
             'ILS' => "₪",
             'JPY' => "¥",
             'MXN' => "$",
+            'MYR' => "MYR",
             'NOK' => "kr",
             'NZD' => "$",
             'PHP' => "₱",
