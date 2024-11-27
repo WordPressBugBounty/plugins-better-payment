@@ -12,6 +12,7 @@ use Elementor\Group_Control_Background;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Typography;
+use Elementor\Plugin;
 use \Elementor\Repeater;
 use Elementor\Utils;
 use \Elementor\Widget_Base as Widget_Base;
@@ -82,630 +83,633 @@ class Better_Payment_Widget extends Widget_Base {
     }
 
     protected function register_controls() {
-        if ( current_user_can('manage_options') ) {
-            $this->better_payment_global_settings = DB::get_settings();
+        $this->better_payment_global_settings = DB::get_settings();
 
-            $this->start_controls_section(
-                'better_payment_form_setting',
-                [
-                    'label' => esc_html__( 'Payment Settings', 'better-payment' ),
-                ]
-            );
-            
-            do_action('better_payment/elementor/editor/layouts_payment_settings_section', $this);
-            
-            $this->add_control(
-                'better_payment_form_layout',
-                [
-                    'label'      => esc_html__( 'Form Layout', 'better-payment' ),
-                    'type'       => Controls_Manager::SELECT,
-                    'default'    => 'layout-1',
-                    'options'    => $this->better_payment_free_layouts(),
-                ]
-            );
+        $is_edit_mode = Plugin::instance()->editor->is_edit_mode();
 
-            $this->add_control(
-                'better_payment_form_payment_type',
-                [
-                    'label'      => esc_html__( 'Payment Type', 'better-payment' ),
-                    'description' => esc_html__( 'Recurring and Split Payment is available for Stripe only at the moment!', 'better-payment' ),
-                    'type'       => Controls_Manager::SELECT,
-                    'default'    => 'one-time',
-                    'options'    => [
-                        'one-time' => 'One Time',
-                        'recurring' => 'Recurring',
-                        'split-payment' => 'Split Payment',
-                    ],
-                    'condition'   => [
-                        'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                    ],
-                ]
-            );
+        if ( $is_edit_mode && ( ! current_user_can('manage_options') ) ) {
+            $this->better_payment_global_settings = [];
+        }
 
-            $this->add_control(
-                'better_payment_form_recurring_price_id',
-                [
-                    'label'       => esc_html__( 'Default Price ID', 'better-payment' ),
-                    'type'        => Controls_Manager::TEXT,
-                    'description' => sprintf( 
-                        __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p>', 'better-payment' ), 
-                        esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'), 
-                    ),
-                    'placeholder' => 'price_G0FvDp6vZvdwRZ',
-                    'label_block' => true,
-                    'ai' => [
-                        'active' => false,
-                    ],
-                    'condition'   => [
-                        'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
-                        'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                    ],
-                    'separator' => 'before',
-                ]
-            );
+        $this->start_controls_section(
+            'better_payment_form_setting',
+            [
+                'label' => esc_html__( 'Payment Settings', 'better-payment' ),
+            ]
+        );
+        
+        do_action('better_payment/elementor/editor/layouts_payment_settings_section', $this);
+        
+        $this->add_control(
+            'better_payment_form_layout',
+            [
+                'label'      => esc_html__( 'Form Layout', 'better-payment' ),
+                'type'       => Controls_Manager::SELECT,
+                'default'    => 'layout-1',
+                'options'    => $this->better_payment_free_layouts(),
+            ]
+        );
 
-            $repeater_split_payment = new Repeater();
-
-            $repeater_split_payment->add_control(
-                'better_payment_split_installment_name',
-                [
-                    'label' => esc_html__( 'Installment Name', 'better-payment' ),
-                    'type'  => Controls_Manager::TEXT,
-                    'placeholder' => '3 Months',
-                    'label_block' => true,
-                    'ai' => [
-                        'active' => false,
-                    ],
-                ]
-            );
-            
-            $repeater_split_payment->add_control(
-                'better_payment_split_installment_price_id',
-                [
-                    'label' => esc_html__( 'Price ID', 'better-payment' ),
-                    'type'  => Controls_Manager::TEXT,
-                    'placeholder' => 'price_G0FvDp6vZvdwRZ',
-                    'label_block' => true,
-                    'ai' => [
-                        'active' => false,
-                    ],
-                ]
-            );
-
-            $repeater_split_payment->add_control(
-                'better_payment_split_installment_iteration',
-                [
-                    'label' => esc_html__( 'Iterations', 'better-payment' ),
-                    'type'  => Controls_Manager::NUMBER,
-                    'min'   => 1,
-                    'max'   => 36,
-                ]
-            );
-            
-            $this->add_control(
-                'better_payment_split_installment_price_ids_note',
-                [
-                    'type'        => Controls_Manager::RAW_HTML,
-                    'raw' => sprintf( 
-                        __( '<p>Now add more prices to the product from Stripe dashboard and <a href="%1$s" target="_blank">get the price id for each installment.</a></p>', 'better-payment' ), 
-                        esc_url('//betterpayment.co/docs/configure-split-payment-into-subscriptions/'), 
-                    ),
-                    'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
-                    'ai' => [
-                        'active' => false,
-                    ],
-                    'condition'   => [
-                        'better_payment_form_payment_type' => 'split-payment',
-                        'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                    ],
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_split_installment_price_ids',
-                [
-                    'label'       => esc_html__( 'Installments', 'better-payment' ),
-                    'type'        => Controls_Manager::REPEATER,
-                    'separator'   => 'after',
-                    'default'     => [
-                        [
-                            'better_payment_split_installment_name' => '3 Months',
-                            'better_payment_split_installment_price_id' => '',
-                            'better_payment_split_installment_iteration' => 3,
-                        ],
-                        [
-                            'better_payment_split_installment_name' => '6 Months',
-                            'better_payment_split_installment_price_id' => '',
-                            'better_payment_split_installment_iteration' => 6,
-                        ],
-                        [
-                            'better_payment_split_installment_name' => '9 Months',
-                            'better_payment_split_installment_price_id' => '',
-                            'better_payment_split_installment_iteration' => 9,
-                        ],
-                        [
-                            'better_payment_split_installment_name' => '12 Months',
-                            'better_payment_split_installment_price_id' => '',
-                            'better_payment_split_installment_iteration' => 12,
-                        ],
-                    ],
-                    'fields'      => $repeater_split_payment->get_controls(),
-                    'title_field' => '<i class="{{ better_payment_split_installment_name }}" aria-hidden="true"></i> {{{ better_payment_split_installment_name }}}',
-                    'condition'   => [
-                        'better_payment_form_payment_type' => 'split-payment',
-                        'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                    ],
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_recurring_webhook_stripe_secret',
-                [
-                    'label'       => esc_html__( 'Webhook Secret', 'better-payment' ),
-                    'type'        => Controls_Manager::TEXT,
-                    'description' => sprintf( 
-                        __( '<p>Create a webhook endpoint from Stripe dashboard and <a href="%1$s" target="_blank">get the webhook secret.</a></p>', 'better-payment' ), 
-                        esc_url('//betterpayment.co/docs/add-webhook-endpoint-recurring-better-payment/'), 
-                    ),
-                    'placeholder' => 'whsec_...',
-                    'label_block' => true,
-                    'ai' => [
-                        'active' => false,
-                    ],
-                    'condition'   => [
-                        'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
-                        'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                    ],
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_recurring_webhook_stripe',
-                [
-                    'type'        => Controls_Manager::RAW_HTML,
-                    'raw' => sprintf( 
-                        __( '<p><a href="%1$s" target="_blank">Your webhook endpoint url »</a><br>%2$s</p>', 'better-payment' ), 
-                        esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
-                        esc_url_raw( get_permalink( get_the_ID() ) . '?webhook-stripe=1' ) 
-                    ),
-                    'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
-                    'ai' => [
-                        'active' => false,
-                    ],
-                    'condition'   => [
-                        'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
-                        'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                    ],
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_payment_source',
-                [
-                    'label'      => esc_html__( 'Payment Source', 'better-payment' ),
-                    'type'       => Controls_Manager::SELECT,
-                    'default'    => 'manual',
-                    'options'    => [
-                        'manual' => 'Manual',
-                        'woocommerce' => 'WooCommerce',
-                    ],
-                    'condition' => [
-                        'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                    ],
-                ]
-            );
-
-            $this->add_control( 'better_payment_form_payment_source_notice', [
-                'type'            => Controls_Manager::RAW_HTML,
-                'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=woocommerce&tab=search&type=term') ),
-                'content_classes' => 'eael-warning',
-                'conditions' => [
-                    'relation' => 'and',
-                    'terms' => [
-                        [
-                            'name' => 'better_payment_form_layout',
-                            'operator' => '!=',
-                            'value' => 'layout-4-pro',
-                        ],
-                        [
-                            'name' => 'better_payment_form_layout',
-                            'operator' => '!=',
-                            'value' => 'layout-5-pro',
-                        ],
-                        [
-                            'relation' => 'or',
-                            'terms' => [
-                                [
-                                    'name' => 'better_payment_form_payment_source',
-                                    'value' => 'woocommerce' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
-                                ],
-                                [
-                                    'name' => 'better_payment_form_layout',
-                                    'value' => 'layout-6-pro' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
-                                ],
-                            ],
-                        ],
-                    ],
+        $this->add_control(
+            'better_payment_form_payment_type',
+            [
+                'label'      => esc_html__( 'Payment Type', 'better-payment' ),
+                'description' => esc_html__( 'Recurring and Split Payment is available for Stripe only at the moment!', 'better-payment' ),
+                'type'       => Controls_Manager::SELECT,
+                'default'    => 'one-time',
+                'options'    => [
+                    'one-time' => 'One Time',
+                    'recurring' => 'Recurring',
+                    'split-payment' => 'Split Payment',
                 ],
-            ] );
+                'condition'   => [
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
 
-            $this->add_control(
-                'better_payment_form_woocommerce_product_section',
-                [
-                    'label' => __( 'Product', 'better-payment' ),
-                    'type'  => Controls_Manager::HIDDEN,
-                    'condition' => [
-                        'better_payment_form_payment_source' => 'woocommerce',
-                    ],
-                ]
-            );
-
-            $this->add_control( "better_payment_form_woocommerce_product_id", [
-                'label'       => __( 'Choose a Product', 'better-payment' ),
-                'description' => __( 'Enter Product IDs separated by a comma', 'better-payment' ),
-                'type'        => 'better-payment-select2',
+        $this->add_control(
+            'better_payment_form_recurring_price_id',
+            [
+                'label'       => esc_html__( 'Default Price ID', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'description' => sprintf( 
+                    __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p>', 'better-payment' ), 
+                    esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'), 
+                ),
+                'placeholder' => 'price_G0FvDp6vZvdwRZ',
                 'label_block' => true,
-                'multiple'    => false,
-                'source_name' => 'post_type',
-                'source_type' => 'product',
-                'placeholder' => __( 'Search By', 'better-payment' ),
-                'conditions' => $this->payment_source_woo_conditions(),
-                'separator' => 'after',
-                'default'     => __( '1', 'better-payment' ),
-                'dynamic'     => [
+                'ai' => [
                     'active' => false,
                 ],
-            ] );
+                'condition'   => [
+                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+                'separator' => 'before',
+            ]
+        );
 
-            $this->add_control('better_payment_form_woocommerce_product_ids', [
-                'label' => esc_html__('Select Products', 'better-payment'),
-                'type'        => 'better-payment-select2',
+        $repeater_split_payment = new Repeater();
+
+        $repeater_split_payment->add_control(
+            'better_payment_split_installment_name',
+            [
+                'label' => esc_html__( 'Installment Name', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => '3 Months',
                 'label_block' => true,
-                'multiple' => true,
-                'source_name' => 'post_type',
-                'source_type' => 'product',
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+        
+        $repeater_split_payment->add_control(
+            'better_payment_split_installment_price_id',
+            [
+                'label' => esc_html__( 'Price ID', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => 'price_G0FvDp6vZvdwRZ',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $repeater_split_payment->add_control(
+            'better_payment_split_installment_iteration',
+            [
+                'label' => esc_html__( 'Iterations', 'better-payment' ),
+                'type'  => Controls_Manager::NUMBER,
+                'min'   => 1,
+                'max'   => 36,
+            ]
+        );
+        
+        $this->add_control(
+            'better_payment_split_installment_price_ids_note',
+            [
+                'type'        => Controls_Manager::RAW_HTML,
+                'raw' => sprintf( 
+                    __( '<p>Now add more prices to the product from Stripe dashboard and <a href="%1$s" target="_blank">get the price id for each installment.</a></p>', 'better-payment' ), 
+                    esc_url('//betterpayment.co/docs/configure-split-payment-into-subscriptions/'), 
+                ),
+                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition'   => [
+                    'better_payment_form_payment_type' => 'split-payment',
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_split_installment_price_ids',
+            [
+                'label'       => esc_html__( 'Installments', 'better-payment' ),
+                'type'        => Controls_Manager::REPEATER,
+                'separator'   => 'after',
+                'default'     => [
+                    [
+                        'better_payment_split_installment_name' => '3 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 3,
+                    ],
+                    [
+                        'better_payment_split_installment_name' => '6 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 6,
+                    ],
+                    [
+                        'better_payment_split_installment_name' => '9 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 9,
+                    ],
+                    [
+                        'better_payment_split_installment_name' => '12 Months',
+                        'better_payment_split_installment_price_id' => '',
+                        'better_payment_split_installment_iteration' => 12,
+                    ],
+                ],
+                'fields'      => $repeater_split_payment->get_controls(),
+                'title_field' => '<i class="{{ better_payment_split_installment_name }}" aria-hidden="true"></i> {{{ better_payment_split_installment_name }}}',
+                'condition'   => [
+                    'better_payment_form_payment_type' => 'split-payment',
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_recurring_webhook_stripe_secret',
+            [
+                'label'       => esc_html__( 'Webhook Secret', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'description' => sprintf( 
+                    __( '<p>Create a webhook endpoint from Stripe dashboard and <a href="%1$s" target="_blank">get the webhook secret.</a></p>', 'better-payment' ), 
+                    esc_url('//betterpayment.co/docs/add-webhook-endpoint-recurring-better-payment/'), 
+                ),
+                'placeholder' => 'whsec_...',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition'   => [
+                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_recurring_webhook_stripe',
+            [
+                'type'        => Controls_Manager::RAW_HTML,
+                'raw' => sprintf( 
+                    __( '<p><a href="%1$s" target="_blank">Your webhook endpoint url »</a><br>%2$s</p>', 'better-payment' ), 
+                    esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
+                    esc_url_raw( get_permalink( get_the_ID() ) . '?webhook-stripe=1' ) 
+                ),
+                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition'   => [
+                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
+                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_payment_source',
+            [
+                'label'      => esc_html__( 'Payment Source', 'better-payment' ),
+                'type'       => Controls_Manager::SELECT,
+                'default'    => 'manual',
+                'options'    => [
+                    'manual' => 'Manual',
+                    'woocommerce' => 'WooCommerce',
+                ],
                 'condition' => [
-                    'better_payment_form_layout' => ['layout-6-pro'],
+                    'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
-            ]);
+            ]
+        );
 
-            $this->add_control(
-                'better_payment_form_paypal_enable',
-                [
-                    'label'        => __( 'Enable PayPal', 'better-payment' ),
-                    'type'         => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paypal']), //yes or no
-                    'separator'    => 'before',
-                    'condition' => [
-                        'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
+        $this->add_control( 'better_payment_form_payment_source_notice', [
+            'type'            => Controls_Manager::RAW_HTML,
+            'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=woocommerce&tab=search&type=term') ),
+            'content_classes' => 'eael-warning',
+            'conditions' => [
+                'relation' => 'and',
+                'terms' => [
+                    [
+                        'name' => 'better_payment_form_layout',
+                        'operator' => '!=',
+                        'value' => 'layout-4-pro',
                     ],
-                ]
-            );
-
-            $this->add_control( 'better_payment_form_paypal_enable_notice', [
-                'type'            => Controls_Manager::RAW_HTML,
-                'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>PayPal (Business Email) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
-                'content_classes' => 'eael-warning',
-                'condition'       => [
-                    'better_payment_form_paypal_enable' => 'yes',
-                    'better_payment_paypal_business_email' => '',
-                ],
-            ] );
-
-            $this->add_control(
-                'better_payment_form_stripe_enable',
-                [
-                    'label'        => __( 'Enable Stripe', 'better-payment' ),
-                    'type'         => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_stripe']), //yes or no
-                ]
-            );
-
-            $this->add_control( 'better_payment_form_stripe_enable_notice', [
-                'type'            => Controls_Manager::RAW_HTML,
-                'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Stripe (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
-                'content_classes' => 'eael-warning',
-                'conditions' => [
-                    'relation' => 'and',
-                    'terms' => [
-                        [
-                            'name' => 'better_payment_form_stripe_enable',
-                            'value' => 'yes',
-                        ],
-                        [
-                            'relation' => 'or',
-                            'terms' => [
-                                [
-                                    'name' => 'better_payment_stripe_public_key',
-                                    'value' => '',
-                                ],
-                                [
-                                    'name' => 'better_payment_stripe_secret_key',
-                                    'value' => '',
-                                ],
-                            ],
-                        ],
+                    [
+                        'name' => 'better_payment_form_layout',
+                        'operator' => '!=',
+                        'value' => 'layout-5-pro',
                     ],
-                ],
-            ] );
-
-            $this->add_control(
-                'better_payment_form_paystack_enable',
-                [
-                    'label'        => __( 'Enable Paystack', 'better-payment' ),
-                    'type'         => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => ! empty( $this->better_payment_global_settings['better_payment_settings_general_general_paystack'] ) ? esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paystack']) : 'no', //yes or no
-                    'condition' => [
-                        'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
-                    ],
-                ]
-            );
-
-            $this->add_control( 'better_payment_form_paystack_enable_notice', [
-                'type'            => Controls_Manager::RAW_HTML,
-                'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Paystack (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
-                'content_classes' => 'eael-warning',
-                'conditions' => [
-                    'relation' => 'and',
-                    'terms' => [
-                        [
-                            'name' => 'better_payment_form_paystack_enable',
-                            'value' => 'yes',
-                        ],
-                        [
-                            'relation' => 'or',
-                            'terms' => [
-                                [
-                                    'name' => 'better_payment_paystack_public_key',
-                                    'value' => '',
-                                ],
-                                [
-                                    'name' => 'better_payment_paystack_secret_key',
-                                    'value' => '',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ] );
-            
-            $this->add_control(
-                'better_payment_form_email_enable',
-                [
-                    'label'        => __( 'Enable Email Notification', 'better-payment' ),
-                    'type'         => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_email']), //yes or no
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_sidebar_show',
-                [
-                    'label'        => __( 'Show Sidebar', 'better-payment' ),
-                    'type'         => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => 'yes',
-                ]
-            );
-
-            $better_payment_helper = new ClassesHelper();
-            $better_payment_general_currency = $this->better_payment_global_settings['better_payment_settings_general_general_currency'];
-            
-            $better_payment_general_currency_woocommerce = $better_payment_general_currency;
-            if( class_exists('woocommerce')  ) {
-                $better_payment_general_currency_woocommerce = get_woocommerce_currency() ? get_woocommerce_currency() : $better_payment_general_currency_woocommerce;        
-            }
-            
-            $this->add_control(
-                'better_payment_form_currency_use_woocommerce',
-                [
-                    'label'      => esc_html__( 'Use WooCommerce Currency?', 'better-payment' ),
-                    'type'       => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => '',
-                    'conditions' => $this->payment_source_woo_conditions(),
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_currency',
-                [
-                    'label'      => esc_html__( 'Currency', 'better-payment' ),
-                    'type'       => Controls_Manager::SELECT,
-                    'default'    => esc_html($better_payment_general_currency), //USD
-                    'options'    => $better_payment_helper->get_currency_list(),
-                    'conditions' => [
+                    [
                         'relation' => 'or',
                         'terms' => [
                             [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_paypal_enable',
-                                        'value' => 'yes',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_payment_source',
-                                        'value' => 'manual',
-                                    ],
-                                ],
+                                'name' => 'better_payment_form_payment_source',
+                                'value' => 'woocommerce' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
                             ],
-
                             [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_stripe_enable',
-                                        'value' => 'yes',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_payment_source',
-                                        'value' => 'manual',
-                                    ],
-                                ],
+                                'name' => 'better_payment_form_layout',
+                                'value' => 'layout-6-pro' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
                             ],
-
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_paystack_enable',
-                                        'value' => 'yes',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_payment_source',
-                                        'value' => 'manual',
-                                    ],
-                                ],
-                            ],
-
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_paypal_enable',
-                                        'value' => 'yes',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_currency_use_woocommerce',
-                                        'value' => '',
-                                    ],
-                                ],
-                            ],
-
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_stripe_enable',
-                                        'value' => 'yes',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_currency_use_woocommerce',
-                                        'value' => '',
-                                    ],
-                                ],
-                            ],
-
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_paystack_enable',
-                                        'value' => 'yes',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_currency_use_woocommerce',
-                                        'value' => '',
-                                    ],
-                                ],
-                            ],
-                            
                         ],
                     ],
-                ]
-            );
+                ],
+            ],
+        ] );
 
-            $this->add_control(
-                'better_payment_form_currency_woocommerce',
-                [
-                    'label'      => esc_html__( 'WooCommerce Currency', 'better-payment' ),
-                    'type'       => Controls_Manager::SELECT,
-                    'default'    => $better_payment_general_currency_woocommerce,
-                    'options'    => [ 
-                        $better_payment_general_currency_woocommerce => $better_payment_general_currency_woocommerce,
+        $this->add_control(
+            'better_payment_form_woocommerce_product_section',
+            [
+                'label' => __( 'Product', 'better-payment' ),
+                'type'  => Controls_Manager::HIDDEN,
+                'condition' => [
+                    'better_payment_form_payment_source' => 'woocommerce',
+                ],
+            ]
+        );
+
+        $this->add_control( "better_payment_form_woocommerce_product_id", [
+            'label'       => __( 'Choose a Product', 'better-payment' ),
+            'description' => __( 'Enter Product IDs separated by a comma', 'better-payment' ),
+            'type'        => 'better-payment-select2',
+            'label_block' => true,
+            'multiple'    => false,
+            'source_name' => 'post_type',
+            'source_type' => 'product',
+            'placeholder' => __( 'Search By', 'better-payment' ),
+            'conditions' => $this->payment_source_woo_conditions(),
+            'separator' => 'after',
+            'default'     => __( '1', 'better-payment' ),
+            'dynamic'     => [
+                'active' => false,
+            ],
+        ] );
+
+        $this->add_control('better_payment_form_woocommerce_product_ids', [
+            'label' => esc_html__('Select Products', 'better-payment'),
+            'type'        => 'better-payment-select2',
+            'label_block' => true,
+            'multiple' => true,
+            'source_name' => 'post_type',
+            'source_type' => 'product',
+            'condition' => [
+                'better_payment_form_layout' => ['layout-6-pro'],
+            ],
+        ]);
+
+        $this->add_control(
+            'better_payment_form_paypal_enable',
+            [
+                'label'        => __( 'Enable PayPal', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paypal']), //yes or no
+                'separator'    => 'before',
+                'condition' => [
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
+                ],
+            ]
+        );
+
+        $this->add_control( 'better_payment_form_paypal_enable_notice', [
+            'type'            => Controls_Manager::RAW_HTML,
+            'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>PayPal (Business Email) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
+            'content_classes' => 'eael-warning',
+            'condition'       => [
+                'better_payment_form_paypal_enable' => 'yes',
+                'better_payment_paypal_business_email' => '',
+            ],
+        ] );
+
+        $this->add_control(
+            'better_payment_form_stripe_enable',
+            [
+                'label'        => __( 'Enable Stripe', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_stripe']), //yes or no
+            ]
+        );
+
+        $this->add_control( 'better_payment_form_stripe_enable_notice', [
+            'type'            => Controls_Manager::RAW_HTML,
+            'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Stripe (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
+            'content_classes' => 'eael-warning',
+            'conditions' => [
+                'relation' => 'and',
+                'terms' => [
+                    [
+                        'name' => 'better_payment_form_stripe_enable',
+                        'value' => 'yes',
                     ],
-                    'condition' => [
-                        'better_payment_form_payment_source' => 'woocommerce',
-                        'better_payment_form_currency_use_woocommerce' => 'yes',
-
-                    ]
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_currency_notice',
-                [
-                    'type'            => Controls_Manager::RAW_HTML,
-                    'raw'             => sprintf( __( 'Supported by %sStripe%s only', 'better-payment' ), '<strong>', '</strong>' ),
-                    'content_classes' => 'eael-warning',
-                    'conditions' => [
-                        'relation' => 'and',
-                        'terms'    => [
+                    [
+                        'relation' => 'or',
+                        'terms' => [
                             [
-                                'name'     => 'better_payment_form_paypal_enable',
-                                'value'    => 'yes',
+                                'name' => 'better_payment_stripe_public_key',
+                                'value' => '',
                             ],
                             [
-                                'relation' => 'or',
-                                'terms'    => [
-                                    [
-                                        'name'     => 'better_payment_form_currency',
-                                        'value'    => 'AED',
-                                    ],
-                                    [
-                                        'name'     => 'better_payment_form_currency',
-                                        'value'    => 'ZAR',
-                                    ],
-                                    [
-                                        'name'     => 'better_payment_form_currency',
-                                        'value'    => 'BGN',
-                                    ],
-                                ],
-                            ]
-                        ],
-                    ]
-                ]
-            );
-
-            $this->add_control(
-                'better_payment_form_currency_alignment',
-                [
-                    'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
-                    'type' => Controls_Manager::CHOOSE,
-                    'options' => [
-                        'left' => [
-                            'title' => esc_html__( 'Left', 'better-payment' ),
-                            'icon' => 'eicon-text-align-left',
-                        ],
-                        'right' => [
-                            'title' => esc_html__( 'Right', 'better-payment' ),
-                            'icon' => 'eicon-text-align-right',
+                                'name' => 'better_payment_stripe_secret_key',
+                                'value' => '',
+                            ],
                         ],
                     ],
-                ]
-            );
+                ],
+            ],
+        ] );
 
-            $this->end_controls_section();
+        $this->add_control(
+            'better_payment_form_paystack_enable',
+            [
+                'label'        => __( 'Enable Paystack', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => ! empty( $this->better_payment_global_settings['better_payment_settings_general_general_paystack'] ) ? esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paystack']) : 'no', //yes or no
+                'condition' => [
+                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
+                ],
+            ]
+        );
+
+        $this->add_control( 'better_payment_form_paystack_enable_notice', [
+            'type'            => Controls_Manager::RAW_HTML,
+            'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Paystack (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
+            'content_classes' => 'eael-warning',
+            'conditions' => [
+                'relation' => 'and',
+                'terms' => [
+                    [
+                        'name' => 'better_payment_form_paystack_enable',
+                        'value' => 'yes',
+                    ],
+                    [
+                        'relation' => 'or',
+                        'terms' => [
+                            [
+                                'name' => 'better_payment_paystack_public_key',
+                                'value' => '',
+                            ],
+                            [
+                                'name' => 'better_payment_paystack_secret_key',
+                                'value' => '',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ] );
         
-            $this->form_element_settings();
-            $this->paypal_form_setting();
-            $this->stripe_form_setting();
-            $this->paystack_form_setting();
-            $this->email_element_settings();
+        $this->add_control(
+            'better_payment_form_email_enable',
+            [
+                'label'        => __( 'Enable Email Notification', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_email']), //yes or no
+            ]
+        );
 
-            $this->success_message_setting();
-            $this->error_message_setting();
+        $this->add_control(
+            'better_payment_form_sidebar_show',
+            [
+                'label'        => __( 'Show Sidebar', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => 'yes',
+            ]
+        );
 
-            $this->form_style();
+        $better_payment_helper = new ClassesHelper();
+        $better_payment_general_currency = $this->better_payment_global_settings['better_payment_settings_general_general_currency'];
+        
+        $better_payment_general_currency_woocommerce = $better_payment_general_currency;
+        if( class_exists('woocommerce')  ) {
+            $better_payment_general_currency_woocommerce = get_woocommerce_currency() ? get_woocommerce_currency() : $better_payment_general_currency_woocommerce;        
         }
+        
+        $this->add_control(
+            'better_payment_form_currency_use_woocommerce',
+            [
+                'label'      => esc_html__( 'Use WooCommerce Currency?', 'better-payment' ),
+                'type'       => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => '',
+                'conditions' => $this->payment_source_woo_conditions(),
+            ]
+        );
 
+        $this->add_control(
+            'better_payment_form_currency',
+            [
+                'label'      => esc_html__( 'Currency', 'better-payment' ),
+                'type'       => Controls_Manager::SELECT,
+                'default'    => esc_html($better_payment_general_currency), //USD
+                'options'    => $better_payment_helper->get_currency_list(),
+                'conditions' => [
+                    'relation' => 'or',
+                    'terms' => [
+                        [
+                            'relation' => 'and',
+                            'terms' => [
+                                [
+                                    'name' => 'better_payment_form_paypal_enable',
+                                    'value' => 'yes',
+                                ],
+                                [
+                                    'name' => 'better_payment_form_payment_source',
+                                    'value' => 'manual',
+                                ],
+                            ],
+                        ],
+
+                        [
+                            'relation' => 'and',
+                            'terms' => [
+                                [
+                                    'name' => 'better_payment_form_stripe_enable',
+                                    'value' => 'yes',
+                                ],
+                                [
+                                    'name' => 'better_payment_form_payment_source',
+                                    'value' => 'manual',
+                                ],
+                            ],
+                        ],
+
+                        [
+                            'relation' => 'and',
+                            'terms' => [
+                                [
+                                    'name' => 'better_payment_form_paystack_enable',
+                                    'value' => 'yes',
+                                ],
+                                [
+                                    'name' => 'better_payment_form_payment_source',
+                                    'value' => 'manual',
+                                ],
+                            ],
+                        ],
+
+                        [
+                            'relation' => 'and',
+                            'terms' => [
+                                [
+                                    'name' => 'better_payment_form_paypal_enable',
+                                    'value' => 'yes',
+                                ],
+                                [
+                                    'name' => 'better_payment_form_currency_use_woocommerce',
+                                    'value' => '',
+                                ],
+                            ],
+                        ],
+
+                        [
+                            'relation' => 'and',
+                            'terms' => [
+                                [
+                                    'name' => 'better_payment_form_stripe_enable',
+                                    'value' => 'yes',
+                                ],
+                                [
+                                    'name' => 'better_payment_form_currency_use_woocommerce',
+                                    'value' => '',
+                                ],
+                            ],
+                        ],
+
+                        [
+                            'relation' => 'and',
+                            'terms' => [
+                                [
+                                    'name' => 'better_payment_form_paystack_enable',
+                                    'value' => 'yes',
+                                ],
+                                [
+                                    'name' => 'better_payment_form_currency_use_woocommerce',
+                                    'value' => '',
+                                ],
+                            ],
+                        ],
+                        
+                    ],
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_currency_woocommerce',
+            [
+                'label'      => esc_html__( 'WooCommerce Currency', 'better-payment' ),
+                'type'       => Controls_Manager::SELECT,
+                'default'    => $better_payment_general_currency_woocommerce,
+                'options'    => [ 
+                    $better_payment_general_currency_woocommerce => $better_payment_general_currency_woocommerce,
+                ],
+                'condition' => [
+                    'better_payment_form_payment_source' => 'woocommerce',
+                    'better_payment_form_currency_use_woocommerce' => 'yes',
+
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_currency_notice',
+            [
+                'type'            => Controls_Manager::RAW_HTML,
+                'raw'             => sprintf( __( 'Supported by %sStripe%s only', 'better-payment' ), '<strong>', '</strong>' ),
+                'content_classes' => 'eael-warning',
+                'conditions' => [
+                    'relation' => 'and',
+                    'terms'    => [
+                        [
+                            'name'     => 'better_payment_form_paypal_enable',
+                            'value'    => 'yes',
+                        ],
+                        [
+                            'relation' => 'or',
+                            'terms'    => [
+                                [
+                                    'name'     => 'better_payment_form_currency',
+                                    'value'    => 'AED',
+                                ],
+                                [
+                                    'name'     => 'better_payment_form_currency',
+                                    'value'    => 'ZAR',
+                                ],
+                                [
+                                    'name'     => 'better_payment_form_currency',
+                                    'value'    => 'BGN',
+                                ],
+                            ],
+                        ]
+                    ],
+                ]
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_currency_alignment',
+            [
+                'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
+                'type' => Controls_Manager::CHOOSE,
+                'options' => [
+                    'left' => [
+                        'title' => esc_html__( 'Left', 'better-payment' ),
+                        'icon' => 'eicon-text-align-left',
+                    ],
+                    'right' => [
+                        'title' => esc_html__( 'Right', 'better-payment' ),
+                        'icon' => 'eicon-text-align-right',
+                    ],
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
+    
+        $this->form_element_settings();
+        $this->paypal_form_setting();
+        $this->stripe_form_setting();
+        $this->paystack_form_setting();
+        $this->email_element_settings();
+
+        $this->success_message_setting();
+        $this->error_message_setting();
+
+        $this->form_style();
     }
 
     public function payment_source_woo_conditions(){
@@ -3587,8 +3591,9 @@ class Better_Payment_Widget extends Widget_Base {
      * @since 1.0.0
      */
     protected function render() {
+        $is_edit_mode = Plugin::instance()->editor->is_edit_mode();
 
-        if ( ! current_user_can('manage_options') ) {
+        if ( $is_edit_mode && ( ! current_user_can('manage_options') ) ) {
             return;
         }
         

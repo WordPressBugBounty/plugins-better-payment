@@ -5,7 +5,7 @@ Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.2.4
+Stable tag: 1.2.5
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,6 +162,10 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.2.5 - 27/11/2024 =
+- Fixed: Form visibility issue fixed
+- Few minor bug fixes & improvements
 
 = 1.2.4 - 25/11/2024 =
 - Added: MYR currency support
