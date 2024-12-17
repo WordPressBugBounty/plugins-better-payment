@@ -171,11 +171,11 @@ $transaction_filter_per_page = !empty($args['per_page']) ? $args['per_page'] : 2
             <div class="bp-col-3">
                 <p class="showing-entities-html">
                     <select class="per-page" name="per_page" id="">
-                        <option value="10" <?php 10 === $transaction_filter_per_page ? esc_attr_e('selected') : '' ?> ><?php esc_html_e('10', 'better-payment'); ?></option>
-                        <option value="20" <?php 20 === $transaction_filter_per_page ? esc_attr_e('selected') : '' ?> ><?php esc_html_e('20', 'better-payment'); ?></option>
-                        <option value="50" <?php 50 === $transaction_filter_per_page ? esc_attr_e('selected') : '' ?> ><?php esc_html_e('50', 'better-payment'); ?></option>
-                        <option value="100" <?php 100 === $transaction_filter_per_page ? esc_attr_e('selected') : '' ?> ><?php esc_html_e('100', 'better-payment'); ?></option>
-                        <option value="<?php echo esc_attr($bp_admin_all_transactions_count); ?>" <?php $bp_admin_all_transactions_count === $transaction_filter_per_page ? esc_attr_e('selected') : '' ?>>All</option>
+                        <option value="10" <?php echo 10 === $transaction_filter_per_page ? esc_attr('selected') : '' ?> ><?php esc_html_e('10', 'better-payment'); ?></option>
+                        <option value="20" <?php echo 20 === $transaction_filter_per_page ? esc_attr('selected') : '' ?> ><?php esc_html_e('20', 'better-payment'); ?></option>
+                        <option value="50" <?php echo 50 === $transaction_filter_per_page ? esc_attr('selected') : '' ?> ><?php esc_html_e('50', 'better-payment'); ?></option>
+                        <option value="100" <?php echo 100 === $transaction_filter_per_page ? esc_attr('selected') : '' ?> ><?php esc_html_e('100', 'better-payment'); ?></option>
+                        <option value="<?php echo esc_attr($bp_admin_all_transactions_count); ?>" <?php echo $bp_admin_all_transactions_count === $transaction_filter_per_page ? esc_attr('selected') : '' ?>>All</option>
                     </select>    
                     <span><?php echo wp_kses( $paginations_showing_entities_html, wp_kses_allowed_html( 'post' ) ); ?></span>
                 </p>

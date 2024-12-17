@@ -1,11 +1,11 @@
 === Better Payment - Instant Payments Through PayPal & Stripe ===
-Contributors: wpdevteam, re_enter_rupok, asif2bd, robinwpdeveloper
+Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, rahatsheikhleon
 Donate link: https://wpdeveloper.com
 Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.2.5
+Stable tag: 1.2.6
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,6 +162,13 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.2.6 - 17/12/2024 =
+- Added: Decimal point support added for dynamic value 
+- Revamped: User Dashboard | Responsive design improved 
+- Fixed: Textdomain mismatched issue fixed
+- Fixed: Function _load_textdomain_just_in_time was called incorrectly notice
+- Few minor bug fixes & improvements
 
 = 1.2.5 - 27/11/2024 =
 - Fixed: Form visibility issue fixed

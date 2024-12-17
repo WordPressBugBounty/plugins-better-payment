@@ -77,26 +77,6 @@ msgstr ""
 msgid "No action taken!"
 msgstr ""
 
-#: ../includes/Admin/DB.php:40, ../includes/Admin/DB.php:41, ../includes/Admin/DB.php:43, ../includes/Admin/DB.php:44
-msgid "yes"
-msgstr ""
-
-#: ../includes/Admin/DB.php:42, ../includes/Admin/DB.php:47, ../includes/Admin/DB.php:48, ../includes/Admin/DB.php:49, ../includes/Admin/DB.php:50, ../includes/Admin/DB.php:51, ../includes/Admin/DB.php:52, ../includes/Admin/DB.php:53, ../includes/Admin/DB.php:54, ../includes/Admin/DB.php:57, ../includes/Admin/DB.php:58, ../includes/Admin/DB.php:59, ../includes/Admin/DB.php:60, ../includes/Admin/DB.php:61, ../includes/Admin/DB.php:62, ../includes/Admin/DB.php:63, ../includes/Admin/DB.php:67, ../includes/Admin/DB.php:68, ../includes/Admin/DB.php:69, ../includes/Admin/DB.php:70, ../includes/Admin/DB.php:71, ../includes/Admin/DB.php:72, ../includes/Admin/DB.php:74, ../includes/Admin/DB.php:75, ../includes/Admin/DB.php:76, ../includes/Admin/DB.php:77, ../includes/Admin/DB.php:79, ../includes/Admin/DB.php:80, ../includes/Admin/DB.php:81, ../includes/Admin/DB.php:82, ../includes/Admin/views/better-payment-transaction-view.php:54, ../includes/Admin/views/better-payment-transaction-view.php:55, ../includes/Admin/views/better-payment-transaction-view.php:58, ../includes/Admin/views/better-payment-transaction-view.php:62, ../includes/Admin/views/better-payment-transaction-view.php:65, ../includes/Admin/views/better-payment-transaction-view.php:67
-msgid ""
-msgstr ""
-
-#: ../includes/Admin/DB.php:45
-msgid "USD"
-msgstr ""
-
-#: ../includes/Admin/DB.php:55, ../includes/Admin/DB.php:64
-msgid "html"
-msgstr ""
-
-#: ../includes/Admin/DB.php:66, ../includes/Admin/DB.php:73, ../includes/Admin/DB.php:78
-msgid "no"
-msgstr ""
-
 #: ../includes/Admin/Settings.php:79, ../includes/Admin/Settings.php:80, ../includes/Classes/Actions.php:104, ../includes/Classes/Actions.php:247, ../includes/Classes/Actions.php:253, ../includes/Admin/Elementor/Better_Payment_Widget.php:59, ../includes/Admin/Elementor/Better_Payment_Widget.php:777, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
 msgid "Better Payment"
 msgstr ""
@@ -351,6 +331,66 @@ msgstr ""
 
 #: ../includes/Classes/Plugin_Usage_Tracker.php:416
 msgid "We can't detect any plugin information. This is most probably because you have not included the code in the plugin main file."
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:674
+msgid "What we collect."
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:675
+msgid "Sure, I'd like to help"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:676
+msgid "No Thanks."
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:778
+msgid "Sorry to see you go"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:779
+msgid "Before you deactivate the plugin, would you quickly give us your reason for doing so?"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:782
+msgid "I no longer need the plugin"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:784
+msgid "I found a better plugin"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:785
+msgid "Please share which plugin"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:787
+msgid "I couldn't get the plugin to work"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:788
+msgid "It's a temporary deactivation"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:790
+msgid "Other"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:791
+msgid "Please share the reason"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:834
+msgid "Submitting form"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:892
+msgid "Submit and Deactivate"
+msgstr ""
+
+#: ../includes/Classes/Plugin_Usage_Tracker.php:892
+msgid "Just Deactivate"
 msgstr ""
 
 #: ../includes/Traits/Helper.php:313
@@ -1573,6 +1613,10 @@ msgstr ""
 msgid "Back to Transactions"
 msgstr ""
 
+#: ../includes/Admin/views/better-payment-transaction-view.php:54, ../includes/Admin/views/better-payment-transaction-view.php:55, ../includes/Admin/views/better-payment-transaction-view.php:58, ../includes/Admin/views/better-payment-transaction-view.php:62, ../includes/Admin/views/better-payment-transaction-view.php:65, ../includes/Admin/views/better-payment-transaction-view.php:67
+msgid ""
+msgstr ""
+
 #: ../includes/Admin/views/better-payment-transaction-view.php:82, ../includes/Admin/views/better-payment-transaction-view.php:96, ../includes/Admin/views/better-payment-transaction-view.php:97, ../includes/Admin/views/template-transaction-list.php:142, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:163
 msgid "N/A"
 msgstr ""
@@ -1655,6 +1699,10 @@ msgstr ""
 
 #: ../includes/Admin/views/better-payment-transaction-view.php:209
 msgid "Email sent to"
+msgstr ""
+
+#: ../includes/Admin/views/page-analytics.php:13
+msgid "We are caching all data for 1 hour. To see the live data press this button!"
 msgstr ""
 
 #: ../includes/Admin/views/page-analytics.php:87

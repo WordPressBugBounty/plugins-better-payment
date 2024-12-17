@@ -2,7 +2,16 @@
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js!./src/css/common.scss ***!
   \************************************************************************************************************************************************************************************/
 .better-payment .width-100 {
+  display: inline-block;
   width: 100%;
+  max-height: 465px;
+  min-height: 465px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.better-payment .width-100 img {
+  object-fit: cover;
+  height: 100%;
 }
 .better-payment .payment-form-layout-1 .field-payment_method .bp-radio-box,
 .better-payment .payment-form-layout-1 .field-payment_method .bp-radio-box label,
@@ -3007,9 +3016,13 @@
 }
 .better-payment .th.details,
 .better-payment .td.details {
-  min-width: 145px;
-  max-width: 145px;
+  min-width: 130px;
+  max-width: 130px;
   flex: 1;
+}
+.better-payment .th.details.user-name,
+.better-payment .td.details.user-name {
+  max-width: 200px;
 }
 .better-payment .transactions .th.details:first-child,
 .better-payment .transactions .td.details:first-child {
@@ -3053,6 +3066,11 @@
 .better-payment .bp--table-wrapper .bp--table-header {
   min-width: 1640px;
 }
+.better-payment .bp--table-wrapper .bp--table-header.bp-min_width-1300 {
+  min-width: 1300px;
+  padding-left: 14px;
+  padding-right: 14px;
+}
 .better-payment .bp--table-wrapper .bp--table-header .th.details.email {
   max-width: 200px;
   min-width: 200px;
@@ -3061,8 +3079,17 @@
   max-width: 200px;
   min-width: 200px;
 }
+.better-payment .bp--table-wrapper .bp--table-header .th.user-name {
+  max-width: 200px;
+  min-width: 200px;
+}
 .better-payment .bp--table-wrapper .bp--table-body {
   min-width: 1640px;
+}
+.better-payment .bp--table-wrapper .bp--table-body.bp-min_width-1300 {
+  min-width: 1300px;
+  padding-left: 14px;
+  padding-right: 14px;
 }
 .better-payment .bp--table-wrapper .bp--table-body .td p {
   align-items: center;
@@ -3190,20 +3217,16 @@
 }
 .better-payment .td-product_logo {
   line-height: 0;
-  min-width: 24px;
-  max-width: 80px;
+  max-width: 90px;
 }
 .better-payment .td-product_logo img {
   object-fit: contain;
-  height: 30px;
+  height: 20px;
   width: 100%;
 }
 .better-payment .bp-dashboard_wrapper {
   width: 100%;
-  padding: 40px 32px 32px 32px;
   background-color: #FFFFFF;
-  border-top: 1px solid #EAECF0;
-  border-left: 1px solid #EAECF0;
 }
 .better-payment .bp-dashboard_wrapper .bp-dashboard_title {
   font-size: 32px;
@@ -3222,12 +3245,12 @@
 }
 .better-payment .bp-amount h4 {
   margin: 16px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   color: #667085;
 }
 .better-payment .bp-amount_price {
-  font-size: 40px;
+  font-size: 30px;
   font-weight: 600;
   text-align: left;
   color: #2A3256;
@@ -3237,9 +3260,20 @@
   padding: 10px 16px;
   background-color: #FAFAFC;
   width: 100%;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 400;
   color: #667085;
+}
+@media (min-width: 1500px) {
+  .better-payment .bp-amount_price {
+    font-size: 40px;
+  }
+  .better-payment .bp-amount h4 {
+    font-size: 18px;
+  }
+  .better-payment .bp-transaction {
+    font-size: 16px;
+  }
 }
 .better-payment .bp-transaction_number {
   font-weight: 500;
@@ -3290,6 +3324,9 @@
   border-bottom: 1px solid #EAECF0;
   margin-bottom: 16px;
 }
+.better-payment .bp-recent_header span {
+  line-height: 0;
+}
 .better-payment .bp-view_all-btn {
   font-size: 14px;
   font-weight: 500;
@@ -3311,7 +3348,7 @@
   margin-bottom: 4px;
 }
 .better-payment .bp-th h5 {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: #667085;
 }
@@ -3736,4 +3773,17 @@
   .better-payment .bp--table-body .td span.action-icon i {
     font-size: 16px;
   }
+}
+.better-payment .bp-no_subscription-text {
+  font-size: 14px;
+  color: #48506d;
+  font-weight: 400;
+}
+.better-payment .td-product_price span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a3256;
+}
+.better-payment .padding-0 {
+  padding: 0px;
 }

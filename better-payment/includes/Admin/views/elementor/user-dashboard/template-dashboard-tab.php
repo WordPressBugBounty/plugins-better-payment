@@ -93,11 +93,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
         <div class="bp-row">
             <?php if ($bp_settings['dashboard_analytics_report_show']) : ?>
                     <?php if ( ( ! $this->pro_enabled ) && current_user_can('manage_options') ) : ?>
-                    <p>
-                        <a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro">
+                    <div class="bp-col_10 bp-col">
+                        <a class="bp-analytics_reports" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro" >
                             <img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/' . 'user-dashboard-analytics-reports-pro-banner.png'); ?>" alt="user-dashboard-analytics-reports-pro-banner">
                         </a>
-                    </p>
+                    </div>
                     <?php endif; ?>
                     
                     <?php do_action('better_payment/widget/user-dashboard/dashboard_tab_analytics_reports', $settings, $bp_settings); ?>
@@ -107,7 +107,7 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
             <div class="bp-col_4 bp-col">
                 <div class="bp-recent_box">
                     <div class="bp-recent_header flex justify-between items-center">
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 items-center">
                             <span>
                                 <svg width="20" height="21" viewBox="0 0 20 21" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
@@ -208,11 +208,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
         <div class="bp-row">
             <?php if ($bp_settings['dashboard_recurring_subscription_show']) : ?>
                 <?php if ( ( ! $this->pro_enabled ) && current_user_can('manage_options') ) : ?>
-                <p>
+                <div class="bp-col_7 bp-col ">
                     <a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro">
                         <img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/' . 'user-dashboard-recurring-subscription-pro-banner.png'); ?>" alt="user-dashboard-recurring-subscriptions-pro-banner">
                     </a>
-                </p>
+                </div>
                 <?php endif; ?>
                 
                 <?php do_action('better_payment/widget/user-dashboard/dashboard_tab_recurring_subscriptions', $settings, $bp_settings); ?>
@@ -220,11 +220,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
 
             <?php if ($bp_settings['dashboard_split_subscription_show']) : ?>
                 <?php if ( ( ! $this->pro_enabled ) && current_user_can('manage_options') ) : ?>
-                <p>
+                <div class=" bp-col_7 bp-col">
                     <a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro">
                         <img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/' . 'user-dashboard-split-subscription-pro-banner.png'); ?>" alt="user-dashboard-split-subscriptions-pro-banner">
                     </a>
-                </p>
+                </div>
                 <?php endif; ?>
                 
                 <?php do_action('better_payment/widget/user-dashboard/dashboard_tab_split_subscriptions', $settings, $bp_settings); ?>

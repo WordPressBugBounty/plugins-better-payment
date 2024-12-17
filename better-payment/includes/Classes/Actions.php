@@ -242,7 +242,7 @@ class Actions {
             ],
             'line_items'                 => [
                 [
-                    'amount'   => ( $amount * 100 ),
+                    'amount'   => (int) round( $amount * 100 ),
                     'currency' => $el_settings_currency,
                     'name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__('Better Payment', 'better-payment'),
                     'quantity' => 1

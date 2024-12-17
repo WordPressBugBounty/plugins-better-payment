@@ -16,9 +16,9 @@ $transactions = $this->get_user_transactions();
 <div class="bp--body-content">
     <div class="bp--table-main-wrapper">
         <div class="bp--table-wrapper transaction better-payment-user-dashboard-table">
-            <div class="better-payment-user-dashboard-table-header bp--table-header flex justify-between gap-3">
+            <div class="better-payment-user-dashboard-table-header bp--table-header bp-min_width-1300 flex justify-between gap-1">
                 <?php if ( $bp_settings['transaction_table_name_show'] ) : ?>
-                <div class="th details">
+                <div class="th user-name details">
                     <h5><?php esc_html_e($bp_settings['transaction_table_name_label'], 'better-payment') ?></h5>
                 </div>
                 <?php endif; ?>
@@ -30,7 +30,7 @@ $transactions = $this->get_user_transactions();
                 <?php endif; ?>
 
                 <?php if ( $bp_settings['transaction_table_amount_show'] ) : ?>
-                <div class="th details">
+                <div class="th details amount">
                     <h5><?php esc_html_e($bp_settings['transaction_table_amount_label'], 'better-payment') ?></h5>
                 </div>
                 <?php endif; ?>
@@ -104,10 +104,10 @@ $transactions = $this->get_user_transactions();
 
                     $is_subscription = ! empty( $bp_form_fields_info['subscription_id'] ) ? 'Subscription' : 'One Time';
                     ?>
-                    <div class="better-payment-user-dashboard-table-body bp--table-body flex items-center justify-between gap-3">
+                    <div class="better-payment-user-dashboard-table-body bp--table-body bp-min_width-1300 flex items-center justify-between gap-1">
                         <?php 
                         if ( $bp_settings['transaction_table_name_show'] ) : ?>
-                        <div class="td details flex items-center gap-3">
+                        <div class="td details user-name flex items-center gap-3">
                             <p><?php if ( $is_imported ) : ?> <span title="<?php esc_attr_e('Imported', 'better-payment'); ?>" class="bp-icon bp-imported imported-icon"></span> <?php endif; ?> <?php echo esc_html( $bp_transaction_customer_name ); ?> </p>
                         </div>
                         <?php endif; ?>
@@ -119,7 +119,7 @@ $transactions = $this->get_user_transactions();
                         <?php endif; ?>
 
                         <?php if ( $bp_settings['transaction_table_amount_show'] ) : ?>
-                        <div class="td details flex items-center gap-3">
+                        <div class="td details amount flex items-center gap-3">
                             <p> <?php echo esc_html($bp_transaction->currency) . ' ' . esc_html( floatval( $bp_transaction->amount ) ); ?> </p>
                         </div>
                         <?php endif; ?>
@@ -185,7 +185,7 @@ $transactions = $this->get_user_transactions();
                 <?php endforeach; ?>
             <?php else : ?>
             <div class="flex justify-center m-5">
-                <p><?php esc_html_e($bp_settings['no_items_label'], 'better-payment'); ?></p>
+                <p class="bp-no_subscription-text"><?php esc_html_e($bp_settings['no_items_label'], 'better-payment'); ?></p>
             </div>
             <?php endif; ?>
         </div>

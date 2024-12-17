@@ -404,7 +404,7 @@ class Handler extends Controller{
                     $table,
                     array(
                         'status'        => ! empty( $response->data->status ) ? sanitize_text_field( $response->data->status ) : '',
-                        'amount'        => ! empty( $response->data->amount ) ? floatval( $response->data->amount ) : 0,
+                        'amount'        => ! empty( $response->data->amount ) ? floatval( ( $response->data->amount ) / 100 ) : 0,
                         'obj_id'        => ! empty( $response->data->id ) ? sanitize_text_field( $response->data->id ) : '',
                         'transaction_id' => ! empty( $response->data->reference ) ? sanitize_text_field( $response->data->reference ) : '',
                         'customer_info' => ! empty( $response->data->customer ) ? maybe_serialize( $response->data->customer ) : '',

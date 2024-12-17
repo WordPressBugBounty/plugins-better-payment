@@ -3756,7 +3756,7 @@ class Better_Payment_Widget extends Widget_Base {
                 
                 if ( $is_payment_amount_field ) {
                     $render_attribute_default_dynamic = ! empty( $item["better_payment_field_name_default_dynamic_enable"] ) && 'yes' ===  $item["better_payment_field_name_default_dynamic_enable"] ? 1 : 0;
-                    $render_attribute_default_text = $render_attribute_default_dynamic && ! empty( $_GET['payment_amount'] ) ? intval($_GET['payment_amount']) : '';
+                    $render_attribute_default_text = $render_attribute_default_dynamic && ! empty( $_GET['payment_amount'] ) ? floatval($_GET['payment_amount']) : '';
                 }
             endforeach;
         endif;

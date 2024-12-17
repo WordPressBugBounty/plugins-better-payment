@@ -671,9 +671,9 @@ class Plugin_Usage_Tracker
     public function set_notice_options($options = [])
     {
         $default_options = [
-            'consent_button_text' => esc_html__('What we collect.', 'disable-comments'),
-            'yes'                 => esc_html__('Sure, I\'d like to help', 'disable-comments'),
-            'no'                  => esc_html__('No Thanks.', 'disable-comments'),
+            'consent_button_text' => esc_html__('What we collect.', 'better-payment'),
+            'yes'                 => esc_html__('Sure, I\'d like to help', 'better-payment'),
+            'no'                  => esc_html__('No Thanks.', 'better-payment'),
         ];
         $options = wp_parse_args($options, $default_options);
         $this->notice_options = $options;
@@ -775,20 +775,20 @@ class Plugin_Usage_Tracker
     public function deactivation_reasons()
     {
         $form = array();
-        $form['heading'] = esc_html__('Sorry to see you go', 'disable-comments');
-        $form['body'] = esc_html__('Before you deactivate the plugin, would you quickly give us your reason for doing so?', 'disable-comments');
+        $form['heading'] = esc_html__('Sorry to see you go', 'better-payment');
+        $form['body'] = esc_html__('Before you deactivate the plugin, would you quickly give us your reason for doing so?', 'better-payment');
 
         $form['options'] = array(
-            esc_html__('I no longer need the plugin', 'disable-comments'),
+            esc_html__('I no longer need the plugin', 'better-payment'),
             [
-                'label' => esc_html__('I found a better plugin', 'disable-comments'),
-                'extra_field' => esc_html__('Please share which plugin', 'disable-comments')
+                'label' => esc_html__('I found a better plugin', 'better-payment'),
+                'extra_field' => esc_html__('Please share which plugin', 'better-payment')
             ],
-            esc_html__("I couldn't get the plugin to work", 'disable-comments'),
-            esc_html__('It\'s a temporary deactivation', 'disable-comments'),
+            esc_html__("I couldn't get the plugin to work", 'better-payment'),
+            esc_html__('It\'s a temporary deactivation', 'better-payment'),
             [
-                'label' => esc_html__('Other', 'disable-comments'),
-                'extra_field' => esc_html__('Please share the reason', 'disable-comments'),
+                'label' => esc_html__('Other', 'better-payment'),
+                'extra_field' => esc_html__('Please share the reason', 'better-payment'),
                 'type' => 'textarea'
             ]
         );
@@ -831,7 +831,7 @@ class Plugin_Usage_Tracker
             $html .= '</ul></div><!-- .wpinsights-' . esc_attr( $class_plugin_name ) . '-goodbye-options -->';
         }
         $html .= '</div><!-- .wpinsights-goodbye-form-body -->';
-        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . esc_html__('Submitting form', 'disable-comments') . '</p>';
+        $html .= '<p class="deactivating-spinner"><span class="spinner"></span> ' . esc_html__('Submitting form', 'better-payment') . '</p>';
 
         $wrapper_class = '.wpinsights-goodbye-form-wrapper-' . esc_attr( $class_plugin_name );
 
@@ -889,7 +889,7 @@ class Plugin_Usage_Tracker
                     var url = document.getElementById("wpinsights-goodbye-link-<?php echo esc_attr( $class_plugin_name ); ?>");
                     $('body').toggleClass('wpinsights-form-active-<?php echo esc_attr( $class_plugin_name ); ?>');
                     $(".wpinsights-goodbye-form-wrapper-<?php echo esc_attr( $class_plugin_name ); ?> #wpinsights-goodbye-form").fadeIn();
-                    $(".wpinsights-goodbye-form-wrapper-<?php echo esc_attr( $class_plugin_name ); ?> #wpinsights-goodbye-form").html('<?php echo $html; ?>' + '<div class="wpinsights-goodbye-form-footer"><div class="wpinsights-goodbye-form-buttons"><a id="wpinsights-submit-form-<?php echo esc_attr( $class_plugin_name ); ?>" class="wpinsights-submit-btn" href="#"><?php esc_html_e('Submit and Deactivate', 'disable-comments'); ?></a>&nbsp;<a class="wpsp-put-deactivate-btn" href="' + url + '"><?php esc_html_e('Just Deactivate', 'disable-comments'); ?></a></div></div>');
+                    $(".wpinsights-goodbye-form-wrapper-<?php echo esc_attr( $class_plugin_name ); ?> #wpinsights-goodbye-form").html('<?php echo $html; ?>' + '<div class="wpinsights-goodbye-form-footer"><div class="wpinsights-goodbye-form-buttons"><a id="wpinsights-submit-form-<?php echo esc_attr( $class_plugin_name ); ?>" class="wpinsights-submit-btn" href="#"><?php esc_html_e('Submit and Deactivate', 'better-payment'); ?></a>&nbsp;<a class="wpsp-put-deactivate-btn" href="' + url + '"><?php esc_html_e('Just Deactivate', 'better-payment'); ?></a></div></div>');
                     $('#wpinsights-submit-form-<?php echo esc_attr( $class_plugin_name ); ?>').on('click', function(e) {
                         // As soon as we click, the body of the form should disappear
                         $("#wpinsights-goodbye-form-<?php echo esc_attr( $class_plugin_name ); ?> .wpinsights-goodbye-form-body").fadeOut();

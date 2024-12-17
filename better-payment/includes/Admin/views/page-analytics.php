@@ -10,7 +10,7 @@
                         </div>
                         <div class="column is-3">
                             <p class="has-text-right">
-                                <a title="<?php esc_attr_e('We are caching all data for 1 hour. To see the live data press this button!') ?>" href="#" class="button mr-1 fix-common"><?php esc_html_e('Refresh Stats', 'better-payment'); ?></a>
+                                <a title="<?php esc_attr_e('We are caching all data for 1 hour. To see the live data press this button!', 'better-payment') ?>" href="#" class="button mr-1 fix-common"><?php esc_html_e('Refresh Stats', 'better-payment'); ?></a>
                             </p>
                         </div>
                     </div>

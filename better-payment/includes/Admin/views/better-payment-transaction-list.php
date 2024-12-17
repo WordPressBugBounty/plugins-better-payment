@@ -190,7 +190,7 @@ $search_text = $args['search_text'] ? $args['search_text'] : '';
                                                     continue;
                                                 }
                                                 ?>
-                                                <option value="<?php esc_attr_e($better_payment_allowed_status); ?>" <?php echo $transaction_pagination_status === $better_payment_allowed_status ? 'selected' : ''; ?>> <?php esc_html_e(('null' === $better_payment_allowed_status) ? 'N/A' : strtoupper($better_payment_allowed_status), 'better-payment'); ?> </option>
+                                                <option value="<?php echo esc_attr($better_payment_allowed_status); ?>" <?php echo $transaction_pagination_status === $better_payment_allowed_status ? 'selected' : ''; ?>> <?php esc_html_e(('null' === $better_payment_allowed_status) ? 'N/A' : strtoupper($better_payment_allowed_status), 'better-payment'); ?> </option>
                                             <?php endforeach; ?>
                                         </select>
 
