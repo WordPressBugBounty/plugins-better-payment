@@ -137,7 +137,7 @@ class DB {
             'search_text' => '',
             'payment_date_from' => '',
             'payment_date_to' => '',
-            'order_by' => 'id',
+            'order_by' => 'payment_date',
             'order' => 'DESC',
             'source' => '', 
             'paged' => 1,

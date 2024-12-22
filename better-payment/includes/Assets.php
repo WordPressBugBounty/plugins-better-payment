@@ -24,6 +24,7 @@ class Assets extends Controller {
     public function __construct() {
         add_action( 'wp_enqueue_scripts', [ $this, 'register_assets' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'register_assets' ] );
+        add_action( 'elementor/editor/before_enqueue_scripts', [ $this, 'register_assets' ] );
     }
 
     /**

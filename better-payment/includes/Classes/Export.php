@@ -79,15 +79,25 @@ class Export extends Controller{
             
             $line['form_fields_info_name'] = isset($line['form_fields_info']['customer_name']) ? $line['form_fields_info']['customer_name'] : '';
             $line['form_fields_info_email'] = isset($line['form_fields_info']['customer_email']) ? $line['form_fields_info']['customer_email'] : '';
+            $line['payment_type'] = ! empty( $line['form_fields_info']['subscription_id'] ) ? 'Subscription' : 'One Time'; 
             
+            unset($line['form_fields_info']['customer_name']);
+            unset($line['form_fields_info']['customer_email']);
+            
+            $line['form_fields_info'] = array_filter($line['form_fields_info'], function($value) {
+                return !empty($value);
+            });
+
             $line_formatted = array(
                 $line['form_fields_info_name'],
                 $line['form_fields_info_email'],
                 $line['currency'] . ' ' . $line['amount'],
+                $line['payment_type'],
                 $line['transaction_id'],
                 $line['source'],
                 $line['status'],
                 $line['payment_date'],
+                ! empty( $line['form_fields_info'] ) ? maybe_serialize( $line['form_fields_info'] ) : '',
             );
 
             fputcsv($f, $line_formatted, $delimiter); 
@@ -110,10 +120,12 @@ class Export extends Controller{
             esc_html('name'),
             esc_html('email'),
             esc_html('amount'),
+            esc_html('payment_type'),
             esc_html('transaction_id'),
             esc_html('source'),
             esc_html('status'),
             esc_html('payment_date'),
+            esc_html('form_fields_info'),
             // 'Order ID',
             // 'Customer Info',
             // 'Form Fields Info',
@@ -124,6 +136,17 @@ class Export extends Controller{
 
     public function form_fields_info_formatted($form_fields_info){
         $bp_form_fields_info = maybe_unserialize($form_fields_info);
+
+        $bp_transaction_subscription_id             = isset($bp_form_fields_info['subscription_id']) ? sanitize_text_field($bp_form_fields_info['subscription_id']) : '';
+        $bp_transaction_subscription_customer_id    = isset($bp_form_fields_info['subscription_customer_id']) ? sanitize_text_field($bp_form_fields_info['subscription_customer_id']) : '';
+        $bp_transaction_subscription_plan_id        = isset($bp_form_fields_info['subscription_plan_id']) ? sanitize_text_field($bp_form_fields_info['subscription_plan_id']) : '';
+        
+        $subscription_interval      = ! empty($bp_form_fields_info['subscription_interval']) ? sanitize_text_field( $bp_form_fields_info['subscription_interval'] ) : '';
+        $subscription_current_period_start  = ! empty($bp_form_fields_info['subscription_current_period_start']) ? sanitize_text_field( $bp_form_fields_info['subscription_current_period_start'] ) : '';
+        $subscription_current_period_end    = ! empty($bp_form_fields_info['subscription_current_period_end']) ? sanitize_text_field( $bp_form_fields_info['subscription_current_period_end'] ) : '';
+        $subscription_status        = ! empty($bp_form_fields_info['subscription_status']) ? sanitize_text_field( $bp_form_fields_info['subscription_status'] ) : '';
+        $subscription_created_date  = ! empty($bp_form_fields_info['subscription_created_date']) ? sanitize_text_field( $bp_form_fields_info['subscription_created_date'] ) : '';
+        $is_payment_split_payment   = ! empty($bp_form_fields_info['is_payment_split_payment']) ? intval( $bp_form_fields_info['is_payment_split_payment'] ) : 0;
 
         $bp_transaction_customer_name = isset($bp_form_fields_info['primary_first_name']) ? sanitize_text_field($bp_form_fields_info['primary_first_name']) : '';
         $bp_transaction_customer_name .= ' ';
@@ -143,8 +166,17 @@ class Export extends Controller{
         }
 
         return [
-            'customer_name' => $bp_transaction_customer_name,
-            'customer_email' => $bp_transaction_customer_email
+            'customer_name'             => $bp_transaction_customer_name,
+            'customer_email'            => $bp_transaction_customer_email,
+            'subscription_id'           => $bp_transaction_subscription_id,
+            'subscription_customer_id'  => $bp_transaction_subscription_customer_id,
+            'subscription_plan_id'      => $bp_transaction_subscription_plan_id,
+            'subscription_interval'     => $subscription_interval,
+            'subscription_current_period_start'      => $subscription_current_period_start,
+            'subscription_current_period_end'        => $subscription_current_period_end,
+            'subscription_status'       => $subscription_status,
+            'subscription_created_date' => $subscription_created_date,
+            'is_payment_split_payment'  => $is_payment_split_payment,
         ];
     }
     

@@ -304,7 +304,7 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control( 'better_payment_form_payment_source_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=woocommerce&tab=search&type=term') ),
-            'content_classes' => 'eael-warning',
+            'content_classes' => 'better-payment-warning',
             'conditions' => [
                 'relation' => 'and',
                 'terms' => [
@@ -394,7 +394,7 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control( 'better_payment_form_paypal_enable_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>PayPal (Business Email) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
-            'content_classes' => 'eael-warning',
+            'content_classes' => 'better-payment-warning',
             'condition'       => [
                 'better_payment_form_paypal_enable' => 'yes',
                 'better_payment_paypal_business_email' => '',
@@ -416,12 +416,17 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control( 'better_payment_form_stripe_enable_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Stripe (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
-            'content_classes' => 'eael-warning',
+            'content_classes' => 'better-payment-warning',
             'conditions' => [
                 'relation' => 'and',
                 'terms' => [
                     [
                         'name' => 'better_payment_form_stripe_enable',
+                        'value' => 'yes',
+                    ],
+                    [
+                        'name' => 'better_payment_stripe_live_mode',
+                        'operator' => '!==',
                         'value' => 'yes',
                     ],
                     [
@@ -433,6 +438,38 @@ class Better_Payment_Widget extends Widget_Base {
                             ],
                             [
                                 'name' => 'better_payment_stripe_secret_key',
+                                'value' => '',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ] );
+
+        $this->add_control( 'better_payment_form_stripe_enable_notice_live', [
+            'type'            => Controls_Manager::RAW_HTML,
+            'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Stripe (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
+            'content_classes' => 'better-payment-warning',
+            'conditions' => [
+                'relation' => 'and',
+                'terms' => [
+                    [
+                        'name' => 'better_payment_form_stripe_enable',
+                        'value' => 'yes',
+                    ],
+                    [
+                        'name' => 'better_payment_stripe_live_mode',
+                        'value' => 'yes',
+                    ],
+                    [
+                        'relation' => 'or',
+                        'terms' => [
+                            [
+                                'name' => 'better_payment_stripe_public_key_live',
+                                'value' => '',
+                            ],
+                            [
+                                'name' => 'better_payment_stripe_secret_key_live',
                                 'value' => '',
                             ],
                         ],
@@ -459,7 +496,7 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control( 'better_payment_form_paystack_enable_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Paystack (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
-            'content_classes' => 'eael-warning',
+            'content_classes' => 'better-payment-warning',
             'conditions' => [
                 'relation' => 'and',
                 'terms' => [
@@ -650,7 +687,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'type'            => Controls_Manager::RAW_HTML,
                 'raw'             => sprintf( __( 'Supported by %sStripe%s only', 'better-payment' ), '<strong>', '</strong>' ),
-                'content_classes' => 'eael-warning',
+                'content_classes' => 'better-payment-warning',
                 'conditions' => [
                     'relation' => 'and',
                     'terms'    => [

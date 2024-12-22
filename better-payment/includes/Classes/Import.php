@@ -87,6 +87,20 @@ class Import extends Controller{
                     'is_imported'           => intval(1),
                 ];
 
+                if ( ! empty( $record['payment_type'] ) && strtolower($record['payment_type']) === 'subscription' ) {
+                    $better_form_fields_selected = isset( $record['form_fields_info'] ) ? maybe_unserialize( $record['form_fields_info'] ) : [];
+                    
+                    $better_form_fields['subscription_id']          = isset( $better_form_fields_selected['subscription_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_id'] ) : '';
+                    $better_form_fields['subscription_customer_id'] = isset( $better_form_fields_selected['subscription_customer_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_customer_id'] ) : '';
+                    $better_form_fields['subscription_plan_id']     = isset( $better_form_fields_selected['subscription_plan_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_plan_id'] ) : '';
+                    $better_form_fields['subscription_interval']    = isset( $better_form_fields_selected['subscription_interval'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_interval'] ) : '';
+                    $better_form_fields['subscription_current_period_start']     = isset( $better_form_fields_selected['subscription_current_period_start'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_current_period_start'] ) : '';
+                    $better_form_fields['subscription_current_period_end']     = isset( $better_form_fields_selected['subscription_current_period_end'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_current_period_end'] ) : '';
+                    $better_form_fields['subscription_status']     = isset( $better_form_fields_selected['subscription_status'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_status'] ) : '';
+                    $better_form_fields['subscription_created_date']     = isset( $better_form_fields_selected['subscription_created_date'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_created_date'] ) : '';
+                    $better_form_fields['is_payment_split_payment']     = isset( $better_form_fields_selected['is_payment_split_payment'] ) ? sanitize_text_field( $better_form_fields_selected['is_payment_split_payment'] ) : '';
+                }
+
                 $amount_currency_array = explode(' ', $record['amount']);
                 $currency = is_array($amount_currency_array) && count($amount_currency_array) > 1 ? $amount_currency_array[0] : esc_html('USD');
                 $amount = is_array($amount_currency_array) && count($amount_currency_array) > 1 ? $amount_currency_array[1] : $record['amount'];
@@ -95,6 +109,7 @@ class Import extends Controller{
                     'email'             => sanitize_email( $record['email'] ),
                     'currency'          => sanitize_text_field( $currency ),
                     'amount'            => floatval( $amount ),
+                    // 'payment_type'      => sanitize_text_field( $record['payment_type'] ),
                     'transaction_id'    => sanitize_text_field( $record['transaction_id'] ),
                     'source'            => sanitize_text_field( $record['source'] ),
                     'status'            => sanitize_text_field( $record['status'] ),
