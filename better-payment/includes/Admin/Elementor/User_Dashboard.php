@@ -269,7 +269,7 @@ class User_Dashboard extends Widget_Base {
 			'label'       => esc_html__( 'No Items', 'better-payment' ),
 			'type'        => Controls_Manager::TEXT,
 			'label_block' => false,
-			'default'     => esc_html__( 'No subscriptions found!', 'better-payment' ),
+			'default'     => esc_html__( 'No records found!', 'better-payment' ),
 			'ai' => [
 				'active' => false,
 			],

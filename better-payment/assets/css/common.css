@@ -9,6 +9,9 @@
   overflow: hidden;
   border-radius: 16px;
 }
+.better-payment .width-100.height-auto {
+  min-height: auto;
+}
 .better-payment .width-100 img {
   object-fit: cover;
   height: 100%;
@@ -2765,6 +2768,10 @@
   margin-left: 1%;
 }
 
+.better-payment {
+  /* Media Queries : Start */
+  /* Media Queries : End */
+}
 .better-payment .d-none {
   display: none !important;
 }
@@ -3626,6 +3633,9 @@
 .better-payment .line-height-0 {
   line-height: 0;
 }
+.better-payment .better-payment-transaction-import {
+  margin-bottom: 5px;
+}
 @media only screen and (max-width: 1200px) {
   .better-payment .bp-amount h4,
   .better-payment .bp-transaction {
@@ -3787,7 +3797,49 @@
 .better-payment .padding-0 {
   padding: 0px;
 }
-
+.better-payment .bp-hidden-xs {
+  display: block;
+}
+.better-payment .bp-visible-xs {
+  display: none;
+}
+@media (max-width: 767.98px) {
+  .better-payment .bp-hidden-xs {
+    display: none;
+  }
+  .better-payment .bp-visible-xs {
+    display: block;
+  }
+  .better-payment .bp--db-main-wrapper {
+    width: 100%;
+    max-width: 100%;
+    flex-basis: 100%;
+    padding-right: 0px;
+  }
+  .better-payment .better-payment-user-dashboard-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    height: 100%;
+  }
+  .better-payment .bp-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    display: none;
+  }
+  .better-payment .bp-dashboard-hamburger {
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+}
 .better-payment-warning {
   font-size: 13px;
   line-height: 18px;
@@ -3795,4 +3847,8 @@
   color: #886726;
   padding: 10px;
   border-radius: 3px;
+}
+
+.better-payment-dynamic-value-info {
+  word-break: break-word;
 }

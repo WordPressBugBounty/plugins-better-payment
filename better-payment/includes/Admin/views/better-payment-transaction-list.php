@@ -34,7 +34,7 @@ $search_text = $args['search_text'] ? $args['search_text'] : '';
                     </div>
 
                     <div class="bp-col-3">
-                        <p class="has-text-right">
+                        <p class="bp-transactions-import-export-wrapper">
                             <button class="button better-payment-transaction-import button__active"> <?php esc_html_e('Import Data', 'better-payment'); ?> </button>
                             <button class="button better-payment-transaction-export button__active"> <?php esc_html_e('Export All', 'better-payment'); ?> </button>
                         </p>

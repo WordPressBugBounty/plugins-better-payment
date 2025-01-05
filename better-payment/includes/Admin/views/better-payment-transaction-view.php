@@ -215,8 +215,8 @@ use Better_Payment\Lite\Classes\Helper;
                                     </ul>
                                 </div>
                                 <?php if ( ! $this->pro_enabled ) : ?>
-                                    <p class="p-4"><a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro"><img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/refund-banner.svg'); ?>" alt="refund-banner"></a></p>
-                                    <p class="p-4"><a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro"><img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/receipt-banner.svg'); ?>" alt="receipt-banner"></a></p>
+                                    <p class="p-4"><a class="width-100 height-auto" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro"><img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/refund-banner.svg'); ?>" alt="refund-banner"></a></p>
+                                    <p class="p-4"><a class="width-100 height-auto" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro"><img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/receipt-banner.svg'); ?>" alt="receipt-banner"></a></p>
                                 <?php endif; ?>
                                 <?php do_action('better_payment/admin/transaction_refund_content', $bp_admin_transaction); ?>
                                 <?php do_action('better_payment/admin/transaction_receipt_content', $bp_admin_transaction); ?>

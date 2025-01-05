@@ -11,8 +11,9 @@ if ( empty($current_user->user_email) ) {
 
 <div class="better-payment">
     <div class="better-payment-user-dashboard-container bp--section-wrapper flex gap-6 min-h-full">
+        <div class="bp-overlay"></div>
         <?php if ( $bp_settings['sidebar_show'] ) : ?>
-        <div class="better-payment-user-dashboard-sidebar user-dashboard-sidebar bp--sidebar-wrapper">
+        <div class="better-payment-user-dashboard-sidebar user-dashboard-sidebar bp--sidebar-wrapper bp-hidden-xs">
             <div class="bp--author">
                 <?php 
                 if ( $bp_settings['avatar_show'] ) :

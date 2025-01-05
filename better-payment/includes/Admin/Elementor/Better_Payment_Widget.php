@@ -710,6 +710,10 @@ class Better_Payment_Widget extends Widget_Base {
                                     'name'     => 'better_payment_form_currency',
                                     'value'    => 'BGN',
                                 ],
+                                [
+                                    'name'     => 'better_payment_form_currency',
+                                    'value'    => 'RON',
+                                ],
                             ],
                         ]
                     ],
@@ -996,7 +1000,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'type'        => Controls_Manager::RAW_HTML,
                 'raw' => sprintf( 
-                    __( '<p><a href="%1$s" target="_blank">Sample url »</a><br>%1$s</p>', 'better-payment' ), 
+                    __( '<p class="better-payment-dynamic-value-info" style="word-break: break-word;"><a href="%1$s" target="_blank">Sample url »</a><br>%1$s</p>', 'better-payment' ), 
                     esc_url_raw( get_permalink( get_the_ID() ) . '?payment_amount=100' ) 
                 ),
                 'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',

@@ -189,6 +189,7 @@ class Helper extends Controller
             'SGD' => 'SGD',
             'SEK' => 'SEK',
             'CHF' => 'CHF',
+            'RON' => 'RON',
             'TWD' => 'TWD',
             'THB' => 'THB',
             'ZAR' => 'ZAR'

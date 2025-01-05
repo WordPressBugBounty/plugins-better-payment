@@ -27,8 +27,13 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
 <!-- Need to replace with action -->
 <?php if ($bp_settings['header_show']) : ?>
     <div class="better-payment-user-dashboard-header bp--db-header bp-dashboard-header flex items-center justify-center">
+        <?php if ($bp_settings['sidebar_show']) : ?>
+            <div class="bp-dashboard-hamburger padding-0 bp-visible-xs">
+                <svg fill="none" viewBox="0 0 24 24" width="25" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="m3 8c0-.55228.44772-1 1-1h16c.5523 0 1 .44772 1 1s-.4477 1-1 1h-16c-.55228 0-1-.44772-1-1zm0 4c0-.5523.44772-1 1-1h16c.5523 0 1 .4477 1 1s-.4477 1-1 1h-16c-.55228 0-1-.4477-1-1zm0 4c0-.5523.44772-1 1-1h8c.5523 0 1 .4477 1 1s-.4477 1-1 1h-8c-.55228 0-1-.4477-1-1z" fill="rgb(0,0,0)" fill-rule="evenodd"/></svg>
+            </div>
+        <?php endif; ?>
         <h2><?php esc_html_e($bp_settings['dashboard_label'], 'better-payment'); ?></h2>
-        <button class="primary-btn"><a href="<?php echo the_permalink(); ?>"><?php esc_html_e( $bp_settings['refresh_stats_label'], 'better-payment' ); ?></a></button>
+        <button class="primary-btn bp-hidden-xs"><a href="<?php echo the_permalink(); ?>"><?php esc_html_e( $bp_settings['refresh_stats_label'], 'better-payment' ); ?></a></button>
     </div>
 <?php endif; ?>
 

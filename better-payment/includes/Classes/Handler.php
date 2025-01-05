@@ -463,6 +463,7 @@ class Handler extends Controller{
             'SGD' => "$",
             'SEK' => "kr",
             'CHF' => "CHF",
+            'RON' => "lei",
             'TWD' => "$",
             'THB' => "฿",
             'TRY' => "₺",
