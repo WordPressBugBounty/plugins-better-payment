@@ -80,7 +80,7 @@ class Actions {
 
         $el_settings_currency_symbol = \Better_Payment\Lite\Classes\Handler::get_currency_symbols( esc_html($el_settings_currency) );
 
-        $primary_payment_amount = floatval( $_POST[ 'primary_payment_amount' ] );
+        $primary_payment_amount = isset( $_POST[ 'primary_payment_amount' ] ) ? floatval( $_POST[ 'primary_payment_amount' ] ) : 0;
 
         if( empty( $_POST['primary_payment_amount'] ) && ! empty( $_POST['primary_payment_amount_radio'] ) ){
             $primary_payment_amount = floatval( $_POST['primary_payment_amount_radio'] );

@@ -156,7 +156,8 @@ class Paystack_Integration extends Action_Base {
             return false;
         }
 
-        $amount   = floatval( $sent_data['payment_amount'] );
+        $amount   = isset( $sent_data['payment_amount'] ) ? floatval($sent_data['payment_amount']) : 0;
+
         if ( empty( $amount ) && ! empty( $sent_data['primary_payment_amount_radio'] ) ) {
             $amount = floatval( $sent_data['primary_payment_amount_radio'] );
         }
