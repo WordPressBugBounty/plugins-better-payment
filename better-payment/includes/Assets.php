@@ -155,6 +155,16 @@ class Assets extends Controller {
             'nonce' => wp_create_nonce( 'better-payment' ),
             'confirm' => __( 'Are you sure?', 'better-payment' ),
             'error' => __( 'Something went wrong', 'better-payment' ),
+            'custom_texts' => [
+                'redirecting' => __('Redirecting', 'better-payment'),
+                // 'field' => __('Field', 'better-payment'),
+                // 'required' => __('Required', 'better-payment'),
+                'field_is_required' => __('field is required', 'better-payment'),
+                'business_email_is_required' => __('Business Email is required', 'better-payment'),
+                'payment_amount_field_is_required' => __('Payment Amount field is required', 'better-payment'),
+                'minimum_amount_is_one' => __('Minimum amount is 1', 'better-payment'),
+                'something_went_wrong' => __( 'Something went wrong', 'better-payment' ),
+            ],
         ] );
 
         wp_localize_script('bp-admin-settings', 'betterPaymentObj', array(
@@ -169,7 +179,7 @@ class Assets extends Controller {
 				'success' => __('Changes saved successfully!', 'better-payment'),
 				'error' => __('Opps! something went wrong!', 'better-payment'),
 				'no_action_taken' => __('No action taken!', 'better-payment'),
-			]
+            ]
 		));
     }
 }

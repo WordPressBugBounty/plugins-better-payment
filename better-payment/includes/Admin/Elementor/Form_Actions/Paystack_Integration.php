@@ -37,85 +37,82 @@ class Paystack_Integration extends Action_Base {
      * @param \Elementor\Widget_Base $widget
      */
     public function register_settings_section( $widget ) {
-        if ( current_user_can('manage_options') ) {
+        $this->better_payment_global_settings = DB::get_settings();
 
-            $this->better_payment_global_settings = DB::get_settings();
+        $widget->start_controls_section(
+            'section_paystack_payment',
+            [
+                'label'     => __( 'Paystack', 'better-payment' ),
+                'condition' => [
+                    'submit_actions' => $this->get_name(),
+                    'better_payment_payment_amount_enable' => 'yes'
+                ],
+            ]
+        );
 
-            $widget->start_controls_section(
-                'section_paystack_payment',
-                [
-                    'label'     => __( 'Paystack', 'better-payment' ),
-                    'condition' => [
-                        'submit_actions' => $this->get_name(),
-                        'better_payment_payment_amount_enable' => 'yes'
-                    ],
-                ]
-            );
+        $better_payment_helper = new \Better_Payment\Lite\Classes\Helper();
 
-            $better_payment_helper = new \Better_Payment\Lite\Classes\Helper();
+        $widget->add_control(
+            'better_payment_form_paystack_currency',
+            [
+                'label'   => esc_html__( 'Currency Symbols', 'better-payment' ),
+                'type'    => Controls_Manager::SELECT,
+                'default' => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_currency']),
+                'options' => $better_payment_helper->get_currency_list(),
+            ]
+        );
 
-            $widget->add_control(
-                'better_payment_form_paystack_currency',
-                [
-                    'label'   => esc_html__( 'Currency Symbols', 'better-payment' ),
-                    'type'    => Controls_Manager::SELECT,
-                    'default' => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_currency']),
-                    'options' => $better_payment_helper->get_currency_list(),
-                ]
-            );
+        $better_payment_is_paystack_live = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_mode'] ) && 'yes' === $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_mode'] ? 1 : 0;
+        $paystack_live_key = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_public'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_public'] : '';
+        $paystack_test_key = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_public'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_public'] : '';
+        $paystack_live_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] : '';
+        $paystack_test_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] : '';
 
-            $better_payment_is_paystack_live = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_mode'] ) && 'yes' === $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_mode'] ? 1 : 0;
-            $paystack_live_key = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_public'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_public'] : '';
-            $paystack_test_key = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_public'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_public'] : '';
-            $paystack_live_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] : '';
-            $paystack_test_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] : '';
+        $widget->add_control(
+            'better_payment_paystack_public_key',
+            [
+                'label'       => __( 'Public Key', 'better-payment' ),
+                'type'        => current_user_can('manage_options') ? Controls_Manager::TEXT : Controls_Manager::HIDDEN,
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'default'     => $better_payment_is_paystack_live ? esc_html( $paystack_live_key ) : esc_html( $paystack_test_key ),
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
 
-            $widget->add_control(
-                'better_payment_paystack_public_key',
-                [
-                    'label'       => __( 'Public Key', 'better-payment' ),
-                    'type'        => Controls_Manager::TEXT,
-                    'dynamic'     => [
-                        'active' => true,
-                    ],
-                    'label_block' => true,
-                    'default'     => $better_payment_is_paystack_live ? esc_html( $paystack_live_key ) : esc_html( $paystack_test_key ),
-                    'ai' => [
-                        'active' => false,
-                    ],
-                ]
-            );
+        $widget->add_control(
+            'better_payment_paystack_secret_key',
+            [
+                'label'       => __( 'Secret Key', 'better-payment' ),
+                'type'        => current_user_can('manage_options') ? Controls_Manager::TEXT : Controls_Manager::HIDDEN,
+                'input_type'  => 'password',
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'default'     => $better_payment_is_paystack_live ? esc_html( $paystack_live_secret ) : esc_html( $paystack_test_secret ),
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
 
-            $widget->add_control(
-                'better_payment_paystack_secret_key',
-                [
-                    'label'       => __( 'Secret Key', 'better-payment' ),
-                    'type'        => Controls_Manager::TEXT,
-                    'input_type'  => 'password',
-                    'dynamic'     => [
-                        'active' => true,
-                    ],
-                    'label_block' => true,
-                    'default'     => $better_payment_is_paystack_live ? esc_html( $paystack_live_secret ) : esc_html( $paystack_test_secret ),
-                    'ai' => [
-                        'active' => false,
-                    ],
-                ]
-            );
-
-            $widget->add_control(
-                'better_payment_paystack_live_mode',
-                [
-                    'label'        => __( 'Live Mode', 'better-payment' ),
-                    'type'         => Controls_Manager::SWITCHER,
-                    'label_on'     => __( 'Yes', 'better-payment' ),
-                    'label_off'    => __( 'No', 'better-payment' ),
-                    'return_value' => 'yes',
-                    'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
-                ]
-            );
-            $widget->end_controls_section();
-        }
+        $widget->add_control(
+            'better_payment_paystack_live_mode',
+            [
+                'label'        => __( 'Live Mode', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Yes', 'better-payment' ),
+                'label_off'    => __( 'No', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
+            ]
+        );
+        $widget->end_controls_section();
     }
 
     /**
