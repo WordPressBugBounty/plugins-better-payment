@@ -290,7 +290,7 @@ class Handler extends Controller{
                 ];
                 $form_fields_info = maybe_unserialize($results->form_fields_info);
                 $is_payment_recurring = ! empty( $form_fields_info['mode'] ) && 'subscription' === $form_fields_info['mode'];
-                $is_payment_split_payment = ! empty( $form_fields_info['mode'] ) && 'subscription' === $form_fields_info['mode'];
+                $is_payment_split_payment = ( $is_payment_recurring ) && ( ! empty( $form_fields_info['is_payment_split_payment'] ) && 1 === intval( $form_fields_info['is_payment_split_payment'] ) );
                 
                 $action_data = [
                     'form_fields_info' => $form_fields_info,
