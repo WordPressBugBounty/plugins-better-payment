@@ -143,7 +143,19 @@ use Better_Payment\Lite\Classes\Helper;
                                             <?php endif; ?>
                                         </li>
                                         <li class="source"><span><?php esc_html_e('Source:', 'better-payment'); ?></span> <img src="<?php echo esc_url($td_source_image_url) ?>" title="<?php echo esc_attr( $td_source_image_alt ); ?>" alt="<?php echo esc_attr( $td_source_image_alt ); ?>"></li>
-                                        <li><span><?php esc_html_e('Status:', 'better-payment'); ?></span> <span style="color:#fff; padding:5px 15px; border-radius: 20px;background: <?php echo esc_attr($td_status_btn_color); ?>"> <?php echo esc_html(ucwords($td_status_btn_text_v2)); //$td_status ?> </span></li>
+                                        <li>
+                                            <span><?php esc_html_e('Status:', 'better-payment'); ?></span> <span style="color:#fff; padding:5px 15px; border-radius: 20px;background: <?php echo esc_attr($td_status_btn_color); ?>"> <?php echo esc_html(ucwords($td_status_btn_text_v2)); //$td_status ?> </span>
+                                            
+                                            <?php if(
+                                                strtolower($td_status) !== 'completed' 
+                                                && strtolower($td_status) !== 'paid'
+                                                && strtolower($td_status) !== 'success'
+                                                && strtolower($td_status) !== 'refunded' 
+                                                && strtolower($td_status) !== 'failed'
+                                                ){ ?>
+                                                <a href="#" class="button button--sm view-button bp-mark-as-completed" data-id="<?php echo esc_attr($bp_admin_transaction->id); ?>"><?php esc_html_e('Mark as Completed', 'better-payment'); ?></a>
+                                            <?php } ?>
+                                        </li>
                                     </ul>
                                 </div>
                                 <div class="transaction__info">

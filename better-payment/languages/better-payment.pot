@@ -113,7 +113,7 @@ msgstr ""
 msgid "Record not found!"
 msgstr ""
 
-#: ../includes/Admin/Settings.php:329, ../includes/Admin/Settings.php:334, ../includes/Admin/Settings.php:362, ../includes/Admin/Settings.php:367, ../includes/Admin/Settings.php:403, ../includes/Admin/Settings.php:408, ../includes/Classes/Export.php:38, ../includes/Classes/Export.php:43
+#: ../includes/Admin/Settings.php:329, ../includes/Admin/Settings.php:334, ../includes/Admin/Settings.php:362, ../includes/Admin/Settings.php:367, ../includes/Admin/Settings.php:403, ../includes/Admin/Settings.php:408, ../includes/Admin/Settings.php:671, ../includes/Admin/Settings.php:676, ../includes/Classes/Export.php:38, ../includes/Classes/Export.php:43
 msgid "Access Denied!"
 msgstr ""
 
@@ -123,6 +123,14 @@ msgstr ""
 
 #: ../includes/Admin/Settings.php:374
 msgid "Deleted Successfully!"
+msgstr ""
+
+#: ../includes/Admin/Settings.php:689
+msgid "Failed to mark transaction as completed!"
+msgstr ""
+
+#: ../includes/Admin/Settings.php:686
+msgid "Transaction marked as completed!"
 msgstr ""
 
 #: ../includes/Admin/Setup_Wizard.php:102, ../includes/Admin/Setup_Wizard.php:103
@@ -1149,7 +1157,7 @@ msgstr ""
 msgid "No Items"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:272, ../includes/Admin/views/better-payment-transaction-view.php:231, ../includes/Admin/views/template-transaction-list.php:161
+#: ../includes/Admin/Elementor/User_Dashboard.php:272, ../includes/Admin/views/better-payment-transaction-view.php:243, ../includes/Admin/views/template-transaction-list.php:161
 msgid "No records found!"
 msgstr ""
 
@@ -1653,7 +1661,7 @@ msgstr ""
 msgid "Email Address:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:122, ../includes/Admin/views/better-payment-transaction-view.php:139, ../includes/Admin/views/better-payment-transaction-view.php:199, ../includes/Admin/views/template-transaction-list.php:104, ../includes/Admin/views/template-transaction-list.php:121, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:122, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:143
+#: ../includes/Admin/views/better-payment-transaction-view.php:122, ../includes/Admin/views/better-payment-transaction-view.php:139, ../includes/Admin/views/better-payment-transaction-view.php:211, ../includes/Admin/views/template-transaction-list.php:104, ../includes/Admin/views/template-transaction-list.php:121, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:122, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:143
 msgid "Copy"
 msgstr ""
 
@@ -1669,7 +1677,7 @@ msgstr ""
 msgid "Total Amount:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:135, ../includes/Admin/views/better-payment-transaction-view.php:197
+#: ../includes/Admin/views/better-payment-transaction-view.php:135, ../includes/Admin/views/better-payment-transaction-view.php:209
 msgid "Transaction ID:"
 msgstr ""
 
@@ -1677,43 +1685,47 @@ msgstr ""
 msgid "Source:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:146
+#: ../includes/Admin/views/better-payment-transaction-view.php:147
 msgid "Status:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:151
+#: ../includes/Admin/views/better-payment-transaction-view.php:156
+msgid "Mark as Completed"
+msgstr ""
+
+#: ../includes/Admin/views/better-payment-transaction-view.php:163
 msgid "Additional Information"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:154
+#: ../includes/Admin/views/better-payment-transaction-view.php:166
 msgid "Order ID:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:155
+#: ../includes/Admin/views/better-payment-transaction-view.php:167
 msgid "Payment Date:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:156
+#: ../includes/Admin/views/better-payment-transaction-view.php:168
 msgid "Referer Page:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:157
+#: ../includes/Admin/views/better-payment-transaction-view.php:169
 msgid "Referer Widget:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:167
+#: ../includes/Admin/views/better-payment-transaction-view.php:179
 msgid "Payment Gateway"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:189, ../includes/Admin/views/better-payment-transaction-view.php:182, ../includes/Admin/views/better-payment-transaction-view.php:175
+#: ../includes/Admin/views/better-payment-transaction-view.php:201, ../includes/Admin/views/better-payment-transaction-view.php:194, ../includes/Admin/views/better-payment-transaction-view.php:187
 msgid "Payment Method:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:204
+#: ../includes/Admin/views/better-payment-transaction-view.php:216
 msgid "Email Activity"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:209
+#: ../includes/Admin/views/better-payment-transaction-view.php:221
 msgid "Email sent to"
 msgstr ""
 

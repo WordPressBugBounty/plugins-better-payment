@@ -48,7 +48,7 @@ class Settings extends Controller
 		add_action('wp_ajax_better-payment-delete-transaction', [$this, 'admin_transaction_delete']);
 		add_action('wp_ajax_better-payment-filter-transaction', [$this, 'admin_transaction_filter']);
 		add_action('wp_ajax_better-payment-view-transaction', [$this, 'admin_transaction_view']);
-		
+		add_action('wp_ajax_better-payment-mark-as-completed', [$this, 'admin_transaction_mark_as_completed']);
 		//EL Editor Style
         add_action('elementor/editor/before_enqueue_scripts', [$this, 'editor_enqueue_scripts']);
 	}
@@ -661,5 +661,34 @@ class Settings extends Controller
 		}
 
 		return $value;
+	}
+
+	public function admin_transaction_mark_as_completed()
+	{
+		$response = [];
+
+		if (!wp_verify_nonce($_REQUEST['nonce'], 'better_payment_admin_nonce')) {
+			$response['message'] = __("Access Denied!", 'better-payment');
+			wp_send_json_error($response);
+		}
+
+		if (!current_user_can('manage_options')) {
+			$response['message'] = __("Access Denied!", 'better-payment');
+			wp_send_json_error($response);
+		}
+		
+		$id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+		if ($id) {
+			$updated = DB::mark_as_completed($id);
+
+			if ($updated) {
+				$response['message'] = __("Transaction marked as completed!", 'better-payment');
+				wp_send_json_success($response);
+			} else {
+				$response['message'] = __("Failed to mark transaction as completed!", 'better-payment');
+				wp_send_json_error($response);
+			}
+		}
 	}
 }

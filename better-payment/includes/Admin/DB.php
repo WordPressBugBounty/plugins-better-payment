@@ -4,8 +4,6 @@ namespace Better_Payment\Lite\Admin;
 
 use Better_Payment\Lite\Classes\Helper;
 
-use function Better_Payment\Lite\Classes\better_payment_dd;
-
 /**
  * Exit if accessed directly
  */
@@ -617,5 +615,19 @@ class DB {
         }
 
         return $filtered_items;
+    }
+
+    public static function mark_as_completed($id)
+    {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        $id = (int) sanitize_text_field($id);
+
+        if ($id > 0) {
+            return $wpdb->update($table, ['status' => 'Completed'], ['id' => $id]);
+        }
+
+        return false;
     }
 }
