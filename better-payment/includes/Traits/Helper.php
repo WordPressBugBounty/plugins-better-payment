@@ -310,11 +310,11 @@ trait Helper
             'item_id'      => '64e1f724b5e14edb343e'
         ] );
         $tracker->set_notice_options(array(
-            'notice' => __( 'Want to help make <strong>Better Payment</strong> even more awesome? You can get a <strong>10% discount coupon</strong> for Pro upgrade if you allow.', 'better-payment' ),
-            'extra_notice' => __( 'We collect non-sensitive diagnostic data and plugin usage information.
+            'notice' => 'Want to help make <strong>Better Payment</strong> even more awesome? You can get a <strong>10% discount coupon</strong> for Pro upgrade if you allow.',
+            'extra_notice' => 'We collect non-sensitive diagnostic data and plugin usage information.
             Your site URL, WordPress & PHP version, plugins & themes and email address to send you the
             discount coupon. This data lets us make sure this plugin always stays compatible with the most
-            popular plugins and themes. No spam, I promise.', 'better-payment' ),
+            popular plugins and themes. No spam, I promise.',
         ));
         $tracker->init();
     }

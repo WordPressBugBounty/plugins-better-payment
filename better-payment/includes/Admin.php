@@ -104,7 +104,7 @@ class Admin extends Controller{
 			'priority'       => 9
 		] );
 
-        $review_notice = __( 'We hope you\'re enjoying Better Payment! Could you please do us a BIG favor and give it a 5-star rating on WordPress to help us spread the word and boost our motivation?', 'better-payment' );
+        $review_notice = 'We hope you\'re enjoying Better Payment! Could you please do us a BIG favor and give it a 5-star rating on WordPress to help us spread the word and boost our motivation?';
 		$_review_notice = [
 			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
 			'html'      => '<p>' . $review_notice . '</p>',
@@ -112,21 +112,21 @@ class Admin extends Controller{
 				'later'            => array(
 					'link'       => '//wordpress.org/support/plugin/better-payment/reviews/#new-post',
 					'target'     => '_blank',
-					'label'      => __( 'Ok, you deserve it!', 'better-payment' ),
+					'label'      => 'Ok, you deserve it!',
 					'icon_class' => 'dashicons dashicons-external',
                     'attributes' => [
 						'target'     => '_blank',
 					],
 				),
 				'allready'         => array(
-					'label'      => __( 'I already did', 'better-payment' ),
+					'label'      => 'I already did',
 					'icon_class' => 'dashicons dashicons-smiley',
 					'attributes' => [
 						'data-dismiss' => true
 					],
 				),
 				'maybe_later'      => array(
-					'label'      => __( 'Maybe Later', 'better-payment' ),
+					'label'      => 'Maybe Later',
 					'icon_class' => 'dashicons dashicons-calendar-alt',
 					'attributes' => [
 						'data-later' => true
@@ -134,14 +134,14 @@ class Admin extends Controller{
 				),
 				'support'          => array(
 					'link'       => 'https://wpdeveloper.com/support',
-					'label'      => __( 'I need help', 'better-payment' ),
+					'label'      => 'I need help',
 					'icon_class' => 'dashicons dashicons-sos',
                     'attributes' => [
 						'target'     => '_blank',
 					],
 				),
 				'never_show_again' => array(
-					'label'      => __( 'Never show again', 'better-payment' ),
+					'label'      => 'Never show again',
 					'icon_class' => 'dashicons dashicons-dismiss',
 					'attributes' => [
 						'data-dismiss' => true

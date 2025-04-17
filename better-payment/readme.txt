@@ -3,9 +3,9 @@ Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, rahatsheikhleon
 Donate link: https://wpdeveloper.com
 Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
 Requires at least: 6.0
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.12
+Stable tag: 1.2.13
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,6 +162,10 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.2.13 - 17/04/2025 =
+- Fixed: Function _load_textdomain_just_in_time was called incorrectly notice
+- Few minor bug fixes & improvements
 
 = 1.2.12 - 07/04/2025 =
 - Added: Transaction Details | Mark as Completed button added to update transaction status
