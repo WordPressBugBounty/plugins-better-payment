@@ -157,7 +157,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'label' => esc_html__( 'Installment Name', 'better-payment' ),
                 'type'  => Controls_Manager::TEXT,
-                'placeholder' => '3 Months',
+                'placeholder' => 'Installment Name',
                 'label_block' => true,
                 'ai' => [
                     'active' => false,
@@ -240,6 +240,59 @@ class Better_Payment_Widget extends Widget_Base {
                 'condition'   => [
                     'better_payment_form_payment_type' => 'split-payment',
                     'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
+                ],
+            ]
+        );
+
+        $repeater_recurring_payment = new Repeater();
+ 
+        $repeater_recurring_payment->add_control(
+            'better_payment_recurring_name',
+            [
+                'label' => esc_html__( 'Interval Name', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => 'Interval Name',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+         
+        $repeater_recurring_payment->add_control(
+            'better_payment_recurring_price_id',
+            [
+                'label' => esc_html__( 'Price ID', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => 'price_G0FvDp6vZvdwRZ',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_recurring_price_ids',
+            [
+                'label'       => esc_html__( 'Intervals', 'better-payment' ),
+                'type'        => Controls_Manager::REPEATER,
+                'separator'   => 'after',
+                'default'     => [
+                    [
+                        'better_payment_recurring_name' => 'Monthly',
+                        'better_payment_recurring_price_id' => '',
+                    ],
+                    [
+                        'better_payment_recurring_name' => 'Yearly',
+                        'better_payment_recurring_price_id' => '',
+                    ],
+                ],
+                'fields'      => $repeater_recurring_payment->get_controls(),
+                'title_field' => '<i class="{{ better_payment_recurring_name }}" aria-hidden="true"></i> {{{ better_payment_recurring_name }}}',
+                'condition'   => [
+                    'better_payment_form_payment_type' => 'recurring',
+                    'better_payment_form_layout' => 'layout-5-pro',
                 ],
             ]
         );
@@ -357,7 +410,6 @@ class Better_Payment_Widget extends Widget_Base {
             'placeholder' => __( 'Search By', 'better-payment' ),
             'conditions' => $this->payment_source_woo_conditions(),
             'separator' => 'after',
-            'default'     => __( '1', 'better-payment' ),
             'dynamic'     => [
                 'active' => false,
             ],
@@ -2119,27 +2171,39 @@ class Better_Payment_Widget extends Widget_Base {
         );
 
         $this->add_control(
-            'better_payment_form_success_message_heading',
+            'better_payment_form_success_message_content',
             [
-                'label'       => __( 'Heading Message Text', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'default'     => __( 'Payment Successful', 'better-payment' ),
-                'dynamic'     => [
-                    'active' => true,
-                ],
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
+                'label'       => esc_html__( 'Content', 'better-payment' ),
+                'type'        => Controls_Manager::HEADING,
+                'separator'    => 'before',
             ]
         );
+
+        $this->add_control('better_payment_form_success_message_heading', [
+            'label' => __('Heading', 'better-payment'),
+            'type' => Controls_Manager::TEXTAREA,
+            'default' => __('You paid', 'better-payment') . ' [currency_symbol][amount] ' . __('to', 'better-payment') . ' [store_name]',
+            'placeholder' => __('You paid', 'better-payment') . ' [currency_symbol][amount] ' . __('to', 'better-payment') . ' [store_name]',
+            'description' => __('Use shortcode like', 'better-payment') . ' [currency_symbol], [amount], [store_name] ' . __('to customize your message.', 'better-payment') . ' ' . __('eg:', 'better-payment') . ' ' . __('You paid', 'better-payment') . ' [currency_symbol][amount] ' . __('to', 'better-payment') . ' [store_name] ' . __('for your order.', 'better-payment'),
+            'render_type' => 'none',
+        ]);
+
+        $this->add_control('better_payment_form_success_message_sub_heading', [
+            'label' => __('Sub Heading', 'better-payment'),
+            'type' => Controls_Manager::TEXTAREA,
+            'default' => __('Payment confirmation email will be sent to', 'better-payment') . ' [customer_email]',
+            'placeholder' => __('Payment confirmation email will be sent to', 'better-payment') . ' [customer_email]',
+            'description' =>  __('Payment confirmation email will be sent to', 'better-payment') . ' [customer_email]',
+            'render_type' => 'none',
+        ]);
 
         $this->add_control(
             'better_payment_form_success_message_transaction',
             [
-                'label'       => __( 'Transaction Text', 'better-payment' ),
+                'label'       => __( 'Transaction', 'better-payment' ),
                 'type'        => Controls_Manager::TEXT,
-                'default'     => __( 'Transaction Number', 'better-payment' ),
+                'default'     => __( 'Transaction ID', 'better-payment' ),
+                'placeholder' => __( 'Transaction ID', 'better-payment' ),
                 'dynamic'     => [
                     'active' => true,
                 ],
@@ -2153,9 +2217,10 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control(
             'better_payment_form_success_message_thanks',
             [
-                'label'       => __( 'Thanks Text', 'better-payment' ),
+                'label'       => __( 'Thank You', 'better-payment' ),
                 'type'        => Controls_Manager::TEXT,
                 'default'     => __( 'Thank you for your payment', 'better-payment' ),
+                'placeholder' => __( 'Thank you for your payment', 'better-payment' ),
                 'dynamic'     => [
                     'active' => true,
                 ],
@@ -2166,11 +2231,172 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
+        $this->add_control(
+            'better_payment_form_success_message_amount_text',
+            [
+                'label'       => __( 'Amount', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Amount', 'better-payment' ),
+                'placeholder' => __( 'Amount', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_currency_text',
+            [
+                'label'       => __( 'Currency', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Currency', 'better-payment' ),
+                'placeholder' => __( 'Currency', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_pay_method_text',
+            [
+                'label'       => __( 'Payment Method', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Payment Method', 'better-payment' ),
+                'placeholder' => __( 'Payment Method', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_pay_type_text',
+            [
+                'label'       => __( 'Payment Type', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Payment Type', 'better-payment' ),
+                'placeholder' => __( 'Payment Type', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_merchant_details_text',
+            [
+                'label'       => __( 'Merchant Details', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Merchant Details', 'better-payment' ),
+                'placeholder' => __( 'Merchant Details', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_paid_amount_text',
+            [
+                'label'       => __( 'Paid Amount', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Paid Amount', 'better-payment' ),
+                'placeholder' => __( 'Paid Amount', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_purchase_details_text',
+            [
+                'label'       => __( 'Purchase Details', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Purchase Details', 'better-payment' ),
+                'placeholder' => __( 'Purchase Details', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_print_btn_text',
+            [
+                'label'       => __( 'Print', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Print', 'better-payment' ),
+                'placeholder' => __( 'Print', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_success_message_view_details_btn_text',
+            [
+                'label'       => __( 'View Details', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'View Details', 'better-payment' ),
+                'placeholder' => __( 'View Details', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control( 'better_payment_form_success_page_view_details_url', [
+			'type'          => Controls_Manager::URL,
+			'label'         => __( 'User Dashboard URL', 'better-payment' ),
+			'show_external' => false,
+			'placeholder'   => __( 'eg. https://example.com/custom-page/', 'better-payment' ),
+			'description'   => __( 'Please enter the page url where <strong>User Dashboard</strong> widget is used.', 'better-payment' ),
+		] );
+
         $this->add_control( 'better_payment_form_success_page_url', [
 			'type'          => Controls_Manager::URL,
 			'label'         => __( 'Custom Redirect URL', 'better-payment' ),
 			'show_external' => false,
-			'placeholder'   => __( 'eg. https://your-link.com/custom-page/', 'better-payment' ),
+			'placeholder'   => __( 'eg. https://example.com/custom-page/', 'better-payment' ),
 			'description'   => __( 'Please note that only your current domain is allowed here to keep your site secure.', 'better-payment' ),
 		] );
 
@@ -2227,7 +2453,7 @@ class Better_Payment_Widget extends Widget_Base {
 			'type'          => Controls_Manager::URL,
 			'label'         => __( 'Custom Redirect URL', 'better-payment' ),
 			'show_external' => false,
-			'placeholder'   => __( 'eg. https://your-link.com/custom-page/', 'better-payment' ),
+			'placeholder'   => __( 'eg. https://example.com/custom-page/', 'better-payment' ),
 			'description'   => __( 'Please note that only your current domain is allowed here to keep your site secure.', 'better-payment' ),
 		] );
 

@@ -419,6 +419,32 @@ class Helper extends Controller
         
         return $statuses_types;
     }
+
+    /**
+     * Get interval text for recurring and split payment
+     *
+     * @since 1.3.0
+     */
+    public function get_interval_text( $interval = '' ){
+        $interval_text = '';
+
+        switch( $interval ) {
+            case 'day':
+                $interval_text = 'Daily';
+                break;
+
+            case 'month': 
+            case 'year':
+                $interval_text = $interval . 'ly';
+                break;
+
+            default :
+                $interval_text = ! empty( $interval ) ? "Per " . esc_html( $interval ) : "";
+                break;
+        }
+
+        return esc_html( ucfirst( $interval_text ) );
+    }
 }
 
 

@@ -734,6 +734,312 @@ button:not(:disabled) {
   width: unset;
 }
 
+.bp-thank_page span {
+  display: inline-block;
+}
+
+.bp-bold {
+  font-weight: 400;
+  color: #222b3d;
+}
+
+.bp-flex {
+  display: flex;
+}
+
+.bp-thank_page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+}
+
+.bp-thank_page-wrapper {
+  background-color: #ffffff;
+  max-width: 700px;
+  margin: 0 auto;
+  vertical-align: middle;
+  padding: 40px;
+  border-radius: 20px;
+  width: 100%;
+  box-shadow: 0px 0px 10px 3px rgba(34, 43, 61, 0.1019607843);
+}
+
+.bp-thank_page-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.bp-thank_page-logo_wrapper {
+  display: inline-block;
+  background: rgba(107, 89, 238, 0.1019607843);
+  border-radius: 16px;
+  padding: 11px;
+}
+
+.bp-thank_page-text {
+  text-align: center;
+  border-bottom: 1px solid #dfe2ed;
+}
+
+.bp-page_header {
+  font-size: 32px;
+  color: #222b3d;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.bp-reason_for-text {
+  font-size: 24px;
+  font-weight: 300;
+  color: #222b3d;
+  margin-bottom: 8px;
+}
+
+.bp-payment_info {
+  color: #6a758c;
+  font-size: 16px;
+  font-weight: 300;
+  margin-top: 8px;
+}
+
+.bp-transaction_info-wrapper {
+  background-color: #f0f3f7;
+  border: 1px solid #dfe2ed;
+  min-width: 258px;
+  width: auto;
+  padding: 7px;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  margin-top: 27px;
+  position: relative;
+  display: inline-flex;
+}
+
+.bp-transaction_info {
+  color: #6a758c;
+  font-size: 14px;
+  font-weight: 300;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.bp-transaction_id {
+  position: relative;
+  width: 95px;
+  overflow: hidden;
+}
+
+.bp-transaction_id::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, rgba(240, 243, 247, 0.0588235294), #f0f3f7);
+}
+
+.bp-thank_page-info {
+  border-bottom: 1px solid #dfe2ed;
+  margin-bottom: 32px;
+}
+
+.bp-transaction_data-copy_btn {
+  border: none;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  z-index: 999;
+  stroke: #394357;
+  padding: 0px;
+}
+.bp-transaction_data-copy_btn:hover {
+  background: transparent;
+}
+.bp-transaction_data-copy_btn:focus {
+  background: none;
+}
+
+.copied-text::after,
+.bp-transaction_data-copy_btn::after {
+  display: none;
+  content: "Copy";
+  position: absolute;
+  top: -28px;
+  right: -18px;
+  background-color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  box-shadow: 0px 5px 10px 0px rgba(34, 43, 61, 0.2980392157);
+  font-size: 12px;
+  font-weight: 400;
+  color: #222b3d;
+}
+
+.copied-text {
+  stroke: #6b59ee;
+}
+
+.copied-text::after {
+  display: block;
+  content: "Copied!";
+  right: -23px;
+}
+
+.copied-text::before,
+.bp-transaction_data-copy_btn::before {
+  display: none;
+  content: "";
+  position: absolute;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #ffffff;
+  bottom: -6px;
+  right: 5px;
+  top: 0px;
+  z-index: 1;
+}
+
+.copied-text::before {
+  display: block;
+}
+
+.bp-transaction_data-copy_btn:hover::before,
+.bp-transaction_data-copy_btn:hover::after {
+  display: block;
+}
+
+.bp-transaction_data-copy_btn:active svg {
+  width: 17px;
+  height: 17px;
+}
+
+.bp-page_info-list {
+  padding: 32px 0;
+}
+
+.bp-page_info-list_item {
+  color: #6a758c;
+  font-weight: 300;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.bp-info_content {
+  font-size: 20px;
+}
+
+.bp-payment_method-logo-wrapper {
+  height: 30px;
+  width: auto;
+  line-height: 0;
+}
+
+.bp-payment_method-logo {
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.bp-button_group {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bp-print_btn {
+  background-color: #f4f5ff;
+  border-radius: 8px;
+  padding: 13px 16px;
+  border: none;
+  cursor: pointer;
+  align-items: center;
+  font-weight: 400;
+  font-size: 16px;
+  color: #6b59ee;
+  gap: 8px;
+}
+.bp-print_btn:hover {
+  background-color: #f4f5ff;
+  color: #6b59ee;
+}
+.bp-print_btn:focus {
+  background-color: #f4f5ff;
+  color: #6b59ee;
+}
+
+.bp-print_btn:active {
+  transform: scale(0.96);
+}
+
+.bp-btn_wrapper {
+  gap: 8px;
+}
+
+.bp-details_btn {
+  padding: 13px 16px;
+  color: #f7f8fa;
+  background-color: #6b59ee;
+  font-weight: 400;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bp-details_btn:hover {
+  background-color: #624fec;
+  color: #f7f8fa;
+}
+
+@media (max-width: 991.98px) {
+  .bp-thank_page-wrapper {
+    padding: 20px;
+  }
+  .bp-page_header {
+    font-size: 28px;
+  }
+  .bp-reason_for-text {
+    font-size: 20px;
+  }
+  .bp-payment_info {
+    color: #6a758c;
+    font-size: 13px;
+  }
+  .bp-page_info-list {
+    padding: 28px 0;
+  }
+  .bp-info_content {
+    font-size: 16px;
+  }
+  .bp-print_btn {
+    padding: 10px 13px;
+    font-size: 16px;
+  }
+  .bp-print_btn:focus {
+    background-color: #f4f5ff;
+    color: #6b59ee;
+  }
+  .bp-details_btn {
+    padding: 10px 13px;
+    font-size: 16px;
+  }
+}
+/* Hide everything except print-section */
+@media print {
+  .bp-thank_page {
+    height: unset;
+    padding: 0;
+  }
+  .bp-button_group {
+    display: none;
+  }
+}
 .better-payment-payment__report .report__thumb {
   /* margin-bottom: 20px; */
 }
@@ -755,16 +1061,16 @@ button:not(:disabled) {
   }
 }
 .better-payment-payment__report .report__content h3.transaction__success {
-  color: #2A3256;
+  color: #2a3256;
 }
 
 .better-payment-success-transaction-number {
-  background: #F4F6FF;
-  border: 1px solid #E4E9FF;
+  background: #f4f6ff;
+  border: 1px solid #e4e9ff;
   border-radius: 10px;
   padding: 5px 15px;
   margin-left: 10px;
-  color: #006AFF;
+  color: #006aff;
 }
 
 .better-payment-payment__report .report__content h3.transaction__failed {
@@ -774,7 +1080,7 @@ button:not(:disabled) {
 .better-payment-payment__report .report__content p {
   font-size: 20px;
   font-weight: 500;
-  color: #2A3256;
+  color: #2a3256;
   font-family: "Poppins", sans-serif;
   line-height: 1.8;
   margin: 0;
@@ -895,4 +1201,8 @@ button:not(:disabled) {
 .better-payment-success-report .report__thumb i,
 .better-payment-error-report .report__thumb i {
   font-size: 50px;
+}
+
+.line-height-0 {
+  line-height: 0;
 }

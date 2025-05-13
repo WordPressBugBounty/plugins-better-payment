@@ -221,7 +221,13 @@ class Handler extends Controller{
      */
     public static function paypal_payment_success( $settings = [] ) {
         $data = $_REQUEST;
-        
+        $frontend_data = [
+            'amount' => ! empty( $data['payment_gross'] ) ? floatval( $data['payment_gross'] ) : 0,
+            'email' => ! empty( $data['payer_email'] ) ? sanitize_email( $data['payer_email'] ) : '',
+            'transaction_id' => ! empty( $data[ 'txn_id' ] ) ? sanitize_text_field( $data[ 'txn_id' ] ) : '',
+            'currency' => ! empty( $data['mc_currency'] ) ? sanitize_text_field( $data['mc_currency'] ) : __( 'USD', 'better-payment' ),
+            'method' => 'paypal',
+        ];
         if ( !empty( $data[ 'payment_status' ] ) && !empty( $data[ 'payer_id' ] ) && !empty( $data[ 'payer_status' ] ) ) {
             global $wpdb;
             $table   = "{$wpdb->prefix}better_payment";
@@ -251,11 +257,11 @@ class Handler extends Controller{
                         self::better_email_notification(sanitize_text_field( $data[ 'txn_id' ] ), sanitize_email( $data[ 'payer_email' ] ), $settings, 'PayPal', $results->form_fields_info, $is_elementor_form);
                     }
 
-                    return sanitize_text_field( $data[ 'txn_id' ] );
+                    return $frontend_data;
                 }
             }
         }else if($data['better_payment_paypal_status'] === 'success'){
-            return ( isset($data[ 'txn_id' ]) && !empty( sanitize_text_field( $data[ 'txn_id' ] ) ) ) ? sanitize_text_field( $data[ 'txn_id' ] ) : __('Payment under processing!', 'better-payment');
+            return ( isset($data[ 'txn_id' ]) && !empty( sanitize_text_field( $data[ 'txn_id' ] ) ) ) ? $frontend_data : __('Payment under processing!', 'better-payment');
         }
         return false;
     }
@@ -273,7 +279,7 @@ class Handler extends Controller{
             global $wpdb;
             $table   = "{$wpdb->prefix}better_payment";
             $results = $wpdb->get_row(
-                $wpdb->prepare( "SELECT id,obj_id,transaction_id,form_fields_info,referer FROM $table WHERE order_id=%s and status = 'unpaid' limit 1", sanitize_text_field( $data[ 'better_payment_stripe_id' ] ) )
+                $wpdb->prepare( "SELECT id, obj_id, amount, transaction_id, currency, form_fields_info, referer FROM $table WHERE order_id=%s and status = 'unpaid' limit 1", sanitize_text_field( $data[ 'better_payment_stripe_id' ] ) )
             );
             
             if ( !empty( $results->obj_id ) && !empty( $settings[ 'better_payment_stripe_secret_key' ] ) ) {
@@ -335,12 +341,29 @@ class Handler extends Controller{
                 }
 
                 $customer_email = $is_payment_recurring && ( ! empty( $response->customer_email ) ) ? sanitize_email( $response->customer_email ) : '';
+                $customer_email_optional = '';
+                if (
+                    isset( $response->payment_intent ) &&
+                    isset( $response->payment_intent->charges ) &&
+                    isset( $response->payment_intent->charges->data ) &&
+                    ! empty( $response->payment_intent->charges->data )
+                ) {
+                    $charge = current( $response->payment_intent->charges->data );
+            
+                    if (
+                        isset( $charge->billing_details ) &&
+                        isset( $charge->billing_details->email ) &&
+                        ! empty( $charge->billing_details->email )
+                    ) {
+                        $customer_email_optional = sanitize_email( $charge->billing_details->email );
+                    }
+                }
                 
                 $updated = $wpdb->update(
                     $table,
                     array(
                         'status'        => sanitize_text_field( $response->payment_status ),
-                        'email'         => $is_payment_recurring ? $customer_email : sanitize_email( current( $response->payment_intent->charges->data )->billing_details->email ),
+                        'email'         => $is_payment_recurring ? $customer_email : $customer_email_optional,
                         'customer_info' => maybe_serialize( $response ),
                         'form_fields_info' => maybe_serialize( $form_fields_info ),
                         'transaction_id' => $transaction_id,
@@ -349,10 +372,32 @@ class Handler extends Controller{
                 );
 
                 do_action('better_payment/stripe_payment/success', $action_data);
+                
+                $frontend_data = [
+                    'amount' => ! empty( $results->amount ) ? floatval( $results->amount ) : 0,
+                    'email' => $is_payment_recurring ? $customer_email : $customer_email_optional,
+                    'transaction_id' => $transaction_id,
+                    'currency' => ! empty( $results->currency ) ? $results->currency : __( 'USD', 'better-payment' ),
+                    'method' => 'stripe',
+                    'is_payment_recurring' => $is_payment_recurring,
+                    'is_payment_split_payment' => $is_payment_split_payment,
+                ];
+
+                if ( $is_payment_split_payment ) {
+                    $total_amount = ! empty( $form_fields_info['split_payment_total_amount'] ) 
+                        ? sanitize_text_field( $form_fields_info['split_payment_total_amount'] ) 
+                        : 0;
+                    $total_installment = ! empty( $form_fields_info['split_payment_installment_iteration'] ) 
+                        ? sanitize_text_field( $form_fields_info['split_payment_installment_iteration'] ) 
+                        : 1;
+
+                    $frontend_data['amount'] = floatval( $total_amount / $total_installment );
+                    $frontend_data['total_amount'] = $total_amount;
+                }
 
                 if ( false !== $updated ) {
                     //Send email notification
-                    $better_customer_email = $is_payment_recurring ? $customer_email : sanitize_email( current( $response->payment_intent->charges->data )->billing_details->email );
+                    $better_customer_email = $is_payment_recurring ? $customer_email : $customer_email_optional;
                     
                     if ( 
                         (isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' ) 
@@ -362,7 +407,7 @@ class Handler extends Controller{
                         self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Stripe', $results->form_fields_info, $is_elementor_form);                    
                     }
 
-                    return $transaction_id;
+                    return $frontend_data;
                 }
             }
         }
@@ -417,6 +462,14 @@ class Handler extends Controller{
             $better_customer_email = ! empty( $response->data->customer->email ) ? maybe_serialize( $response->data->customer->email ) : '';
             $transaction_id = ! empty( $response->data->reference ) ? sanitize_text_field( $response->data->reference ) : '';
 
+            $frontend_data = [
+                'amount' => ! empty( $response->data->amount ) ? floatval( ( $response->data->amount ) / 100 ) : 0,
+                'email' => ! empty( $better_customer_email ) ? $better_customer_email : '',
+                'transaction_id' => $transaction_id,
+                'currency' => ! empty( $response->data->currency ) ? sanitize_text_field( $response->data->currency ) : __( 'USD', 'better-payment' ),
+                'method' => 'paystack',
+            ];
+
             if ( ! empty( $updated ) && $better_customer_email ) {
                 //Send email notification
                 if ( 
@@ -427,7 +480,7 @@ class Handler extends Controller{
                     self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Stripe', $results->form_fields_info, $is_elementor_form);                    
                 }
 
-                return $transaction_id;
+                return $frontend_data;
             }
         }
         return false;
@@ -485,6 +538,26 @@ class Handler extends Controller{
         $image_url = BETTER_PAYMENT_ASSETS . '/img/success.svg';
         $show_icon = 0;
 
+        $store_name = ( $settings['better_payment_form_payment_source'] === 'manual' && !empty( $settings['better_payment_form_title'] ) ) 
+            ? esc_html($settings['better_payment_form_title']) 
+            : esc_html( get_bloginfo('name') );
+
+        $payment_desc_text = !empty( $settings['better_payment_form_success_message_heading'] ) 
+            ? esc_html($settings['better_payment_form_success_message_heading']) 
+            : esc_html( __('You paid', 'better-payment') . '[currency_symbol][amount] '. __(' to ', 'better-payment') . '[store_name]');
+
+        $bp__currency_symbol = esc_html( self::get_currency_symbols( $tr_id['currency'] ) );
+
+        $payment_desc_text = str_replace( '[currency_symbol]', '<span class="bp-bold">' . $bp__currency_symbol . '</span>', $payment_desc_text );
+
+        $payment_desc_text = str_replace( '[amount]', '<span class="bp-bold">' . esc_html( $tr_id['amount'] ) . '</span>', $payment_desc_text );
+        
+        $payment_desc_text = str_replace( '[store_name]', '<span class="bp-bold">' . esc_html( $store_name ) . '</span>', $payment_desc_text );
+
+        $payment_mail_text = !empty( $settings['better_payment_form_success_message_sub_heading'] ) ? esc_html($settings['better_payment_form_success_message_sub_heading']) : esc_html( __('Payment Confirmation email will be sent to ', 'better-payment') . '[customer_email]');
+
+        $payment_mail_text = str_replace( '[customer_email]', '<span class="bp-bold">' . esc_html( $tr_id['email'] ) . '</span>', $payment_mail_text );
+
         if ( !empty( $settings[ 'better_payment_form_success_message_icon' ][ 'library' ] ) ) {
             if ( $settings[ 'better_payment_form_success_message_icon' ][ 'library' ] == 'svg' ) {
                 $image_url = $settings[ 'better_payment_form_success_message_icon' ][ 'value' ][ 'url' ];
@@ -493,29 +566,212 @@ class Handler extends Controller{
                 $image_url = $settings[ 'better_payment_form_success_message_icon' ][ 'value' ];
             }
         }
+
+
+        $allowed_payment_methods = [
+            'paypal' => BETTER_PAYMENT_ASSETS . '/img/paypal-2.svg',
+            'stripe' => BETTER_PAYMENT_ASSETS . '/img/stripe-2.svg',
+            'paystack' => BETTER_PAYMENT_ASSETS . '/img/paystack-2.svg',
+        ];
+        $payment_method_logo = isset( $allowed_payment_methods[ $tr_id['method'] ] ) ? $allowed_payment_methods[ $tr_id['method'] ] : ''; 
+
+        $better_payment_form_success_message_thanks = !empty( $settings['better_payment_form_success_message_thanks'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_thanks'] ) 
+            : esc_html__('Thank You!', 'better-payment');
+        $better_payment_form_success_message_transaction = !empty( $settings['better_payment_form_success_message_transaction'] ) 
+            ? esc_html__( $settings['better_payment_form_success_message_transaction'], 'better-payment' ) 
+            : esc_html__('Transaction ID', 'better-payment');
+        $better_payment_form_success_message_amount_text = !empty( $settings['better_payment_form_success_message_amount_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_amount_text'] ) 
+            : esc_html__( 'Amount', 'better-payment' );
+        $better_payment_form_success_message_currency_text = !empty( $settings['better_payment_form_success_message_currency_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_currency_text'] ) 
+            : esc_html__( 'Currency', 'better-payment' );
+        $better_payment_form_success_message_pay_method_text = !empty( $settings['better_payment_form_success_message_pay_method_text'] ) ? esc_html( $settings['better_payment_form_success_message_pay_method_text'] ) : esc_html__( 'Payment Method', 'better-payment' );
+        $better_payment_form_success_message_pay_type_text = !empty( $settings['better_payment_form_success_message_pay_type_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_pay_type_text'] ) 
+            : esc_html__( 'Payment Type', 'better-payment' );
+        $better_payment_form_payment_type = !empty( $settings['better_payment_form_payment_type'] ) 
+            ? esc_html( $settings['better_payment_form_payment_type'] ) 
+            : '';
+        if ( ! empty( $better_payment_form_payment_type ) ) {
+            if (  'one-time' === $better_payment_form_payment_type ) {
+                $better_payment_form_payment_type_value = esc_html__( 'One Time Payment', 'better-payment' );
+            } elseif (  'recurring' === $better_payment_form_payment_type ) {
+                $better_payment_form_payment_type_value = esc_html__( 'Recurring Payment', 'better-payment' );
+            } else {
+                $better_payment_form_payment_type_value = esc_html__( 'Split Payment', 'better-payment' );
+            }
+        }
+        $better_payment_form_success_message_merchant_details_text = !empty( $settings['better_payment_form_success_message_merchant_details_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_merchant_details_text'] ) 
+            : esc_html__( 'Merchant Details', 'better-payment' );
+        $better_payment_form_success_message_merchant_details_value = $settings['better_payment_form_payment_source'] === 'manual' && ! empty( $settings['better_payment_form_title'] ) 
+            ? esc_html($settings['better_payment_form_title']) 
+            : esc_html( get_bloginfo( 'name' ) );
+        $better_payment_form_success_message_paid_amount_text = !empty( $settings['better_payment_form_success_message_paid_amount_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_paid_amount_text'] ) 
+            : esc_html__( 'Paid Amount', 'better-payment' );
+        $better_payment_form_success_message_purchase_details_text = !empty( $settings['better_payment_form_success_message_purchase_details_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_purchase_details_text'] ) 
+            : esc_html__( 'Purchase Details', 'better-payment' );
+        $better_payment_form_success_message_print_text = !empty( $settings['better_payment_form_success_message_print_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_print_text'] ) 
+            : esc_html__( 'Print', 'better-payment' );
+        $better_payment_form_success_message_view_details_btn_text = !empty( $settings['better_payment_form_success_message_view_details_btn_text'] ) 
+            ? esc_html( $settings['better_payment_form_success_message_view_details_btn_text'] ) 
+            : esc_html__( 'View Details', 'better-payment' );
+        $better_payment_form_success_page_view_details_url = !empty( $settings['better_payment_form_success_page_view_details_url']['url'] ) ? esc_url( $settings['better_payment_form_success_page_view_details_url']['url'] ) : 'javascript:void(0)';
         ?>
-        <div class="pt140 pb140 background__grey2">
-            <div class="better-payment-payment__report better-payment-success-report">
-                <div class="report__thumb">
-                    <?php if($show_icon) : ?>
-                        <i class="<?php echo esc_attr($image_url); ?>"></i>
-                    <?php else : ?>    
-                        <img src="<?php echo esc_url($image_url); ?>" alt="Success image">
-                    <?php endif; ?>
+        <section class="bp-thank_page">
+            <div class="bp-thank_page-wrapper">
+                <div class="bp-thank_page-logo">
+                    <span class="bp-thank_page-logo_wrapper">
+                        <img src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/success-2.svg' ); ?>" alt="Better Payment logo">
+                    </span>
                 </div>
-                <div class="report__content">
-                    <h3 class="transaction__success"><?php echo ( isset( $settings[ 'better_payment_form_success_message_heading' ] ) ) ? esc_html__( $settings['better_payment_form_success_message_heading'], 'better-payment' ) : esc_html__('Payment Successful', 'better-payment'); ?> </h3>
-                    <p class="transaction__number">
-                        <?php printf( "%s : <span id='bp_copy_clipboard_input_1' class='better-payment-success-transaction-number'>%s</span>", ( isset( $settings['better_payment_form_success_message_transaction'] ) ) ? esc_html__( $settings['better_payment_form_success_message_transaction'], 'better-payment' ) : esc_html__('Transaction Number', 'better-payment'), esc_html( $tr_id ) );; ?>
-                        <span id="bp_copy_clipboard_1" class="bp-icon bp-copy-square bp-copy-clipboard" title="Copy" data-bp_txn_counter="1" style="color: rgb(42, 50, 86);"></span>
+                <div class="bp-thank_page-text">
+                    <h2 class="bp-font_ibm bp-page_header">
+                        <?php echo wp_kses_post( $better_payment_form_success_message_thanks ); ?>
+                        <span> &#127881;</span>
+                    </h2>
+                    <p class="bp-font_ibm bp-reason_for-text">
+                        <?php echo wp_kses_post( $payment_desc_text ); ?>
                     </p>
-                    <p class="payment__greeting"><?php echo ( isset( $settings['better_payment_form_success_message_thanks'] ) ) ? esc_html__( $settings['better_payment_form_success_message_thanks'], 'better-payment' ) : esc_html__('Thank you for your payment', 'better-payment'); ?></p>
+                    <?php if ($settings['better_payment_form_email_enable'] && !empty( $tr_id['email'] )): ?>
+                        <p class="bp-font_ibm bp-payment_info">
+                            <?php echo wp_kses_post( $payment_mail_text ); ?>
+                        </p>
+                    <?php endif; ?>
+
+                    <div class="bp-flex bp-transaction_info-wrapper">
+                        <p class="bp-flex bp-font_ibm  bp-transaction_info"> <span class="line-height-0">
+                            <img src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/wallet.svg' ); ?>" alt="Better Payment wallet"> 
+                            </span>
+                            <span>
+                                <?php echo wp_kses_post( $better_payment_form_success_message_transaction ); ?>: 
+                            </span>
+                            <span class="bp-bold bp-transaction_id"><?php echo esc_html( $tr_id['transaction_id'] ); ?></span>
+                        </p>
+                    
+                        <button class="bp-transaction_data-copy_btn ">
+                            <svg width="20" height="20" viewBox="0 0 20 20"
+                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M15.0002 15.601C16.3257 15.601 17.4002 14.5265 17.4002 13.201V8.40098C17.4002 5.38399 17.4002 3.87549 16.463 2.93823C15.5257 2.00098 14.0172 2.00098 11.0002 2.00098H7.80024C6.47476 2.00098 5.40024 3.07549 5.40024 4.40098M10.2002 18.001H7.80024C5.5375 18.001 4.40613 18.001 3.70319 17.298C3.00024 16.5951 3.00024 15.4637 3.00024 13.201V9.20098C3.00024 6.93823 3.00024 5.80686 3.70319 5.10392C4.40613 4.40098 5.5375 4.40098 7.80024 4.40098H10.2002C12.463 4.40098 13.5944 4.40098 14.2973 5.10392C15.0002 5.80686 15.0002 6.93824 15.0002 9.20098V13.201C15.0002 15.4637 15.0002 16.5951 14.2973 17.298C13.5944 18.001 12.463 18.001 10.2002 18.001Z"
+                                stroke-width="1.152" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bp-thank_page-info">
+                    <ul class="bp-page_info-list">
+                        <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                            <span class="bp-info_content">
+                                <?php
+                                    echo wp_kses_post( $better_payment_form_success_message_amount_text );
+                                ?>
+                            </span>
+                            <span class="bp-info_content  bp-bold"><?php echo $bp__currency_symbol . esc_html( $tr_id['amount'] ); ?></span>
+                        </li>
+                        <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                            <span class=" bp-info_content">
+                                <?php
+                                    echo wp_kses_post( $better_payment_form_success_message_currency_text );
+                                ?>
+                            </span>
+                            <span class="bp-info_content  bp-bold"><?php echo esc_html( $tr_id['currency'] ); ?></span>
+                        </li>
+                        <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                            <span class="bp-info_content">
+                                <?php
+                                    echo wp_kses_post( $better_payment_form_success_message_pay_method_text );
+                                ?>
+                            </span>
+                            <div class="bp-payment_method-logo-wrapper">
+                                <?php if ( !empty( $payment_method_logo ) ) : ?>
+                                    <img src="<?php echo esc_url( $payment_method_logo ); ?>" alt="<?php echo esc_attr( $tr_id['method'] ); ?>" class="bp-payment_method-logo">
+                                <?php endif; ?>
+                            </div>
+                        </li>
+                        <?php if( !empty( $better_payment_form_payment_type ) ): ?>
+                            <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                                <span class="bp-info_content">
+                                    <?php
+                                        echo wp_kses_post( $better_payment_form_success_message_pay_type_text );
+                                    ?>
+                                </span>
+                                <span class="bp-info_content  bp-bold"><?php echo wp_kses_post( $better_payment_form_payment_type_value ); ?></span>
+                            </li>
+                        <?php endif; ?>
+                        <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                            <span class="bp-info_content">
+                                <?php
+                                    echo wp_kses_post( $better_payment_form_success_message_merchant_details_text );
+                                ?>
+                            </span>
+                            <span class="bp-info_content  bp-bold">
+                                <?php echo wp_kses_post( $better_payment_form_success_message_merchant_details_value );  ?>
+                            </span>
+                        </li>
+                        <?php if( isset( $tr_id['is_payment_split_payment'] ) && $tr_id['is_payment_split_payment'] ): ?>
+                            <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                                <span class="bp-info_content">
+                                    <?php
+                                        echo wp_kses_post( $better_payment_form_success_message_paid_amount_text );
+                                    ?>
+                                </span>
+                                <span class="bp-info_content  bp-bold">
+                                    <?php echo $bp__currency_symbol . esc_html($tr_id['amount']); ?> out of <?php echo $bp__currency_symbol . esc_html($tr_id['total_amount']); ?>
+                                </span>
+                            </li>
+                        <?php endif; ?>
+                        <?php if( !empty($settings['better_payment_form_woocommerce_product_id']) || !empty( $settings['better_payment_form_woocommerce_product_ids'] ) ): ?>
+                        <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
+                            <span class="bp-info_content">
+                                <?php
+                                    echo wp_kses_post( $better_payment_form_success_message_purchase_details_text );
+                                ?>
+                            </span>
+                            <?php if( !empty( $settings['better_payment_form_woocommerce_product_id'] ) ): ?>
+                                <span class="bp-info_content  bp-bold"><?php echo esc_html( get_the_title( $settings['better_payment_form_woocommerce_product_id'] ) ); ?></span>
+                            <?php endif; ?>
+                            <?php
+                                if( !empty( $settings['better_payment_form_woocommerce_product_ids'] ) ):
+                                    $product_ids = $settings['better_payment_form_woocommerce_product_ids'];
+                                    $product_names = [];
+                                    foreach( $product_ids as $product_id ):
+                                        $product_names[] = get_the_title( $product_id );
+                                    endforeach;
+                                    echo '<span class="bp-info_content  bp-bold">' . implode( ', ', $product_names ) . '</span>';
+                                endif;
+                            ?>
+                        </li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+
+                <div class="bp-flex bp-button_group">
+                    <button class="bp-flex bp-font_ibm bp-print_btn">
+                        <span style="line-height: 0;">
+                            <img src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/print.svg' ); ?>" alt="Better Payment print">
+                        </span>
+                        <span class="bp-font_ibm">
+                            <?php echo wp_kses_post( $better_payment_form_success_message_print_text ); ?>
+                        </span>
+                    </button>
+                    
+                    <div class="bp-flex bp-btn_wrapper">
+                        <a href="<?php echo $better_payment_form_success_page_view_details_url; ?>" target="_blank" class="bp-font_ibm bp-details_btn">
+                            <?php echo wp_kses_post( $better_payment_form_success_message_view_details_btn_text ); ?>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
         <?php
     }
-
 
     /**
      * Error message template
