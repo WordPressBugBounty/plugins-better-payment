@@ -439,11 +439,12 @@ class Actions {
         
         $el_settings_currency_symbol = \Better_Payment\Lite\Classes\Handler::get_currency_symbols( esc_html($el_settings_currency) );
 
-        $redirection_url_success    = ! empty( $el_settings['better_payment_form_success_page_url']['url'] )   ? esc_url( $el_settings['better_payment_form_success_page_url']['url'] )   : get_permalink( $page_id );
-        $redirection_url_error      = ! empty( $el_settings['better_payment_form_error_page_url']['url'] )     ? esc_url( $el_settings['better_payment_form_error_page_url']['url'] )     : get_permalink( $page_id );
+        $redirection_url_success    = get_permalink( $page_id );
+        $redirection_url_error      = get_permalink( $page_id );
 
         $request  = [
             'amount'   => ( $amount * 100 ),
+            'currency' => $el_settings_currency,
             'cart_id'  => $order_id,
             'callback_url'  => add_query_arg( [
                 'better_payment_paystack_status' => 'success',
@@ -495,7 +496,7 @@ class Actions {
         $response_ar = json_decode( $response[ 'body' ] );
         
         if( empty( $response_ar->status ) || empty( $response_ar->data ) ){
-            $error_message = 'Something went wrong!';
+            $error_message = $response_ar->message ? sanitize_text_field($response_ar->message) : 'Something went wrong!';
 
             if (isset($response_ar->error)){
                 $error_message = sanitize_text_field($response_ar->error->message);

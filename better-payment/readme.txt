@@ -5,7 +5,7 @@ Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,6 +162,12 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.3.1 - 28/05/2025 =
+- Added: KES currency support
+- Added: Custom redirection after payment for Paystack
+- Fixed: Resubmit button remained disabled after form submission error, preventing users from correcting and resubmitting the form
+- Few minor bug fixes & improvements
 
 = 1.3.0 - 13/05/2025 =
 - Added: Payment success screen new design

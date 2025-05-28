@@ -738,7 +738,7 @@ class Better_Payment_Widget extends Widget_Base {
             'better_payment_form_currency_notice',
             [
                 'type'            => Controls_Manager::RAW_HTML,
-                'raw'             => sprintf( __( 'Supported by %sStripe%s only', 'better-payment' ), '<strong>', '</strong>' ),
+                'raw'             => sprintf( __( 'Supported by %1$sStripe%2$s (and/or %1$sPaystack%2$s) only', 'better-payment' ), '<strong>', '</strong>' ),
                 'content_classes' => 'better-payment-warning',
                 'conditions' => [
                     'relation' => 'and',
@@ -765,6 +765,10 @@ class Better_Payment_Widget extends Widget_Base {
                                 [
                                     'name'     => 'better_payment_form_currency',
                                     'value'    => 'RON',
+                                ],
+                                [
+                                    'name'     => 'better_payment_form_currency',
+                                    'value'    => 'KES',
                                 ],
                             ],
                         ]
@@ -2156,6 +2160,10 @@ class Better_Payment_Widget extends Widget_Base {
                             'name'  => 'better_payment_form_paypal_enable',
                             'value' => 'yes',
                         ],
+                        [
+                            'name'  => 'better_payment_form_paystack_enable',
+                            'value' => 'yes',
+                        ],
                     ],
                 ]
             ]
@@ -2417,6 +2425,10 @@ class Better_Payment_Widget extends Widget_Base {
                         ],
                         [
                             'name'  => 'better_payment_form_paypal_enable',
+                            'value' => 'yes',
+                        ],
+                        [
+                            'name'  => 'better_payment_form_paystack_enable',
                             'value' => 'yes',
                         ],
                     ],

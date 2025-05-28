@@ -477,7 +477,7 @@ class Handler extends Controller{
                     || ( $results->referer === 'elementor-form' )
                     ) {
                     $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
-                    self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Stripe', $results->form_fields_info, $is_elementor_form);                    
+                    self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form);                    
                 }
 
                 return $frontend_data;
@@ -506,6 +506,7 @@ class Handler extends Controller{
             'HUF' => "ft",
             'ILS' => "₪",
             'JPY' => "¥",
+            'KES' => "Ksh.",
             'MXN' => "$",
             'MYR' => "MYR",
             'NOK' => "kr",

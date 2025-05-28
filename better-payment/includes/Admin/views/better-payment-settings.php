@@ -9,30 +9,8 @@
 $bp_admin_settings_total_transactions_count = isset($bp_admin_all_transactions_analytics['total_transactions']) ? $bp_admin_all_transactions_analytics['total_transactions'] : 0;
 $bp_admin_settings_completed_transactions_count = isset($bp_admin_all_transactions_analytics['completed_transactions']) ? $bp_admin_all_transactions_analytics['completed_transactions'] : 0;
 $bp_admin_settings_incomplete_transactions_count = isset($bp_admin_all_transactions_analytics['incomplete_transactions']) ? $bp_admin_all_transactions_analytics['incomplete_transactions'] : 0;
-$currency_list = [
-	'USD' => 'USD',
-	'EUR' => 'EUR',
-	'GBP' => 'GBP',
-	'AUD' => 'AUD',
-	'CAD' => 'CAD',
-	'CZK' => 'CZK',
-	'DKK' => 'DKK',
-	'HKD' => 'HKD',
-	'HUF' => 'HUF',
-	'ILS' => 'ILS',
-	'JPY' => 'JPY',
-	'MXN' => 'MXN',
-	'NOK' => 'NOK',
-	'NZD' => 'NZD',
-	'PHP' => 'PHP',
-	'PLN' => 'PLN',
-	'RUB' => 'RUB',
-	'SGD' => 'SGD',
-	'SEK' => 'SEK',
-	'CHF' => 'CHF',
-	'TWD' => 'TWD',
-	'THB' => 'THB',
-];
+$better_payment_helper = new Better_Payment\Lite\Classes\Helper();
+$currency_list = $better_payment_helper->get_currency_list();
 ?>
 <!-- Admin Settings Form Wrapper: Starts  -->
 <div class="better-payment">

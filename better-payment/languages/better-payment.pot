@@ -13,7 +13,7 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../includes/Admin.php:80, ../includes/Admin/Settings.php:90, ../includes/Admin/Settings.php:91, ../includes/Admin/views/better-payment-settings.php:64
+#: ../includes/Admin.php:80, ../includes/Admin/Settings.php:90, ../includes/Admin/Settings.php:91, ../includes/Admin/views/better-payment-settings.php:42
 msgid "Settings"
 msgstr ""
 
@@ -73,7 +73,7 @@ msgstr ""
 msgid "No action taken!"
 msgstr ""
 
-#: ../includes/Admin/Settings.php:79, ../includes/Admin/Settings.php:80, ../includes/Classes/Actions.php:104, ../includes/Classes/Actions.php:247, ../includes/Classes/Actions.php:253, ../includes/Admin/Elementor/Better_Payment_Widget.php:59, ../includes/Admin/Elementor/Better_Payment_Widget.php:870, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
+#: ../includes/Admin/Settings.php:79, ../includes/Admin/Settings.php:80, ../includes/Classes/Actions.php:104, ../includes/Classes/Actions.php:247, ../includes/Classes/Actions.php:253, ../includes/Admin/Elementor/Better_Payment_Widget.php:59, ../includes/Admin/Elementor/Better_Payment_Widget.php:874, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
 msgid "Better Payment"
 msgstr ""
 
@@ -129,119 +129,119 @@ msgstr ""
 msgid "Finalize"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:226, ../includes/Admin/views/better-payment-settings.php:98, ../includes/Admin/views/better-payment-settings.php:109, ../includes/Admin/views/better-payment-transaction-list.php:276, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:32, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:44, ../includes/Admin/views/elementor/layouts/layout-1.php:70, ../includes/Admin/views/elementor/layouts/layout-2.php:38
+#: ../includes/Admin/Setup_Wizard.php:227, ../includes/Admin/views/better-payment-settings.php:76, ../includes/Admin/views/better-payment-settings.php:87, ../includes/Admin/views/better-payment-transaction-list.php:276, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:32, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:44, ../includes/Admin/views/elementor/layouts/layout-1.php:70, ../includes/Admin/views/elementor/layouts/layout-2.php:38
 msgid "PayPal"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:227, ../includes/Admin/views/better-payment-settings.php:111
+#: ../includes/Admin/Setup_Wizard.php:228, ../includes/Admin/views/better-payment-settings.php:89
 msgid "Enable PayPal if you want to make transaction using PayPal."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:239, ../includes/Admin/views/better-payment-settings.php:99, ../includes/Admin/views/better-payment-settings.php:125, ../includes/Admin/views/better-payment-transaction-list.php:277, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:29, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:45, ../includes/Admin/views/elementor/layouts/layout-1.php:84, ../includes/Admin/views/elementor/layouts/layout-2.php:52
+#: ../includes/Admin/Setup_Wizard.php:240, ../includes/Admin/views/better-payment-settings.php:77, ../includes/Admin/views/better-payment-settings.php:103, ../includes/Admin/views/better-payment-transaction-list.php:277, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:29, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:45, ../includes/Admin/views/elementor/layouts/layout-1.php:84, ../includes/Admin/views/elementor/layouts/layout-2.php:52
 msgid "Stripe"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:240, ../includes/Admin/views/better-payment-settings.php:127
+#: ../includes/Admin/Setup_Wizard.php:241, ../includes/Admin/views/better-payment-settings.php:105
 msgid "Enable Stripe if you want to accept payment via Stripe."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:252, ../includes/Admin/views/better-payment-settings.php:174
+#: ../includes/Admin/Setup_Wizard.php:253, ../includes/Admin/views/better-payment-settings.php:152
 msgid "Email Notification"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:253, ../includes/Admin/views/better-payment-settings.php:175
+#: ../includes/Admin/Setup_Wizard.php:254, ../includes/Admin/views/better-payment-settings.php:153
 msgid "Enable email notification for each transaction. It sends notification to the website admin and customer (who makes the payment). You can modify email settings as per your need."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:265, ../includes/Classes/Handler.php:589, ../includes/Admin/Elementor/Better_Payment_Widget.php:624, ../includes/Admin/Elementor/Better_Payment_Widget.php:2254, ../includes/Admin/Elementor/Better_Payment_Widget.php:2256, ../includes/Admin/Elementor/Better_Payment_Widget.php:2257, ../includes/Admin/views/better-payment-settings.php:187, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:57, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:58
+#: ../includes/Admin/Setup_Wizard.php:266, ../includes/Classes/Handler.php:590, ../includes/Admin/Elementor/Better_Payment_Widget.php:624, ../includes/Admin/Elementor/Better_Payment_Widget.php:2262, ../includes/Admin/Elementor/Better_Payment_Widget.php:2264, ../includes/Admin/Elementor/Better_Payment_Widget.php:2265, ../includes/Admin/views/better-payment-settings.php:165, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:57, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:58
 msgid "Currency"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:266, ../includes/Admin/views/better-payment-settings.php:188
+#: ../includes/Admin/Setup_Wizard.php:267, ../includes/Admin/views/better-payment-settings.php:166
 msgid "Select default currency for each transaction. You can also overwrite this setting from each widget control on elementor page builder."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:271, ../includes/Admin/views/better-payment-settings.php:193
+#: ../includes/Admin/Setup_Wizard.php:272, ../includes/Admin/views/better-payment-settings.php:171
 msgid "Select Currency"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:287, ../includes/Admin/Setup_Wizard.php:314, ../includes/Admin/Elementor/Better_Payment_Widget.php:1609, ../includes/Admin/Elementor/Better_Payment_Widget.php:1713, ../includes/Admin/Elementor/Better_Payment_Widget.php:1779, ../includes/Admin/views/better-payment-settings.php:361, ../includes/Admin/views/better-payment-settings.php:440, ../includes/Admin/views/better-payment-settings.php:509, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:115, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:107, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:121
+#: ../includes/Admin/Setup_Wizard.php:288, ../includes/Admin/Setup_Wizard.php:315, ../includes/Admin/Elementor/Better_Payment_Widget.php:1613, ../includes/Admin/Elementor/Better_Payment_Widget.php:1717, ../includes/Admin/Elementor/Better_Payment_Widget.php:1783, ../includes/Admin/views/better-payment-settings.php:339, ../includes/Admin/views/better-payment-settings.php:418, ../includes/Admin/views/better-payment-settings.php:487, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:115, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:107, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:121
 msgid "Live Mode"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:288, ../includes/Admin/views/better-payment-settings.php:362
+#: ../includes/Admin/Setup_Wizard.php:289, ../includes/Admin/views/better-payment-settings.php:340
 msgid "Live mode allows you to process real transactions. It just requires PayPal business email to accept real payments."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:300, ../includes/Admin/Elementor/Better_Payment_Widget.php:1579, ../includes/Admin/views/better-payment-settings.php:374, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:85
+#: ../includes/Admin/Setup_Wizard.php:301, ../includes/Admin/Elementor/Better_Payment_Widget.php:1583, ../includes/Admin/views/better-payment-settings.php:352, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:85
 msgid "Business Email"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:301, ../includes/Admin/views/better-payment-settings.php:375
+#: ../includes/Admin/Setup_Wizard.php:302, ../includes/Admin/views/better-payment-settings.php:353
 msgid "Your PayPal account email address to accept payment via PayPal."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:315, ../includes/Admin/views/better-payment-settings.php:441
+#: ../includes/Admin/Setup_Wizard.php:316, ../includes/Admin/views/better-payment-settings.php:419
 msgid "Live mode allows you to process real transactions. It just requires live Stripe keys (public and secret keys) to accept real payments."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:330, ../includes/Admin/Elementor/Better_Payment_Widget.php:1674, ../includes/Admin/views/better-payment-settings.php:456, ../includes/Admin/views/better-payment-settings.php:525
+#: ../includes/Admin/Setup_Wizard.php:331, ../includes/Admin/Elementor/Better_Payment_Widget.php:1678, ../includes/Admin/views/better-payment-settings.php:434, ../includes/Admin/views/better-payment-settings.php:503
 msgid "Live Public Key"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:331, ../includes/Admin/views/better-payment-settings.php:458
+#: ../includes/Admin/Setup_Wizard.php:332, ../includes/Admin/views/better-payment-settings.php:436
 msgid "Stripe live public key is required to make payments via Stripe. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:339, ../includes/Admin/Elementor/Better_Payment_Widget.php:1693, ../includes/Admin/views/better-payment-settings.php:468, ../includes/Admin/views/better-payment-settings.php:537
+#: ../includes/Admin/Setup_Wizard.php:340, ../includes/Admin/Elementor/Better_Payment_Widget.php:1697, ../includes/Admin/views/better-payment-settings.php:446, ../includes/Admin/views/better-payment-settings.php:515
 msgid "Live Secret Key"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:340, ../includes/Admin/views/better-payment-settings.php:470
+#: ../includes/Admin/Setup_Wizard.php:341, ../includes/Admin/views/better-payment-settings.php:448
 msgid "Stripe live secret key is required to make payments via Stripe. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:348, ../includes/Admin/Elementor/Better_Payment_Widget.php:1635, ../includes/Admin/views/better-payment-settings.php:480, ../includes/Admin/views/better-payment-settings.php:549
+#: ../includes/Admin/Setup_Wizard.php:349, ../includes/Admin/Elementor/Better_Payment_Widget.php:1639, ../includes/Admin/views/better-payment-settings.php:458, ../includes/Admin/views/better-payment-settings.php:527
 msgid "Test Public Key"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:349, ../includes/Admin/views/better-payment-settings.php:482
+#: ../includes/Admin/Setup_Wizard.php:350, ../includes/Admin/views/better-payment-settings.php:460
 msgid "Stripe test public key is required to make payments via Stripe. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:357, ../includes/Admin/Elementor/Better_Payment_Widget.php:1654, ../includes/Admin/views/better-payment-settings.php:492, ../includes/Admin/views/better-payment-settings.php:561
+#: ../includes/Admin/Setup_Wizard.php:358, ../includes/Admin/Elementor/Better_Payment_Widget.php:1658, ../includes/Admin/views/better-payment-settings.php:470, ../includes/Admin/views/better-payment-settings.php:539
 msgid "Test Secret Key"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:358, ../includes/Admin/views/better-payment-settings.php:494
+#: ../includes/Admin/Setup_Wizard.php:359, ../includes/Admin/views/better-payment-settings.php:472
 msgid "Stripe test secret key is required to make payments via Stripe. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:379
+#: ../includes/Admin/Setup_Wizard.php:380
 msgid "Great Job! Your Configuration is Complete "
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:381
+#: ../includes/Admin/Setup_Wizard.php:382
 msgid "Share non-sensitive diagnostic data and plugin usage information."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:383
+#: ../includes/Admin/Setup_Wizard.php:384
 msgid "What do we collect? We collect non-sensitive diagnostic data and plugin usage information. Your site URL, WordPress & PHP version, plugins & themes and email address to send you the discount coupon. This data lets us make sure this plugin always stays compatible with the most popular plugins and themes. No spam, we promise."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:399
+#: ../includes/Admin/Setup_Wizard.php:400
 msgid "< Previous"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:400
+#: ../includes/Admin/Setup_Wizard.php:401
 msgid "Next >"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:401
+#: ../includes/Admin/Setup_Wizard.php:402
 msgid "Finish"
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:517
+#: ../includes/Admin/Setup_Wizard.php:518
 msgid "Quick Setup Wizard - Better Payment"
 msgstr ""
 
@@ -277,95 +277,95 @@ msgstr ""
 msgid "There was a problem connecting to the Stripe API endpoint."
 msgstr ""
 
-#: ../includes/Classes/Handler.php:547, ../includes/Admin/Elementor/Better_Payment_Widget.php:2185, ../includes/Admin/Elementor/Better_Payment_Widget.php:2186, ../includes/Admin/Elementor/Better_Payment_Widget.php:2187
+#: ../includes/Classes/Handler.php:548, ../includes/Admin/Elementor/Better_Payment_Widget.php:2193, ../includes/Admin/Elementor/Better_Payment_Widget.php:2194, ../includes/Admin/Elementor/Better_Payment_Widget.php:2195
 msgid "You paid"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:547
+#: ../includes/Classes/Handler.php:548
 msgid " to "
 msgstr ""
 
-#: ../includes/Classes/Handler.php:557
+#: ../includes/Classes/Handler.php:558
 msgid "Payment Confirmation email will be sent to "
 msgstr ""
 
-#: ../includes/Classes/Handler.php:580, ../includes/Admin/views/template-email-notification.php:173
+#: ../includes/Classes/Handler.php:581, ../includes/Admin/views/template-email-notification.php:173
 msgid "Thank You!"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:583, ../includes/Admin/Elementor/Better_Payment_Widget.php:2205, ../includes/Admin/Elementor/Better_Payment_Widget.php:2206, ../includes/Admin/Elementor/User_Dashboard.php:1907, ../includes/Admin/Elementor/User_Dashboard.php:2030, ../includes/Admin/Elementor/User_Dashboard.php:2033, ../includes/Admin/views/template-transaction-list.php:44
+#: ../includes/Classes/Handler.php:584, ../includes/Admin/Elementor/Better_Payment_Widget.php:2213, ../includes/Admin/Elementor/Better_Payment_Widget.php:2214, ../includes/Admin/Elementor/User_Dashboard.php:1907, ../includes/Admin/Elementor/User_Dashboard.php:2030, ../includes/Admin/Elementor/User_Dashboard.php:2033, ../includes/Admin/views/template-transaction-list.php:44
 msgid "Transaction ID"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:586, ../includes/Admin/Elementor/Better_Payment_Widget.php:1209, ../includes/Admin/Elementor/Better_Payment_Widget.php:2237, ../includes/Admin/Elementor/Better_Payment_Widget.php:2239, ../includes/Admin/Elementor/Better_Payment_Widget.php:2240, ../includes/Admin/Elementor/User_Dashboard.php:1883, ../includes/Admin/Elementor/User_Dashboard.php:2004, ../includes/Admin/Elementor/User_Dashboard.php:2007, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:328, ../includes/Admin/views/template-transaction-list.php:38
+#: ../includes/Classes/Handler.php:587, ../includes/Admin/Elementor/Better_Payment_Widget.php:1213, ../includes/Admin/Elementor/Better_Payment_Widget.php:2245, ../includes/Admin/Elementor/Better_Payment_Widget.php:2247, ../includes/Admin/Elementor/Better_Payment_Widget.php:2248, ../includes/Admin/Elementor/User_Dashboard.php:1883, ../includes/Admin/Elementor/User_Dashboard.php:2004, ../includes/Admin/Elementor/User_Dashboard.php:2007, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:328, ../includes/Admin/views/template-transaction-list.php:38
 msgid "Amount"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:590, ../includes/Admin/Elementor/Better_Payment_Widget.php:2271, ../includes/Admin/Elementor/Better_Payment_Widget.php:2273, ../includes/Admin/Elementor/Better_Payment_Widget.php:2274, ../includes/Admin/Elementor/Better_Payment_Widget.php:3267
+#: ../includes/Classes/Handler.php:591, ../includes/Admin/Elementor/Better_Payment_Widget.php:2279, ../includes/Admin/Elementor/Better_Payment_Widget.php:2281, ../includes/Admin/Elementor/Better_Payment_Widget.php:2282, ../includes/Admin/Elementor/Better_Payment_Widget.php:3279
 msgid "Payment Method"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:593, ../includes/Admin/Elementor/Better_Payment_Widget.php:116, ../includes/Admin/Elementor/Better_Payment_Widget.php:2288, ../includes/Admin/Elementor/Better_Payment_Widget.php:2290, ../includes/Admin/Elementor/Better_Payment_Widget.php:2291, ../includes/Admin/Elementor/User_Dashboard.php:1895, ../includes/Admin/Elementor/User_Dashboard.php:2017, ../includes/Admin/Elementor/User_Dashboard.php:2020, ../includes/Admin/views/template-transaction-list.php:41
+#: ../includes/Classes/Handler.php:594, ../includes/Admin/Elementor/Better_Payment_Widget.php:116, ../includes/Admin/Elementor/Better_Payment_Widget.php:2296, ../includes/Admin/Elementor/Better_Payment_Widget.php:2298, ../includes/Admin/Elementor/Better_Payment_Widget.php:2299, ../includes/Admin/Elementor/User_Dashboard.php:1895, ../includes/Admin/Elementor/User_Dashboard.php:2017, ../includes/Admin/Elementor/User_Dashboard.php:2020, ../includes/Admin/views/template-transaction-list.php:41
 msgid "Payment Type"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:603
+#: ../includes/Classes/Handler.php:604
 msgid "Split Payment"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:601
+#: ../includes/Classes/Handler.php:602
 msgid "Recurring Payment"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:599
+#: ../includes/Classes/Handler.php:600
 msgid "One Time Payment"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:608, ../includes/Admin/Elementor/Better_Payment_Widget.php:2305, ../includes/Admin/Elementor/Better_Payment_Widget.php:2307, ../includes/Admin/Elementor/Better_Payment_Widget.php:2308
+#: ../includes/Classes/Handler.php:609, ../includes/Admin/Elementor/Better_Payment_Widget.php:2313, ../includes/Admin/Elementor/Better_Payment_Widget.php:2315, ../includes/Admin/Elementor/Better_Payment_Widget.php:2316
 msgid "Merchant Details"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:614, ../includes/Admin/Elementor/Better_Payment_Widget.php:2322, ../includes/Admin/Elementor/Better_Payment_Widget.php:2324, ../includes/Admin/Elementor/Better_Payment_Widget.php:2325
+#: ../includes/Classes/Handler.php:615, ../includes/Admin/Elementor/Better_Payment_Widget.php:2330, ../includes/Admin/Elementor/Better_Payment_Widget.php:2332, ../includes/Admin/Elementor/Better_Payment_Widget.php:2333
 msgid "Paid Amount"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:617, ../includes/Admin/Elementor/Better_Payment_Widget.php:2339, ../includes/Admin/Elementor/Better_Payment_Widget.php:2341, ../includes/Admin/Elementor/Better_Payment_Widget.php:2342
+#: ../includes/Classes/Handler.php:618, ../includes/Admin/Elementor/Better_Payment_Widget.php:2347, ../includes/Admin/Elementor/Better_Payment_Widget.php:2349, ../includes/Admin/Elementor/Better_Payment_Widget.php:2350
 msgid "Purchase Details"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:620, ../includes/Admin/Elementor/Better_Payment_Widget.php:2356, ../includes/Admin/Elementor/Better_Payment_Widget.php:2358, ../includes/Admin/Elementor/Better_Payment_Widget.php:2359
+#: ../includes/Classes/Handler.php:621, ../includes/Admin/Elementor/Better_Payment_Widget.php:2364, ../includes/Admin/Elementor/Better_Payment_Widget.php:2366, ../includes/Admin/Elementor/Better_Payment_Widget.php:2367
 msgid "Print"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:623, ../includes/Admin/Elementor/Better_Payment_Widget.php:2373, ../includes/Admin/Elementor/Better_Payment_Widget.php:2375, ../includes/Admin/Elementor/Better_Payment_Widget.php:2376
+#: ../includes/Classes/Handler.php:624, ../includes/Admin/Elementor/Better_Payment_Widget.php:2381, ../includes/Admin/Elementor/Better_Payment_Widget.php:2383, ../includes/Admin/Elementor/Better_Payment_Widget.php:2384
 msgid "View Details"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:805, ../includes/Admin/Elementor/Better_Payment_Widget.php:2441
+#: ../includes/Classes/Handler.php:806, ../includes/Admin/Elementor/Better_Payment_Widget.php:2453
 msgid "Payment Failed"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:849, ../includes/Admin/Elementor/Better_Payment_Widget.php:1834, ../includes/Admin/Elementor/Better_Payment_Widget.php:2001
+#: ../includes/Classes/Handler.php:850, ../includes/Admin/Elementor/Better_Payment_Widget.php:1838, ../includes/Admin/Elementor/Better_Payment_Widget.php:2005
 msgid "Better Payment transaction on %s"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:989, ../includes/Classes/Handler.php:993
+#: ../includes/Classes/Handler.php:990, ../includes/Classes/Handler.php:994
 msgid "New better payment transaction! "
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1122
+#: ../includes/Classes/Handler.php:1123
 msgid "Field"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1123
+#: ../includes/Classes/Handler.php:1124
 msgid "Entry"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1176, ../includes/Admin/views/template-email-notification.php:252
+#: ../includes/Classes/Handler.php:1177, ../includes/Admin/views/template-email-notification.php:252
 msgid "Paid"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1179
+#: ../includes/Classes/Handler.php:1180
 msgid "Product Price: "
 msgstr ""
 
@@ -533,11 +533,11 @@ msgstr ""
 msgid "Enable PayPal"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:435, ../includes/Admin/Elementor/Better_Payment_Widget.php:461, ../includes/Admin/Elementor/Better_Payment_Widget.php:538, ../includes/Admin/Elementor/Better_Payment_Widget.php:581, ../includes/Admin/Elementor/Better_Payment_Widget.php:593, ../includes/Admin/Elementor/Better_Payment_Widget.php:613, ../includes/Admin/Elementor/Better_Payment_Widget.php:965, ../includes/Admin/Elementor/Better_Payment_Widget.php:992, ../includes/Admin/Elementor/Better_Payment_Widget.php:1041, ../includes/Admin/Elementor/Better_Payment_Widget.php:1074, ../includes/Admin/Elementor/Better_Payment_Widget.php:1088, ../includes/Admin/Elementor/Better_Payment_Widget.php:1326, ../includes/Admin/Elementor/Better_Payment_Widget.php:1342, ../includes/Admin/Elementor/Better_Payment_Widget.php:1611, ../includes/Admin/Elementor/Better_Payment_Widget.php:1715, ../includes/Admin/Elementor/Better_Payment_Widget.php:1781, ../includes/Admin/Elementor/Better_Payment_Widget.php:1861, ../includes/Admin/Elementor/Better_Payment_Widget.php:1873, ../includes/Admin/Elementor/Better_Payment_Widget.php:1885, ../includes/Admin/Elementor/Better_Payment_Widget.php:1897, ../includes/Admin/Elementor/Better_Payment_Widget.php:1909, ../includes/Admin/Elementor/Better_Payment_Widget.php:1921, ../includes/Admin/Elementor/Better_Payment_Widget.php:2029, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:80, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:119, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:176, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:283, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:117, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:109, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:123
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:435, ../includes/Admin/Elementor/Better_Payment_Widget.php:461, ../includes/Admin/Elementor/Better_Payment_Widget.php:538, ../includes/Admin/Elementor/Better_Payment_Widget.php:581, ../includes/Admin/Elementor/Better_Payment_Widget.php:593, ../includes/Admin/Elementor/Better_Payment_Widget.php:613, ../includes/Admin/Elementor/Better_Payment_Widget.php:969, ../includes/Admin/Elementor/Better_Payment_Widget.php:996, ../includes/Admin/Elementor/Better_Payment_Widget.php:1045, ../includes/Admin/Elementor/Better_Payment_Widget.php:1078, ../includes/Admin/Elementor/Better_Payment_Widget.php:1092, ../includes/Admin/Elementor/Better_Payment_Widget.php:1330, ../includes/Admin/Elementor/Better_Payment_Widget.php:1346, ../includes/Admin/Elementor/Better_Payment_Widget.php:1615, ../includes/Admin/Elementor/Better_Payment_Widget.php:1719, ../includes/Admin/Elementor/Better_Payment_Widget.php:1785, ../includes/Admin/Elementor/Better_Payment_Widget.php:1865, ../includes/Admin/Elementor/Better_Payment_Widget.php:1877, ../includes/Admin/Elementor/Better_Payment_Widget.php:1889, ../includes/Admin/Elementor/Better_Payment_Widget.php:1901, ../includes/Admin/Elementor/Better_Payment_Widget.php:1913, ../includes/Admin/Elementor/Better_Payment_Widget.php:1925, ../includes/Admin/Elementor/Better_Payment_Widget.php:2033, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:80, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:119, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:176, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:283, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:117, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:109, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:123
 msgid "Yes"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:436, ../includes/Admin/Elementor/Better_Payment_Widget.php:462, ../includes/Admin/Elementor/Better_Payment_Widget.php:539, ../includes/Admin/Elementor/Better_Payment_Widget.php:582, ../includes/Admin/Elementor/Better_Payment_Widget.php:594, ../includes/Admin/Elementor/Better_Payment_Widget.php:614, ../includes/Admin/Elementor/Better_Payment_Widget.php:966, ../includes/Admin/Elementor/Better_Payment_Widget.php:993, ../includes/Admin/Elementor/Better_Payment_Widget.php:1042, ../includes/Admin/Elementor/Better_Payment_Widget.php:1075, ../includes/Admin/Elementor/Better_Payment_Widget.php:1089, ../includes/Admin/Elementor/Better_Payment_Widget.php:1327, ../includes/Admin/Elementor/Better_Payment_Widget.php:1343, ../includes/Admin/Elementor/Better_Payment_Widget.php:1612, ../includes/Admin/Elementor/Better_Payment_Widget.php:1716, ../includes/Admin/Elementor/Better_Payment_Widget.php:1782, ../includes/Admin/Elementor/Better_Payment_Widget.php:1862, ../includes/Admin/Elementor/Better_Payment_Widget.php:1874, ../includes/Admin/Elementor/Better_Payment_Widget.php:1886, ../includes/Admin/Elementor/Better_Payment_Widget.php:1898, ../includes/Admin/Elementor/Better_Payment_Widget.php:1910, ../includes/Admin/Elementor/Better_Payment_Widget.php:1922, ../includes/Admin/Elementor/Better_Payment_Widget.php:2030, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:81, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:120, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:177, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:284, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:118, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:110, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:124
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:436, ../includes/Admin/Elementor/Better_Payment_Widget.php:462, ../includes/Admin/Elementor/Better_Payment_Widget.php:539, ../includes/Admin/Elementor/Better_Payment_Widget.php:582, ../includes/Admin/Elementor/Better_Payment_Widget.php:594, ../includes/Admin/Elementor/Better_Payment_Widget.php:614, ../includes/Admin/Elementor/Better_Payment_Widget.php:970, ../includes/Admin/Elementor/Better_Payment_Widget.php:997, ../includes/Admin/Elementor/Better_Payment_Widget.php:1046, ../includes/Admin/Elementor/Better_Payment_Widget.php:1079, ../includes/Admin/Elementor/Better_Payment_Widget.php:1093, ../includes/Admin/Elementor/Better_Payment_Widget.php:1331, ../includes/Admin/Elementor/Better_Payment_Widget.php:1347, ../includes/Admin/Elementor/Better_Payment_Widget.php:1616, ../includes/Admin/Elementor/Better_Payment_Widget.php:1720, ../includes/Admin/Elementor/Better_Payment_Widget.php:1786, ../includes/Admin/Elementor/Better_Payment_Widget.php:1866, ../includes/Admin/Elementor/Better_Payment_Widget.php:1878, ../includes/Admin/Elementor/Better_Payment_Widget.php:1890, ../includes/Admin/Elementor/Better_Payment_Widget.php:1902, ../includes/Admin/Elementor/Better_Payment_Widget.php:1914, ../includes/Admin/Elementor/Better_Payment_Widget.php:1926, ../includes/Admin/Elementor/Better_Payment_Widget.php:2034, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:81, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:120, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:177, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:284, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:118, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:110, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:124
 msgid "No"
 msgstr ""
 
@@ -578,582 +578,582 @@ msgid "WooCommerce Currency"
 msgstr ""
 
 #: ../includes/Admin/Elementor/Better_Payment_Widget.php:741
-msgid "Supported by %sStripe%s only"
+msgid "Supported by %1$sStripe%2$s (and/or %1$sPaystack%2$s) only"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:779, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:67, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:68
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:783, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:67, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:68
 msgid "Currency Alignment"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:783, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:71, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:72
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:787, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:71, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:72
 msgid "Left"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:787, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:75, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:76
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:791, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:75, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:76
 msgid "Right"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:841
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:845
 msgid "Form Settings"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:865, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:102
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:869, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:102
 msgid "Form Name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:884, ../includes/Admin/Elementor/Better_Payment_Widget.php:886, ../includes/Admin/Elementor/Better_Payment_Widget.php:899
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:888, ../includes/Admin/Elementor/Better_Payment_Widget.php:890, ../includes/Admin/Elementor/Better_Payment_Widget.php:903
 msgid "Field Name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:897
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:901
 msgid "Placeholder Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:910, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:243
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:914, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:243
 msgid "Field Type"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:914
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:918
 msgid "Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:915, ../includes/Admin/Elementor/Better_Payment_Widget.php:942, ../includes/Admin/Elementor/Better_Payment_Widget.php:1200, ../includes/Admin/views/better-payment-settings.php:89
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:919, ../includes/Admin/Elementor/Better_Payment_Widget.php:946, ../includes/Admin/Elementor/Better_Payment_Widget.php:1204, ../includes/Admin/views/better-payment-settings.php:67
 msgid "Email"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:916
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:920
 msgid "Number"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:935
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:939
 msgid "Primary Field Type"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:936
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:940
 msgid "If this is a primary field (first name, last name, email etc), then please select one."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:940, ../includes/Admin/Elementor/Better_Payment_Widget.php:1136, ../includes/Admin/Elementor/Better_Payment_Widget.php:1137
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:944, ../includes/Admin/Elementor/Better_Payment_Widget.php:1140, ../includes/Admin/Elementor/Better_Payment_Widget.php:1141
 msgid "First Name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:941, ../includes/Admin/Elementor/Better_Payment_Widget.php:1145, ../includes/Admin/Elementor/Better_Payment_Widget.php:1146
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:945, ../includes/Admin/Elementor/Better_Payment_Widget.php:1149, ../includes/Admin/Elementor/Better_Payment_Widget.php:1150
 msgid "Last Name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:943, ../includes/Admin/Elementor/Better_Payment_Widget.php:1163, ../includes/Admin/Elementor/Better_Payment_Widget.php:1164, ../includes/Admin/Elementor/Better_Payment_Widget.php:1315, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:29, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:93
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:947, ../includes/Admin/Elementor/Better_Payment_Widget.php:1167, ../includes/Admin/Elementor/Better_Payment_Widget.php:1168, ../includes/Admin/Elementor/Better_Payment_Widget.php:1319, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:29, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:93
 msgid "Payment Amount"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:944
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:948
 msgid "None"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:953, ../includes/Admin/Elementor/Better_Payment_Widget.php:2167, ../includes/Admin/Elementor/Better_Payment_Widget.php:2430, ../includes/Admin/Elementor/Better_Payment_Widget.php:2871, ../includes/Admin/Elementor/User_Dashboard.php:643
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:957, ../includes/Admin/Elementor/Better_Payment_Widget.php:2175, ../includes/Admin/Elementor/Better_Payment_Widget.php:2442, ../includes/Admin/Elementor/Better_Payment_Widget.php:2883, ../includes/Admin/Elementor/User_Dashboard.php:643
 msgid "Icon"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:954
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:958
 msgid "Select an icon for this field (not applicable for primary field - Payment Amount and layout 4, 5, 6)."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:963, ../includes/Admin/Elementor/User_Dashboard.php:117, ../includes/Admin/Elementor/User_Dashboard.php:129, ../includes/Admin/Elementor/User_Dashboard.php:144, ../includes/Admin/Elementor/User_Dashboard.php:159, ../includes/Admin/Elementor/User_Dashboard.php:171, ../includes/Admin/Elementor/User_Dashboard.php:183, ../includes/Admin/Elementor/User_Dashboard.php:195, ../includes/Admin/Elementor/User_Dashboard.php:1662, ../includes/Admin/Elementor/User_Dashboard.php:1674, ../includes/Admin/Elementor/User_Dashboard.php:1686, ../includes/Admin/Elementor/User_Dashboard.php:1698, ../includes/Admin/Elementor/User_Dashboard.php:1710, ../includes/Admin/Elementor/User_Dashboard.php:1861, ../includes/Admin/Elementor/User_Dashboard.php:1873, ../includes/Admin/Elementor/User_Dashboard.php:1885, ../includes/Admin/Elementor/User_Dashboard.php:1897, ../includes/Admin/Elementor/User_Dashboard.php:1909, ../includes/Admin/Elementor/User_Dashboard.php:1921, ../includes/Admin/Elementor/User_Dashboard.php:1933, ../includes/Admin/Elementor/User_Dashboard.php:1945
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:967, ../includes/Admin/Elementor/User_Dashboard.php:117, ../includes/Admin/Elementor/User_Dashboard.php:129, ../includes/Admin/Elementor/User_Dashboard.php:144, ../includes/Admin/Elementor/User_Dashboard.php:159, ../includes/Admin/Elementor/User_Dashboard.php:171, ../includes/Admin/Elementor/User_Dashboard.php:183, ../includes/Admin/Elementor/User_Dashboard.php:195, ../includes/Admin/Elementor/User_Dashboard.php:1662, ../includes/Admin/Elementor/User_Dashboard.php:1674, ../includes/Admin/Elementor/User_Dashboard.php:1686, ../includes/Admin/Elementor/User_Dashboard.php:1698, ../includes/Admin/Elementor/User_Dashboard.php:1710, ../includes/Admin/Elementor/User_Dashboard.php:1861, ../includes/Admin/Elementor/User_Dashboard.php:1873, ../includes/Admin/Elementor/User_Dashboard.php:1885, ../includes/Admin/Elementor/User_Dashboard.php:1897, ../includes/Admin/Elementor/User_Dashboard.php:1909, ../includes/Admin/Elementor/User_Dashboard.php:1921, ../includes/Admin/Elementor/User_Dashboard.php:1933, ../includes/Admin/Elementor/User_Dashboard.php:1945
 msgid "Show"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:978
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:982
 msgid "Field is hidden if payment source is WooCommerce or payment type is recurring/split payment or field dynamic value is enabled."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:990
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:994
 msgid "Required"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1005, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:284
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1009, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:284
 msgid "Min. Value"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1016, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:295
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1020, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:295
 msgid "Max. Value"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1027, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:306
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1031, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:306
 msgid "Default Value"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1038
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1042
 msgid "Dynamic Value"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1040
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1044
 msgid "It will override default value!"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1055
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1059
 msgid "<p class=\"better-payment-dynamic-value-info\" style=\"word-break: break-word;\"><a href=\"%1$s\" target=\"_blank\">Sample url »</a><br>%1$s</p>"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1072, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:317
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1076, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:317
 msgid "Readonly"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1086
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1090
 msgid "Display Inline?"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1106
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1110
 msgid "Column Width"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1131
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1135
 msgid "Set the width of the column. Use less than 50% to make fields inline"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1154, ../includes/Admin/Elementor/Better_Payment_Widget.php:1155, ../includes/Admin/Elementor/User_Dashboard.php:1871, ../includes/Admin/Elementor/User_Dashboard.php:1991, ../includes/Admin/Elementor/User_Dashboard.php:1994, ../includes/Admin/views/better-payment-transaction-list.php:228, ../includes/Admin/views/template-transaction-list.php:35
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1158, ../includes/Admin/Elementor/Better_Payment_Widget.php:1159, ../includes/Admin/Elementor/User_Dashboard.php:1871, ../includes/Admin/Elementor/User_Dashboard.php:1991, ../includes/Admin/Elementor/User_Dashboard.php:1994, ../includes/Admin/views/better-payment-transaction-list.php:228, ../includes/Admin/views/template-transaction-list.php:35
 msgid "Email Address"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1172, ../includes/Admin/Elementor/Better_Payment_Widget.php:1173
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1176, ../includes/Admin/Elementor/Better_Payment_Widget.php:1177
 msgid "First name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1186, ../includes/Admin/Elementor/Better_Payment_Widget.php:1187
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1190, ../includes/Admin/Elementor/Better_Payment_Widget.php:1191
 msgid "Last name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1201
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1205
 msgid "Enter your email"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1210, ../includes/Admin/Elementor/Better_Payment_Widget.php:1219
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1214, ../includes/Admin/Elementor/Better_Payment_Widget.php:1223
 msgid "Other amount"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1218
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1222
 msgid "Amount to pay"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1256, ../includes/Admin/Elementor/Better_Payment_Widget.php:1270, ../includes/Admin/Elementor/Better_Payment_Widget.php:1284, ../includes/Admin/Elementor/Better_Payment_Widget.php:1298
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1260, ../includes/Admin/Elementor/Better_Payment_Widget.php:1274, ../includes/Admin/Elementor/Better_Payment_Widget.php:1288, ../includes/Admin/Elementor/Better_Payment_Widget.php:1302
 msgid "Form Fields"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1324, ../includes/Admin/Elementor/Better_Payment_Widget.php:1340, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:117
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1328, ../includes/Admin/Elementor/Better_Payment_Widget.php:1344, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:117
 msgid "Show Amount List"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1356, ../includes/Admin/Elementor/Better_Payment_Widget.php:1386, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:248, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:146
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1360, ../includes/Admin/Elementor/Better_Payment_Widget.php:1390, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:248, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:146
 msgid "Amount List"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1420, ../includes/Admin/Elementor/Better_Payment_Widget.php:1431
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1424, ../includes/Admin/Elementor/Better_Payment_Widget.php:1435
 msgid "Transaction Details"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1429
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1433
 msgid "Heading Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1442
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1446
 msgid "Sub Heading Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1444
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1448
 msgid "Total payment of your product in the following:"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1455
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1459
 msgid "Product Title Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1457
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1461
 msgid "Title:"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1471, ../includes/Admin/Elementor/Better_Payment_Widget.php:2719
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1475, ../includes/Admin/Elementor/Better_Payment_Widget.php:2731
 msgid "Amount Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1473, ../includes/Admin/views/better-payment-transaction-view.php:130
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1477, ../includes/Admin/views/better-payment-transaction-view.php:130
 msgid "Amount:"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1489
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1493
 msgid "Form Custom Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1498
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1502
 msgid "Form Title"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1513
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1517
 msgid "Form Sub-Title"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1528
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1532
 msgid "PayPal Button Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1540
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1544
 msgid "Stripe Button Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1552
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1556
 msgid "Paystack Button Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1568
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1572
 msgid "PayPal Settings"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1595, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:101
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1599, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:101
 msgid "Button Type"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1625
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1629
 msgid "Stripe Settings"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1729
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1733
 msgid "Paystack Settings"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1743, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:74, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:88
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1747, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:74, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:88
 msgid "Public Key"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1762, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:90, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:104
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1766, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:90, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:104
 msgid "Secret Key"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1795
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1799
 msgid "Email Settings"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1805
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1809
 msgid "Choose Logo"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1818
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1822
 msgid "Admin"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1822, ../includes/Admin/views/better-payment-settings.php:207, ../includes/Admin/views/better-payment-settings.php:284, ../includes/Admin/views/template-email-notification.php:270
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1826, ../includes/Admin/views/better-payment-settings.php:185, ../includes/Admin/views/better-payment-settings.php:262, ../includes/Admin/views/template-email-notification.php:270
 msgid "To"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1827
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1831
 msgid "Email address to notify site admin after each successful transaction"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1837, ../includes/Admin/Elementor/Better_Payment_Widget.php:2004, ../includes/Admin/views/better-payment-settings.php:214, ../includes/Admin/views/better-payment-settings.php:290
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1841, ../includes/Admin/Elementor/Better_Payment_Widget.php:2008, ../includes/Admin/views/better-payment-settings.php:192, ../includes/Admin/views/better-payment-settings.php:268
 msgid "Subject"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1849, ../includes/Admin/Elementor/Better_Payment_Widget.php:2016, ../includes/Admin/views/better-payment-settings.php:221, ../includes/Admin/views/better-payment-settings.php:297
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1853, ../includes/Admin/Elementor/Better_Payment_Widget.php:2020, ../includes/Admin/views/better-payment-settings.php:199, ../includes/Admin/views/better-payment-settings.php:275
 msgid "Message"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1859
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1863
 msgid "Show Greeting Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1871
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1875
 msgid "Show Header Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1883
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1887
 msgid "Show From Section"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1895
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1899
 msgid "Show To Section"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1907
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1911
 msgid "Show Transaction Summary"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1919
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1923
 msgid "Show Footer Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1932, ../includes/Admin/Elementor/Better_Payment_Widget.php:2074
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1936, ../includes/Admin/Elementor/Better_Payment_Widget.php:2078
 msgid "From email"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1943, ../includes/Admin/Elementor/Better_Payment_Widget.php:2085
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1947, ../includes/Admin/Elementor/Better_Payment_Widget.php:2089
 msgid "From name"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1953, ../includes/Admin/Elementor/Better_Payment_Widget.php:2095, ../includes/Admin/views/better-payment-settings.php:245, ../includes/Admin/views/better-payment-settings.php:321
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1957, ../includes/Admin/Elementor/Better_Payment_Widget.php:2099, ../includes/Admin/views/better-payment-settings.php:223, ../includes/Admin/views/better-payment-settings.php:299
 msgid "Reply-To"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1964, ../includes/Admin/Elementor/Better_Payment_Widget.php:2106, ../includes/Admin/views/better-payment-settings.php:252, ../includes/Admin/views/better-payment-settings.php:328
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1968, ../includes/Admin/Elementor/Better_Payment_Widget.php:2110, ../includes/Admin/views/better-payment-settings.php:230, ../includes/Admin/views/better-payment-settings.php:306
 msgid "Cc"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1974, ../includes/Admin/Elementor/Better_Payment_Widget.php:2116, ../includes/Admin/views/better-payment-settings.php:259, ../includes/Admin/views/better-payment-settings.php:335
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1978, ../includes/Admin/Elementor/Better_Payment_Widget.php:2120, ../includes/Admin/views/better-payment-settings.php:237, ../includes/Admin/views/better-payment-settings.php:313
 msgid "Bcc"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1984, ../includes/Admin/Elementor/Better_Payment_Widget.php:2126
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1988, ../includes/Admin/Elementor/Better_Payment_Widget.php:2130
 msgid "Send as"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1989, ../includes/Admin/Elementor/Better_Payment_Widget.php:2131
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1993, ../includes/Admin/Elementor/Better_Payment_Widget.php:2135
 msgid "HTML"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1990, ../includes/Admin/Elementor/Better_Payment_Widget.php:2132, ../includes/Admin/views/better-payment-settings.php:271, ../includes/Admin/views/better-payment-settings.php:347
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1994, ../includes/Admin/Elementor/Better_Payment_Widget.php:2136, ../includes/Admin/views/better-payment-settings.php:249, ../includes/Admin/views/better-payment-settings.php:325
 msgid "Plain"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1998
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2002
 msgid "Customer"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2026
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2030
 msgid "PDF Attachment?"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2038
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2042
 msgid "Attachment"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2039
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2043
 msgid "Allowed file types: jpg, jpeg, png"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2054
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2058
 msgid "PDF"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2055
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2059
 msgid "Allowed file types: pdf"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2147
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2151
 msgid "Success Message"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2176, ../includes/Admin/Elementor/User_Dashboard.php:213
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2184, ../includes/Admin/Elementor/User_Dashboard.php:213
 msgid "Content"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2183
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2191
 msgid "Heading"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2185, ../includes/Admin/Elementor/Better_Payment_Widget.php:2186, ../includes/Admin/Elementor/Better_Payment_Widget.php:2187
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2193, ../includes/Admin/Elementor/Better_Payment_Widget.php:2194, ../includes/Admin/Elementor/Better_Payment_Widget.php:2195
 msgid "to"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2187
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2195
 msgid "Use shortcode like"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2187
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2195
 msgid "to customize your message."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2187
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2195
 msgid "eg:"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2187
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2195
 msgid "for your order."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2192
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2200
 msgid "Sub Heading"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2194, ../includes/Admin/Elementor/Better_Payment_Widget.php:2195, ../includes/Admin/Elementor/Better_Payment_Widget.php:2196
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2202, ../includes/Admin/Elementor/Better_Payment_Widget.php:2203, ../includes/Admin/Elementor/Better_Payment_Widget.php:2204
 msgid "Payment confirmation email will be sent to"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2203
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2211
 msgid "Transaction"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2220
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2228
 msgid "Thank You"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2222, ../includes/Admin/Elementor/Better_Payment_Widget.php:2223
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2230, ../includes/Admin/Elementor/Better_Payment_Widget.php:2231
 msgid "Thank you for your payment"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2389
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2397
 msgid "User Dashboard URL"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2391, ../includes/Admin/Elementor/Better_Payment_Widget.php:2399, ../includes/Admin/Elementor/Better_Payment_Widget.php:2456
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2399, ../includes/Admin/Elementor/Better_Payment_Widget.php:2407, ../includes/Admin/Elementor/Better_Payment_Widget.php:2468
 msgid "eg. https://example.com/custom-page/"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2392
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2400
 msgid "Please enter the page url where <strong>User Dashboard</strong> widget is used."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2397, ../includes/Admin/Elementor/Better_Payment_Widget.php:2454
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2405, ../includes/Admin/Elementor/Better_Payment_Widget.php:2466
 msgid "Custom Redirect URL"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2400, ../includes/Admin/Elementor/Better_Payment_Widget.php:2457
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2408, ../includes/Admin/Elementor/Better_Payment_Widget.php:2469
 msgid "Please note that only your current domain is allowed here to keep your site secure."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2410
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2418
 msgid "Error Message"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2439
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2451
 msgid "Heading Message Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2477
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2489
 msgid "Form Sidebar Style"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2494, ../includes/Admin/Elementor/Better_Payment_Widget.php:2613, ../includes/Admin/Elementor/Better_Payment_Widget.php:2687, ../includes/Admin/Elementor/Better_Payment_Widget.php:2761, ../includes/Admin/Elementor/Better_Payment_Widget.php:2837, ../includes/Admin/Elementor/Better_Payment_Widget.php:2923, ../includes/Admin/Elementor/Better_Payment_Widget.php:2974, ../includes/Admin/Elementor/User_Dashboard.php:308, ../includes/Admin/Elementor/User_Dashboard.php:446, ../includes/Admin/Elementor/User_Dashboard.php:694, ../includes/Admin/Elementor/User_Dashboard.php:857, ../includes/Admin/Elementor/User_Dashboard.php:978, ../includes/Admin/Elementor/User_Dashboard.php:1131
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2506, ../includes/Admin/Elementor/Better_Payment_Widget.php:2625, ../includes/Admin/Elementor/Better_Payment_Widget.php:2699, ../includes/Admin/Elementor/Better_Payment_Widget.php:2773, ../includes/Admin/Elementor/Better_Payment_Widget.php:2849, ../includes/Admin/Elementor/Better_Payment_Widget.php:2935, ../includes/Admin/Elementor/Better_Payment_Widget.php:2986, ../includes/Admin/Elementor/User_Dashboard.php:308, ../includes/Admin/Elementor/User_Dashboard.php:446, ../includes/Admin/Elementor/User_Dashboard.php:694, ../includes/Admin/Elementor/User_Dashboard.php:857, ../includes/Admin/Elementor/User_Dashboard.php:978, ../includes/Admin/Elementor/User_Dashboard.php:1131
 msgid "Margin"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2510, ../includes/Admin/Elementor/Better_Payment_Widget.php:2630, ../includes/Admin/Elementor/Better_Payment_Widget.php:2703, ../includes/Admin/Elementor/Better_Payment_Widget.php:2778, ../includes/Admin/Elementor/Better_Payment_Widget.php:2854, ../includes/Admin/Elementor/Better_Payment_Widget.php:2938, ../includes/Admin/Elementor/Better_Payment_Widget.php:2989, ../includes/Admin/Elementor/Better_Payment_Widget.php:3120, ../includes/Admin/Elementor/Better_Payment_Widget.php:3740, ../includes/Admin/Elementor/User_Dashboard.php:320, ../includes/Admin/Elementor/User_Dashboard.php:458, ../includes/Admin/Elementor/User_Dashboard.php:706, ../includes/Admin/Elementor/User_Dashboard.php:869, ../includes/Admin/Elementor/User_Dashboard.php:990, ../includes/Admin/Elementor/User_Dashboard.php:1143
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2522, ../includes/Admin/Elementor/Better_Payment_Widget.php:2642, ../includes/Admin/Elementor/Better_Payment_Widget.php:2715, ../includes/Admin/Elementor/Better_Payment_Widget.php:2790, ../includes/Admin/Elementor/Better_Payment_Widget.php:2866, ../includes/Admin/Elementor/Better_Payment_Widget.php:2950, ../includes/Admin/Elementor/Better_Payment_Widget.php:3001, ../includes/Admin/Elementor/Better_Payment_Widget.php:3132, ../includes/Admin/Elementor/Better_Payment_Widget.php:3752, ../includes/Admin/Elementor/User_Dashboard.php:320, ../includes/Admin/Elementor/User_Dashboard.php:458, ../includes/Admin/Elementor/User_Dashboard.php:706, ../includes/Admin/Elementor/User_Dashboard.php:869, ../includes/Admin/Elementor/User_Dashboard.php:990, ../includes/Admin/Elementor/User_Dashboard.php:1143
 msgid "Padding"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2525, ../includes/Admin/Elementor/Better_Payment_Widget.php:3004, ../includes/Admin/Elementor/Better_Payment_Widget.php:3234, ../includes/Admin/Elementor/Better_Payment_Widget.php:3609, ../includes/Admin/Elementor/Better_Payment_Widget.php:3725, ../includes/Admin/Elementor/User_Dashboard.php:333, ../includes/Admin/Elementor/User_Dashboard.php:482, ../includes/Admin/Elementor/User_Dashboard.php:719, ../includes/Admin/Elementor/User_Dashboard.php:882, ../includes/Admin/Elementor/User_Dashboard.php:1003, ../includes/Admin/Elementor/User_Dashboard.php:1156, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:266, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:471
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2537, ../includes/Admin/Elementor/Better_Payment_Widget.php:3016, ../includes/Admin/Elementor/Better_Payment_Widget.php:3246, ../includes/Admin/Elementor/Better_Payment_Widget.php:3621, ../includes/Admin/Elementor/Better_Payment_Widget.php:3737, ../includes/Admin/Elementor/User_Dashboard.php:333, ../includes/Admin/Elementor/User_Dashboard.php:482, ../includes/Admin/Elementor/User_Dashboard.php:719, ../includes/Admin/Elementor/User_Dashboard.php:882, ../includes/Admin/Elementor/User_Dashboard.php:1003, ../includes/Admin/Elementor/User_Dashboard.php:1156, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:266, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:471
 msgid "Border Radius"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2561
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2573
 msgid "Sidebar Text Style"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2572
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2584
 msgid "Title Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2583, ../includes/Admin/Elementor/Better_Payment_Widget.php:2659, ../includes/Admin/Elementor/Better_Payment_Widget.php:2731, ../includes/Admin/Elementor/Better_Payment_Widget.php:2807, ../includes/Admin/Elementor/Better_Payment_Widget.php:2883, ../includes/Admin/Elementor/Better_Payment_Widget.php:3343, ../includes/Admin/Elementor/User_Dashboard.php:671, ../includes/Admin/Elementor/User_Dashboard.php:749, ../includes/Admin/Elementor/User_Dashboard.php:793, ../includes/Admin/Elementor/User_Dashboard.php:1033, ../includes/Admin/Elementor/User_Dashboard.php:1078, ../includes/Admin/Elementor/User_Dashboard.php:1186, ../includes/Admin/Elementor/User_Dashboard.php:1233, ../includes/Admin/Elementor/User_Dashboard.php:1299, ../includes/Admin/Elementor/User_Dashboard.php:1327, ../includes/Admin/Elementor/User_Dashboard.php:1367, ../includes/Admin/Elementor/User_Dashboard.php:1395, ../includes/Admin/Elementor/User_Dashboard.php:1435, ../includes/Admin/Elementor/User_Dashboard.php:1463
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2595, ../includes/Admin/Elementor/Better_Payment_Widget.php:2671, ../includes/Admin/Elementor/Better_Payment_Widget.php:2743, ../includes/Admin/Elementor/Better_Payment_Widget.php:2819, ../includes/Admin/Elementor/Better_Payment_Widget.php:2895, ../includes/Admin/Elementor/Better_Payment_Widget.php:3355, ../includes/Admin/Elementor/User_Dashboard.php:671, ../includes/Admin/Elementor/User_Dashboard.php:749, ../includes/Admin/Elementor/User_Dashboard.php:793, ../includes/Admin/Elementor/User_Dashboard.php:1033, ../includes/Admin/Elementor/User_Dashboard.php:1078, ../includes/Admin/Elementor/User_Dashboard.php:1186, ../includes/Admin/Elementor/User_Dashboard.php:1233, ../includes/Admin/Elementor/User_Dashboard.php:1299, ../includes/Admin/Elementor/User_Dashboard.php:1327, ../includes/Admin/Elementor/User_Dashboard.php:1367, ../includes/Admin/Elementor/User_Dashboard.php:1395, ../includes/Admin/Elementor/User_Dashboard.php:1435, ../includes/Admin/Elementor/User_Dashboard.php:1463
 msgid "Color"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2601, ../includes/Admin/Elementor/Better_Payment_Widget.php:2676, ../includes/Admin/Elementor/Better_Payment_Widget.php:2750, ../includes/Admin/Elementor/Better_Payment_Widget.php:2826, ../includes/Admin/Elementor/Better_Payment_Widget.php:3251, ../includes/Admin/Elementor/Better_Payment_Widget.php:3625, ../includes/Admin/Elementor/Better_Payment_Widget.php:3778, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:487
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2613, ../includes/Admin/Elementor/Better_Payment_Widget.php:2688, ../includes/Admin/Elementor/Better_Payment_Widget.php:2762, ../includes/Admin/Elementor/Better_Payment_Widget.php:2838, ../includes/Admin/Elementor/Better_Payment_Widget.php:3263, ../includes/Admin/Elementor/Better_Payment_Widget.php:3637, ../includes/Admin/Elementor/Better_Payment_Widget.php:3790, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:487
 msgid "Typography"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2647
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2659
 msgid "Sub-Title Text"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2795
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2807
 msgid "Amount Summary"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2898
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2910
 msgid "Font Size"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2957
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2969
 msgid "Form Container Style"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3040
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3052
 msgid "Form Fields Style"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3048, ../includes/Admin/Elementor/Better_Payment_Widget.php:3524, ../includes/Admin/Elementor/Better_Payment_Widget.php:3563, ../includes/Admin/Elementor/Better_Payment_Widget.php:3685, ../includes/Admin/Elementor/Better_Payment_Widget.php:3804, ../includes/Admin/Elementor/User_Dashboard.php:358, ../includes/Admin/Elementor/User_Dashboard.php:391, ../includes/Admin/Elementor/User_Dashboard.php:471, ../includes/Admin/Elementor/User_Dashboard.php:760, ../includes/Admin/Elementor/User_Dashboard.php:804, ../includes/Admin/Elementor/User_Dashboard.php:904, ../includes/Admin/Elementor/User_Dashboard.php:937, ../includes/Admin/Elementor/User_Dashboard.php:1045, ../includes/Admin/Elementor/User_Dashboard.php:1090, ../includes/Admin/Elementor/User_Dashboard.php:1200, ../includes/Admin/Elementor/User_Dashboard.php:1245, ../includes/Admin/Elementor/User_Dashboard.php:1310, ../includes/Admin/Elementor/User_Dashboard.php:1338, ../includes/Admin/Elementor/User_Dashboard.php:1378, ../includes/Admin/Elementor/User_Dashboard.php:1406, ../includes/Admin/Elementor/User_Dashboard.php:1446, ../includes/Admin/Elementor/User_Dashboard.php:1474, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:221, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:380, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:422
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3060, ../includes/Admin/Elementor/Better_Payment_Widget.php:3536, ../includes/Admin/Elementor/Better_Payment_Widget.php:3575, ../includes/Admin/Elementor/Better_Payment_Widget.php:3697, ../includes/Admin/Elementor/Better_Payment_Widget.php:3816, ../includes/Admin/Elementor/User_Dashboard.php:358, ../includes/Admin/Elementor/User_Dashboard.php:391, ../includes/Admin/Elementor/User_Dashboard.php:471, ../includes/Admin/Elementor/User_Dashboard.php:760, ../includes/Admin/Elementor/User_Dashboard.php:804, ../includes/Admin/Elementor/User_Dashboard.php:904, ../includes/Admin/Elementor/User_Dashboard.php:937, ../includes/Admin/Elementor/User_Dashboard.php:1045, ../includes/Admin/Elementor/User_Dashboard.php:1090, ../includes/Admin/Elementor/User_Dashboard.php:1200, ../includes/Admin/Elementor/User_Dashboard.php:1245, ../includes/Admin/Elementor/User_Dashboard.php:1310, ../includes/Admin/Elementor/User_Dashboard.php:1338, ../includes/Admin/Elementor/User_Dashboard.php:1378, ../includes/Admin/Elementor/User_Dashboard.php:1406, ../includes/Admin/Elementor/User_Dashboard.php:1446, ../includes/Admin/Elementor/User_Dashboard.php:1474, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:221, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:380, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:422
 msgid "Background Color"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3063, ../includes/Admin/Elementor/Better_Payment_Widget.php:3539, ../includes/Admin/Elementor/Better_Payment_Widget.php:3578, ../includes/Admin/Elementor/Better_Payment_Widget.php:3700, ../includes/Admin/Elementor/Better_Payment_Widget.php:3820, ../includes/Admin/Elementor/User_Dashboard.php:556, ../includes/Admin/Elementor/User_Dashboard.php:573, ../includes/Admin/Elementor/User_Dashboard.php:611, ../includes/Admin/Elementor/User_Dashboard.php:628, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:190, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:395, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:437
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3075, ../includes/Admin/Elementor/Better_Payment_Widget.php:3551, ../includes/Admin/Elementor/Better_Payment_Widget.php:3590, ../includes/Admin/Elementor/Better_Payment_Widget.php:3712, ../includes/Admin/Elementor/Better_Payment_Widget.php:3832, ../includes/Admin/Elementor/User_Dashboard.php:556, ../includes/Admin/Elementor/User_Dashboard.php:573, ../includes/Admin/Elementor/User_Dashboard.php:611, ../includes/Admin/Elementor/User_Dashboard.php:628, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:190, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:395, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:437
 msgid "Text Color"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3079
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3091
 msgid "Placeholder Color"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3094, ../includes/Admin/Elementor/Better_Payment_Widget.php:3489, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:342
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3106, ../includes/Admin/Elementor/Better_Payment_Widget.php:3501, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:342
 msgid "Spacing"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3135
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3147
 msgid "Text Indent"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3162, ../includes/Admin/Elementor/Better_Payment_Widget.php:3445, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:298
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3174, ../includes/Admin/Elementor/Better_Payment_Widget.php:3457, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:298
 msgid "Input Width"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3172
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3184
 msgid "Set width for all input fields. Not applicable if the field is set to display inline (<b>Content => Form Settings => Form Fields (Repeater) => Display Inline?</b>)"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3193, ../includes/Admin/Elementor/Better_Payment_Widget.php:3467, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:320
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3205, ../includes/Admin/Elementor/Better_Payment_Widget.php:3479, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:320
 msgid "Input Height"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3224, ../includes/Admin/Elementor/Better_Payment_Widget.php:3292, ../includes/Admin/Elementor/Better_Payment_Widget.php:3316, ../includes/Admin/Elementor/Better_Payment_Widget.php:3598, ../includes/Admin/Elementor/Better_Payment_Widget.php:3716, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:457
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3236, ../includes/Admin/Elementor/Better_Payment_Widget.php:3304, ../includes/Admin/Elementor/Better_Payment_Widget.php:3328, ../includes/Admin/Elementor/Better_Payment_Widget.php:3610, ../includes/Admin/Elementor/Better_Payment_Widget.php:3728, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:457
 msgid "Border"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3281
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3293
 msgid "Active"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3305
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3317
 msgid "Inactive"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3331
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3343
 msgid "Input Icon"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3362, ../includes/Admin/Elementor/User_Dashboard.php:523, ../includes/Admin/Elementor/User_Dashboard.php:652
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3374, ../includes/Admin/Elementor/User_Dashboard.php:523, ../includes/Admin/Elementor/User_Dashboard.php:652
 msgid "Size"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3386, ../includes/Admin/Elementor/Better_Payment_Widget.php:3654
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3398, ../includes/Admin/Elementor/Better_Payment_Widget.php:3666
 msgid "Width"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3409
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3421
 msgid "Height"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3437
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3449
 msgid "Amount Fields Style"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3517, ../includes/Admin/Elementor/Better_Payment_Widget.php:3678, ../includes/Admin/Elementor/User_Dashboard.php:352, ../includes/Admin/Elementor/User_Dashboard.php:550, ../includes/Admin/Elementor/User_Dashboard.php:605, ../includes/Admin/Elementor/User_Dashboard.php:743, ../includes/Admin/Elementor/User_Dashboard.php:898, ../includes/Admin/Elementor/User_Dashboard.php:1027, ../includes/Admin/Elementor/User_Dashboard.php:1180, ../includes/Admin/Elementor/User_Dashboard.php:1293, ../includes/Admin/Elementor/User_Dashboard.php:1361, ../includes/Admin/Elementor/User_Dashboard.php:1429, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:370
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3529, ../includes/Admin/Elementor/Better_Payment_Widget.php:3690, ../includes/Admin/Elementor/User_Dashboard.php:352, ../includes/Admin/Elementor/User_Dashboard.php:550, ../includes/Admin/Elementor/User_Dashboard.php:605, ../includes/Admin/Elementor/User_Dashboard.php:743, ../includes/Admin/Elementor/User_Dashboard.php:898, ../includes/Admin/Elementor/User_Dashboard.php:1027, ../includes/Admin/Elementor/User_Dashboard.php:1180, ../includes/Admin/Elementor/User_Dashboard.php:1293, ../includes/Admin/Elementor/User_Dashboard.php:1361, ../includes/Admin/Elementor/User_Dashboard.php:1429, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:370
 msgid "Normal"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3556, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:412
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3568, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:412
 msgid "Selected"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3646
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3658
 msgid "Form Button Style"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3755
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3767
 msgid "Margin Top"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3797, ../includes/Admin/Elementor/User_Dashboard.php:385, ../includes/Admin/Elementor/User_Dashboard.php:567, ../includes/Admin/Elementor/User_Dashboard.php:622, ../includes/Admin/Elementor/User_Dashboard.php:787, ../includes/Admin/Elementor/User_Dashboard.php:931, ../includes/Admin/Elementor/User_Dashboard.php:1072, ../includes/Admin/Elementor/User_Dashboard.php:1227, ../includes/Admin/Elementor/User_Dashboard.php:1321, ../includes/Admin/Elementor/User_Dashboard.php:1389, ../includes/Admin/Elementor/User_Dashboard.php:1457
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3809, ../includes/Admin/Elementor/User_Dashboard.php:385, ../includes/Admin/Elementor/User_Dashboard.php:567, ../includes/Admin/Elementor/User_Dashboard.php:622, ../includes/Admin/Elementor/User_Dashboard.php:787, ../includes/Admin/Elementor/User_Dashboard.php:931, ../includes/Admin/Elementor/User_Dashboard.php:1072, ../includes/Admin/Elementor/User_Dashboard.php:1227, ../includes/Admin/Elementor/User_Dashboard.php:1321, ../includes/Admin/Elementor/User_Dashboard.php:1389, ../includes/Admin/Elementor/User_Dashboard.php:1457
 msgid "Hover"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3836, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:236
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3848, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:236
 msgid "Border Color"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:58, ../includes/Admin/views/better-payment-settings.php:158
+#: ../includes/Admin/Elementor/User_Dashboard.php:58, ../includes/Admin/views/better-payment-settings.php:136
 msgid "User Dashboard"
 msgstr ""
 
@@ -1321,239 +1321,239 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:51
+#: ../includes/Admin/views/better-payment-settings.php:29
 msgid "Save Changes"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:69
+#: ../includes/Admin/views/better-payment-settings.php:47
 msgid "Go Premium"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:75
+#: ../includes/Admin/views/better-payment-settings.php:53
 msgid "License"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:86
+#: ../includes/Admin/views/better-payment-settings.php:64
 msgid "General"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:91
+#: ../includes/Admin/views/better-payment-settings.php:69
 msgid "Admin Email"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:92
+#: ../includes/Admin/views/better-payment-settings.php:70
 msgid "Customer Email"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:96
+#: ../includes/Admin/views/better-payment-settings.php:74
 msgid "Payment"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:100, ../includes/Admin/views/better-payment-settings.php:141, ../includes/Admin/views/better-payment-transaction-list.php:278, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:29, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:45, ../includes/Admin/views/elementor/layouts/layout-1.php:98, ../includes/Admin/views/elementor/layouts/layout-2.php:66
+#: ../includes/Admin/views/better-payment-settings.php:78, ../includes/Admin/views/better-payment-settings.php:119, ../includes/Admin/views/better-payment-transaction-list.php:278, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:29, ../includes/Admin/Elementor/Form_Actions/Paystack_Integration.php:45, ../includes/Admin/views/elementor/layouts/layout-1.php:98, ../includes/Admin/views/elementor/layouts/layout-2.php:66
 msgid "Paystack"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:112, ../includes/Admin/views/better-payment-settings.php:128, ../includes/Admin/views/better-payment-settings.php:144, ../includes/Admin/views/better-payment-settings.php:161
+#: ../includes/Admin/views/better-payment-settings.php:90, ../includes/Admin/views/better-payment-settings.php:106, ../includes/Admin/views/better-payment-settings.php:122, ../includes/Admin/views/better-payment-settings.php:139
 msgid "See documentation."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:143
+#: ../includes/Admin/views/better-payment-settings.php:121
 msgid "Enable Paystack if you want to accept payment via Paystack."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:160
+#: ../includes/Admin/views/better-payment-settings.php:138
 msgid "Enable User Dashboard widget. It shows list of transactions and subscriptions for the user."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:209
+#: ../includes/Admin/views/better-payment-settings.php:187
 msgid "Email address"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:210
+#: ../includes/Admin/views/better-payment-settings.php:188
 msgid "Enter website admin email address here. This email will be used to send email notification for each transaction."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:216, ../includes/Admin/views/better-payment-settings.php:292
+#: ../includes/Admin/views/better-payment-settings.php:194, ../includes/Admin/views/better-payment-settings.php:270
 msgid "Email subject"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:217
+#: ../includes/Admin/views/better-payment-settings.php:195
 msgid "Email subject for the admin email notification."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:224
+#: ../includes/Admin/views/better-payment-settings.php:202
 msgid "Email body for the admin email notification."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:228, ../includes/Admin/views/better-payment-settings.php:304
+#: ../includes/Admin/views/better-payment-settings.php:206, ../includes/Admin/views/better-payment-settings.php:282
 msgid "Additional Headers"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:231, ../includes/Admin/views/better-payment-settings.php:307
+#: ../includes/Admin/views/better-payment-settings.php:209, ../includes/Admin/views/better-payment-settings.php:285
 msgid "From Name"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:234, ../includes/Admin/views/better-payment-settings.php:310
+#: ../includes/Admin/views/better-payment-settings.php:212, ../includes/Admin/views/better-payment-settings.php:288
 msgid "From name that will be used in the email headers."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:238, ../includes/Admin/views/better-payment-settings.php:314
+#: ../includes/Admin/views/better-payment-settings.php:216, ../includes/Admin/views/better-payment-settings.php:292
 msgid "From Email"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:241, ../includes/Admin/views/better-payment-settings.php:317
+#: ../includes/Admin/views/better-payment-settings.php:219, ../includes/Admin/views/better-payment-settings.php:295
 msgid "Email address that will be displayed in the email header as From Email."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:248, ../includes/Admin/views/better-payment-settings.php:324
+#: ../includes/Admin/views/better-payment-settings.php:226, ../includes/Admin/views/better-payment-settings.php:302
 msgid "Email address that will be displayed in the email header as Reply-To Email."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:255, ../includes/Admin/views/better-payment-settings.php:331
+#: ../includes/Admin/views/better-payment-settings.php:233, ../includes/Admin/views/better-payment-settings.php:309
 msgid "Email address that will be displayed in the email header as Cc Email."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:262, ../includes/Admin/views/better-payment-settings.php:338
+#: ../includes/Admin/views/better-payment-settings.php:240, ../includes/Admin/views/better-payment-settings.php:316
 msgid "Email address that will be displayed in the email header as Bcc Email."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:266, ../includes/Admin/views/better-payment-settings.php:342
+#: ../includes/Admin/views/better-payment-settings.php:244, ../includes/Admin/views/better-payment-settings.php:320
 msgid "Send As"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:270, ../includes/Admin/views/better-payment-settings.php:346
+#: ../includes/Admin/views/better-payment-settings.php:248, ../includes/Admin/views/better-payment-settings.php:324
 msgid "Select One"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:272, ../includes/Admin/views/better-payment-settings.php:348
+#: ../includes/Admin/views/better-payment-settings.php:250, ../includes/Admin/views/better-payment-settings.php:326
 msgid "Html"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:275, ../includes/Admin/views/better-payment-settings.php:351
+#: ../includes/Admin/views/better-payment-settings.php:253, ../includes/Admin/views/better-payment-settings.php:329
 msgid "Html helps to send html markup in the email body. Select plain if you just want plain text in the email body."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:286
+#: ../includes/Admin/views/better-payment-settings.php:264
 msgid "Customer email address will be auto populated from payment form. This email will be used to send email notification for each transaction."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:293
+#: ../includes/Admin/views/better-payment-settings.php:271
 msgid "Email subject for the customer (who make payments) email notification."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:300
+#: ../includes/Admin/views/better-payment-settings.php:278
 msgid "Email body for the customer email notification. "
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:386
+#: ../includes/Admin/views/better-payment-settings.php:364
 msgid "Live Client ID"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:388
+#: ../includes/Admin/views/better-payment-settings.php:366
 msgid "PayPal live client ID is required to do Refund via PayPal. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:389, ../includes/Admin/views/better-payment-settings.php:401, ../includes/Admin/views/better-payment-settings.php:413, ../includes/Admin/views/better-payment-settings.php:425, ../includes/Admin/views/better-payment-settings.php:459, ../includes/Admin/views/better-payment-settings.php:471, ../includes/Admin/views/better-payment-settings.php:483, ../includes/Admin/views/better-payment-settings.php:495, ../includes/Admin/views/better-payment-settings.php:528, ../includes/Admin/views/better-payment-settings.php:540, ../includes/Admin/views/better-payment-settings.php:552, ../includes/Admin/views/better-payment-settings.php:564
+#: ../includes/Admin/views/better-payment-settings.php:367, ../includes/Admin/views/better-payment-settings.php:379, ../includes/Admin/views/better-payment-settings.php:391, ../includes/Admin/views/better-payment-settings.php:403, ../includes/Admin/views/better-payment-settings.php:437, ../includes/Admin/views/better-payment-settings.php:449, ../includes/Admin/views/better-payment-settings.php:461, ../includes/Admin/views/better-payment-settings.php:473, ../includes/Admin/views/better-payment-settings.php:506, ../includes/Admin/views/better-payment-settings.php:518, ../includes/Admin/views/better-payment-settings.php:530, ../includes/Admin/views/better-payment-settings.php:542
 msgid "see documentation."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:398
+#: ../includes/Admin/views/better-payment-settings.php:376
 msgid "Live Secret"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:400
+#: ../includes/Admin/views/better-payment-settings.php:378
 msgid "PayPal live secret is required to do refund via PayPal. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:410
+#: ../includes/Admin/views/better-payment-settings.php:388
 msgid "Test/Sandbox Client ID"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:412
+#: ../includes/Admin/views/better-payment-settings.php:390
 msgid "PayPal test/sandbox client id is required to do refund via PayPal. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:422
+#: ../includes/Admin/views/better-payment-settings.php:400
 msgid "Test/Sandbox Secret"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:424
+#: ../includes/Admin/views/better-payment-settings.php:402
 msgid "PayPal test/sandbox secret is required to do refund via PayPal. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:510
+#: ../includes/Admin/views/better-payment-settings.php:488
 msgid "Live mode allows you to process real transactions. It just requires live Paystack keys (public and secret keys) to accept real payments."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:527
+#: ../includes/Admin/views/better-payment-settings.php:505
 msgid "Paystack live public key is required to make payments via Paystack. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:539
+#: ../includes/Admin/views/better-payment-settings.php:517
 msgid "Paystack live secret key is required to make payments via Paystack. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:551
+#: ../includes/Admin/views/better-payment-settings.php:529
 msgid "Paystack test public key is required to make payments via Paystack. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:563
+#: ../includes/Admin/views/better-payment-settings.php:541
 msgid "Paystack test secret key is required to make payments via Paystack. For more help visit"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:611, ../includes/Admin/views/better-payment-transaction-list.php:123, ../includes/Admin/views/page-analytics.php:30
+#: ../includes/Admin/views/better-payment-settings.php:589, ../includes/Admin/views/better-payment-transaction-list.php:123, ../includes/Admin/views/page-analytics.php:30
 msgid "Total Transactions"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:620, ../includes/Admin/views/better-payment-transaction-list.php:135, ../includes/Admin/views/page-analytics.php:49
+#: ../includes/Admin/views/better-payment-settings.php:598, ../includes/Admin/views/better-payment-transaction-list.php:135, ../includes/Admin/views/page-analytics.php:49
 msgid "Completed Transactions"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:629, ../includes/Admin/views/better-payment-transaction-list.php:147, ../includes/Admin/views/page-analytics.php:68
+#: ../includes/Admin/views/better-payment-settings.php:607, ../includes/Admin/views/better-payment-transaction-list.php:147, ../includes/Admin/views/page-analytics.php:68
 msgid "Incomplete Transactions"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:641, ../includes/Admin/views/better-payment-settings.php:643
+#: ../includes/Admin/views/better-payment-settings.php:619, ../includes/Admin/views/better-payment-settings.php:621
 msgid "Documentation"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:642
+#: ../includes/Admin/views/better-payment-settings.php:620
 msgid "Get started by spending some time with the documentation to get familiar with Better Payment."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:653
+#: ../includes/Admin/views/better-payment-settings.php:631
 msgid "Contribute to Better Payment"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:654
+#: ../includes/Admin/views/better-payment-settings.php:632
 msgid "You can contribute to make Better Payment better reporting bugs, creating issues, pull requests at "
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:655
+#: ../includes/Admin/views/better-payment-settings.php:633
 msgid "Report a Bug"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:665
+#: ../includes/Admin/views/better-payment-settings.php:643
 msgid "Need Help?"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:666
+#: ../includes/Admin/views/better-payment-settings.php:644
 msgid "Stuck with something? Get help from live chat or support ticket."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:667
+#: ../includes/Admin/views/better-payment-settings.php:645
 msgid "Initiate a Chat"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:676
+#: ../includes/Admin/views/better-payment-settings.php:654
 msgid "Show Your Love"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:679
+#: ../includes/Admin/views/better-payment-settings.php:657
 msgid "We love to have you in Better Payment family. We are making it more awesome everyday. Take your 2 minutes to review the plugin and spread the love to encourage us to keep it going."
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-settings.php:680
+#: ../includes/Admin/views/better-payment-settings.php:658
 msgid "Leave a Review"
 msgstr ""
 

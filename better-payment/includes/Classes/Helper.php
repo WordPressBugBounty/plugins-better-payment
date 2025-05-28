@@ -179,6 +179,7 @@ class Helper extends Controller
             'HUF' => 'HUF',
             'ILS' => 'ILS',
             'JPY' => 'JPY',
+            'KES' => 'KES',
             'MXN' => 'MXN',
             'MYR' => 'MYR',
             'NOK' => 'NOK',
