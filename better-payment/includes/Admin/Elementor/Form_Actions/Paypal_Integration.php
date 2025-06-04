@@ -62,6 +62,18 @@ class Paypal_Integration extends Action_Base {
         );
 
         $widget->add_control(
+			'better_payment_paypal_currecny_support_notice',
+			[
+				'type' => Controls_Manager::RAW_HTML,
+				'raw' => __( 'Currency is not supported by PayPal!', 'better-payment' ),
+				'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
+                'condition' => [
+                    'better_payment_form_paypal_currency' => $this->bp_unsupported_currencies( 'paypal' ),
+                ],
+			]
+		);
+
+        $widget->add_control(
             'better_payment_form_currency_alignment_paypal',
             [
                 'label' => esc_html__( 'Currency Alignment', 'better-payment' ),
@@ -186,9 +198,16 @@ class Paypal_Integration extends Action_Base {
         $cancel_url = get_the_permalink() . '?better_payment_error_status=error&better_payment_widget_id=' . sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] );
         $order_id   = 'paypal_' . uniqid();
 
+        $paypal_unsupported_currencies = $this->bp_unsupported_currencies( 'paypal' );
+        $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paypal_currency' ) );
+        if ( is_array( $paypal_unsupported_currencies ) && in_array( $currency_code, $paypal_unsupported_currencies ) ) {
+            $ajax_handler->add_error_message( 'Currency is not supported by PayPal!' );
+            return false;
+        }
+
         $request_data = [
             'business'      => $email,
-            'currency_code' => $record->get_form_settings( 'better_payment_form_paypal_currency' ),
+            'currency_code' => $currency_code,
             'rm'            => '2',
             'return'        => esc_url_raw( $return_url ),
             'cancel_return' => esc_url_raw( $cancel_url ),
@@ -210,7 +229,7 @@ class Paypal_Integration extends Action_Base {
             'primary_first_name'    => $customer_name,
             'email'                 => $customer_email,
             'el_form_fields'        => maybe_serialize( $sent_data ),
-            'amount'                => $record->get_form_settings('better_payment_form_paypal_currency') . $amount,
+            'amount'                => $currency_code . $amount,
             'referer_page_id'       => $page_id,
             'referer_widget_id'     => $widget_id,
             'source'                => 'paypal'
@@ -223,7 +242,7 @@ class Paypal_Integration extends Action_Base {
                 'payment_date' => date( 'Y-m-d H:i:s' ),
                 'source'       => 'paypal',
                 'form_fields_info' => maybe_serialize( $better_form_fields ),
-                'currency'     => $record->get_form_settings( 'better_payment_form_paypal_currency' ),
+                'currency'     => $currency_code,
                 'referer'      => "elementor-form",
             ]
         );

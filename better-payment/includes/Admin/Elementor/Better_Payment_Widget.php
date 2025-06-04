@@ -5,7 +5,7 @@ namespace Better_Payment\Lite\Admin\Elementor;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\Helper as ClassesHelper;
-use Better_Payment\Lite\Traits\Helper;
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 use \Elementor\Controls_Manager as Controls_Manager;
 use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
 use Elementor\Group_Control_Background;
@@ -31,7 +31,7 @@ if (!defined('ABSPATH')) {
  */
 class Better_Payment_Widget extends Widget_Base {
 
-    use Helper;
+    use TraitsHelper;
 
     private $better_payment_global_settings = [];
 
@@ -749,28 +749,7 @@ class Better_Payment_Widget extends Widget_Base {
                         ],
                         [
                             'relation' => 'or',
-                            'terms'    => [
-                                [
-                                    'name'     => 'better_payment_form_currency',
-                                    'value'    => 'AED',
-                                ],
-                                [
-                                    'name'     => 'better_payment_form_currency',
-                                    'value'    => 'ZAR',
-                                ],
-                                [
-                                    'name'     => 'better_payment_form_currency',
-                                    'value'    => 'BGN',
-                                ],
-                                [
-                                    'name'     => 'better_payment_form_currency',
-                                    'value'    => 'RON',
-                                ],
-                                [
-                                    'name'     => 'better_payment_form_currency',
-                                    'value'    => 'KES',
-                                ],
-                            ],
+                            'terms'    => $this->get_paypal_unsupported_currencies_conditions(),
                         ]
                     ],
                 ]
@@ -3963,7 +3942,7 @@ class Better_Payment_Widget extends Widget_Base {
             $defauls['items'] = $settings['better_payment_amount_layout_4_5_6'];
         }
 
-        $layout_form_currency_symbol    = Handler::get_currency_symbols( esc_html($settings[ 'better_payment_form_currency' ]) );
+        $layout_form_currency_symbol    = $this->get_currency_symbol( esc_html($settings[ 'better_payment_form_currency' ]) );
         $currency_alignment             = ! empty ( $settings['better_payment_form_currency_alignment'] ) ? $settings['better_payment_form_currency_alignment'] : 'left';
         $layout_form_currency_left      = 'left'    === $currency_alignment ? $layout_form_currency_symbol : '';
         $layout_form_currency_right     = 'right'   === $currency_alignment ? $layout_form_currency_symbol : '' ;
@@ -4063,4 +4042,15 @@ class Better_Payment_Widget extends Widget_Base {
         return $layouts;
     }
 
+    public function get_paypal_unsupported_currencies_conditions() {
+        $paypal_unsupported_currencies = $this->bp_unsupported_currencies('paypal');
+        $conditions = [];
+        foreach ($paypal_unsupported_currencies as $currency) {
+            $conditions[] = [
+                'name'     => 'better_payment_form_currency',
+                'value'    => $currency,
+            ];
+        }
+        return $conditions;
+    }
 }

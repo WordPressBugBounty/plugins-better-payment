@@ -1,6 +1,7 @@
 <?php
 
 namespace Better_Payment\Lite\Classes;
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 /**
  * Exit if accessed directly
@@ -15,6 +16,7 @@ if (!defined('ABSPATH')) {
  * @since 0.0.1
  */
 class Actions {
+    use TraitsHelper;
     /**
      * Constructor
      * 
@@ -78,7 +80,7 @@ class Actions {
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
         }
 
-        $el_settings_currency_symbol = \Better_Payment\Lite\Classes\Handler::get_currency_symbols( esc_html($el_settings_currency) );
+        $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
         $primary_payment_amount = isset( $_POST[ 'primary_payment_amount' ] ) ? floatval( $_POST[ 'primary_payment_amount' ] ) : 0;
 
@@ -220,7 +222,7 @@ class Actions {
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
         }
 
-        $el_settings_currency_symbol = \Better_Payment\Lite\Classes\Handler::get_currency_symbols( esc_html($el_settings_currency) );
+        $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
         $request  = [
             'success_url'                => add_query_arg( [
@@ -437,7 +439,7 @@ class Actions {
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
         }
         
-        $el_settings_currency_symbol = \Better_Payment\Lite\Classes\Handler::get_currency_symbols( esc_html($el_settings_currency) );
+        $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
         $redirection_url_success    = get_permalink( $page_id );
         $redirection_url_error      = get_permalink( $page_id );

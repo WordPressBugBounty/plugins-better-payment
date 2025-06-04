@@ -2,6 +2,8 @@
 
 namespace Better_Payment\Lite;
 
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
+
 /**
  * Exit if accessed directly
  */
@@ -15,7 +17,7 @@ if (!defined('ABSPATH')) {
  * @since 0.0.1
  */
 class Assets extends Controller {
-
+    use TraitsHelper;
     /**
      * Class constructor
      * 
@@ -165,6 +167,7 @@ class Assets extends Controller {
                 'minimum_amount_is_one' => __('Minimum amount is 1', 'better-payment'),
                 'something_went_wrong' => __( 'Something went wrong', 'better-payment' ),
             ],
+            'currency_symbols' => $this->get_currency_symbols_list(),
         ] );
 
         wp_localize_script('bp-admin-settings', 'betterPaymentObj', array(

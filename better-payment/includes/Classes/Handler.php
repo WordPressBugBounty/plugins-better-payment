@@ -4,6 +4,8 @@ namespace Better_Payment\Lite\Classes;
 
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Controller;
+use Better_Payment\Lite\Classes\Helper;
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 /**
  * Exit if accessed directly
@@ -18,6 +20,7 @@ if (!defined('ABSPATH')) {
  * @since 0.0.1
  */
 class Handler extends Controller{
+    use TraitsHelper;
 
     /**
      * PayPal button
@@ -487,46 +490,6 @@ class Handler extends Controller{
     }
 
     /**
-     * Get currency symbols
-     * 
-     * @since 0.0.1
-     */
-    public static function get_currency_symbols( $currency = 'USD' ) {
-        $list = [
-            'USD' => "$",
-            'EUR' => "€",
-            'GBP' => "£",
-            'AED' => "د.إ",
-            'AUD' => "$",
-            'BGN' => 'лв',
-            'CAD' => "$",
-            'CZK' => "Kč",
-            'DKK' => "kr",
-            'HKD' => "$",
-            'HUF' => "ft",
-            'ILS' => "₪",
-            'JPY' => "¥",
-            'KES' => "Ksh.",
-            'MXN' => "$",
-            'MYR' => "MYR",
-            'NOK' => "kr",
-            'NZD' => "$",
-            'PHP' => "₱",
-            'PLN' => "zł",
-            'RUB' => "₽",
-            'SGD' => "$",
-            'SEK' => "kr",
-            'CHF' => "CHF",
-            'RON' => "lei",
-            'TWD' => "$",
-            'THB' => "฿",
-            'TRY' => "₺",
-            'ZAR' => "R",
-        ];
-        return !empty( $list[ $currency ] ) ? $list[ $currency ] : '$';
-    }
-
-    /**
      * Success message template
      * 
      * @since 0.0.1
@@ -538,6 +501,7 @@ class Handler extends Controller{
         wp_enqueue_script('better-payment-admin-script');
         $image_url = BETTER_PAYMENT_ASSETS . '/img/success.svg';
         $show_icon = 0;
+        $helper_obj = new Helper();
 
         $store_name = ( $settings['better_payment_form_payment_source'] === 'manual' && !empty( $settings['better_payment_form_title'] ) ) 
             ? esc_html($settings['better_payment_form_title']) 
@@ -547,7 +511,7 @@ class Handler extends Controller{
             ? esc_html($settings['better_payment_form_success_message_heading']) 
             : esc_html( __('You paid', 'better-payment') . '[currency_symbol][amount] '. __(' to ', 'better-payment') . '[store_name]');
 
-        $bp__currency_symbol = esc_html( self::get_currency_symbols( $tr_id['currency'] ) );
+        $bp__currency_symbol = esc_html( $helper_obj->get_currency_symbol( $tr_id['currency'] ) );
 
         $payment_desc_text = str_replace( '[currency_symbol]', '<span class="bp-bold">' . $bp__currency_symbol . '</span>', $payment_desc_text );
 
@@ -1101,6 +1065,7 @@ class Handler extends Controller{
         $customer_first_name = 
         $customer_last_name = 
         $amount = '';
+        $helper_obj = new Helper();
         
         if(null !== $transaction_obj && is_object($transaction_obj)){
            $transaction_id = $transaction_obj->transaction_id;
@@ -1108,7 +1073,7 @@ class Handler extends Controller{
            $status = $transaction_obj->status;
            $source = $transaction_obj->source;
            $currency = $transaction_obj->currency;
-           $currency_symbol    = Handler::get_currency_symbols( esc_html($currency) );
+           $currency_symbol    = $helper_obj->get_currency_symbol( esc_html($currency) );
            $payment_date = wp_date(get_option('date_format').' '.get_option('time_format'), strtotime($transaction_obj->payment_date));
         }
 

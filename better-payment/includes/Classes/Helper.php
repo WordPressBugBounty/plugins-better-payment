@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\Classes;
 
 use Better_Payment\Lite\Controller;
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 /**
  * Exit if accessed directly
@@ -18,6 +19,8 @@ if (!defined('ABSPATH')) {
  */
 class Helper extends Controller
 {
+    use TraitsHelper;
+
     /**
      * Check if elementor plugin is activated
      *
@@ -157,46 +160,6 @@ class Helper extends Controller
         }
 
         return false;
-    }
-
-    /**
-     * Get currency list
-     *
-     * @since 0.0.2
-     */
-    public function get_currency_list(){
-        $currency_list = [
-            'USD' => 'USD',
-            'EUR' => 'EUR',
-            'GBP' => 'GBP',
-            'AED' => 'AED',
-            'AUD' => 'AUD',
-            'BGN' => 'лв',
-            'CAD' => 'CAD',
-            'CZK' => 'CZK',
-            'DKK' => 'DKK',
-            'HKD' => 'HKD',
-            'HUF' => 'HUF',
-            'ILS' => 'ILS',
-            'JPY' => 'JPY',
-            'KES' => 'KES',
-            'MXN' => 'MXN',
-            'MYR' => 'MYR',
-            'NOK' => 'NOK',
-            'NZD' => 'NZD',
-            'PHP' => 'PHP',
-            'PLN' => 'PLN',
-            'RUB' => 'RUB',
-            'SGD' => 'SGD',
-            'SEK' => 'SEK',
-            'CHF' => 'CHF',
-            'RON' => 'RON',
-            'TWD' => 'TWD',
-            'THB' => 'THB',
-            'ZAR' => 'ZAR'
-        ];
-
-        return $currency_list;
     }
 
     public function titleToSnake($text, $divider = '_') {

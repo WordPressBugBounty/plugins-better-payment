@@ -9,6 +9,7 @@ use ElementorPro\Modules\Forms\Classes;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Fields\Field_Base;
 use ElementorPro\Plugin;
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -20,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.0.1
  */
 class Payment_Amount_Field extends Field_Base {
+	use TraitsHelper;
 
 	public function get_type() {
 		return 'payment_amount';
@@ -63,7 +65,7 @@ class Payment_Amount_Field extends Field_Base {
 
 		$better_payment_amount_readonly 		= ! empty( $item['bp_field_default_fixed'] ) ? 'readonly' : '';
 		$better_payment_form_currency 			= $this->get_better_payment_form_currency($form);
-        $better_payment_form_currency_symbol 	= Handler::get_currency_symbols( $better_payment_form_currency );
+        $better_payment_form_currency_symbol 	= $this->get_currency_symbol( $better_payment_form_currency );
         
 		$bp_payment_amount_input = '<input type="number" class="elementor-field elementor-size-sm elementor-field-textual bp-elementor-field-textual-amount" ' . $form->get_render_attribute_string( 'input' . $item['custom_id'] ) . '>';
 
@@ -195,9 +197,12 @@ class Payment_Amount_Field extends Field_Base {
 		} elseif ( in_array( 'stripe', $settings['submit_actions'] ) ) {
 			$currency = ! empty( $settings['better_payment_form_stripe_currency'] ) ? $settings['better_payment_form_stripe_currency'] : $currency;
 			$currency_alignment = ! empty( $settings['better_payment_form_currency_alignment_stripe'] ) ? $settings['better_payment_form_currency_alignment_stripe'] : $currency_alignment;
+		} elseif ( in_array( 'paystack', $settings['submit_actions'] ) ) {
+			$currency = ! empty( $settings['better_payment_form_paystack_currency'] ) ? $settings['better_payment_form_paystack_currency'] : $currency;
+			$currency_alignment = ! empty( $settings['better_payment_form_currency_alignment_paystack'] ) ? $settings['better_payment_form_currency_alignment_paystack'] : $currency_alignment;
 		}
 
-		$currency_symbol 		= Handler::get_currency_symbols( esc_html( $currency ) );
+		$currency_symbol 		= $this->get_currency_symbol( esc_html( $currency ) );
 		$currency_symbol_left	= 'left'    === $currency_alignment ? $currency_symbol : '';
         $currency_symbol_right	= 'right'   === $currency_alignment ? $currency_symbol : '' ;
 
@@ -374,7 +379,9 @@ class Payment_Amount_Field extends Field_Base {
         
         if(in_array('paypal', $submit_actions)){
             $better_payment_form_currency = isset($instance['better_payment_form_paypal_currency']) ? esc_html($instance['better_payment_form_paypal_currency']) : esc_html($better_payment_global_currency);            
-        }else {
+        } else if(in_array('paystack', $submit_actions)){
+			$better_payment_form_currency = isset($instance['better_payment_form_paystack_currency']) ? esc_html($instance['better_payment_form_paystack_currency']) : esc_html($better_payment_global_currency);
+		}else {
 			$better_payment_form_currency = isset($instance['better_payment_form_stripe_currency']) ? esc_html($instance['better_payment_form_stripe_currency']) : esc_html($better_payment_global_currency);
         }
         

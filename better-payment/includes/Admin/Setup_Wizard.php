@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\Admin;
 
 use Better_Payment\Lite\Classes\Plugin_Usage_Tracker;
+use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 if (!defined('ABSPATH')) {
     exit;
@@ -15,6 +16,8 @@ if (!defined('ABSPATH')) {
  */
 class Setup_Wizard
 {
+    use TraitsHelper;
+
     protected $file_version;
 
     /**
@@ -170,41 +173,6 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
             </li>
         </ul>
     <?php
-    }
-
-    /**
-     * Get currency list
-     *
-     * @since 0.0.2
-     */
-    public function get_currency_list(){
-        $currency_list = [
-            'USD' => 'USD',
-            'EUR' => 'EUR',
-            'GBP' => 'GBP',
-            'AUD' => 'AUD',
-            'CAD' => 'CAD',
-            'CZK' => 'CZK',
-            'DKK' => 'DKK',
-            'HKD' => 'HKD',
-            'HUF' => 'HUF',
-            'ILS' => 'ILS',
-            'JPY' => 'JPY',
-            'KES' => 'KES',
-            'MXN' => 'MXN',
-            'NOK' => 'NOK',
-            'NZD' => 'NZD',
-            'PHP' => 'PHP',
-            'PLN' => 'PLN',
-            'RUB' => 'RUB',
-            'SGD' => 'SGD',
-            'SEK' => 'SEK',
-            'CHF' => 'CHF',
-            'TWD' => 'TWD',
-            'THB' => 'THB',
-        ];
-
-        return $currency_list;
     }
 
     /**

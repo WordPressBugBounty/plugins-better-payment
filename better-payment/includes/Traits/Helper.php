@@ -318,4 +318,174 @@ trait Helper
         ));
         $tracker->init();
     }
+
+	/**
+	 * List of currencies not supported by paypal or stripe
+	 *
+	 * @since v1.3.1
+	 */
+	public function bp_unsupported_currencies( $method = '' ) {
+		$method = sanitize_text_field( strtolower( $method ) );
+		$all_currencies = [
+			'paypal' => [
+				'AED',
+				'BGN',
+				'KES',
+				'NGN',
+				'RON',
+				'ZAR'
+			],
+			'stripe' => [],
+		];
+
+		return !empty( $all_currencies[ $method ] ) ? $all_currencies[ $method ] : [];
+	}
+
+	/**
+	 * List of currencies supported by paystack
+	 *
+	 * @since v1.3.1
+	 */
+	public function bp_supported_currencies( $method = '' ) {
+		$method = sanitize_text_field( strtolower( $method ) );
+		$supported_currencies = [
+			'paystack' => [
+				'GHS',
+				'KES',
+				'NGN',
+				'USD',
+				'ZAR'
+			],
+		];
+
+		return !empty( $supported_currencies[ $method ] ) ? $supported_currencies[ $method ] : [];
+	}
+
+	/**
+     * Get comprehensive currency data
+     *
+     * @since 0.0.2
+     * @return array Array of currency data with codes, names, and symbols
+     */
+    private function get_currency_data() {
+        return [
+            'USD' => ['name' => 'US Dollar', 'symbol' => '$'],
+            'EUR' => ['name' => 'Euro', 'symbol' => '€'],
+            'GBP' => ['name' => 'British Pound', 'symbol' => '£'],
+            'AED' => ['name' => 'UAE Dirham', 'symbol' => 'د.إ'],
+            'AUD' => ['name' => 'Australian Dollar', 'symbol' => '$'],
+            'BGN' => ['name' => 'Bulgarian Lev', 'symbol' => 'лв'],
+            'CAD' => ['name' => 'Canadian Dollar', 'symbol' => '$'],
+            'CHF' => ['name' => 'Swiss Franc', 'symbol' => 'CHF'],
+            'CZK' => ['name' => 'Czech Koruna', 'symbol' => 'Kč'],
+            'DKK' => ['name' => 'Danish Krone', 'symbol' => 'kr'],
+            'HKD' => ['name' => 'Hong Kong Dollar', 'symbol' => '$'],
+            'HUF' => ['name' => 'Hungarian Forint', 'symbol' => 'ft'],
+            'ILS' => ['name' => 'Israeli Shekel', 'symbol' => '₪'],
+            'JPY' => ['name' => 'Japanese Yen', 'symbol' => '¥'],
+            'KES' => ['name' => 'Kenyan Shilling', 'symbol' => 'Ksh.'],
+            'MXN' => ['name' => 'Mexican Peso', 'symbol' => '$'],
+            'MYR' => ['name' => 'Malaysian Ringgit', 'symbol' => 'MYR'],
+            'NGN' => ['name' => 'Nigerian Naira', 'symbol' => '₦'],
+            'NOK' => ['name' => 'Norwegian Krone', 'symbol' => 'kr'],
+            'NZD' => ['name' => 'New Zealand Dollar', 'symbol' => '$'],
+            'PHP' => ['name' => 'Philippine Peso', 'symbol' => '₱'],
+            'PLN' => ['name' => 'Polish Zloty', 'symbol' => 'zł'],
+            'RON' => ['name' => 'Romanian Leu', 'symbol' => 'lei'],
+            'RUB' => ['name' => 'Russian Ruble', 'symbol' => '₽'],
+            'SEK' => ['name' => 'Swedish Krona', 'symbol' => 'kr'],
+            'SGD' => ['name' => 'Singapore Dollar', 'symbol' => '$'],
+            'THB' => ['name' => 'Thai Baht', 'symbol' => '฿'],
+            'TRY' => ['name' => 'Turkish Lira', 'symbol' => '₺'],
+            'TWD' => ['name' => 'Taiwan Dollar', 'symbol' => '$'],
+            'ZAR' => ['name' => 'South African Rand', 'symbol' => 'R'],
+        ];
+    }
+
+    /**
+     * Get currency symbols list
+     *
+     * @since 0.0.2
+     * @return array Array of currency codes and their symbols
+     */
+	public function get_currency_symbols_list() {
+        $currency_data = $this->get_currency_data();
+        $symbols = [];
+
+        foreach ($currency_data as $code => $data) {
+            $symbols[$code] = $data['symbol'];
+        }
+
+		return $symbols;
+	}
+
+	/**
+     * Get currency list
+     *
+     * @since 0.0.2
+     * @return array Array of currency codes as key-value pairs
+     */
+    public function get_currency_list() {
+        $currency_data = $this->get_currency_data();
+        $currency_list = [];
+
+        foreach ($currency_data as $code => $data) {
+            $currency_list[$code] = $code;
+        }
+
+        return $currency_list;
+    }
+
+    /**
+     * Get currency names list
+     *
+     * @since 0.0.2
+     * @return array Array of currency codes and their full names
+     */
+    public function get_currency_names_list() {
+        $currency_data = $this->get_currency_data();
+        $names = [];
+
+        foreach ($currency_data as $code => $data) {
+            $names[$code] = $data['name'];
+        }
+
+        return $names;
+    }
+
+    /**
+     * Get currency symbol by code
+     *
+     * @since 0.0.2
+     * @param string $currency_code The currency code (e.g., 'USD', 'EUR')
+     * @return string The currency symbol or the code if symbol not found
+     */
+    public function get_currency_symbol($currency_code) {
+        $currency_data = $this->get_currency_data();
+
+        if (isset($currency_data[$currency_code])) {
+            return $currency_data[$currency_code]['symbol'];
+        }
+
+        return $currency_code; // Fallback to currency code
+    }
+
+    /**
+     * Get currency name by code
+     *
+     * @since 0.0.2
+     * @param string $currency_code The currency code (e.g., 'USD', 'EUR')
+     * @return string The currency name or the code if name not found
+     */
+    public function get_currency_name($currency_code) {
+        $currency_data = $this->get_currency_data();
+
+        if (isset($currency_data[$currency_code])) {
+            return $currency_data[$currency_code]['name'];
+        }
+
+        return $currency_code; // Fallback to currency code
+    }
+
+	//
 }

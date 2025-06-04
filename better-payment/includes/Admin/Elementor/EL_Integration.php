@@ -37,6 +37,7 @@ class EL_Integration {
         add_action( 'elementor/widgets/register', array( $this, 'register_widget' ) );
         add_action( 'elementor/widgets/register', [ $this, 'elementor_form_integration' ], 10 );
         add_action( 'elementor-pro/forms/pre_render', [ $this, 'elementor_pro_form_response' ], 10, 2 );
+        add_action( 'wp_enqueue_scripts', [ $this, 'conditional_enqueue_assets' ] );
     }
 
     /**
@@ -85,6 +86,77 @@ class EL_Integration {
 			$obj->add_render_attribute( 'form', 'style', 'display:none' );
             return false;
         }
+    }
+
+    /**
+     * Conditionally enqueue assets on pages with Elementor forms
+     *
+     * @since 0.0.1
+     */
+    public function conditional_enqueue_assets() {
+        // Only run on frontend
+        if ( is_admin() ) {
+            return;
+        }
+
+        if ( ! defined( 'ELEMENTOR_PRO_VERSION' ) || ! \Elementor\Plugin::$instance->documents->get( get_the_ID() ) ) {
+            return;
+        }
+
+        $document = \Elementor\Plugin::$instance->documents->get( get_the_ID() );
+        if ( ! $document ) {
+            return;
+        }
+
+        $elements_data = $document->get_elements_data();
+        if ( $this->has_better_payment_form( $elements_data ) ) {
+            wp_enqueue_style( 'better-payment-el' );
+            wp_enqueue_style( 'bp-icon-front' );
+            wp_enqueue_style( 'better-payment-style' );
+            wp_enqueue_style( 'better-payment-common-style' );
+            wp_enqueue_style( 'better-payment-admin-style' );
+
+            wp_enqueue_script( 'better-payment-common-script' );
+            wp_enqueue_script( 'better-payment' );
+        }
+    }
+
+    /**
+     * Recursively check if page has forms with Better Payment
+     *
+     * @param array $elements
+     * @return bool
+     */
+    private function has_better_payment_form( $elements ) {
+        foreach ( $elements as $element ) {
+            if ( isset( $element['widgetType'] ) && $element['widgetType'] === 'form' ) {
+                $settings = isset( $element['settings'] ) ? $element['settings'] : [];
+
+                // Check submit actions
+                $submit_actions = isset( $settings['submit_actions'] ) ? $settings['submit_actions'] : [];
+                if ( is_array( $submit_actions ) ) {
+                    $better_payment_actions = [ 'better-payment', 'PayPal', 'Stripe', 'Paystack' ];
+                    if ( !empty( array_intersect( $submit_actions, $better_payment_actions ) ) ) {
+                        return true;
+                    }
+                }
+
+                // Check payment amount field
+                if ( isset( $settings['better_payment_payment_amount_enable'] ) &&
+                     $settings['better_payment_payment_amount_enable'] === 'yes' ) {
+                    return true;
+                }
+            }
+
+            // Check nested elements
+            if ( isset( $element['elements'] ) && is_array( $element['elements'] ) ) {
+                if ( $this->has_better_payment_form( $element['elements'] ) ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 }

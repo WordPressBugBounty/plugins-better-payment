@@ -1,4 +1,5 @@
 <?php
+$bp_helper_obj = new Better_Payment\Lite\Classes\Helper();
 $layout_action = !empty($extraDatas['action']) ? $extraDatas['action'] : '';
 $layout_setting_meta = !empty($extraDatas['setting_meta']) ? $extraDatas['setting_meta'] : '';
 $layout_dynamic_payment_hide_show = !empty($settings["better_payment_form_payment_source"]) && 'woocommerce' !== $settings["better_payment_form_payment_source"] ? 'is-hidden' : '';
@@ -17,7 +18,7 @@ $layout_put_amount_field_hide_show = ( $is_payment_recurring || $is_payment_spli
 $is_layout_for_woocommerce = ! empty( $settings["better_payment_form_layout"] ) && in_array( $settings["better_payment_form_layout"], ['layout-6-pro'] ) ? 1 : 0;
 
 $layout_form_currency = !empty($settings["better_payment_form_currency"]) ? $settings["better_payment_form_currency"] : '';
-$layout_form_currency_symbol = $layout_form_currency ? Better_Payment\Lite\Classes\Handler::get_currency_symbols(esc_html($layout_form_currency)) : '<i class="bp-icon bp-logo-2"></i>';
+$layout_form_currency_symbol = $layout_form_currency ? $bp_helper_obj->get_currency_symbol(esc_html($layout_form_currency)) : '<i class="bp-icon bp-logo-2"></i>';
 
 $currency_alignment             = ! empty ( $settings['better_payment_form_currency_alignment'] ) ? $settings['better_payment_form_currency_alignment'] : 'left';
 
@@ -34,7 +35,7 @@ if ( $is_payment_type_woocommerce || $is_layout_for_woocommerce ) {
         !empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($settings['better_payment_form_currency_woocommerce'])
     ) {
-        $layout_form_currency_symbol = \Better_Payment\Lite\Classes\Handler::get_currency_symbols( esc_html($settings['better_payment_form_currency_woocommerce']) );
+        $layout_form_currency_symbol = $bp_helper_obj->get_currency_symbol( esc_html($settings['better_payment_form_currency_woocommerce']) );
     }
 
     //Fetch product data using product ID

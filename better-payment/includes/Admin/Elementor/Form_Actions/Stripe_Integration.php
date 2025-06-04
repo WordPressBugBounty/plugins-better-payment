@@ -245,6 +245,11 @@ class Stripe_Integration extends Action_Base {
 
         $response_ar = json_decode( $response[ 'body' ] );
 
+        if ( ! empty( $response_ar->error ) ) {
+            $ajax_handler->add_error_message( sanitize_text_field( $response_ar->error->message ) );
+            return false;
+        }
+
         if ( !empty( $response_ar->payment_intent ) ) {
             
             //Form fields data to send via email

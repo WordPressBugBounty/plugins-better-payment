@@ -525,14 +525,14 @@ class Payment_Amount_Integration extends Action_Base {
      */
     public function run( $record, $ajax_handler ) {
         //Silence is golden!
-        wp_enqueue_style( 'better-payment-el' );
-        wp_enqueue_style( 'bp-icon-front' );
-        wp_enqueue_style( 'better-payment-style' );
-        wp_enqueue_style( 'better-payment-common-style' );
-        wp_enqueue_style( 'better-payment-admin-style' );
+    //     wp_enqueue_style( 'better-payment-el' );
+    //     wp_enqueue_style( 'bp-icon-front' );
+    //     wp_enqueue_style( 'better-payment-style' );
+    //     wp_enqueue_style( 'better-payment-common-style' );
+    //     wp_enqueue_style( 'better-payment-admin-style' );
         
-        wp_enqueue_script( 'better-payment-common-script' );
-        wp_enqueue_script( 'better-payment' );
+    //     wp_enqueue_script( 'better-payment-common-script' );
+    //     wp_enqueue_script( 'better-payment' );
     }
 }
 

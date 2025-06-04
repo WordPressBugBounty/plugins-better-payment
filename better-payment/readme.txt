@@ -5,7 +5,7 @@ Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,6 +162,16 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.3.2 - 04/06/2025 =
+- Added: NGN currency support
+- Added: Error message for Stripe minimum amount limit
+- Added: Notice for unsupported currencies in payment gateways
+- Fixed: Currency symbol issue in Elementor Form
+- Fixed: CSS/JS enqueue issue for Elementor Form in frontend
+- Fixed: Static method issue in Handler class
+- Fixed: Trait name issue across multiple files
+- Few minor bug fixes & improvements
 
 = 1.3.1 - 28/05/2025 =
 - Added: KES currency support
