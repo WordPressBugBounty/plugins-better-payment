@@ -253,6 +253,9 @@ class Paystack_Integration extends Action_Base {
                 'source' => 'paystack'
             ];
             
+            // Get campaign_id from form data if available
+            $campaign_id = ! empty( $sent_data['campaign_id'] ) ? sanitize_text_field( $sent_data['campaign_id'] ) : '';
+
             Handler::payment_create(
                 [
                     'amount'         => $amount,
@@ -266,6 +269,7 @@ class Paystack_Integration extends Action_Base {
                     'status'         => 'unpaid',
                     'currency'       => $currency_code,
                     'referer'        => "elementor-form",
+                    'campaign_id'    => $campaign_id,
                 ]
             );
 

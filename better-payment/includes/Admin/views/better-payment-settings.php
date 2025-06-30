@@ -135,7 +135,7 @@ $currency_list = $better_payment_helper->get_currency_list();
                                                     <div class="payment__option__content">
                                                         <h4><?php esc_html_e('User Dashboard', 'better-payment'); ?></h4>
                                                         <p>
-                                                            <?php esc_html_e('Enable User Dashboard widget. It shows list of transactions and subscriptions for the user.', 'better-payment'); ?>
+                                                            <?php esc_html_e('Display subscription information, take action, unsubscribe, and more with User Dashboard widget. ', 'better-payment'); ?>
                                                             <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/user-dashboard-using-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
                                                         </p>
                                                     </div>
@@ -143,6 +143,23 @@ $currency_list = $better_payment_helper->get_currency_list();
                                                         <label class="bp-switch">
                                                             <input type="hidden" name="better_payment_settings_general_general_user_dashboard" value="no">
                                                             <input type="checkbox" name="better_payment_settings_general_general_user_dashboard" value="yes" <?php echo isset($bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard']) && $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] == 'yes' ? ' checked' : '' ?>>
+                                                            <span class="switch__btn"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="payment__option">
+                                                    <?php $bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign'] = isset( $bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign'] ) ? sanitize_text_field( $bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign'] ) : 'yes'; ?>
+                                                    <div class="payment__option__content">
+                                                        <h4><?php esc_html_e('Fundraising Campaign', 'better-payment'); ?></h4>
+                                                        <p>
+                                                            <?php esc_html_e('Create fundraising campaigns seamlessly in Elementor builder with Fundraising Campaign widget. ', 'better-payment'); ?>
+                                                            <a class="color__themeColor" target="_blank" href="<?php echo esc_url('//betterpayment.co/docs/configure-fundraising-campaign-in-better-payment/'); ?>"><?php _e('See documentation.', 'better-payment'); ?></a>
+                                                        </p>
+                                                    </div>
+                                                    <div class="active__status">
+                                                        <label class="bp-switch">
+                                                            <input type="hidden" name="better_payment_settings_general_general_fundraising_campaign" value="no">
+                                                            <input type="checkbox" name="better_payment_settings_general_general_fundraising_campaign" value="yes" <?php echo isset($bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign']) && $bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign'] == 'yes' ? ' checked' : '' ?>>
                                                             <span class="switch__btn"></span>
                                                         </label>
                                                     </div>

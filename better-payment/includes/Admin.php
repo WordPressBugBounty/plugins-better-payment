@@ -277,6 +277,8 @@ class Admin extends Controller{
         
         $bpExportObj = new Export();
 
+		$helperObj = new Helper();
+
         // Handle select2 ajax search
         add_action('wp_ajax_better_payment_select2_search_post', [$bpElementorWidgetObj, 'select2_ajax_posts_filter_autocomplete']);
 
@@ -288,5 +290,8 @@ class Admin extends Controller{
         //Page: Transactions
         add_action('admin_post_better-payment-transactions-import',[$bpImportObj, 'import_transactions']);
         add_action('wp_ajax_better-payment-transactions-export',[$bpExportObj, 'export_transactions']);
+
+		// Elementor categories
+		add_action('elementor/elements/categories_registered', [$helperObj, 'register_widget_categories']);
     }
 }

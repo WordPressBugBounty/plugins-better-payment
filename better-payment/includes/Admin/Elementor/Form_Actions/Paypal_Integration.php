@@ -235,6 +235,9 @@ class Paypal_Integration extends Action_Base {
             'source'                => 'paypal'
         ];
 
+        // Get campaign_id from form data if available
+        $campaign_id = ! empty( $sent_data['campaign_id'] ) ? sanitize_text_field( $sent_data['campaign_id'] ) : '';
+
         Handler::payment_create(
             [
                 'amount'       => $amount,
@@ -244,6 +247,7 @@ class Paypal_Integration extends Action_Base {
                 'form_fields_info' => maybe_serialize( $better_form_fields ),
                 'currency'     => $currency_code,
                 'referer'      => "elementor-form",
+                'campaign_id'  => $campaign_id,
             ]
         );
         $paypal_url = "https://www.$path.com/cgi-bin/webscr?";

@@ -487,5 +487,46 @@ trait Helper
         return $currency_code; // Fallback to currency code
     }
 
-	//
+	/**
+     * Widget settings
+     * 
+     * @since 1.0.0
+     */
+    public function get_elementor_widget_settings( $page_id, $widget_id ) {
+        $document = \Elementor\Plugin::$instance->documents->get( $page_id );
+        $settings = [];
+        if ( $document ) {
+            $elements    = \Elementor\Plugin::instance()->documents->get( $page_id )->get_elements_data();
+            $widget_data = $this->find_element_recursive( $elements, $widget_id );
+            $widget      = ! empty( $widget_data ) && is_array( $widget_data ) ? \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data ) : '';
+            if ( ! empty( $widget ) ) {
+                $settings = $widget->get_settings_for_display();
+            }
+        }
+        return $settings;
+    }
+
+	/**
+     * Find element recursive
+     * 
+     * @since 1.0.0
+     */
+    public function find_element_recursive( $elements, $form_id ) {
+
+        foreach ( $elements as $element ) {
+            if ( $form_id === $element[ 'id' ] ) {
+                return $element;
+            }
+
+            if ( !empty( $element[ 'elements' ] ) ) {
+                $element = $this->find_element_recursive( $element[ 'elements' ], $form_id );
+
+                if ( $element ) {
+                    return $element;
+                }
+            }
+        }
+
+        return false;
+    }
 }

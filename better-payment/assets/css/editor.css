@@ -1,0 +1,61 @@
+/*!****************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[1].use[3]!./src/css/editor.scss ***!
+  \****************************************************************************************************************************************************************************************************************/
+.elementor-control.bpc-pro-control::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: block;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 99;
+  background: transparent;
+}
+
+.elementor-control.bpc-pro-control .bpc-pro-label {
+  color: red;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.elementor-control.bpc-pro-control .eicon-pro-icon:before {
+  color: #b4b5b7;
+  margin-left: 4px;
+  font-size: 14px;
+}
+
+.elementor-element-wrapper:not(.elementor-element--promotion) [class^=bp-icon]:after,
+.elementor-element-wrapper:not(.elementor-element--promotion) [class*=" bp-icon"]:after {
+  content: "\e92a";
+  font-family: "bp-icon" !important;
+  speak: none;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: #cdcfd2;
+}
+
+#elementor-panel__editor__help__link[href^="https://betterpayment.co/docs/"]:before {
+  content: "\e92a";
+  font-family: "bp-icon" !important;
+  font-size: 190%;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin-right: 7px;
+}

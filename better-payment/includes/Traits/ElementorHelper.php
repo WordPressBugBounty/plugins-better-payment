@@ -123,4 +123,18 @@ trait ElementorHelper {
             wp_send_json_error( [] );
         }
     }
+
+    /**
+	 * Add elementor category
+	 *
+	 * @since v1.0.0
+	 */
+	public function register_widget_categories( $elements_manager ) {
+		$elements_manager->add_category(
+			'better-payment',
+			[
+				'title' => __( 'Better Payment', 'better-payment' ),
+				'icon'  => 'font',
+			], 1 );
+	}
 }

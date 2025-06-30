@@ -48,8 +48,13 @@ class EL_Integration {
     public function register_widget( $widgets_manager ) {
 		$bp_admin_saved_settings = DB::get_settings();
         $is_user_dashboard_enabled = isset( $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] ) && 'yes' === sanitize_text_field( $bp_admin_saved_settings['better_payment_settings_general_general_user_dashboard'] ) ? 1 : 0;
+        $is_fundraising_campaign_enabled = isset( $bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign'] ) && 'yes' === sanitize_text_field( $bp_admin_saved_settings['better_payment_settings_general_general_fundraising_campaign'] ) ? 1 : 0;
         $widgets_manager->register_widget_type( new Better_Payment_Widget() );
         
+        if ( $is_fundraising_campaign_enabled ) {
+            $widgets_manager->register_widget_type( new Fundraising_Campaign_Widget() );
+        }
+
         if ( $is_user_dashboard_enabled ) {
             $widgets_manager->register_widget_type( new User_Dashboard() );
         }

@@ -91,6 +91,11 @@ use Better_Payment\Lite\Classes\Helper;
                                 $td_payment_date = wp_date(get_option('date_format').' '.get_option('time_format'), strtotime($bp_admin_transaction->payment_date));
                                 $td_referer = $bp_admin_transaction->referer;
                                 $td_obj_id = $bp_admin_transaction->obj_id;
+                                $td_campaign_id = '';
+                                if( isset($bp_admin_transaction->campaign_id) && $bp_admin_transaction->campaign_id ) {
+                                    $td_campaign_id = $bp_admin_transaction->campaign_id;
+                                    $td_campaign_id = substr($td_campaign_id, strrpos($td_campaign_id, '_') + 1);
+                                }
 
                                 //Show widget name and page url
                                 $referer_content_form_name = esc_html__('N/A', 'better-payment');
@@ -167,6 +172,9 @@ use Better_Payment\Lite\Classes\Helper;
                                         <li><span><?php esc_html_e('Payment Date:', 'better-payment'); ?></span> <?php echo esc_html($td_payment_date) ?></li>
                                         <li><span><?php esc_html_e('Referer Page:', 'better-payment'); ?></span> <a target="_blank" class="color__themeColor" href="<?php echo esc_url($referer_content_page_link) ?>"><?php echo esc_html($referer_content_page_title); ?></a> </li>
                                         <li class="is-hidden"><span><?php esc_html_e('Referer Widget:', 'better-payment'); ?></span> <?php echo esc_html($referer_content_form_name) ?></li>
+                                        <?php if( !empty($td_campaign_id) ) : ?>
+                                            <li><span><?php esc_html_e('Campaign ID:', 'better-payment'); ?></span> <?php echo esc_html($td_campaign_id) ?></li>
+                                        <?php endif; ?>
                                     </ul>
                                 </div>
 

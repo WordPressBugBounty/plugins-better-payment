@@ -75,6 +75,11 @@ class Assets extends Controller {
                 'version' => filemtime( BETTER_PAYMENT_PATH . '/assets/js/frontend.min.js' ),
                 'deps'    => [ 'jquery' ]
             ],
+            'fundraising-campaign-script' => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/js/fundraising-campaign.min.js',
+                'version' => filemtime( BETTER_PAYMENT_PATH . '/assets/js/fundraising-campaign.min.js' ),
+                'deps'    => [ 'jquery' ]
+            ],
         ];
     }
 
@@ -125,6 +130,15 @@ class Assets extends Controller {
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/admin.min.css',
                 'version' => filemtime( BETTER_PAYMENT_PATH . '/assets/css/admin.min.css' )
             ],
+            'fundraising-campaign-style' => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign.min.css',
+                'version' => filemtime( BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css' )
+            ],
+            'better-payment-editor-style' => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/css/editor.min.css',
+                'version' => filemtime( BETTER_PAYMENT_PATH . '/assets/css/editor.min.css' ),
+                'admin_enqueue' => true,
+            ],
         ];
     }
 
@@ -148,8 +162,13 @@ class Assets extends Controller {
         foreach ( $styles as $handle => $style ) {
             $version = isset( $style['version'] ) ? $style['version'] : false;
             $deps = isset( $style['deps'] ) ? $style['deps'] : false;
+            $admin_enqueue = isset( $style['admin_enqueue'] ) ? $style['admin_enqueue'] : false;
 
             wp_register_style( $handle, $style['src'], $deps, $version );
+
+            if ( $admin_enqueue && is_admin()  ) {
+                wp_enqueue_style( $handle, $style['src'], $deps, $version );
+            }
         }
 
         wp_localize_script( 'better-payment', 'betterPayment', [

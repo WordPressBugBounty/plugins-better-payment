@@ -263,6 +263,9 @@ class Stripe_Integration extends Action_Base {
                 'source' => 'stripe'
             ];
             
+            // Get campaign_id from form data if available
+            $campaign_id = ! empty( $sent_data['campaign_id'] ) ? sanitize_text_field( $sent_data['campaign_id'] ) : '';
+
             Handler::payment_create(
                 [
                     'amount'         => $amount,
@@ -276,6 +279,7 @@ class Stripe_Integration extends Action_Base {
                     'status'         => sanitize_text_field($response_ar->payment_status),
                     'currency'       => sanitize_text_field($record->get_form_settings( 'better_payment_form_stripe_currency' )),
                     'referer'        => "elementor-form",
+                    'campaign_id'    => $campaign_id,
                 ]
             );
             $stripe_response = [

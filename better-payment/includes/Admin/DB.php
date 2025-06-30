@@ -39,6 +39,7 @@ class DB {
             'better_payment_settings_general_general_stripe' => 'yes',
             'better_payment_settings_general_general_paystack' => '',
             'better_payment_settings_general_general_user_dashboard' => 'yes',
+            'better_payment_settings_general_general_fundraising_campaign' => 'yes',
             'better_payment_settings_general_general_email' => 'yes',
             'better_payment_settings_general_general_currency' => 'USD',
 
@@ -91,6 +92,9 @@ class DB {
     {
         $settings = get_option('better_payment_settings', true);
         $default = self::default_settings();
+
+        $settings = wp_parse_args($settings, $default);
+
         if (!empty($name) && isset($settings[$name])) {
             return $settings[$name];
         }

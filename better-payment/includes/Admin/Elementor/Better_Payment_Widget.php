@@ -56,11 +56,15 @@ class Better_Payment_Widget extends Widget_Base {
     }
 
     public function get_title() {
-        return esc_html__( 'Better Payment', 'better-payment' );
+        return esc_html__( 'Payment Form', 'better-payment' );
     }
 
     public function get_icon() {
-        return 'bp-icon bp-logo';
+        return 'bp-icon bp-payment-form';
+    }
+
+    public function get_categories() {
+        return ['better-payment'];
     }
 
     public function get_keywords() {
@@ -3982,17 +3986,17 @@ class Better_Payment_Widget extends Widget_Base {
 
     public function render_attribute_default_text( $settings ) {
         $render_attribute_default_text = '';
-        
+
         $items = [];
         $layout = ! empty( $settings["better_payment_form_layout"] ) ? $settings["better_payment_form_layout"] : '';
-        
+
         switch( $layout ) {
             case 'layout-1':
             case 'layout-2':
             case 'layout-3':
                 $items = ! empty( $settings['better_payment_form_fields'] ) ? $settings['better_payment_form_fields'] : [];
                 break;
-            
+
             case 'layout-4-pro':
                 $items = ! empty( $settings['better_payment_form_fields_layout_4_5_6'] ) ? $settings['better_payment_form_fields_layout_4_5_6'] : [];
                 break;
@@ -4006,20 +4010,36 @@ class Better_Payment_Widget extends Widget_Base {
             default:
                 break;
         }
-        
+
         if (!empty($items)) :
             foreach ($items as $item) :
                 $item_primary_field_type = !empty($item["better_payment_primary_field_type"]) ? $item["better_payment_primary_field_type"] : "";
                 $is_payment_amount_field = 'primary_payment_amount' === $item_primary_field_type ? 1 : 0;
-                
+
                 if ( $is_payment_amount_field ) {
                     $render_attribute_default_dynamic = ! empty( $item["better_payment_field_name_default_dynamic_enable"] ) && 'yes' ===  $item["better_payment_field_name_default_dynamic_enable"] ? 1 : 0;
-                    $render_attribute_default_text = $render_attribute_default_dynamic && ! empty( $_GET['payment_amount'] ) ? floatval($_GET['payment_amount']) : '';
+                    $is_campaign_widget = ! empty( $_GET['campaign_id'] ) ? 1 : 0;
+                    $render_attribute_default_text = ( $render_attribute_default_dynamic || $is_campaign_widget ) && ! empty( $_GET['payment_amount'] ) ? floatval( sanitize_text_field( $_GET['payment_amount'] ) ) : '';
                 }
             endforeach;
         endif;
 
         return $render_attribute_default_text;
+    }
+
+    /**
+     * Render campaign_id hidden field
+     *
+     * @since 1.0.0
+     */
+    public function render_campaign_id_hidden_field( $settings ) {
+        $campaign_id_value = ! empty( $_GET['campaign_id'] ) ? sanitize_text_field( $_GET['campaign_id'] ) : '';
+        $campaign_currency_value = ! empty( $_GET['campaign_currency'] ) ? sanitize_text_field( $_GET['campaign_currency'] ) : '';
+
+        return '
+            <input type="hidden" name="campaign_id" value="' . esc_attr( $campaign_id_value ) . '">
+            <input type="hidden" name="campaign_currency" value="' . esc_attr( $campaign_currency_value ) . '">
+        ';
     }
 
     public function better_payment_free_layouts(){

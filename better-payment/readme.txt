@@ -1,11 +1,11 @@
-=== Better Payment - Instant Payments Through PayPal & Stripe ===
+=== Better Payment – Instant Payments, Donations, Fundraising with Subscriptions & More ===
 Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, rahatsheikhleon, fuadragib
 Donate link: https://wpdeveloper.com
-Tags: payment form, donation, PayPal, Custom Forms, WooCommerce Payments
+Tags: donation, fundraising, recurring donations, payments, stripe paypal & paystack
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.3.2
+Stable tag: 1.4.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,6 +162,13 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.4.0 - 30/06/2025 =
+- Added: Fundraising Campaign | Complete campaign widget with 3 distinct layouts
+- Improved: JavaScript files refactored for better readability and performance
+- Improved: Dynamic value dependency handling and form functionality
+- Fixed: Quick Setup Wizard | Redirection issue on ajax request
+- Few minor bug fixes & improvements
 
 = 1.3.2 - 04/06/2025 =
 - Added: NGN currency support

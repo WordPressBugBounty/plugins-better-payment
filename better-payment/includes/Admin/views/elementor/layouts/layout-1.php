@@ -14,6 +14,11 @@
             <form name="better-payment-form-<?php echo esc_attr($widgetObj->get_id()); ?>" data-better-payment="<?php echo esc_attr($layout_setting_meta); ?>" class="better-payment-form" id="better-payment-form-<?php echo esc_attr($widgetObj->get_id()); ?>" action="<?php echo esc_url($layout_action); ?>" method="post">
                 <input type="hidden" name="better_payment_page_id" value="<?php echo esc_attr( get_the_ID() ); ?>">
                 <input type="hidden" name="better_payment_widget_id" value="<?php echo esc_attr($widgetObj->get_id()); ?>">
+                <?php
+                    if ( method_exists( $widgetObj, 'render_campaign_id_hidden_field' ) ) {
+                        echo $widgetObj->render_campaign_id_hidden_field( $settings );
+                    }
+                ?>
 
                 <div class="payment-form-layout-1 payment-form-layout">
                     <div class="tile is-ancestor m-0">

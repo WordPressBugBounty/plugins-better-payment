@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 1.3.2
+ * Version: 1.4.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -32,7 +32,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '1.3.2';
+    const version = '1.4.0';
 
     /**
      * Class construcotr
@@ -161,7 +161,11 @@ add_action('wp_loaded', function () {
     $setup_wizard = get_option('better_payment_setup_wizard');
 
     if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-        return;
+        $is_from_better_payment = isset( $_POST['form_data'] ) && isset( $_POST['form_data'][0] ) && isset( $_POST['form_data'][0]['name'] ) && strpos( $_POST['form_data'][0]['name'], 'better_payment_' ) !== false;
+
+        if ( ! $is_from_better_payment ) {
+            return;
+        }
     }
     
     if ($setup_wizard == 'redirect') {

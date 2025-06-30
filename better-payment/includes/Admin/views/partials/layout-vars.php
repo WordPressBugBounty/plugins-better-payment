@@ -17,7 +17,12 @@ $payment_type_text = ! empty( $settings["better_payment_form_payment_type"] ) ? 
 $layout_put_amount_field_hide_show = ( $is_payment_recurring || $is_payment_split_payment ) ? 'is-hidden' : $layout_put_amount_field_hide_show;
 $is_layout_for_woocommerce = ! empty( $settings["better_payment_form_layout"] ) && in_array( $settings["better_payment_form_layout"], ['layout-6-pro'] ) ? 1 : 0;
 
-$layout_form_currency = !empty($settings["better_payment_form_currency"]) ? $settings["better_payment_form_currency"] : '';
+if( !empty($_GET[ 'campaign_currency' ]) ) {
+    $layout_form_currency = sanitize_text_field( $_GET[ 'campaign_currency' ] );
+} else {
+    $layout_form_currency = !empty($settings["better_payment_form_currency"]) ? sanitize_text_field( $settings["better_payment_form_currency"] ) : '';
+}
+
 $layout_form_currency_symbol = $layout_form_currency ? $bp_helper_obj->get_currency_symbol(esc_html($layout_form_currency)) : '<i class="bp-icon bp-logo-2"></i>';
 
 $currency_alignment             = ! empty ( $settings['better_payment_form_currency_alignment'] ) ? $settings['better_payment_form_currency_alignment'] : 'left';

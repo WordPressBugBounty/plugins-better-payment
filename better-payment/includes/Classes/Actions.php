@@ -74,10 +74,13 @@ class Actions {
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
         $is_woo_layout = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
-        
+
         if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($el_settings['better_payment_form_currency_woocommerce'])){
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
+        }
+        if( !empty($_POST[ 'campaign_currency' ]) ) {
+            $el_settings_currency = sanitize_text_field( $_POST[ 'campaign_currency' ] );
         }
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
@@ -133,6 +136,8 @@ class Actions {
             $request_data[ 'primary_email' ] = sanitize_email( $better_form_fields[ 'primary_email' ] );
         }
         
+        $campaign_id = ! empty( $_POST['campaign_id'] ) ? sanitize_text_field( $_POST['campaign_id'] ) : '';
+
         Handler::payment_create(
             [
                 'amount'       => floatval( $primary_payment_amount ),
@@ -142,6 +147,7 @@ class Actions {
                 'form_fields_info'     => maybe_serialize( $better_form_fields ),
                 'currency'     => sanitize_text_field($el_settings_currency),
                 'referer'      => "widget",
+                'campaign_id'  => $campaign_id,
             ]
         );
         $paypal_url = "https://www.$path.com/cgi-bin/webscr?";
@@ -189,21 +195,21 @@ class Actions {
         }
 
         $is_payment_split_payment = ! empty( $el_settings["better_payment_form_payment_type"] ) && 'split-payment' === $el_settings["better_payment_form_payment_type"];
-        
+
         $amount = isset($_POST['fields']['primary_payment_amount']) ? floatval($_POST['fields']['primary_payment_amount']) : 0;
-        
+
         if ( empty( $_POST['fields']['primary_payment_amount'] ) && ! empty( $_POST['fields']['primary_payment_amount_radio'] ) ) {
             $amount = floatval($_POST['fields']['primary_payment_amount_radio']);
         }
 
         $amount_quantity = ! empty( $_POST['fields']['payment_amount_quantity'] ) ? intval( $_POST['fields']['payment_amount_quantity'] ) : '';
-        
+
         if ( $is_woo_layout ) {
             $amount_quantity = 1;
         }
 
         $amount = ! empty( $amount_quantity ) ? $amount * $amount_quantity : $amount;
-        
+
         if ( empty( $better_payment_keys['public_key'] ) || empty( $better_payment_keys['secret_key'] ) ) {
             wp_send_json_error( esc_html(__( 'Stripe Key missing', 'better-payment' )) );
         }
@@ -216,10 +222,13 @@ class Actions {
         $order_id = 'stripe_' . uniqid();
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
-        
+
         if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($el_settings['better_payment_form_currency_woocommerce'])){
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
+        }
+        if( !empty($_POST['fields'][ 'campaign_currency' ]) ) {
+            $el_settings_currency = sanitize_text_field( $_POST['fields'][ 'campaign_currency' ] );
         }
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
@@ -261,7 +270,7 @@ class Actions {
 
         $is_payment_recurring = ! empty( $_POST['fields']['better_payment_recurring_mode'] ) && 'subscription' === sanitize_text_field( $_POST['fields']['better_payment_recurring_mode'] );
         $recurring_price_id = ! empty( $_POST['fields']['better_payment_recurring_price_id'] ) ? sanitize_text_field( $_POST['fields']['better_payment_recurring_price_id'] ) : '';
-        
+
         //Form fields data to send via email
         $better_form_fields = [
             'amount' => $el_settings_currency_symbol . $amount,
@@ -340,8 +349,10 @@ class Actions {
         );
 
         $response_ar = json_decode( $response[ 'body' ] );
-        
+
         if ( ! empty( $response_ar->payment_intent ) || ( ! empty( $response_ar->mode ) && 'subscription' === $response_ar->mode ) ) {
+            $campaign_id = ! empty( $_POST['fields']['campaign_id'] ) ? sanitize_text_field( $_POST['fields']['campaign_id'] ) : '';
+
             Handler::payment_create(
                 [
                     'amount'         => $amount,
@@ -355,6 +366,7 @@ class Actions {
                     'status'         => sanitize_text_field($response_ar->payment_status),
                     'currency'       => $el_settings_currency,
                     'referer'        => "widget",
+                    'campaign_id'    => $campaign_id,
                 ]
             );
             wp_send_json_success(
@@ -383,7 +395,7 @@ class Actions {
         if ( !check_admin_referer( 'better-payment', 'security' ) ) {
             wp_send_json_error();
         }
-        
+
         $error_message = '';
 
         if( empty( $_POST[ 'setting_data' ]['page_id'] ) ){
@@ -402,7 +414,7 @@ class Actions {
         $widget_id = sanitize_text_field( $_POST[ 'setting_data' ]['widget_id'] );
         $el_settings = $this->better_payment_widget_settings( $page_id, $widget_id );
         $is_woo_layout = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
-        
+
         if ( empty( $el_settings ) ) {
             wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
         }
@@ -412,7 +424,7 @@ class Actions {
         }
 
         $amount = isset($_POST[ 'fields' ][ 'primary_payment_amount' ]) ? floatval($_POST[ 'fields' ][ 'primary_payment_amount' ]) : 0;
-        
+
         if ( empty( $_POST[ 'fields' ][ 'primary_payment_amount' ] ) && ! empty( $_POST[ 'fields' ][ 'primary_payment_amount_radio' ] ) ) {
             $amount = floatval($_POST[ 'fields' ][ 'primary_payment_amount_radio' ]);
         }
@@ -433,12 +445,15 @@ class Actions {
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
-        
+
         if(!empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($settings['better_payment_form_currency_woocommerce'])){
             $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
         }
-        
+        if( !empty($_POST['fields'][ 'campaign_currency' ]) ) {
+            $el_settings_currency = sanitize_text_field( $_POST['fields'][ 'campaign_currency' ] );
+        }
+
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
         $redirection_url_success    = get_permalink( $page_id );
@@ -454,7 +469,7 @@ class Actions {
                 'better_payment_widget_id'     => $widget_id
             ], $redirection_url_success ),
         ];
-        
+
         //Form fields data to send via email
         $better_form_fields = [
             'amount' => $el_settings_currency_symbol . $amount,
@@ -496,7 +511,7 @@ class Actions {
         );
 
         $response_ar = json_decode( $response[ 'body' ] );
-        
+
         if( empty( $response_ar->status ) || empty( $response_ar->data ) ){
             $error_message = $response_ar->message ? sanitize_text_field($response_ar->message) : 'Something went wrong!';
 
@@ -506,6 +521,8 @@ class Actions {
 
             wp_send_json_error( $error_message );
         }
+
+        $campaign_id = ! empty( $_POST['fields']['campaign_id'] ) ? sanitize_text_field( $_POST['fields']['campaign_id'] ) : '';
 
         Handler::payment_create(
             [
@@ -519,11 +536,12 @@ class Actions {
                 'status'         => 'unpaid',
                 'currency'       => $el_settings_currency,
                 'referer'        => "widget",
+                'campaign_id'    => $campaign_id,
             ]
         );
 
         $authorization_url = ! empty( $response_ar->data->authorization_url ) ? esc_url_raw( $response_ar->data->authorization_url ) : '';
-        
+
         wp_send_json_success(
             [
                 'authorization_url' => $authorization_url,
@@ -537,41 +555,9 @@ class Actions {
      * @since 1.0.0
      */
     public function better_payment_widget_settings( $page_id, $widget_id ) {
-        $document = \Elementor\Plugin::$instance->documents->get( $page_id );
-        $settings = [];
-        if ( $document ) {
-            $elements    = \Elementor\Plugin::instance()->documents->get( $page_id )->get_elements_data();
-            $widget_data = $this->find_element_recursive( $elements, $widget_id );
-            $widget      = ! empty( $widget_data ) && is_array( $widget_data ) ? \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data ) : '';
-            if ( ! empty( $widget ) ) {
-                $settings = $widget->get_settings_for_display();
-            }
-        }
+        $settings = $this->get_elementor_widget_settings( $page_id, $widget_id );
+
         return $settings;
-    }
-
-    /**
-     * Find element recursive
-     * 
-     * @since 1.0.0
-     */
-    public function find_element_recursive( $elements, $form_id ) {
-
-        foreach ( $elements as $element ) {
-            if ( $form_id === $element[ 'id' ] ) {
-                return $element;
-            }
-
-            if ( !empty( $element[ 'elements' ] ) ) {
-                $element = $this->find_element_recursive( $element[ 'elements' ], $form_id );
-
-                if ( $element ) {
-                    return $element;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -598,7 +584,7 @@ class Actions {
         $post_data_primary_first_name = '';
         $post_data_primary_last_name = '';
         $post_data_primary_email = '';
-        
+
         $post_fields = $post_data_form_fields;
 
         $layout = ! empty( $el_settings['better_payment_form_layout'] ) ? sanitize_text_field( $el_settings['better_payment_form_layout'] ) : 'layout-1';
@@ -611,7 +597,7 @@ class Actions {
             case 'layout-5-pro':
                 $el_settings['better_payment_form_fields'] = $el_settings['better_payment_form_fields_layout_4_5_6_desc'];
                 break;
-                
+
             case 'layout-6-pro':
                 $el_settings['better_payment_form_fields'] = $el_settings['better_payment_form_fields_layout_4_5_6_woo'];
                 break;
@@ -619,7 +605,7 @@ class Actions {
             default:
                 break;
         }
-        
+
         //in case of duplicate post name using the first one
         if(isset($el_settings['better_payment_form_fields']) && count($el_settings['better_payment_form_fields'])){
             foreach ($el_settings['better_payment_form_fields'] as $item) {
@@ -631,7 +617,7 @@ class Actions {
                     if( isset($post_fields[$item_primary_field_type]) ) {
                         $post_fields[$item_primary_field_type] =  is_array($post_fields[$item_primary_field_type]) ? $post_fields[$item_primary_field_type][0] : $post_fields[$item_primary_field_type];
                     }
-                    
+
                     if( isset($post_fields[$item_field_name]) ) {
                         $post_fields[$item_field_name] =  is_array($post_fields[$item_field_name]) ? $post_fields[$item_field_name][0] : $post_fields[$item_field_name];
                     }
@@ -658,9 +644,8 @@ class Actions {
                 }
             }
         }
-        
+
         return $better_form_fields;
     }
-    
 }
 

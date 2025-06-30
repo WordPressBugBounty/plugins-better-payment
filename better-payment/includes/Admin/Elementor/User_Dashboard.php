@@ -59,7 +59,11 @@ class User_Dashboard extends Widget_Base {
     }
 
     public function get_icon() {
-        return 'bp-icon bp-logo';
+        return 'bp-icon bp-user-dashboard';
+    }
+
+    public function get_categories() {
+        return ['better-payment'];
     }
 
     public function get_keywords() {

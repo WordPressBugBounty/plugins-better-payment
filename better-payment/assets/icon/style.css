@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'bp-icon';
-  src:  url('fonts/bp-icon.eot?98v6b1');
-  src:  url('fonts/bp-icon.eot?98v6b1#iefix') format('embedded-opentype'),
-    url('fonts/bp-icon.ttf?98v6b1') format('truetype'),
-    url('fonts/bp-icon.woff?98v6b1') format('woff'),
-    url('fonts/bp-icon.svg?98v6b1#bp-icon') format('svg');
+  src:  url('fonts/bp-icon.eot?9rofud');
+  src:  url('fonts/bp-icon.eot?9rofud#iefix') format('embedded-opentype'),
+    url('fonts/bp-icon.ttf?9rofud') format('truetype'),
+    url('fonts/bp-icon.woff?9rofud') format('woff'),
+    url('fonts/bp-icon.svg?9rofud#bp-icon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -25,6 +25,23 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.bp-logo-text:before {
+  content: "\e929";
+  color: #c8cacf;
+}
+.bp-logo-dark:before {
+  content: "\e92a";
+  color: #72787f;
+}
+.bp-fundraising-campaign:before {
+  content: "\e926";
+}
+.bp-payment-form:before {
+  content: "\e927";
+}
+.bp-user-dashboard:before {
+  content: "\e928";
+}
 .bp-view:before {
   content: "\e921";
 }

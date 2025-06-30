@@ -38,6 +38,7 @@ $render_attribute_max = '';
 $render_attribute_default = '';
 $render_attribute_default_fixed = '';
 $render_attribute_default_dynamic = 0;
+$is_bp_campaign = 0;
 
 if ($is_payment_amount_field) {
     $payment_amount_field_exists = 1;
@@ -51,7 +52,12 @@ if ($is_payment_amount_field) {
     $required_placeholder = ' *';
     
     $render_attribute_default_dynamic = ! empty( $item["better_payment_field_name_default_dynamic_enable"] ) && 'yes' ===  $item["better_payment_field_name_default_dynamic_enable"] ? 1 : 0;
-    $render_attribute_default = $render_attribute_default_dynamic && ! empty( $_GET['payment_amount'] ) ? floatval($_GET['payment_amount']) : $render_attribute_default;
+    $is_bp_campaign = ! empty( $_GET['payment_amount'] ) && ! empty( $_GET['campaign_id'] ) ? 1 : 0;
+    if( $is_bp_campaign ) {
+        $render_attribute_default = floatval($_GET['payment_amount']);
+    } else {
+        $render_attribute_default = $render_attribute_default_dynamic && ! empty( $_GET['payment_amount'] ) ? floatval($_GET['payment_amount']) : $render_attribute_default;
+    }
 }
 
 if ($is_primary_email_field) {
@@ -74,7 +80,7 @@ if (!empty($item_primary_field_type)) {
 $payment_amount_field_class = '';
 
 if ( $is_payment_amount_field ) {
-    $payment_amount_field_class = $is_payment_type_woocommerce || $is_payment_recurring || $is_payment_split_payment || $render_attribute_default_dynamic ? 'is-hidden' : '';
+    $payment_amount_field_class = $is_payment_type_woocommerce || $is_payment_recurring || $is_payment_split_payment || $render_attribute_default_dynamic || $is_bp_campaign ? 'is-hidden' : '';
 }
 
 $field_display_inline_class = ! empty( $item["better_payment_field_name_display_inline"] ) && 'inline-block' === $item["better_payment_field_name_display_inline"] ? ' field-display-inline ' : '';
