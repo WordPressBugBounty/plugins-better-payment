@@ -103,13 +103,16 @@ class User_Dashboard extends Widget_Base {
             ]
         );
 
-        $this->add_control(
+		$user_dashboard_layouts = $this->better_payment_free_layouts();
+		$template_list 			= $this->get_template_list_for_dropdown();
+
+		$this->add_control(
             'better_payment_user_dashboard_layout',
             [
                 'label'      => esc_html__( 'Layout', 'better-payment' ),
                 'type'       => Controls_Manager::SELECT,
                 'default'    => 'layout-1',
-                'options'    => $this->better_payment_free_layouts(),
+                'options'    => array_merge($user_dashboard_layouts, $template_list),
             ]
         );
 
@@ -1538,7 +1541,6 @@ class User_Dashboard extends Widget_Base {
         $extraDatas = $data;
 
         $better_payment_form_layout = sanitize_text_field($settings[ 'better_payment_user_dashboard_layout' ]);
-        $better_payment_form_layout = in_array($better_payment_form_layout, array_keys( $this->better_payment_free_layouts() ) ) ? $better_payment_form_layout : 'layout-1';
 
         $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/' . $better_payment_form_layout . '.php';
         $is_pro_layout = str_contains($better_payment_form_layout, '-pro');
@@ -1550,6 +1552,10 @@ class User_Dashboard extends Widget_Base {
         if ( ( ! $this->pro_enabled ) && $is_pro_layout ){
             $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/partials/layout-pro-banners.php';
         }
+		
+		if( $better_payment_form_layout !== 'layout-1' ){
+			$template_file = $this->get_template( $better_payment_form_layout );
+		}
 
         $better_payment_form_content = '';
         

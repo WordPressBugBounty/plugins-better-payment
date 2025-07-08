@@ -1,11 +1,11 @@
 === Better Payment – Instant Payments, Donations, Fundraising with Subscriptions & More ===
 Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, rahatsheikhleon, fuadragib
 Donate link: https://wpdeveloper.com
-Tags: donation, fundraising, recurring donations, payments, stripe paypal & paystack
+Tags: donation, fundraising, recurring donations, payments, stripe paypal paystack
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.4.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -90,7 +90,6 @@ Better Payment reign doesn’t stop here; more advanced and exclusive features a
 - Advanced email templates
 - Coupon management
 - Generate invoices
-- Fundraising campaigns
 
 🙌 After reading this feature list, you can probably imagine that Better Payment is the best WordPress payment plugin on the market. So, do you want to unlock the advanced features? [Upgrade to our Pro version](https://wpdeveloper.com/better-payment/#pricing).
 
@@ -162,6 +161,11 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.4.1 - 08/07/2025 =
+- Added: GHS (Ghanaian Cedi) currency support
+- Added: Template support for user dashboard widget
+- Few minor bug fixes & improvements
 
 = 1.4.0 - 30/06/2025 =
 - Added: Fundraising Campaign | Complete campaign widget with 3 distinct layouts

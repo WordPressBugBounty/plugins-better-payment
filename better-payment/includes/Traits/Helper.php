@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
  */
 trait Helper
 {
-    use Elements, ElementorHelper, WordPressHelper;
+    use Elements, ElementorHelper, WordPressHelper, TemplateQuery;
 
     public function bp_template_render($filePath, $variables = array(), $print = true)
     {
@@ -333,7 +333,8 @@ trait Helper
 				'KES',
 				'NGN',
 				'RON',
-				'ZAR'
+				'ZAR',
+				'GHS',
 			],
 			'stripe' => [],
 		];
@@ -379,6 +380,7 @@ trait Helper
             'CHF' => ['name' => 'Swiss Franc', 'symbol' => 'CHF'],
             'CZK' => ['name' => 'Czech Koruna', 'symbol' => 'Kč'],
             'DKK' => ['name' => 'Danish Krone', 'symbol' => 'kr'],
+			'GHS' => ['name' => 'Ghanaian Cedi', 'symbol' => '₵'],
             'HKD' => ['name' => 'Hong Kong Dollar', 'symbol' => '$'],
             'HUF' => ['name' => 'Hungarian Forint', 'symbol' => 'ft'],
             'ILS' => ['name' => 'Israeli Shekel', 'symbol' => '₪'],

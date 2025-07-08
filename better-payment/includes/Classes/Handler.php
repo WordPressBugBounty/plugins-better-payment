@@ -503,13 +503,13 @@ class Handler extends Controller{
         $show_icon = 0;
         $helper_obj = new Helper();
 
-        $store_name = ( $settings['better_payment_form_payment_source'] === 'manual' && !empty( $settings['better_payment_form_title'] ) ) 
+        $store_name = ( isset( $settings['better_payment_form_payment_source'] ) && $settings['better_payment_form_payment_source'] === 'manual' && !empty( $settings['better_payment_form_title'] ) ) 
             ? esc_html($settings['better_payment_form_title']) 
             : esc_html( get_bloginfo('name') );
 
         $payment_desc_text = !empty( $settings['better_payment_form_success_message_heading'] ) 
             ? esc_html($settings['better_payment_form_success_message_heading']) 
-            : esc_html( __('You paid', 'better-payment') . '[currency_symbol][amount] '. __(' to ', 'better-payment') . '[store_name]');
+            : esc_html( __('You paid', 'better-payment') . ' [currency_symbol][amount] ' . __('to', 'better-payment') . ' [store_name]');
 
         $bp__currency_symbol = esc_html( $helper_obj->get_currency_symbol( $tr_id['currency'] ) );
 
@@ -571,7 +571,7 @@ class Handler extends Controller{
         $better_payment_form_success_message_merchant_details_text = !empty( $settings['better_payment_form_success_message_merchant_details_text'] ) 
             ? esc_html( $settings['better_payment_form_success_message_merchant_details_text'] ) 
             : esc_html__( 'Merchant Details', 'better-payment' );
-        $better_payment_form_success_message_merchant_details_value = $settings['better_payment_form_payment_source'] === 'manual' && ! empty( $settings['better_payment_form_title'] ) 
+        $better_payment_form_success_message_merchant_details_value = isset( $settings['better_payment_form_payment_source'] ) && $settings['better_payment_form_payment_source'] === 'manual' && ! empty( $settings['better_payment_form_title'] ) 
             ? esc_html($settings['better_payment_form_title']) 
             : esc_html( get_bloginfo( 'name' ) );
         $better_payment_form_success_message_paid_amount_text = !empty( $settings['better_payment_form_success_message_paid_amount_text'] ) 
@@ -603,7 +603,7 @@ class Handler extends Controller{
                     <p class="bp-font_ibm bp-reason_for-text">
                         <?php echo wp_kses_post( $payment_desc_text ); ?>
                     </p>
-                    <?php if ($settings['better_payment_form_email_enable'] && !empty( $tr_id['email'] )): ?>
+                    <?php if (isset( $settings['better_payment_form_email_enable'] ) && !empty( $tr_id['email'] )): ?>
                         <p class="bp-font_ibm bp-payment_info">
                             <?php echo wp_kses_post( $payment_mail_text ); ?>
                         </p>
