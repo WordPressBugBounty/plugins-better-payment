@@ -5,7 +5,7 @@ Tags: donation, fundraising, recurring donations, payments, stripe paypal paysta
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -161,6 +161,13 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 1.4.2 - 11/08/2025 =
+- Added: A Dismissible onboarding info banner in settings page for new users
+- Added: Stripe coupon support
+- Added: Coupon information in payment details
+- Improved: Better Payment menu visibility when Elementor is not installed
+- Few minor bug fixes & improvements
 
 = 1.4.1 - 08/07/2025 =
 - Added: GHS (Ghanaian Cedi) currency support

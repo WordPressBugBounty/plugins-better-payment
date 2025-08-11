@@ -531,4 +531,256 @@ trait Helper
 
         return false;
     }
+
+	public function get_stripe_price_details( $price_id = '', $secret_key = '' ) {
+		if ( empty( $price_id ) || empty( $secret_key ) ) {
+			return [];
+		}
+
+		$api_url = 'https://api.stripe.com/v1/prices/' . $price_id;
+
+		$response = wp_remote_get( $api_url, [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $secret_key,
+			],
+			'timeout' => 20,
+		] );
+
+		if ( is_wp_error( $response ) ) {
+			error_log( 'Stripe API error: ' . $response->get_error_message() );
+			return [];
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $body, true );
+		// dd( $data );
+
+		if ( ! isset( $data ) || ! is_array( $data ) ) {
+			error_log( 'Stripe API response format error.' );
+			return [];
+		}
+
+		return $data;
+	}
+
+    /**
+     * Initialize widget usage
+     *
+     * @since 1.0.0
+     */
+    public function bp_init_widget_usage() {
+        // Run initial scan if not done yet
+        if (!get_option('bp_widget_usage_initial_scan_done', false)) {
+            $this->scan_existing_pages_for_widgets();
+            update_option('bp_widget_usage_initial_scan_done', true);
+        }
+    }
+
+    /**
+     * Track widget usage when a post is saved
+     *
+     * @since 1.0.0
+     * @param int $post_id
+     */
+    public function bp_widget_usage_on_save($post_id) {
+		// add capability check
+		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+
+        // Skip autosaves and revisions
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        if (wp_is_post_revision($post_id)) {
+            return;
+        }
+
+        // Only track pages that support Elementor
+        $post_type = get_post_type($post_id);
+        if (!in_array($post_type, ['page', 'post'])) {
+            return;
+        }
+
+        // Check if this page uses Elementor
+        $elementor_data = get_post_meta($post_id, '_elementor_data', true);
+        if (empty($elementor_data)) {
+            return;
+        }
+
+        // Parse and check for Better Payment widgets
+        $this->update_widget_usage_flags($post_id, $elementor_data);
+    }
+
+    /**
+     * Scan all existing pages for Better Payment widgets
+     *
+     * @since 1.0.0
+     */
+    public function scan_existing_pages_for_widgets() {
+        global $wpdb;
+
+        // Get all posts/pages with Elementor data
+        $posts_with_elementor = $wpdb->get_results(
+            "SELECT post_id, meta_value FROM {$wpdb->postmeta}
+             WHERE meta_key = '_elementor_data'
+             AND meta_value != ''
+             AND meta_value != '[]'"
+        );
+
+        foreach ($posts_with_elementor as $post_data) {
+            $this->update_widget_usage_flags($post_data->post_id, $post_data->meta_value);
+        }
+    }
+
+    /**
+     * Update widget usage flags based on page content
+     *
+     * @since 1.0.0
+     * @param int $post_id
+     * @param string $elementor_data
+     */
+    public function update_widget_usage_flags($post_id, $elementor_data) {
+        // Parse Elementor data
+        $elements = json_decode($elementor_data, true);
+        if (!is_array($elements)) {
+            return;
+        }
+
+        // Check for Better Payment widgets
+        $widget_usage = $this->detect_better_payment_widgets($elements);
+
+        // Update overall usage flag
+        $any_widget_used = $widget_usage['better-payment'];
+
+        if ($any_widget_used) {
+            update_option('better_payment_any_widget_used', true);
+        } else {
+            delete_option('better_payment_any_widget_used');
+        }
+    }
+
+    /**
+     * Recursively detect Better Payment widgets in Elementor data
+     *
+     * @since 1.0.0
+     * @param array $elements
+     * @return array
+     */
+    public function detect_better_payment_widgets($elements) {
+        $widget_usage = [
+            'better-payment' => false,
+        ];
+
+        foreach ($elements as $element) {
+            // Check if this element is a Better Payment widget
+            if (isset($element['widgetType'])) {
+                $widget_type = $element['widgetType'];
+
+                if ($widget_type === 'better-payment') {
+                    $widget_usage['better-payment'] = true;
+                } elseif ($widget_type === 'better-payment-user-dashboard') {
+                    $widget_usage['better-payment'] = true;
+                } elseif ($widget_type === 'fundraising-campaign') {
+                    $widget_usage['better-payment'] = true;
+                }
+            }
+
+            // Recursively check nested elements
+            if (!empty($element['elements']) && is_array($element['elements'])) {
+                $nested_usage = $this->detect_better_payment_widgets($element['elements']);
+
+                // Merge results (OR operation)
+                $widget_usage['better-payment'] = $widget_usage['better-payment'] || $nested_usage['better-payment'];
+            }
+        }
+
+        return $widget_usage;
+    }
+
+    /**
+     * Check if any Better Payment widget is being used
+     *
+     * @since 1.0.0
+     * @return bool
+     */
+    public function is_any_better_payment_widget_used() {
+        return get_option('better_payment_any_widget_used', false);
+    }
+
+	/**
+	 * Check if dismissible section should be shown
+	 *
+	 * @since 1.4.2
+	 * @return bool
+	 */
+	public function bp_show_dismissible_section() {
+		// Check if progress bar should be shown
+		$progress_bar_dismissed = get_option('better_payment_progress_bar_dismissed', false);
+		$plugin_installed_fresh = get_option('better_payment_plugin_installed_fresh', false);
+		$progress_bar_dismissed_expiry_date = get_option('better_payment_progress_bar_dismissed_expiry_date', 0);
+
+		return ! $progress_bar_dismissed && $plugin_installed_fresh === 'yes' && time() < $progress_bar_dismissed_expiry_date;
+	}
+
+	public function bp_calculate_progress_steps($settings) {
+		$steps = [];
+
+		// Step 1: Check if Elementor is installed and active
+		$elementor_active = defined('ELEMENTOR_VERSION') && class_exists('Elementor\Plugin');
+		$steps[] = [
+			'completed' => $elementor_active,
+			'text' => __('Install ( if not installed yet ) and Activate Elementor.', 'better-payment')
+		];
+
+		// Step 2: Check if API keys are configured
+		// Check PayPal keys
+		$paypal_business_email = !empty($settings['better_payment_settings_payment_paypal_email']);
+
+		// Check Stripe keys
+		$is_stripe_live_mode = $settings['better_payment_settings_payment_stripe_live_mode'] === 'yes' ? true : false;
+		if ( $is_stripe_live_mode ) {
+			$stripe_public = !empty($settings['better_payment_settings_payment_stripe_live_public']);
+			$stripe_secret = !empty($settings['better_payment_settings_payment_stripe_live_secret']);
+		} else {
+			$stripe_public = !empty($settings['better_payment_settings_payment_stripe_test_public']);
+			$stripe_secret = !empty($settings['better_payment_settings_payment_stripe_test_secret']);
+		}
+
+		// Check Paystack keys
+		$is_paystack_live_mode = $settings['better_payment_settings_payment_paystack_live_mode'] === 'yes' ? true : false;
+		if ( $is_paystack_live_mode ) {
+			$paystack_public = !empty($settings['better_payment_settings_payment_paystack_live_public']);
+			$paystack_secret = !empty($settings['better_payment_settings_payment_paystack_live_secret']);
+		} else {
+			$paystack_public = !empty($settings['better_payment_settings_payment_paystack_test_public']);
+			$paystack_secret = !empty($settings['better_payment_settings_payment_paystack_test_secret']);
+		}
+
+		$api_keys_configured = ( isset($paypal_business_email) && $paypal_business_email ) || ( isset($stripe_public) && isset($stripe_secret) && $stripe_public && $stripe_secret ) || ( isset($paystack_public) && isset($paystack_secret) && $paystack_public && $paystack_secret );
+
+		$steps[] = [
+			'completed' => $api_keys_configured,
+			'text' => __('Insert sandbox/test API keys for Stripe, PayPal & Paystack on <a id="better-payment-gateway-api-key-set-settings" href="#">Payment Settings</a>.', 'better-payment')
+		];
+
+		// Step 3: Check if widget has been added
+		$widget_used = $this->is_any_better_payment_widget_used();
+
+		$steps[] = [
+			'completed' => $widget_used,
+			'text' => __('Edit page with Elementor and add Better Payment widget to use it. You can check this', 'better-payment') . ' <a target="_blank" href="//betterpayment.co/docs/" target="_blank">' . __('doc', 'better-payment') . '</a>.'
+		];
+
+		// Step 4: Check if widget has been customized
+		$widget_customized = $widget_used;
+
+		$steps[] = [
+			'completed' => $widget_customized,
+			'text' => __('Customize the widget as your own and save the changes.', 'better-payment')
+		];
+
+		return $steps;
+	}
 }

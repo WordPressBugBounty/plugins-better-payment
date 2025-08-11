@@ -1466,6 +1466,188 @@
   transition-property: color;
 }
 
+.better-payment {
+  /* Dismissable Banner Styles */
+}
+.better-payment .dismissable-banner-wrapper {
+  margin-bottom: 30px;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(92.02deg, #F8F5FF 47.66%, #EEEAF7 116.34%);
+  border: 1px solid #E6E1F1;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content {
+  display: flex;
+}
+@media (max-width: 1280px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content {
+    flex-direction: column;
+  }
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left {
+  flex: 1 60%;
+  padding: 24px 10px 24px 24px;
+  background: transparent;
+}
+@media (max-width: 1520px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left {
+    padding: 24px 10px 24px 24px;
+  }
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left h2 {
+  font-size: 28px;
+  line-height: 120%;
+  font-weight: 600;
+  color: #222B3D;
+  margin-bottom: 12px;
+}
+@media (max-width: 1520px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left h2 {
+    font-size: 20px;
+  }
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .progress-line {
+  width: 100%;
+  max-width: 467px;
+  height: 8px;
+  background: #EBE4FF;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+@media (max-width: 1520px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .progress-line {
+    max-width: 340px;
+    margin-bottom: 16px;
+  }
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .progress-line .progress-fill {
+  width: 60%;
+  height: 100%;
+  background: #6C3BFF;
+  box-shadow: 0px 0.5px 1px 0px #3914A7 inset, 0px -0.5px 1px 0px #9B79FF inset, 0px 0.2px 0.5px 0px #190064;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .setup-steps .step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .setup-steps .step-item .step-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 1520px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .setup-steps .step-item .step-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .setup-steps .step-item .step-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 120%;
+  color: #222B3D;
+  flex: 1;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-left .setup-steps .step-item .step-text a {
+  font-size: 14px;
+  font-weight: 500;
+  color: #222B3D;
+  text-decoration: underline;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right {
+  flex: 1 40%;
+  background-image: url(../img/dismiss-bg.png);
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: cover;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup {
+  position: relative;
+  height: 100%;
+  padding: 32px 20px 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@media (max-width: 1520px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup {
+    padding: 0 24px 0;
+  }
+}
+@media (max-width: 1280px) {
+  .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup {
+    padding: 10px 20px 0;
+  }
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup img {
+  max-height: 205px;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup .play-icon-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -35%);
+  width: 72px;
+  height: 72px;
+  background: rgba(108, 59, 255, 0.06);
+  border: 1px solid rgba(108, 59, 255, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup .play-icon {
+  width: 48px;
+  height: 48px;
+  background: #FFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 10.6px 14.13px 0px rgba(108, 59, 255, 0.2392156863);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right .dashboard-mockup .play-icon::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 9px 0 9px 15px;
+  border-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) rgba(0, 0, 0, 0) #6C3BFF;
+  margin-left: 3px;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner button.dismiss-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #6A758C;
+  font-size: 12px;
+  text-decoration: underline;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+}
+.better-payment .dismissable-banner-wrapper .setup-banner button.dismiss-button:hover {
+  color: #6859fa;
+}
+
 .better-payment .bp-tabs .tab__menu {
   padding: 0;
   margin: 0;

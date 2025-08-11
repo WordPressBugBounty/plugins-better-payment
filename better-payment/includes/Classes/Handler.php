@@ -361,10 +361,20 @@ class Handler extends Controller{
                         $customer_email_optional = sanitize_email( $charge->billing_details->email );
                     }
                 }
+
+                $form_fields_info['is_coupon_applied'] = 0;
+                $exact_paid_amount = ! empty( $response->amount_total ) ? floatval( $response->amount_total ) : $results->amount * 100;
+                $exact_paid_amount = $exact_paid_amount / 100;
+                $form_fields_info['exact_paid_amount'] = $exact_paid_amount;
+                if( (int)$exact_paid_amount != (int)$results->amount ) {
+                    $form_fields_info['paid_amount_diff'] = $results->amount - $exact_paid_amount;
+                    $form_fields_info['is_coupon_applied'] = 1;
+                }
                 
                 $updated = $wpdb->update(
                     $table,
                     array(
+                        'amount'        => $exact_paid_amount,
                         'status'        => sanitize_text_field( $response->payment_status ),
                         'email'         => $is_payment_recurring ? $customer_email : $customer_email_optional,
                         'customer_info' => maybe_serialize( $response ),
@@ -377,7 +387,7 @@ class Handler extends Controller{
                 do_action('better_payment/stripe_payment/success', $action_data);
                 
                 $frontend_data = [
-                    'amount' => ! empty( $results->amount ) ? floatval( $results->amount ) : 0,
+                    'amount' => $exact_paid_amount,
                     'email' => $is_payment_recurring ? $customer_email : $customer_email_optional,
                     'transaction_id' => $transaction_id,
                     'currency' => ! empty( $results->currency ) ? $results->currency : __( 'USD', 'better-payment' ),
@@ -394,7 +404,7 @@ class Handler extends Controller{
                         ? sanitize_text_field( $form_fields_info['split_payment_installment_iteration'] ) 
                         : 1;
 
-                    $frontend_data['amount'] = floatval( $total_amount / $total_installment );
+                    // $frontend_data['amount'] = floatval( $total_amount / $total_installment );
                     $frontend_data['total_amount'] = $total_amount;
                 }
 

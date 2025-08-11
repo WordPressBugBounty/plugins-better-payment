@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 1.4.1
+ * Version: 1.4.2
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -26,13 +26,15 @@ require_once __DIR__ . '/vendor/autoload.php';
  */
 final class Better_Payment {
 
+    use Better_Payment\Lite\Traits\Helper;
+
     /**
      * Plugin version
      *
      * @var string
      * @since 0.0.1
      */
-    const version = '1.4.1';
+    const version = '1.4.2';
 
     /**
      * Class construcotr
@@ -93,6 +95,14 @@ final class Better_Payment {
     public function activate() {
         $installer = new Better_Payment\Lite\Installer();
         $installer->run();
+
+        if (get_option('better_payment_plugin_installed_fresh') !== 'yes' && get_option('better_payment_plugin_installed_time_fresh') === false) {
+            update_option('better_payment_plugin_installed_fresh', 'yes');
+
+            $now = time();
+            update_option('better_payment_plugin_installed_time_fresh', $now);
+            update_option('better_payment_progress_bar_dismissed_expiry_date', $now + 7 * DAY_IN_SECONDS);
+        }
     }
 
     /**
@@ -111,6 +121,10 @@ final class Better_Payment {
         if (is_admin()) {
             $adminObj = new Better_Payment\Lite\Admin();
             $adminObj->init();
+
+            if ( $this->bp_show_dismissible_section() ) {
+                add_action('save_post', array($this, 'bp_widget_usage_on_save'), 10, 1);
+            }
         } else {
             new Better_Payment\Lite\Frontend();
         }

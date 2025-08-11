@@ -43,13 +43,12 @@ class Admin extends Controller{
     public function init(){
         $this->pro_enabled = apply_filters('better_payment/pro_enabled', false);
 
-        if ( defined( 'ELEMENTOR_VERSION' ) ) {
-            new Settings();
-        }
+        new Settings();
 
         if ( ! did_action('elementor/loaded') ) {
-            $notice = new Helper();
-            add_action( 'admin_notices', array( $notice, 'elementor_not_loaded' ) );
+            $helper = new Helper();
+            add_action( 'admin_notices', array( $helper, 'elementor_not_loaded' ) );
+			add_action( 'better_payment_admin_notices', array( $helper, 'elementor_not_loaded' ) );
         }
 
         if (did_action('elementor/loaded')) {
@@ -258,7 +257,12 @@ class Admin extends Controller{
         if ($current_screen && str_contains( $current_screen->id, 'better-payment' ) ) {
             remove_all_actions('user_admin_notices');
             remove_all_actions('admin_notices');
-        }
+
+			// To show notice in better payment settings page we have to use 'better_payment_admin_notices' action hook
+			add_action( 'admin_notices', function () {
+				do_action( 'better_payment_admin_notices' );
+			} );
+		}
     }
 
     /**

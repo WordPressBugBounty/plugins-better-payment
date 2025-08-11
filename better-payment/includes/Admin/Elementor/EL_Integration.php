@@ -9,6 +9,7 @@ use Better_Payment\Lite\Admin\Elementor\Form_Actions\Paypal_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Stripe_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Paystack_Integration;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Traits\Helper;
 
 use function Better_Payment\Lite\Classes\better_payment_dd;
 
@@ -26,6 +27,8 @@ if (!defined('ABSPATH')) {
  */
 class EL_Integration {
 
+    use Helper;
+
     private $payment_amount = 'payment_amount';
 
     /**
@@ -38,6 +41,8 @@ class EL_Integration {
         add_action( 'elementor/widgets/register', [ $this, 'elementor_form_integration' ], 10 );
         add_action( 'elementor-pro/forms/pre_render', [ $this, 'elementor_pro_form_response' ], 10, 2 );
         add_action( 'wp_enqueue_scripts', [ $this, 'conditional_enqueue_assets' ] );
+
+        $this->bp_init_widget_usage();
     }
 
     /**

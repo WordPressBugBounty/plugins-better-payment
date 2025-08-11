@@ -73,6 +73,13 @@ use Better_Payment\Lite\Classes\Helper;
                                 $allowed_sources = ['paypal', 'stripe', 'paystack'];
                                 $td_source_image_url = BETTER_PAYMENT_ASSETS . '/img/stripe.svg';
                                 $td_source_image_alt = 'Stripe';
+
+                                $is_coupon_applied = ! empty( $form_fields_info['is_coupon_applied'] ) ? 1 : 0;
+                                if ( $is_coupon_applied ) {
+                                    $paid_amount_diff = ! empty( $form_fields_info['paid_amount_diff'] ) ? floatval( $form_fields_info['paid_amount_diff'] ) : 0;
+                                    $exact_paid_amount = ! empty( $form_fields_info['exact_paid_amount'] ) ? floatval( $form_fields_info['exact_paid_amount'] ) : 0;
+                                    $coupon_code = ! empty( $form_fields_info['stripe_coupon_code'] ) ? $form_fields_info['stripe_coupon_code'] : '';
+                                }
                                 
                                 if( in_array( strtolower( $bp_admin_transaction->source ), $allowed_sources ) ){
                                     $td_source_image_url = strtolower( $bp_admin_transaction->source ) == 'paypal' ? BETTER_PAYMENT_ASSETS . '/img/paypal.png' : BETTER_PAYMENT_ASSETS . "/img/{$bp_admin_transaction->source}.svg";
@@ -127,6 +134,11 @@ use Better_Payment\Lite\Classes\Helper;
                                             <span id="bp_email_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-email-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span>
                                             <span id="bp_email_copy_clipboard_info_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-email-copy-clipboard-info is-hidden" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" >Copied!</span> 
                                         </li>
+                                        <?php if( $is_coupon_applied ) : ?>
+                                            <li><span><?php esc_html_e('Subtotal:', 'better-payment'); ?></span> <?php echo esc_html( $paid_amount_diff + $exact_paid_amount ) . ' ' . esc_html( $bp_admin_transaction->currency ); ?> </li>
+                                            <li><span><?php esc_html_e('Discount:', 'better-payment'); ?></span> <?php echo esc_html( $paid_amount_diff ) . ' ' . esc_html( $bp_admin_transaction->currency ); ?> </li>
+                                            <li><span><?php esc_html_e('Coupon Code:', 'better-payment'); ?></span> <?php echo esc_html( $coupon_code ) ?> </li>
+                                        <?php endif; ?>
                                         <?php if ( ! empty( $td_amount_quantity ) && ! $is_woo_layout ) : ?>
                                             <li><span><?php esc_html_e('Single Amount:', 'better-payment'); ?></span> <?php echo esc_html( floatval( $td_amount_numer / $td_amount_quantity ) ) . ' ' . esc_html( $bp_admin_transaction->currency ); ?> </li>
                                             <li><span><?php esc_html_e('Quantity:', 'better-payment'); ?></span> <?php echo esc_html( $td_amount_quantity ) ?> </li>

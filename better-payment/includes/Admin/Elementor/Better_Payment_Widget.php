@@ -351,12 +351,32 @@ class Better_Payment_Widget extends Widget_Base {
                 'options'    => [
                     'manual' => 'Manual',
                     'woocommerce' => 'WooCommerce',
+                    'stripe' => 'Stripe Product',
                 ],
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
             ]
         );
+
+        $this->add_control( 'better_payment_form_payment_source_stripe_price_id', [
+            'label'       => __( 'Default Price ID', 'better-payment' ),
+            'description' => sprintf( 
+                __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p> <p>For coupons, make sure they are <a href="%2$s" target="_blank">global or product independent.</a></p>', 'better-payment' ), 
+                esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'), 
+                esc_url('//docs.stripe.com/api/coupons/')
+            ),
+            'type'        => Controls_Manager::TEXT,
+            'placeholder' => 'price_G0FvDp6vZvdwRZ',
+            'label_block' => true,
+            'ai' => [
+                'active' => false,
+            ],
+            'condition'   => [
+                'better_payment_form_payment_source' => 'stripe',
+                'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
+            ],
+        ] );
 
         $this->add_control( 'better_payment_form_payment_source_notice', [
             'type'            => Controls_Manager::RAW_HTML,
@@ -928,6 +948,7 @@ class Better_Payment_Widget extends Widget_Base {
                     'primary_last_name'      => __( 'Last Name', 'better-payment' ),
                     'primary_email'     => __( 'Email', 'better-payment' ),
                     'primary_payment_amount'     => __( 'Payment Amount', 'better-payment' ),
+                    'primary_coupon_code'     => __( 'Coupon Code', 'better-payment' ),
                     'primary_none'     => __( 'None', 'better-payment' ),
                 ],
                 'label_block' => false,

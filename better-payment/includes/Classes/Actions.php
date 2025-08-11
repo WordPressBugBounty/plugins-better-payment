@@ -268,6 +268,15 @@ class Actions {
             ]
         ];
 
+        $coupon_code = ! empty( $_POST['fields']['primary_coupon_code'] ) ? sanitize_text_field( $_POST['fields']['primary_coupon_code'] ) : '';
+        if ( !empty( $coupon_code ) ) {
+            $request['discounts'] = [
+                [
+                    'coupon' => $coupon_code
+                ]
+            ];
+        }
+
         $is_payment_recurring = ! empty( $_POST['fields']['better_payment_recurring_mode'] ) && 'subscription' === sanitize_text_field( $_POST['fields']['better_payment_recurring_mode'] );
         $recurring_price_id = ! empty( $_POST['fields']['better_payment_recurring_price_id'] ) ? sanitize_text_field( $_POST['fields']['better_payment_recurring_price_id'] ) : '';
 
@@ -279,6 +288,7 @@ class Actions {
             'source' => 'stripe',
             'amount_quantity' => ! empty( $amount_quantity ) ? $amount_quantity : '',
             'is_woo_layout' => $is_woo_layout,
+            'stripe_coupon_code' => $coupon_code
         ];
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
@@ -321,9 +331,9 @@ class Actions {
 
             $better_form_fields['is_payment_split_payment'] = 1;
             $better_form_fields['split_payment_installment_price_id'] = $installment_price_id;
-            $better_form_fields['split_payment_total_amount'] = $amount;
             $better_form_fields['split_payment_total_amount_price_id'] = $recurring_price_id;
-            $better_form_fields['split_payment_installment_iteration'] = $installment_price_iteration ?? 1;
+            $better_form_fields['split_payment_installment_iteration'] = ( !empty( $installment_price_id ) && !empty( $installment_price_iteration ) ) ? $installment_price_iteration : 1;
+            $better_form_fields['split_payment_total_amount'] = $amount * $better_form_fields['split_payment_installment_iteration'];
         }
         
         if ( $is_payment_recurring || $is_payment_split_payment ) {

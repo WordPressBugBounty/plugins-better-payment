@@ -438,3 +438,71 @@ span.coupon-code {
     display: none !important;
   }
 }
+/* YouTube Video Modal : Starts */
+.better-payment .bp-youtube-video-modal .modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+}
+@media screen and (min-width: 769px) {
+  .better-payment .bp-youtube-video-modal .modal-content {
+    max-width: 800px;
+    max-height: 600px;
+  }
+}
+@media screen and (min-width: 1024px) {
+  .better-payment .bp-youtube-video-modal .modal-content {
+    max-width: 1000px;
+    max-height: 700px;
+  }
+}
+.better-payment .bp-youtube-video-modal .box {
+  padding: 0;
+  position: relative;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.better-payment .bp-youtube-video-modal .modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}
+.better-payment .bp-youtube-video-modal .modal-close:hover {
+  background: rgba(0, 0, 0, 0.9);
+}
+.better-payment .bp-youtube-video-modal .modal-close::before, .better-payment .bp-youtube-video-modal .modal-close::after {
+  background-color: #fff;
+}
+.better-payment .bp-youtube-video-modal .video-container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+}
+.better-payment .bp-youtube-video-modal .video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Enhance play icon hover effect */
+.better-payment .play-icon-wrap {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.better-payment .play-icon-wrap:hover {
+  transform: translate(-50%, -35%) scale(1.1);
+}
+.better-payment .play-icon-wrap:hover .play-icon {
+  box-shadow: 0px 15px 20px 0px rgba(108, 59, 255, 0.3019607843);
+}
+
+/* YouTube Video Modal : Ends */

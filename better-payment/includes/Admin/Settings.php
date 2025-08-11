@@ -49,6 +49,10 @@ class Settings extends Controller
 		add_action('wp_ajax_better-payment-filter-transaction', [$this, 'admin_transaction_filter']);
 		add_action('wp_ajax_better-payment-view-transaction', [$this, 'admin_transaction_view']);
 		add_action('wp_ajax_better-payment-mark-as-completed', [$this, 'admin_transaction_mark_as_completed']);
+
+		// Progress bar dismissal
+		add_action('wp_ajax_better_payment_dismiss_progress_bar', [$this, 'dismiss_progress_bar']);
+
 		//EL Editor Style
         add_action('elementor/editor/before_enqueue_scripts', [$this, 'editor_enqueue_scripts']);
 	}
@@ -296,6 +300,31 @@ class Settings extends Controller
 		}
 
 		return;
+	}
+
+	/**
+	 * Dismiss progress bar AJAX handler
+	 *
+	 * @since 0.0.1
+	 */
+	public function dismiss_progress_bar()
+	{
+		// Verify nonce
+		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'better_payment_dismiss_progress_bar_nonce')) {
+			wp_send_json_error('Invalid nonce');
+			return;
+		}
+
+		// Check user capability
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error('Insufficient permissions');
+			return;
+		}
+
+		// Save dismissal state
+		update_option('better_payment_progress_bar_dismissed', true);
+
+		wp_send_json_success('Progress bar dismissed');
 	}
 
 	/**

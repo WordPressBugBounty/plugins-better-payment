@@ -11,6 +11,15 @@ $bp_admin_settings_completed_transactions_count = isset($bp_admin_all_transactio
 $bp_admin_settings_incomplete_transactions_count = isset($bp_admin_all_transactions_analytics['incomplete_transactions']) ? $bp_admin_all_transactions_analytics['incomplete_transactions'] : 0;
 $better_payment_helper = new Better_Payment\Lite\Classes\Helper();
 $currency_list = $better_payment_helper->get_currency_list();
+$show_dismissible_section = $better_payment_helper->bp_show_dismissible_section();
+
+if ( $show_dismissible_section ) {
+    // Calculate progress steps
+    $progress_steps = $better_payment_helper->bp_calculate_progress_steps($bp_admin_saved_settings);
+    $completed_steps = count(array_filter($progress_steps, function($step) { return $step['completed']; }));
+    $total_steps = count($progress_steps);
+    $progress_percentage = $total_steps > 0 ? ($completed_steps / $total_steps) * 100 : 0;
+}
 ?>
 <!-- Admin Settings Form Wrapper: Starts  -->
 <div class="better-payment">
@@ -36,6 +45,39 @@ $currency_list = $better_payment_helper->get_currency_list();
         <div class="bp-container">
             <div class="bp-row">
                 <div class="bp-col-lg-9">
+                    <?php if ( $show_dismissible_section ) : ?>
+                        <div class="dismissable-banner-wrapper" id="bp-progress-bar">
+                            <div class="setup-banner">
+                                <div class="banner-content">
+                                    <div class="banner-left">
+                                        <h2 class="banner-title"><?php esc_html_e('One-Click Easy Payment For Elementor', 'better-payment'); ?></h2>
+                                        <div class="progress-line">
+                                            <div class="progress-fill" style="width: <?php echo esc_attr($progress_percentage); ?>%;"></div>
+                                        </div>
+                                        <div class="setup-steps">
+                                            <?php foreach ( $progress_steps as $step ) : ?>
+                                                <div class="step-item <?php echo $step['completed'] ? 'completed' : ''; ?>">
+                                                    <div class="step-icon">
+                                                        <img src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/' . ($step['completed'] ? 'check-full' : 'check-half') . '.svg'); ?>" />
+                                                    </div>
+                                                    <h4 class="step-text"><?php echo wp_kses_post($step['text']); ?></h4>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <div class="banner-right">
+                                        <div class="dashboard-mockup">
+                                            <img src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/dismiss-img-2.png'); ?>" />
+                                            <div class="play-icon-wrap">
+                                                <div class="play-icon"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="bp-progress-bar-dismiss dismiss-button" data-nonce="<?php echo esc_attr( wp_create_nonce('better_payment_dismiss_progress_bar_nonce') ); ?>"><?php esc_html_e('Dismiss', 'better-payment'); ?></button>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                     <div class="bp-tabs">
                         <ul class="tab__menu">
                             <li class="tab__list">
@@ -70,7 +112,7 @@ $currency_list = $better_payment_helper->get_currency_list();
                                                         <li><a href="#" class="sidebar__link_submenu" data-id="customer-email"><?php esc_html_e('Customer Email', 'better-payment'); ?></a></li>
                                                     </ul>
                                                 </li>
-                                                <li class="sidebar__item">
+                                                <li class="sidebar__item" id="better-payment-gateway-api-key-settings">
                                                     <a href="#" class="sidebar__link" data-id="paypal"><i class="bp-icon bp-card"></i> <?php esc_html_e('Payment', 'better-payment'); ?></a>
                                                     <ul class="sub__menu">
                                                         <li><a href="#" class="sidebar__link_submenu" data-id="paypal"><?php esc_html_e('PayPal', 'better-payment'); ?></a></li>
@@ -679,5 +721,27 @@ $currency_list = $better_payment_helper->get_currency_list();
             </div>
         </div>
     </div>
+
+    <!-- YouTube Video Modal: Starts -->
+    <div class="bp-modal bp-youtube-video-modal">
+        <div class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <div class="box">
+                    <button class="modal-close is-large" aria-label="close"></button>
+                    <div class="video-container">
+                        <iframe id="bp-youtube-iframe"
+                                src=""
+                                title="Better Payment Quick Start Guide"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- YouTube Video Modal: Ends -->
 </div>
 <!-- Admin Settings Form Wrapper: Ends  -->

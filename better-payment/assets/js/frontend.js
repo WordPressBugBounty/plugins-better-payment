@@ -15,7 +15,7 @@
   \****************************/
 /***/ (() => {
 
-eval(";\n(function ($) {\n\n  // console.log('Front js');\n})(jQuery);\n\n//# sourceURL=webpack://better-payment/./src/js/frontend.js?");
+eval("{;\n(function ($) {\n\n  // console.log('Front js');\n})(jQuery);\n\n//# sourceURL=webpack://better-payment/./src/js/frontend.js?\n}");
 
 /***/ })
 

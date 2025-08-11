@@ -11,6 +11,7 @@ $layout_form_transaction_details_sub_heading = !empty($settings["better_payment_
 $layout_form_transaction_details_product_title = !empty($settings["better_payment_form_transaction_details_product_title"]) ? $settings["better_payment_form_transaction_details_product_title"] : '';
 $layout_form_transaction_details_amount_text = !empty($settings["better_payment_form_transaction_details_amount_text"]) ? $settings["better_payment_form_transaction_details_amount_text"] : '';
 $is_payment_type_woocommerce = !empty($settings["better_payment_form_payment_source"]) && 'woocommerce' === $settings["better_payment_form_payment_source"] ? true : false;
+$is_payment_type_stripe = !empty($settings["better_payment_form_payment_source"]) && 'stripe' === $settings["better_payment_form_payment_source"] ? true : false;
 $is_payment_recurring = ! empty( $settings["better_payment_form_payment_type"] ) && 'recurring' === $settings["better_payment_form_payment_type"] ? 1 : 0;
 $is_payment_split_payment = ! empty( $settings["better_payment_form_payment_type"] ) && 'split-payment' === $settings["better_payment_form_payment_type"] ? 1 : 0;
 $payment_type_text = ! empty( $settings["better_payment_form_payment_type"] ) ? sanitize_text_field( $settings["better_payment_form_payment_type"] ) : 'One Time';
@@ -89,3 +90,13 @@ $layout_form_currency_right     = 'right'   === $currency_alignment ? $layout_fo
 $stripe_public_key = 'yes' === sanitize_text_field( $settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $settings[ 'better_payment_stripe_public_key_live' ] ) : sanitize_text_field( $settings[ 'better_payment_stripe_public_key' ] );
 $stripe_secret_key = 'yes' === sanitize_text_field( $settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $settings[ 'better_payment_stripe_secret_key_live' ] ) : sanitize_text_field( $settings[ 'better_payment_stripe_secret_key' ] );
 $amount_quantity_text = ! empty( $settings['better_payment_show_amount_quantity_text'] ) ? $settings['better_payment_show_amount_quantity_text'] : 'Amount Quantity';
+
+if ( $is_payment_type_stripe ) {
+    $payment_source_stripe_price_id = ! empty( $settings['better_payment_form_payment_source_stripe_price_id'] ) ? sanitize_text_field( $settings['better_payment_form_payment_source_stripe_price_id'] ) : '';
+
+    $stripe_price_details = $bp_helper_obj->get_stripe_price_details( $payment_source_stripe_price_id, $stripe_secret_key );
+
+    if ( ! empty( $stripe_price_details ) ) {
+        $product_price = ! empty( $stripe_price_details['unit_amount'] ) ? floatval( $stripe_price_details['unit_amount'] ) / 100 : '';
+    }
+}
