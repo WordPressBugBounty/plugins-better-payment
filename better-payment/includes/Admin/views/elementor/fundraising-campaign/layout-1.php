@@ -1,7 +1,7 @@
 <?php 
     include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/partials/campaign-vars.php";
 ?>
-<main class="better-payment">
+<main class="better-payment better-payment-campaign">
     <div class="better-payment_campaign-layout_1">
         <?php if( $layout_header_enable ): ?>
             <section class="bp-section-header bp-donation_thoughts-section">

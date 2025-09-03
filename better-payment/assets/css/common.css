@@ -2768,10 +2768,6 @@
   margin-left: 1%;
 }
 
-.better-payment {
-  /* Media Queries : Start */
-  /* Media Queries : End */
-}
 .better-payment .d-none {
   display: none !important;
 }
@@ -3803,6 +3799,9 @@
 .better-payment .bp-visible-xs {
   display: none;
 }
+.better-payment {
+  /* Media Queries : Start */
+}
 @media (max-width: 767.98px) {
   .better-payment .bp-hidden-xs {
     display: none;
@@ -3840,6 +3839,10 @@
     align-items: center;
   }
 }
+.better-payment {
+  /* Media Queries : End */
+}
+
 .better-payment-warning {
   font-size: 13px;
   line-height: 18px;
