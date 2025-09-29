@@ -437,6 +437,9 @@ class Better_Payment_Widget extends Widget_Base {
             'dynamic'     => [
                 'active' => false,
             ],
+            'condition' => [
+                'better_payment_form_layout' => ['layout-1', 'layout-2', 'layout-3'],
+            ],
         ] );
 
         $this->add_control('better_payment_form_woocommerce_product_ids', [
