@@ -233,6 +233,12 @@
                                                     || $key === 'primary_payment_amount'
                                                     || $key === 'amount_quantity'
                                                     || $key === 'is_woo_layout'
+                                                    || $key === 'woo_product_id'
+                                                    || $key === 'woo_product_ids'
+                                                    || $key === 'fluentcart_product_id'
+                                                    || $key === 'fluentcart_product_ids'
+                                                    || $key === 'is_fluentcart_layout'
+                                                    || $key === 'detailed_product_info'
                                                     || $key === 'is_payment_split_payment'
                                                     || $key === 'split_payment_total_amount'
                                                     || $key === 'split_payment_total_amount_price_id'
@@ -328,11 +334,16 @@
                                     <h3 style="text-align: right; color: rgba(113, 120, 148, 1); font-size: 20px; line-height: 2.4; font-weight: 500; border-bottom: 2px solid rgba(193, 200, 228, 1); margin: 0;" class="bp-summary__table-header bp-text-align__center-active__phone"><?php esc_html_e( 'Amount', 'better-payment'); ?></h3>
                                 </td>
                             </tr>
+                            <?php if ( empty( $all_data['woo_product_ids'] ) && empty( $all_data['fluentcart_product_ids'] ) ) : ?>
                             <tr>
                                 <td style="border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;">
                                     <table style="width: 100%;">
                                         <tr>
                                             <?php if ( ! empty( $all_data['woo_product_id'] ) ) : ?>
+                                            <td style="width: 50px; width: 32px; display: inline-block; margin-top: 5px;"> <span><img style="width: 100%; height: auto;" src="<?php echo esc_url( $all_data['product_image_src'] ); ?>" alt="<?php echo esc_html( $all_data['product_name']); ?>"></span></td>
+                                            <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php echo esc_html( $all_data['product_name']); ?></span>
+                                            
+                                            <?php elseif ( ! empty( $all_data['fluentcart_product_id'] ) ) : ?>
                                             <td style="width: 50px; width: 32px; display: inline-block; margin-top: 5px;"> <span><img style="width: 100%; height: auto;" src="<?php echo esc_url( $all_data['product_image_src'] ); ?>" alt="<?php echo esc_html( $all_data['product_name']); ?>"></span></td>
                                             <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php echo esc_html( $all_data['product_name']); ?></span>
                                             
@@ -354,6 +365,73 @@
                                     <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $all_data['currency_symbol'] ); ?><?php echo esc_html( $all_data['amount'] ); ?></h3>
                                 </td>
                             </tr>
+                            <?php endif; ?>
+
+                            <?php 
+                            if ( ! empty( $all_data['woo_product_ids'] ) || ! empty( $all_data['fluentcart_product_ids'] ) ) :
+                                if ( ! empty( $all_data['woo_product_ids'] ) && is_array( $all_data['detailed_product_info'] ) ) :
+                                    $woo_products = $all_data['detailed_product_info']['woo_products'] ?? []; 
+                                    
+                                    if ( ! empty( $woo_products ) ) :
+                                        foreach ( $woo_products as $product_id => $product_data ) : 
+                            ?>
+                            <tr>
+                                <td style="border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;">
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="width: 50px; width: 32px; display: inline-block; margin-top: 5px;"> <span><img style="width: 100%; height: auto;" src="<?php echo esc_url( $product_data['image_src'] ?? '#' ); ?>" alt="<?php echo esc_html( $product_data['name'] ?? ''); ?>"></span></td>
+                                            <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php echo esc_html( $product_data['name'] ?? ''); ?></span></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="width: 180px; border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;" class="bp-width__100p-active__tablet bp-width__60p-active__phone">
+                                    <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $product_data['price'] ?? 0 ); ?></h3>
+                                </td>
+                                <td style="width: 180px; border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 2.4;" class="bp-width__100p-active__tablet bp-width__60p-active__phone">
+                                    <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $product_data['quantity'] ?? 0 ); ?></h3>
+                                </td>
+                                <td style="width: 180px; border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;" class="bp-width__100p-active__tablet bp-width__60p-active__phone">
+                                    <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $all_data['currency_symbol'] ); ?><?php echo esc_html( $product_data['total_price'] ?? 0 ); ?></h3>
+                                </td>
+                            </tr>
+                                <?php
+                                        endforeach; 
+                                    endif;
+
+                                endif; 
+                                
+                                if ( ! empty( $all_data['fluentcart_product_ids'] ) && is_array( $all_data['detailed_product_info'] ) ) :
+                                    $fluentcart_products = $all_data['detailed_product_info']['fluentcart_products'] ?? []; 
+                                    
+                                    if ( ! empty( $fluentcart_products ) ) :
+                                        foreach ( $fluentcart_products as $product_id => $product_data ) : 
+                                ?>
+                            <tr>
+                                <td style="border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;">
+                                    <table style="width: 100%;">
+                                        <tr>
+                                            <td style="width: 50px; width: 32px; display: inline-block; margin-top: 5px;"> <span><img style="width: 100%; height: auto;" src="<?php echo esc_url( $product_data['image_src'] ?? '#' ); ?>" alt="<?php echo esc_html( $product_data['name'] ?? ''); ?>"></span></td>
+                                            <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php echo esc_html( $product_data['name'] ?? ''); ?></span></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="width: 180px; border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;" class="bp-width__100p-active__tablet bp-width__60p-active__phone">
+                                    <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $product_data['price'] ?? 0 ); ?></h3>
+                                </td>
+                                <td style="width: 180px; border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 2.4;" class="bp-width__100p-active__tablet bp-width__60p-active__phone">
+                                    <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $product_data['quantity'] ?? 0 ); ?></h3>
+                                </td>
+                                <td style="width: 180px; border-bottom: 1px solid rgba(193, 200, 228, 1); padding-bottom: 10px; padding-top: 25px;" class="bp-width__100p-active__tablet bp-width__60p-active__phone">
+                                    <h3 style="text-align: right; color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em; margin: 0;" class="bp-text-align__center-active__phone" style="font-weight: 500;"><?php echo esc_html( $all_data['currency_symbol'] ); ?><?php echo esc_html( $product_data['total_price'] ?? 0 ); ?></h3>
+                                </td>
+                            </tr>
+                                    <?php
+                                        endforeach; 
+                                    endif;
+                                
+                                endif; 
+                            endif; 
+                            ?>
                         </table>
                         <table style="width: 100%; padding-top: 30px;">
                             <tr>

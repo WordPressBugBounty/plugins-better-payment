@@ -506,3 +506,110 @@ span.coupon-code {
 }
 
 /* YouTube Video Modal : Ends */
+/*
+* Black Friday Notice css 2025
+*/
+#wpnotice-better-payment-black_friday_notice1 {
+  border-left-color: #9A8AFB;
+  padding: 10px 40px 14px 20px;
+}
+
+#wpnotice-better-payment-black_friday_notice1 .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary,
+#wpnotice-better-payment-black_friday_notice1 .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary:focus,
+#wpnotice-better-payment-black_friday_notice1 .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary:hover {
+  background-color: #3B4045;
+  color: #fff;
+  box-shadow: 0px 1px 0px 0px #000000;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 16px;
+}
+
+#wpnotice-better-payment-black_friday_notice1 .wpnotice-content-wrapper .wpsp-notice-action-button .wpsp-notice-action-dismiss {
+  background: none;
+  border: none;
+  color: #424242;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+#wpnotice-better-payment-black_friday_notice1 .wpnotice-content-wrapper {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  width: 100%;
+  flex-direction: column;
+}
+
+#wpnotice-better-payment-black_friday_notice1 .wpnotice-content-wrapper p {
+  font-size: 15px;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+@media only screen and (max-width: 767px) {
+  #wpnotice-better-payment-black_friday_notice1 {
+    display: none !important;
+  }
+}
+/*
+* Hloiday Notice css 2025
+*/
+#wpnotice-better-payment-bp_holiday_notice {
+  border-left-color: #9A8AFB;
+  padding: 10px 40px 14px 20px;
+}
+
+#wpnotice-better-payment-bp_holiday_notice .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary,
+#wpnotice-better-payment-bp_holiday_notice .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary:focus,
+#wpnotice-better-payment-bp_holiday_notice .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary:hover {
+  background-color: #2B65D9;
+  color: #fff;
+  box-shadow: 0px 1px 0px 0px #000000;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 16px;
+}
+
+#wpnotice-better-payment-bp_holiday_notice .wpnotice-content-wrapper .wpsp-notice-action-button .wpsp-notice-action-dismiss {
+  background: none;
+  border: none;
+  color: #2B65D9;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  margin-left: 5px;
+}
+
+#wpnotice-better-payment-bp_holiday_notice .wpnotice-content-wrapper {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  width: 100%;
+  flex-direction: column;
+}
+
+#wpnotice-better-payment-bp_holiday_notice .wpnotice-content-wrapper p {
+  font-size: 15px;
+  margin-top: 0;
+  padding-top: 0;
+  text-transform: capitalize;
+}
+
+@media only screen and (max-width: 767px) {
+  #wpnotice-better-payment-bp_holiday_notice {
+    display: none !important;
+  }
+}

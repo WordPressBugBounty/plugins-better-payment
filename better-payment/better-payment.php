@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 1.4.4
+ * Version: 2.0.2
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -34,7 +34,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '1.4.4';
+    const version = '2.0.2';
 
     /**
      * Class construcotr
@@ -122,7 +122,7 @@ final class Better_Payment {
             $adminObj = new Better_Payment\Lite\Admin();
             $adminObj->init();
 
-            if ( $this->bp_show_dismissible_section() ) {
+            if ( !$this->bp_section_dismissed() ) {
                 add_action('save_post', array($this, 'bp_widget_usage_on_save'), 10, 1);
             }
         } else {
@@ -175,13 +175,13 @@ add_action('wp_loaded', function () {
     $setup_wizard = get_option('better_payment_setup_wizard');
 
     if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-        $is_from_better_payment = isset( $_POST['form_data'] ) && isset( $_POST['form_data'][0] ) && isset( $_POST['form_data'][0]['name'] ) && strpos( $_POST['form_data'][0]['name'], 'better_payment_' ) !== false;
+        $is_from_better_payment = (isset( $_POST['form_data'] ) && isset( $_POST['form_data'][0] ) && isset( $_POST['form_data'][0]['name'] ) && strpos( $_POST['form_data'][0]['name'], 'better_payment_' ) !== false) || (isset( $_POST['is_tracking'] ) && $_POST['is_tracking'] === 'true') || (isset( $_POST['action'] ) && $_POST['action'] === 'save_setup_wizard_data');
 
         if ( ! $is_from_better_payment ) {
             return;
         }
     }
-    
+
     if ($setup_wizard == 'redirect') {
         Better_Payment\Lite\Admin\Setup_Wizard::redirect();
     }

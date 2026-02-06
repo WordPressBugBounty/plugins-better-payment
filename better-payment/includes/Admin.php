@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite;
 
 use Better_Payment\Lite\Admin\Settings;
+use Better_Payment\Lite\Admin\ReactAdmin;
 use Better_Payment\Lite\Admin\Elementor\Widget;
 use Better_Payment\Lite\Admin\Menu;
 use Better_Payment\Lite\Classes\Helper;
@@ -43,7 +44,8 @@ class Admin extends Controller{
     public function init(){
         $this->pro_enabled = apply_filters('better_payment/pro_enabled', false);
 
-        new Settings();
+        new ReactAdmin();
+        // new Settings();
 
         if ( ! did_action('elementor/loaded') ) {
             $helper = new Helper();
@@ -76,7 +78,7 @@ class Admin extends Controller{
         $better_payment_plugin = plugin_basename(BETTER_PAYMENT_FILE);
 
         if ($file == $better_payment_plugin && current_user_can('manage_options')) {
-            $links[] = sprintf('<a href="%s">%s</a>', admin_url("admin.php?page=better-payment-settings"), __('Settings', 'better-payment'));
+            $links[] = sprintf('<a href="%s">%s</a>', admin_url("admin.php?page=better-payment-admin&tab=settings"), __('Settings', 'better-payment'));
 
             if ( ! $this->pro_enabled ) {
                 $links[] = sprintf('<a href="https://wpdeveloper.com/in/upgrade-better-payment-pro" target="_blank" style="color: #7561F8; font-weight: bold;">' . __('Go Pro', 'better-payment') . '</a>');
@@ -188,43 +190,31 @@ class Admin extends Controller{
         /**
 		 * Black Friday Notice
 		 */
-        // $crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
-		// $black_friday_notice_message = "<p>🛍️ Manage Payment forms better with Better Payment PRO & grab <strong>up to 40% OFF</strong> this Black Friday.</p><a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/bfcm2024-pricing' target='_blank'><img style='width:15px;' src='{$crown_icon}'/>Upgrade to PRO</a>";
+		$purchase_url = 'https://betterpayment.co/bfcm2025-admin-notice';
+		$black_friday_notice_message = "<p><strong>Black Friday Mega Sale:</strong> Streamline Transactions With Fast, Optimized Payment Forms For Elementor Sites – Now <strong>Up to $200 OFF! 🎁</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To PRO</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I’ll Grab It Later</button></div>";
 
-		// $black_friday_notice = [
-		// 	'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-		// 	'html'      => $black_friday_notice_message,
-		// ];
+		$black_friday_notice = [
+			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
+			'html'      => $black_friday_notice_message,
+		];
 
-        // $notices->add(
-		// 	'black_friday_notice1',
-		// 	$black_friday_notice,
-		// 	[
-		// 		'start'       => $notices->time(),
-		// 		// 'start'       => $notices->strtotime( '+7 day' ),
-		// 		// 'recurrence'  => 30,
-		// 		// 'expire'       => $notices->strtotime( '+10 days' ),
-		// 		'expire'       => strtotime( '11:59:59pm 5th December, 2024' ),
-		// 		'refresh'     => BETTER_PAYMENT_VERSION,
-		// 		'dismissible' => true,
-		// 		'screens' => [ 'dashboard' ],
-		// 	]
-		// );
+        $notices->add(
+			'black_friday_notice1',
+			$black_friday_notice,
+			[
+				'start'       => $notices->time(),
+				'expire'       => strtotime( '11:59:59pm 4th December, 2025' ),
+				'refresh'     => BETTER_PAYMENT_VERSION,
+				'dismissible' => true,
+				'screens' => [ 'dashboard' ],
+			]
+		);
 
 		/**
 		 * Holiday Notice
 		 */
-		$crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
-		$holiday_notice_message = "<p>🎁 <strong>SAVE 25% now</strong> to unlock analytics, split payment & more to manage payments in Elementor effortlessly in 2025.</p>
-									<div class='bp-notice-action-button'>
-										<a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/holiday24-admin-notice' target='_blank'>
-											<img style='width:15px;' src='{$crown_icon}'/>GET PRO Lifetime Access
-										</a>
-										<a class='bp-notice-action-dismiss dismiss-btn' data-dismiss='true' href='#'>
-											<img style='width:15px;' src='{$crown_icon}'/>No, I'll Pay Full Price Later
-										</a>
-									</div>
-									";
+		$purchase_url = '//betterpayment.co/holiday2025-admin-notice';
+		$holiday_notice_message = "<p><strong>Season’s Best Deal:</strong> Streamline transactions with fast, optimized payment forms for Elementor sites - <strong>Up to 25% OFF! 💳</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To PRO</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I’ll Grab It Later</button></div>";
 		
 		$holiday_notice = [
 			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
@@ -232,18 +222,14 @@ class Admin extends Controller{
 		];
 
         $notices->add(
-			'holiday_notice',
+			'bp_holiday_notice',
 			$holiday_notice,
 			[
-				'start'       => $notices->time(),
-				// 'start'       => $notices->strtotime( '+7 day' ),
-				// 'expire'       => $notices->strtotime( '+10 days' ),
-				'expire'       => strtotime( '11:59:59pm 10th January, 2025' ),
+				'start'       => strtotime( '12:00:00am 15th December, 2025' ),
+				'expire'      => strtotime( '11:59:59pm 7th January, 2026' ),
 				'refresh'     => BETTER_PAYMENT_VERSION,
-				// 'recurrence'  => 30,
-				'recurrence'  => false,
 				'dismissible' => true,
-				'screens' => [ 'dashboard' ],
+				'screens' 	  => [ 'dashboard' ],
 			]
 		);
 

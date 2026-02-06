@@ -141,6 +141,7 @@ class DB {
             'payment_date_to' => '',
             'order_by' => 'payment_date',
             'order' => 'DESC',
+            'currency' => 'all',
             'source' => '', 
             'paged' => 1,
             'per_page' => 20, 
@@ -196,11 +197,15 @@ class DB {
 
         $valid_search_text = $search_text != '' && strlen($search_text) >= 2;
         if($valid_search_text){
-            $whereQuery = $wpdb->prepare(' AND email LIKE %s OR form_fields_info LIKE %s OR transaction_id LIKE %s OR amount LIKE %s OR source LIKE %s ', $search_text, $search_text ,$search_text, $search_text, $search_text );
+            $whereQuery = $wpdb->prepare(' AND ( email LIKE %s OR form_fields_info LIKE %s OR transaction_id LIKE %s OR amount LIKE %s OR source LIKE %s ) ', $search_text, $search_text ,$search_text, $search_text, $search_text );
         }
 
         if( $args['source'] != '' ){
             $whereQuery .= $wpdb->prepare(" AND source = %s", $args['source']); 
+        }
+
+        if( $args['currency'] != 'all' ){
+            $whereQuery .= $wpdb->prepare(" AND currency = %s", $args['currency']); 
         }
 
         if( $status != 'all' ){

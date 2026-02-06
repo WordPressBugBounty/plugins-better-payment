@@ -68,7 +68,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
 
     public function get_keywords() {
         return [
-            'payment', 'better-payment' ,'paypal', 'stripe', 'sell', 'donate', 'transaction', 'online-transaction', 'paystack', 'fundraising', 'campaign'
+            'payment', 'better-payment' ,'paypal', 'stripe', 'sell', 'donate', 'transaction', 'online-transaction', 'paystack', 'fundraising', 'campaign', 'better payment'
         ];
     }
 

@@ -3,9 +3,9 @@ Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, rahatsheikhleon, fuadr
 Donate link: https://wpdeveloper.com
 Tags: donation, fundraising, recurring donations, payments, stripe paypal paystack
 Requires at least: 6.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.4.4
+Stable tag: 2.0.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -13,22 +13,22 @@ Better Payment allows you to automate payment transactions to manage payments, d
 
 == Description ==
 
-Transform your WordPress payment process with the leading plugin, [Better Payment](https://wpdeveloper.com/better-payment/) which comes with versatile payment form styles and unlimited customization.
+**Transform your WordPress payment process with the leading plugin, [Better Payment](https://wpdeveloper.com/better-payment/) which comes with versatile payment form styles, unlimited customization, and fundraising platform.**
 
-Better Payment allows you to manage your own website payments with one click, without any hassle. With seamless integration with Elementor, Better Payment allows your customers to pay through PayPal, Stripe, or others. 💳
+Better Payment allows you to manage your own website payments with one click, without any hassle. With seamless integration with Elementor, your customers can pay through PayPal, Stripe, or others; skipping the long checkout process. 💳
 
-With Better Payment, your customers can pay instantly using accepted credit cards, PayPal, Stripe accounts, or other popular choices. Simply by clicking a button, your customers can complete their payment for donations, subscriptions, fundraising, membership, eCommerce products, and the list goes on. You can easily send personalized success messages to customers without any coding. Also, retrieve all the payment history instantly at any time you want. 💰
+👉Simply by clicking the pay button, customers can complete their transactions for donations, subscriptions, fundraising, membership, eCommerce products, and the list goes on. You can easily send personalized success messages to customers without any coding. Also, retrieve all the payment history instantly at any time you want. 💰
 
 ## ⚙️ POPULAR WEBSITE BUILDER, ELEMENTOR COMPATIBILITY
 Better Payment is fully compatible with Elementor. You can make tweaks using Elementor to your Better Payment form. Also, you can integrate with Elementor Form and make the appearance of the payment form more stunning.
 
 ## 🛠️ ONE-CLICK STRIPE PAYMENT INTEGRATION
-Better Payment lets you easily integrate your Stripe account into your website with one click. You will get a Stripe Elements Checkout option with a securely embedded feature, an onsite checkout option, etc.
-
-## 🔌 PAYPAL PAYMENT GATEWAY INTEGRATION
-Better Payment gives you another integration option, it offers a PayPal payment gateway, where you can easily connect your PayPal account and start accepting payments and donations.
+Better Payment lets you easily integrate your Stripe account into your website with one click. You will get a Stripe Elements Checkout option with a securely embedded feature, an on-site checkout option, etc.
 
 Additionally, Better Payment provides credit cards, American Express, Visa, Master Card, and other payment methods as ways to finish the transaction.
+
+## 🔌 PAYPAL PAYMENT GATEWAY INTEGRATION
+Better Payment gives you another integration option; it offers a PayPal payment gateway, where you can easily connect your PayPal account and start accepting payments and donations.
 
 https://youtu.be/Mwg7bjP-ISA?si=93QpysX_T2GryJ0i
 
@@ -36,7 +36,7 @@ https://youtu.be/Mwg7bjP-ISA?si=93QpysX_T2GryJ0i
 With Better Payment, you can effortlessly integrate with Paystack to donate & collect money in a quick and simple process. It is an easy process to set up a Paystack account with Better Payment.
 
 ## 💷 MULTIPLE CURRENCY SUPPORT
-You can easily set up multiple currencies in Better Payment to facilitate your customers’ complete payments in their currency, regardless of where your business is set. At present, Better Payment supports 22 global currencies.
+You can easily set up multiple currencies in Better Payment to facilitate your customers’ complete payments in their currency, regardless of where your business is set. At present, Better Payment supports 22+ global currencies.
 
 ## 🎨 ONE PLUGIN WITH VERSATILE PAYMENT FORM TEMPLATES
 Whether you want to add a simple payment form to your website or manage donation and product payments, you can do all with Better Payment. It offers a variety of payment form styling.
@@ -52,6 +52,9 @@ Better Payment can be integrated with Woo and collect product payments for avail
 
 ### 🖌️ SUBSCRIPTION FORM STYLES [PRO]
 Enable recurring payments in your payment form and manage subscriptions seamlessly for your product, service or anything. With Better Payment, you can create subscription payment forms with stunning designs and start collecting payments.
+
+### 🖌️ FUNDRAISING CAMPAIGN STYLES [FREE+PRO]
+Create a fundraising campaign for a cause and maximize collection with stylish and user-friendly payment form layouts with Better Payment. Manage collections, showcase updates, progress - get all must-have fundraising campaign features.
 
 ## 🌟 POWERFUL DONATION FORMS AT YOUR FINGERTIP 🌟
 Interactive design layouts and multiple donation fundraising options come with Better Payment plugin. It is very easy to set up your website checkout with the utmost flexibility at the touch of a finger.
@@ -69,6 +72,9 @@ https://youtu.be/tbK8G03QdxE?si=R9MPjU5xQBSBZpHy
 
 ## 💸 TRACK EVERY PAYMENT TRANSACTIONS 
 Better Payment comes with a list of transaction pages for all transactions. This payment plugin has an advanced filter to search transactions based on transaction ID, email, amount, source, and payment dates.
+
+## 🧾 GENERATE TRANSACTION INVOICES
+Send invoices to customers for every transaction they made. One can get invoices via email or print or download PDFs from Better Payment. Data fetched from payment every step will be previewed there.
 
 ## ⏬ EXPORT & IMPORT PAYMENT TRANSACTIONS
 Better Payment provides you with a one-stop solution for storing all payment transactions. You can import transactions from other places and export files as well in CSV format.
@@ -89,7 +95,9 @@ Better Payment reign doesn’t stop here; more advanced and exclusive features a
 
 - Advanced email templates
 - Coupon management
-- Generate invoices
+- New payment forms layouts
+- Dedicated Gutenberg payment block
+- Campaign builders
 
 🙌 After reading this feature list, you can probably imagine that Better Payment is the best WordPress payment plugin on the market. So, do you want to unlock the advanced features? [Upgrade to our Pro version](https://wpdeveloper.com/better-payment/#pricing).
 
@@ -161,6 +169,32 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 2.0.2 - 21/01/2026 =
+- Added: Currency-based filtering option
+- Added: Export functionality for filtered data
+- Fixed: Filters aren't working properly.
+- Few minor bug fixes & improvements
+
+= 2.0.1 - 05/01/2026 =
+- Added: BAM (Bosnia-Herzegovina Mark) & RSD (Serbian Dinar) Currency support
+- Fixed: Payment Form | Sidebar background color issues for layout-1 & layout-2
+- Few minor bug fixes & improvements
+
+= 2.0.0 - 15/12/2025 =
+- Revamped: Entire Admin Dashboard with a modern, faster, and more intuitive UI using React
+- Revamped: Quick Setup Wizard with a cleaner layout and improved onboarding experience
+- Improved: Overall performance for smoother user interactions
+- Few minor bug fixes & improvements
+
+= 1.4.6 - 17/11/2025 =
+- Added: FluentCart product payment support
+- Few minor bug fixes & improvements
+
+= 1.4.5 - 22/10/2025 =
+- Fixed: Widget icon is not visible in Elementor > Element Manager page
+- Added: Forms Integration | Info control instructing how to properly display success and error messages on payment redirection
+- Few minor bug fixes & improvements
 
 = 1.4.4 - 29/09/2025 =
 - Fixed: Payment Form | Duplicate controls for Product selection

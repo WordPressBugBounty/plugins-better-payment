@@ -11,7 +11,7 @@ $bp_admin_settings_completed_transactions_count = isset($bp_admin_all_transactio
 $bp_admin_settings_incomplete_transactions_count = isset($bp_admin_all_transactions_analytics['incomplete_transactions']) ? $bp_admin_all_transactions_analytics['incomplete_transactions'] : 0;
 $better_payment_helper = new Better_Payment\Lite\Classes\Helper();
 $currency_list = $better_payment_helper->get_currency_list();
-$show_dismissible_section = $better_payment_helper->bp_show_dismissible_section();
+$show_dismissible_section = $better_payment_helper->bp_section_dismissed();
 
 if ( $show_dismissible_section ) {
     // Calculate progress steps
@@ -67,7 +67,7 @@ if ( $show_dismissible_section ) {
                                     </div>
                                     <div class="banner-right">
                                         <div class="dashboard-mockup">
-                                            <img src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/dismiss-img-2.png'); ?>" />
+                                            <img src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/dismiss-img-2.webp'); ?>" />
                                             <div class="play-icon-wrap">
                                                 <div class="play-icon"></div>
                                             </div>

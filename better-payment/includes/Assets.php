@@ -203,5 +203,12 @@ class Assets extends Controller {
 				'no_action_taken' => __('No action taken!', 'better-payment'),
             ]
 		));
+
+        if ( is_admin() && function_exists( 'get_current_screen' ) ) {
+            $hook = get_current_screen()->id;
+            if ( isset( $hook ) && $hook == 'elementor_page_elementor-element-manager' ) {
+                wp_enqueue_style( 'bp-icon-admin', BETTER_PAYMENT_ASSETS . '/icon/style.min.css', array(), BETTER_PAYMENT_VERSION );
+            }
+        }
     }
 }

@@ -70,6 +70,7 @@ use Better_Payment\Lite\Classes\Helper;
                                 $td_amount_numer = floatval( $bp_admin_transaction->amount );
                                 $td_amount_quantity = ! empty( $form_fields_info['amount_quantity'] ) ? intval( $form_fields_info['amount_quantity'] ) : 0;
                                 $is_woo_layout = ! empty( $form_fields_info['is_woo_layout'] ) ? 1 : 0;
+                                $is_fluentcart_layout = ! empty( $form_fields_info['is_fluentcart_layout'] ) ? 1 : 0;
                                 $allowed_sources = ['paypal', 'stripe', 'paystack'];
                                 $td_source_image_url = BETTER_PAYMENT_ASSETS . '/img/stripe.svg';
                                 $td_source_image_alt = 'Stripe';
@@ -117,13 +118,16 @@ use Better_Payment\Lite\Classes\Helper;
                                     $referer_content_page_link = !empty($referer_page_id) ? get_permalink( $referer_page_id ) : $referer_content_page_link;
                                 }
 
+                                $td_products = [];
+                                $detailed_product_info = maybe_unserialize( $form_fields_info['detailed_product_info'] ?? [] );
+                                $td_products = array_merge( $detailed_product_info['woo_products'] ?? [], $detailed_product_info['fluentcart_products'] ?? [] );
                                 ?>
                                 <div class="transaction__info">
                                     <div class="info__header">
                                         <h4 class="title"><i class="bp-icon bp-info"></i> <?php esc_html_e('Basic Information', 'better-payment'); ?></h4>
                                     </div>
                                     <ul class="informations">
-                                        <?php 
+                                        <?php
                                         $bp_transaction_id = sanitize_text_field($bp_admin_transaction->transaction_id);
                                         $bp_txn_counter = 1;  
                                         ?>
@@ -189,6 +193,22 @@ use Better_Payment\Lite\Classes\Helper;
                                         <?php endif; ?>
                                     </ul>
                                 </div>
+
+                                <?php if( ! empty( $is_woo_layout ) || ! empty( $is_fluentcart_layout ) ) : ?>
+                                <div class="transaction__info">
+                                    <div class="info__header">
+                                        <h4 class="title"><i class="bp-icon bp-info"></i> <?php esc_html_e('Product Information', 'better-payment'); ?></h4>
+                                    </div>
+                                    <ul class="informations">
+                                        <?php if( ! empty( $td_products ) ) : ?>
+                                            <?php foreach( $td_products as $product_info ) : ?>
+                                                <li>
+                                                    <a target="_blank" href="<?php echo esc_url( $product_info['permalink'] ); ?>"><?php echo esc_html( $product_info['name'] ); ?></a> - <?php echo esc_html( $product_info['price'] ) . ' ' . esc_html( $bp_admin_transaction->currency ); ?> x <?php echo esc_html( $product_info['quantity'] ); ?> = <?php echo esc_html( $product_info['total_price'] ) . ' ' . esc_html( $bp_admin_transaction->currency ); ?></li>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
+                                <?php endif; ?>
 
                                 <?php do_action('better_payment/admin/transaction_subscription_content', $bp_admin_transaction); ?>
                             </div>

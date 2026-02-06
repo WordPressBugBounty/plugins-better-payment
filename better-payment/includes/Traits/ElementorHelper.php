@@ -55,7 +55,11 @@ trait ElementorHelper {
                 $post_list = $users;
                 break;
             default:
-                $post_list = $this->get_query_post_list( $post_type, 10, $search );
+                if ( $post_type === 'fluent-products' && function_exists('fluentCart') ) {
+                    $post_list = $this->get_fluentcart_products( $search );
+                } else {
+                    $post_list = $this->get_query_post_list( $post_type, 10, $search );
+                }
         }
     
         if ( !empty( $post_list ) ) {
@@ -136,5 +140,47 @@ trait ElementorHelper {
 				'title' => __( 'Better Payment', 'better-payment' ),
 				'icon'  => 'font',
 			], 1 );
+	}
+
+	/**
+	 * Get FluentCart products for select2 dropdown
+	 *
+	 * @param string $search Search term
+	 * @return array
+	 */
+	private function get_fluentcart_products( $search = '' ) {
+		if ( ! function_exists('fluentCart') || ! class_exists( '\FluentCart\App\Models\Product' ) ) {
+			return [];
+		}
+
+        if ( ! is_user_logged_in() || ! current_user_can('edit_posts') ) {
+            return [];
+        }
+
+		try {
+            $product_model = new \FluentCart\App\Models\Product();
+            
+            $query = $product_model->newQuery()
+                ->where('post_status', 'publish')
+                ->limit(10);
+
+
+			if ( ! empty( $search ) ) {
+				$query->where('post_title', 'LIKE', '%' . sanitize_text_field( $search ) . '%');
+			}
+
+			$products = $query->get();
+
+			$product_list = [];
+			if ( ! empty( $products ) ) {
+				foreach ( $products as $product ) {
+					$product_list[ $product->ID ] = $product->post_title;
+				}
+			}
+
+			return $product_list;
+		} catch ( \Exception $e ) {
+			return [];
+		}
 	}
 }

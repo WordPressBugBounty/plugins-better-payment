@@ -21,8 +21,12 @@ class TransactionModel extends Model {
         parent::__construct();
     }
 
-    public function get_transactions($per_page = '999999999') {
-        $all_transactions = DB::get_transactions(['per_page' => $per_page]);
+    public function get_transactions($args = []) {
+        // Set default per_page if not provided
+        if (!isset($args['per_page'])) {
+            $args['per_page'] = '999999999';
+        }
+        $all_transactions = DB::get_transactions($args);
         return $all_transactions;
     }
 } 

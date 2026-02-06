@@ -1570,7 +1570,7 @@
 }
 .better-payment .dismissable-banner-wrapper .setup-banner .banner-content .banner-right {
   flex: 1 40%;
-  background-image: url(../img/dismiss-bg.png);
+  background-image: url(../img/dismiss-bg.webp);
   background-repeat: no-repeat;
   background-position: bottom center;
   background-size: cover;

@@ -330,9 +330,11 @@ trait Helper
 			'paypal' => [
 				'AED',
 				'BGN',
+				'BAM',
 				'KES',
 				'NGN',
 				'RON',
+				'RSD',
 				'ZAR',
 				'GHS',
 			],
@@ -376,6 +378,7 @@ trait Helper
             'AED' => ['name' => 'UAE Dirham', 'symbol' => 'د.إ'],
             'AUD' => ['name' => 'Australian Dollar', 'symbol' => '$'],
             'BGN' => ['name' => 'Bulgarian Lev', 'symbol' => 'лв'],
+			'BAM' => ['name' => 'Bosnia and Herzegovina Convertible Mark', 'symbol' => 'KM'],
             'CAD' => ['name' => 'Canadian Dollar', 'symbol' => '$'],
             'CHF' => ['name' => 'Swiss Franc', 'symbol' => 'CHF'],
             'CZK' => ['name' => 'Czech Koruna', 'symbol' => 'Kč'],
@@ -394,6 +397,7 @@ trait Helper
             'PHP' => ['name' => 'Philippine Peso', 'symbol' => '₱'],
             'PLN' => ['name' => 'Polish Zloty', 'symbol' => 'zł'],
             'RON' => ['name' => 'Romanian Leu', 'symbol' => 'lei'],
+			'RSD' => ['name' => 'Serbian Dinar', 'symbol' => 'din.'],
             'RUB' => ['name' => 'Russian Ruble', 'symbol' => '₽'],
             'SEK' => ['name' => 'Swedish Krona', 'symbol' => 'kr'],
             'SGD' => ['name' => 'Singapore Dollar', 'symbol' => '$'],
@@ -706,7 +710,7 @@ trait Helper
      * @return bool
      */
     public function is_any_better_payment_widget_used() {
-        return get_option('better_payment_any_widget_used', false);
+        return get_option('better_payment_any_widget_used', false) ? '1' : '0';
     }
 
 	/**
@@ -715,13 +719,16 @@ trait Helper
 	 * @since 1.4.2
 	 * @return bool
 	 */
-	public function bp_show_dismissible_section() {
-		// Check if progress bar should be shown
+	public function bp_section_dismissed() {
 		$progress_bar_dismissed = get_option('better_payment_progress_bar_dismissed', false);
 		$plugin_installed_fresh = get_option('better_payment_plugin_installed_fresh', false);
 		$progress_bar_dismissed_expiry_date = get_option('better_payment_progress_bar_dismissed_expiry_date', 0);
 
-		return ! $progress_bar_dismissed && $plugin_installed_fresh === 'yes' && time() < $progress_bar_dismissed_expiry_date;
+		if ($progress_bar_dismissed) {
+			return true;
+		}
+
+		return $plugin_installed_fresh === 'yes' && time() > $progress_bar_dismissed_expiry_date;
 	}
 
 	public function bp_calculate_progress_steps($settings) {
@@ -731,7 +738,7 @@ trait Helper
 		$elementor_active = defined('ELEMENTOR_VERSION') && class_exists('Elementor\Plugin');
 		$steps[] = [
 			'completed' => $elementor_active,
-			'text' => __('Install ( if not installed yet ) and Activate Elementor.', 'better-payment')
+			'text' => __('Install ( if not installed yet ) and Activate Elementor', 'better-payment')
 		];
 
 		// Step 2: Check if API keys are configured
@@ -759,18 +766,19 @@ trait Helper
 		}
 
 		$api_keys_configured = ( isset($paypal_business_email) && $paypal_business_email ) || ( isset($stripe_public) && isset($stripe_secret) && $stripe_public && $stripe_secret ) || ( isset($paystack_public) && isset($paystack_secret) && $paystack_public && $paystack_secret );
+		$payment_settings_url = admin_url('admin.php?page=better-payment-admin&tab=settings&id=paypal');
 
 		$steps[] = [
 			'completed' => $api_keys_configured,
-			'text' => __('Insert sandbox/test API keys for Stripe, PayPal & Paystack on <a id="better-payment-gateway-api-key-set-settings" href="#">Payment Settings</a>.', 'better-payment')
+			'text' => sprintf(__('Insert sandbox/test API keys for Stripe, PayPal & Paystack on <a href="%s">Payment Settings</a>', 'better-payment'), $payment_settings_url)
 		];
 
 		// Step 3: Check if widget has been added
-		$widget_used = $this->is_any_better_payment_widget_used();
+		$widget_used = $this->is_any_better_payment_widget_used() === '1' ? true : false;
 
 		$steps[] = [
 			'completed' => $widget_used,
-			'text' => __('Edit page with Elementor and add Better Payment widget to use it. You can check this', 'better-payment') . ' <a target="_blank" href="//betterpayment.co/docs/" target="_blank">' . __('doc', 'better-payment') . '</a>.'
+			'text' => __('Edit page with Elementor and add Better Payment widget to use it. You can check this', 'better-payment') . ' <a target="_blank" href="//betterpayment.co/docs/" target="_blank">' . __('doc', 'better-payment') . '</a>'
 		];
 
 		// Step 4: Check if widget has been customized
@@ -778,7 +786,7 @@ trait Helper
 
 		$steps[] = [
 			'completed' => $widget_customized,
-			'text' => __('Customize the widget as your own and save the changes.', 'better-payment')
+			'text' => __('Customize the widget as your own and save the changes', 'better-payment')
 		];
 
 		return $steps;

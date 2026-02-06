@@ -504,6 +504,24 @@ class Payment_Amount_Integration extends Action_Base {
             ]
         );
 
+        $widget->add_control(
+            'better_payment_message_display_heading',
+            [
+                'label' => __( 'Success/Error Messages', 'better-payment' ),
+                'type' => Controls_Manager::HEADING,
+                'separator' => 'before',
+            ]
+        );
+
+        $widget->add_control(
+            'better_payment_message_display_notice',
+            [
+                'type' => Controls_Manager::RAW_HTML,
+                'raw' => __( 'For proper message display on payment redirection, disable Element Caching in <strong>Advanced Tab → Cache Settings</strong>.', 'better-payment' ),
+                'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
+            ]
+        );
+
         $widget->end_controls_section();
     }
 

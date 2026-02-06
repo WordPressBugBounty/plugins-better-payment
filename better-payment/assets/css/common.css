@@ -1120,7 +1120,11 @@
 
 .better-payment .payment-form-layout-1 .dynamic-amount-section,
 .better-payment .payment-form-layout-2 .dynamic-amount-section {
-  background: url("../img/bg-blue-2.svg") no-repeat center;
+  position: relative;
+  background-color: #006AFF;
+  background-image: url("../img/bg-blue-2.svg");
+  background-repeat: no-repeat;
+  background-position: center;
   background-size: cover;
   border-top-left-radius: 10px;
   border-bottom-left-radius: 10px;
@@ -1179,7 +1183,8 @@
 }
 
 .better-payment .payment-form-layout-2 .dynamic-amount-section {
-  background: linear-gradient(180deg, #006AFF 0%, #004CBF 100%);
+  background-color: #006AFF;
+  background-image: linear-gradient(180deg, #006AFF 0%, #004CBF 100%);
 }
 
 .better-payment .payment-form-layout-3 .dynamic-amount-section {

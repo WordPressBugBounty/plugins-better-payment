@@ -844,7 +844,7 @@ class Plugin_Usage_Tracker
         $styles .= 'position: relative; display: none;';
         $styles .= '}';
         $styles .= '.wpinsights-form-active-' . esc_attr( $class_plugin_name ) . ' ' . $wrapper_class . '{';
-        $styles .= 'display: flex !important; position: fixed;top: 0;left: 0;width: 100%;height: 100%; justify-content: center; align-items: center;';
+        $styles .= 'display: flex !important; position: fixed;top: 0;left: 0;width: 100%;height: 100%; justify-content: center; align-items: center; z-index: 99999';
         $styles .= '}';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form { display: none; }';
         $styles .= '.wpinsights-form-active-' . esc_attr( $class_plugin_name ) . ' .wpinsights-goodbye-form {';
@@ -861,6 +861,8 @@ class Plugin_Usage_Tracker
         $styles .= '}';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options { padding-top: 5px; }';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options ul > li { margin-bottom: 15px; }';
+        $styles .= $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options input[type=radio] { border-color: #6B59EE; box-shadow: none; outline: 0; }';
+        $styles .= $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options input[type=radio]:checked::before { content: ""; border-radius: 50%; width: .6rem; height: .6rem; margin: 2.45px; background-color: #6B59EE; line-height: 1.14285714; outline: 0; }';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options ul > li > div { display: inline; padding-left: 3px; }';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options ul > li > div > input, ' . $wrapper_class . ' .wpinsights-goodbye-form-body #wpinsights-goodbye-options ul > li > div > textarea {';
         $styles .= 'margin: 10px 18px; padding: 8px; width: 80%;';
@@ -870,9 +872,9 @@ class Plugin_Usage_Tracker
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-footer { padding: 8px 18px; margin-bottom: 15px; }';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-footer > .wpinsights-goodbye-form-buttons { display: flex; align-items: center; justify-content: space-between; }';
         $styles .= $wrapper_class . ' .wpinsights-goodbye-form-footer .wpinsights-submit-btn {';
-        $styles .= 'background-color: #d30c5c; -webkit-border-radius: 3px; border-radius: 3px; color: #fff; line-height: 1; padding: 15px 20px; font-size: 13px;';
+        $styles .= 'background-color: #6B59EE; -webkit-border-radius: 8px; border-radius: 8px; color: #fff; line-height: 1; padding: 12px 18px; font-size: 13px;';
         $styles .= '}';
-        $styles .= $wrapper_class . ' .wpinsights-goodbye-form-footer .wpinsights-deactivate-btn {';
+        $styles .= $wrapper_class . ' .wpinsights-goodbye-form-footer .wpsp-put-deactivate-btn {';
         $styles .= 'font-size: 13px; color: #a4afb7; background: none; float: right; padding-right: 10px; width: auto; text-decoration: underline;';
         $styles .= '}';
         $styles .= $wrapper_class . ' .test {';

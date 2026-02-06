@@ -30,7 +30,8 @@ class Setup_Wizard
 		$this->file_version = defined('WP_DEBUG') && WP_DEBUG ? time() : BETTER_PAYMENT_VERSION;
         add_action('admin_enqueue_scripts', array($this, 'setup_wizard_scripts'));
         add_action('admin_menu', array($this, 'admin_menu'));
-		add_action('wp_ajax_save_setup_wizard_data', [$this, 'save_setup_wizard_data']);
+        add_action('wp_ajax_save_setup_wizard_data', [$this, 'save_setup_wizard_data']);
+        add_action( 'wp_ajax_bp_quick_setup_save_tracking', [ $this, 'bp_quick_setup_save_tracking' ] );
         add_action('in_admin_header', [$this, 'remove_notice'], 1000);
     }
 
@@ -57,21 +58,37 @@ class Setup_Wizard
     public function setup_wizard_scripts($hook)
     {
         if (isset($hook) && $hook == 'admin_page_better-payment-setup-wizard') {
-            //Styles
-            wp_register_style('jquery-ui', '//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.min.css');
-            wp_enqueue_style('jquery-ui');
+            // Determine the correct file extension based on debug mode
+            $js_ext = file_exists(BETTER_PAYMENT_PATH . '/assets/admin/quick-setup/quick-setup.min.js') ? '.min.js' : '.js';
+            $css_ext = file_exists(BETTER_PAYMENT_PATH . '/assets/admin/quick-setup/quick-setup.min.css') ? '.min.css' : '.css';
 
-            wp_enqueue_style('bp-setup-wizard-style', BETTER_PAYMENT_ASSETS . '/css/setup-wizard.min.css', null, $this->file_version);
-            wp_enqueue_style('bp-settings-style', BETTER_PAYMENT_ASSETS . '/css/style.min.css', null, $this->file_version);
-		    wp_enqueue_style('bp-icon-admin', BETTER_PAYMENT_ASSETS . '/icon/style.min.css');
-            wp_enqueue_style('sweetalert2-css', BETTER_PAYMENT_ASSETS . '/vendor/sweetalert2/css/sweetalert2.min.css');
+            // Enqueue React Quick Setup CSS
+            wp_enqueue_style(
+                'bp-quick-setup-css',
+                BETTER_PAYMENT_ASSETS . '/admin/quick-setup/quick-setup' . $css_ext,
+                array(),
+                $this->file_version
+            );
 
-            //Scripts
-            wp_enqueue_script('bp-setup-wizard-js', BETTER_PAYMENT_ASSETS . '/js/setup-wizard.min.js', null, $this->file_version);
-            
-            wp_localize_script('bp-setup-wizard-js', 'betterPaymentObjWizard', array(
-                'nonce'  => wp_create_nonce('better_payment_admin_nonce'),
+            // Enqueue React Quick Setup JS with WordPress dependencies
+            wp_enqueue_script(
+                'bp-quick-setup-js',
+                BETTER_PAYMENT_ASSETS . '/admin/quick-setup/quick-setup' . $js_ext,
+                array('wp-element', 'wp-i18n'),
+                $this->file_version,
+                true
+            );
+
+            // Localize script with necessary data
+            wp_localize_script('bp-quick-setup-js', 'betterPaymentObjWizard', array(
+                'admin_nonce'  => wp_create_nonce('better_payment_admin_nonce'),
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'assetsUrl' => BETTER_PAYMENT_ASSETS . '/admin/quick-setup',
                 'success_image' => BETTER_PAYMENT_ASSETS . '/img/success.gif',
+                'settings' => DB::get_settings(),
+                'is_tracking' => get_option('better_payment_settings_opt_in') === 'yes' ? 1 : 0,
+                'currencies' => $this->get_currency_list(),
+                'is_pro' => defined('BETTER_PAYMENT_PRO_VERSION') && BETTER_PAYMENT_PRO_VERSION ? true : false,
                 'alerts' => [
                     'confirm' => esc_html__('Are you sure?', 'better-payment'),
                     'confirm_description' => esc_html__("You won't be able to revert this!", 'better-payment'),
@@ -84,10 +101,6 @@ class Setup_Wizard
                     'no_action_taken' => esc_html__('No action taken!', 'better-payment'),
                 ]
             ));
-
-            wp_enqueue_script('bp-setup-wizard-localize');
-
-            wp_enqueue_script('sweetalert2-js', BETTER_PAYMENT_ASSETS . '/vendor/sweetalert2/js/sweetalert2.min.js', array('jquery'), BETTER_PAYMENT_VERSION, true);
         }
         return [];
     }
@@ -101,7 +114,7 @@ class Setup_Wizard
     {
 
         add_submenu_page(
-            '',
+            "admin.php?page=better-payment-setup-wizard",
             esc_html__('Better Payment ', 'better-payment'),
             esc_html__('Better Payment ', 'better-payment'),
             'manage_options',
@@ -382,15 +395,37 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
     ?>
         <div class="better-payment-setup-wizard-wrap">
             <?php
-    		$bp_admin_saved_settings = DB::get_settings();
+    		// $bp_admin_saved_settings = DB::get_settings();
             
-            $this->change_site_title();
-            $this->tab_step();
-            $this->tab_content($bp_admin_saved_settings);
-            $this->setup_wizard_footer();
+            // $this->change_site_title();
+            // $this->tab_step();
+            // $this->tab_content($bp_admin_saved_settings);
+            // $this->setup_wizard_footer();
+            include BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/better-payment-quick-setup.php';
             ?>
         </div>
     <?php
+    }
+
+    public function bp_quick_setup_save_tracking() {
+        // Verify the Nonce
+		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'better_payment_admin_nonce')) {
+			wp_send_json_error( __( 'Nonce verification failed.', 'better-payment' ) );
+			return;
+		}
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error( __( 'Insufficient permissions.', 'better-payment' ) );
+            return;
+		}
+
+        if ( isset( $_POST[ 'is_tracking' ] ) && $_POST[ 'is_tracking' ] === 'true' ) {
+            update_option('better_payment_settings_opt_in', 'yes');
+            self::wpins_process();
+            wp_send_json_success( __( 'Tracking data saved successfully.', 'better-payment' ) );
+        } else {
+            wp_send_json_error( __( 'Invalid tracking parameter.', 'better-payment' ) );
+        }
     }
 
     /**
@@ -413,29 +448,14 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
 		
         try{
             Settings::save_default_settings(1);
-            Settings::save_settings($_POST['form_data']);
-            
-            $posted_field_opt_in_val = '';
-            foreach ($_POST['form_data'] as $posted_field) {
-				 $posted_field_name = sanitize_key($posted_field['name']); 
-				 $posted_field_value = sanitize_key($posted_field['value']);
-                 
-                 if('better_payment_settings_opt_in' === $posted_field_name){
-                    $posted_field_opt_in_val = $posted_field_value;
-                    break;
-                 } 
-			}
-
-            if ( 'yes' === $posted_field_opt_in_val ) {
-                self::wpins_process();
-            }
+            Settings::save_settings(json_decode(stripslashes($_POST['form_data']), true));
 
             update_option( 'better_payment_setup_wizard', 'complete' );
 
             if (!did_action('elementor/loaded')) {
                 wp_send_json_success( [ 'redirect_url' => admin_url() ] );
             }else {
-                wp_send_json_success( [ 'redirect_url' => admin_url( 'admin.php?page=better-payment-settings' ) ] );
+                wp_send_json_success( [ 'redirect_url' => admin_url( 'admin.php?page=better-payment-admin&tab=dashboard' ) ] );
             }
         }catch (\Exception $e) {
             wp_send_json_error($e->getMessage());            

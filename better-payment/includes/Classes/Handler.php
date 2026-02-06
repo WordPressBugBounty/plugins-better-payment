@@ -521,17 +521,17 @@ class Handler extends Controller{
             ? esc_html($settings['better_payment_form_success_message_heading']) 
             : esc_html( __('You paid', 'better-payment') . ' [currency_symbol][amount] ' . __('to', 'better-payment') . ' [store_name]');
 
-        $bp__currency_symbol = esc_html( $helper_obj->get_currency_symbol( $tr_id['currency'] ) );
+        $bp__currency_symbol = esc_html( ! empty( $tr_id['currency'] ) ? $helper_obj->get_currency_symbol( $tr_id['currency'] ) : '' );
 
         $payment_desc_text = str_replace( '[currency_symbol]', '<span class="bp-bold">' . $bp__currency_symbol . '</span>', $payment_desc_text );
 
-        $payment_desc_text = str_replace( '[amount]', '<span class="bp-bold">' . esc_html( $tr_id['amount'] ) . '</span>', $payment_desc_text );
+        $payment_desc_text = str_replace( '[amount]', '<span class="bp-bold">' . esc_html( ! empty( $tr_id['amount'] ) ? $tr_id['amount'] : 0 ) . '</span>', $payment_desc_text );
         
         $payment_desc_text = str_replace( '[store_name]', '<span class="bp-bold">' . esc_html( $store_name ) . '</span>', $payment_desc_text );
 
         $payment_mail_text = !empty( $settings['better_payment_form_success_message_sub_heading'] ) ? esc_html($settings['better_payment_form_success_message_sub_heading']) : esc_html( __('Payment Confirmation email will be sent to ', 'better-payment') . '[customer_email]');
 
-        $payment_mail_text = str_replace( '[customer_email]', '<span class="bp-bold">' . esc_html( $tr_id['email'] ) . '</span>', $payment_mail_text );
+        $payment_mail_text = str_replace( '[customer_email]', '<span class="bp-bold">' . esc_html( ! empty( $tr_id['email'] ) ? $tr_id['email'] : '' ) . '</span>', $payment_mail_text );
 
         if ( !empty( $settings[ 'better_payment_form_success_message_icon' ][ 'library' ] ) ) {
             if ( $settings[ 'better_payment_form_success_message_icon' ][ 'library' ] == 'svg' ) {
@@ -548,7 +548,7 @@ class Handler extends Controller{
             'stripe' => BETTER_PAYMENT_ASSETS . '/img/stripe-2.svg',
             'paystack' => BETTER_PAYMENT_ASSETS . '/img/paystack-2.svg',
         ];
-        $payment_method_logo = isset( $allowed_payment_methods[ $tr_id['method'] ] ) ? $allowed_payment_methods[ $tr_id['method'] ] : ''; 
+        $payment_method_logo = isset( $tr_id['method'] ) && isset( $allowed_payment_methods[ $tr_id['method'] ] ) ? $allowed_payment_methods[ $tr_id['method'] ] : ''; 
 
         $better_payment_form_success_message_thanks = !empty( $settings['better_payment_form_success_message_thanks'] ) 
             ? esc_html( $settings['better_payment_form_success_message_thanks'] ) 
@@ -626,7 +626,7 @@ class Handler extends Controller{
                             <span>
                                 <?php echo wp_kses_post( $better_payment_form_success_message_transaction ); ?>: 
                             </span>
-                            <span class="bp-bold bp-transaction_id"><?php echo esc_html( $tr_id['transaction_id'] ); ?></span>
+                            <span class="bp-bold bp-transaction_id"><?php echo esc_html( ! empty( $tr_id['transaction_id']) ? $tr_id['transaction_id'] : '' ); ?></span>
                         </p>
                     
                         <button class="bp-transaction_data-copy_btn ">
@@ -648,7 +648,7 @@ class Handler extends Controller{
                                     echo wp_kses_post( $better_payment_form_success_message_amount_text );
                                 ?>
                             </span>
-                            <span class="bp-info_content  bp-bold"><?php echo $bp__currency_symbol . esc_html( $tr_id['amount'] ); ?></span>
+                            <span class="bp-info_content  bp-bold"><?php echo $bp__currency_symbol . esc_html( ! empty( $tr_id['amount'] ) ? $tr_id['amount'] : 0 ); ?></span>
                         </li>
                         <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                             <span class=" bp-info_content">
@@ -656,7 +656,7 @@ class Handler extends Controller{
                                     echo wp_kses_post( $better_payment_form_success_message_currency_text );
                                 ?>
                             </span>
-                            <span class="bp-info_content  bp-bold"><?php echo esc_html( $tr_id['currency'] ); ?></span>
+                            <span class="bp-info_content  bp-bold"><?php echo esc_html( ! empty( $tr_id['currency'] ) ? $tr_id['currency'] : '' ); ?></span>
                         </li>
                         <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                             <span class="bp-info_content">
@@ -702,25 +702,60 @@ class Handler extends Controller{
                                 </span>
                             </li>
                         <?php endif; ?>
-                        <?php if( !empty($settings['better_payment_form_woocommerce_product_id']) || !empty( $settings['better_payment_form_woocommerce_product_ids'] ) ): ?>
+                        <?php
+                        $has_woo_products = !empty($settings['better_payment_form_woocommerce_product_id']) || !empty($settings['better_payment_form_woocommerce_product_ids']);
+                        $has_fluentcart_products = !empty($settings['better_payment_form_fluentcart_product_id']) || !empty($settings['better_payment_form_fluentcart_product_ids']);
+
+                        if( $has_woo_products || $has_fluentcart_products ):
+                        ?>
                         <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                             <span class="bp-info_content">
                                 <?php
                                     echo wp_kses_post( $better_payment_form_success_message_purchase_details_text );
                                 ?>
                             </span>
-                            <?php if( !empty( $settings['better_payment_form_woocommerce_product_id'] ) ): ?>
-                                <span class="bp-info_content  bp-bold"><?php echo esc_html( get_the_title( $settings['better_payment_form_woocommerce_product_id'] ) ); ?></span>
-                            <?php endif; ?>
                             <?php
-                                if( !empty( $settings['better_payment_form_woocommerce_product_ids'] ) ):
-                                    $product_ids = $settings['better_payment_form_woocommerce_product_ids'];
-                                    $product_names = [];
-                                    foreach( $product_ids as $product_id ):
-                                        $product_names[] = get_the_title( $product_id );
-                                    endforeach;
-                                    echo '<span class="bp-info_content  bp-bold">' . implode( ', ', $product_names ) . '</span>';
-                                endif;
+                            $product_names = [];
+
+                            if( !empty( $settings['better_payment_form_woocommerce_product_id'] ) ):
+                                $product_names[] = get_the_title( $settings['better_payment_form_woocommerce_product_id'] );
+                            endif;
+
+                            if( !empty( $settings['better_payment_form_woocommerce_product_ids'] ) ):
+                                $product_ids = $settings['better_payment_form_woocommerce_product_ids'];
+                                foreach( $product_ids as $product_id ):
+                                    $product_names[] = get_the_title( $product_id );
+                                endforeach;
+                            endif;
+
+                            if( !empty( $settings['better_payment_form_fluentcart_product_id'] ) && function_exists('fluentCart') && class_exists( '\FluentCart\App\Models\Product' ) ):
+                                try {
+                                    $fluentcart_product = \FluentCart\App\Models\Product::query()->find($settings['better_payment_form_fluentcart_product_id']);
+                                    if ($fluentcart_product) {
+                                        $product_names[] = sanitize_text_field( $fluentcart_product->post_title );
+                                    }
+                                } catch ( \Exception $e ) {
+                                    //
+                                }
+                            endif;
+
+                            if( !empty( $settings['better_payment_form_fluentcart_product_ids'] ) && function_exists('fluentCart') && class_exists( '\FluentCart\App\Models\Product' ) ):
+                                $product_ids = $settings['better_payment_form_fluentcart_product_ids'];
+                                foreach( $product_ids as $product_id ):
+                                    try {
+                                        $fluentcart_product = \FluentCart\App\Models\Product::query()->find($product_id);
+                                        if ($fluentcart_product) {
+                                            $product_names[] = sanitize_text_field( $fluentcart_product->post_title );
+                                        }
+                                    } catch ( \Exception $e ) {
+                                        //
+                                    }
+                                endforeach;
+                            endif;
+
+                            if( !empty($product_names) ):
+                                echo '<span class="bp-info_content  bp-bold">' . implode( ', ', $product_names ) . '</span>';
+                            endif;
                             ?>
                         </li>
                         <?php endif; ?>
@@ -1181,14 +1216,18 @@ class Handler extends Controller{
         $amount_quantity = ! empty( $form_fields_info_arr['amount_quantity'] ) ? intval( $form_fields_info_arr['amount_quantity'] ) : 1;
         // #ToDo Product id or ids with comma
         $woo_product_id = ! empty( $form_fields_info_arr['woo_product_id'] ) ? intval( $form_fields_info_arr['woo_product_id'] ) : 0;
+        $fluentcart_product_id = ! empty( $form_fields_info_arr['fluentcart_product_id'] ) ? intval( $form_fields_info_arr['fluentcart_product_id'] ) : 0;
+        $woo_product_ids = ! empty( $form_fields_info_arr['woo_product_ids'] ) ? maybe_unserialize( $form_fields_info_arr['woo_product_ids'] ) : [0];
+        $fluentcart_product_ids = ! empty( $form_fields_info_arr['fluentcart_product_ids'] ) ? maybe_unserialize( $form_fields_info_arr['fluentcart_product_ids'] ) : [0];
         $product_name = '';
         $product_permalink = '';
         $product_image_src = '';
 
+        // Handle WooCommerce products
         if (function_exists('wc_get_product') && $woo_product_id ) {
             $bp_woocommerce_product = wc_get_product($woo_product_id);
             $product = $bp_woocommerce_product;
-    
+
             if ($product) {
                 $product_name = $product->get_name();
                 $product_permalink = get_permalink($product->get_id());
@@ -1197,14 +1236,46 @@ class Handler extends Controller{
                 $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
             }
         }
-        
+
+        if (function_exists('fluentCart') && $fluentcart_product_id ) {
+            try {
+                $fluentcart_product = \FluentCart\App\Models\Product::query()
+                    ->with(['detail', 'variants'])
+                    ->find($fluentcart_product_id);
+
+                if ($fluentcart_product) {
+                    $product_name = $fluentcart_product->post_title;
+                    $product_permalink = get_permalink($fluentcart_product->ID);
+
+                    // Get price from the first variant or detail
+                    $product_price = 0;
+                    if (!empty($fluentcart_product->variants) && count($fluentcart_product->variants) > 0) {
+                        $product_price = $fluentcart_product->variants[0]->item_price;
+                    } elseif (!empty($fluentcart_product->detail)) {
+                        $product_price = $fluentcart_product->detail->min_price;
+                    }
+
+                    $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $fluentcart_product->ID ), 'single-post-thumbnail' );
+                    $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
+                }
+            } catch ( \Exception $e ) {
+                // Handle error silently
+            }
+        }
+
+        $detailed_product_info = isset( $form_fields_info_arr['detailed_product_info'] ) ? maybe_unserialize( $form_fields_info_arr['detailed_product_info'] ) : [];
+
         $all_data = [
             'amount' => $amount,
             'amount_quantity' => $amount_quantity,
             'woo_product_id' => $woo_product_id,
+            'woo_product_ids' => $woo_product_ids,
+            'fluentcart_product_id' => $fluentcart_product_id,
+            'fluentcart_product_ids' => $fluentcart_product_ids,
             'product_name' => $product_name,
             'product_permalink' => $product_permalink,
             'product_image_src' => $product_image_src,
+            'detailed_product_info' => $detailed_product_info,
             'amount_single' => $amount_quantity > 0 ? floatval( $amount / $amount_quantity ) : $amount,
             'currency' => ! empty( $currency ) ? $currency : '',
             'currency_symbol' => ! empty( $currency_symbol ) ? $currency_symbol : '',

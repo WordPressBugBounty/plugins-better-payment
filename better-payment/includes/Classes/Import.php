@@ -118,10 +118,16 @@ class Import extends Controller{
                 );
             }
 
+            if ( empty( $data ) ) {
+                throw new Exception( __('No valid records found in the CSV file!', 'better-payment') );
+            }
+
             $table = DB::get_table_name();
             $rowsInserted = $this->bulk_insert_transactions( $table, $data );
-            if ( $rowsInserted) {
+            if ( $rowsInserted !== false && $rowsInserted > 0 ) {
                 set_transient('better_payment_import_transactions_success', esc_html__( $rowsInserted . ' rows inserted successfully!', 'better-payment' ), 30);
+            } else {
+                throw new Exception( __('Failed to insert records into database!', 'better-payment') );
             }
         } catch (\Exception $exception) {
             set_transient('better_payment_import_transactions_error', esc_html( $exception->getMessage() ), 30);
@@ -164,7 +170,7 @@ class Import extends Controller{
         foreach ($rows as $row) {
             ksort($row);
             $rowPlaceholders = array();
-            foreach ($row as $key => $value) {
+            foreach ($row as $value) {
                 $data[]            = $value;
                 $rowPlaceholders[] = is_numeric($value) ? '%d' : '%s';
             }

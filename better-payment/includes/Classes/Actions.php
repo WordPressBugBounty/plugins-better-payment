@@ -73,7 +73,12 @@ class Actions {
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
-        $is_woo_layout = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
+        $woo_product_ids = !empty($el_settings["better_payment_form_woocommerce_product_ids"]) ? $el_settings["better_payment_form_woocommerce_product_ids"] : [0];
+        $fluentcart_product_id = !empty($el_settings["better_payment_form_fluentcart_product_id"]) ? intval($el_settings["better_payment_form_fluentcart_product_id"]) : 0;
+        $fluentcart_product_ids = !empty($el_settings["better_payment_form_fluentcart_product_ids"]) ? $el_settings["better_payment_form_fluentcart_product_ids"] : [0];
+        $is_layout_6 = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
+        $is_fluentcart_layout = $is_layout_6 && ! empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) && 'fluentcart' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ];
+        $is_woo_layout = $is_layout_6 && ( empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) || 'woocommerce' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] );
 
         if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($el_settings['better_payment_form_currency_woocommerce'])){
@@ -111,19 +116,31 @@ class Actions {
             'cmd'           => $el_settings[ 'better_payment_paypal_button_type' ],
         ];
 
+        $product_ids = [
+            'woo_product_ids' => $woo_product_ids,
+            'fluentcart_product_ids' => $fluentcart_product_ids,
+        ];
+
+        $detailed_product_info = $this->get_detailed_product_info( $product_ids );
+
         //Form fields data to send via email
         $better_form_fields = [
             'amount' => sanitize_text_field($el_settings_currency_symbol) . $primary_payment_amount,
             'referer_page_id' => $page_id,
             'referer_widget_id' => $widget_id,
             'woo_product_id' => $woo_product_id,
+            'woo_product_ids' => maybe_serialize( $woo_product_ids ),
+            'fluentcart_product_id' => $fluentcart_product_id,
+            'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source' => 'paypal',
             'amount_quantity' => ! empty( $primary_payment_amount_quantity ) ? intval( $primary_payment_amount_quantity ) : '',
             'is_woo_layout' => $is_woo_layout,
+            'is_fluentcart_layout' => $is_fluentcart_layout,
+            'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         ];
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST) );
-        
+
         if ( !empty( $better_form_fields[ 'primary_first_name' ] ) ) {
             $request_data[ 'primary_first_name' ] = sanitize_text_field( $better_form_fields[ 'primary_first_name' ] );
         }
@@ -134,6 +151,10 @@ class Actions {
 
         if ( !empty( $better_form_fields[ 'primary_email' ] ) ) {
             $request_data[ 'primary_email' ] = sanitize_email( $better_form_fields[ 'primary_email' ] );
+        }
+
+        if ( !empty( $better_form_fields[ 'primary_reference_number' ] ) ) {
+            $request_data[ 'invoice' ] = sanitize_text_field( $better_form_fields[ 'primary_reference_number' ] );
         }
         
         $campaign_id = ! empty( $_POST['campaign_id'] ) ? sanitize_text_field( $_POST['campaign_id'] ) : '';
@@ -183,7 +204,9 @@ class Actions {
         }
 
         $el_settings = $this->better_payment_widget_settings( $page_id, $widget_id );
-        $is_woo_layout = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
+        $is_layout_6 = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
+        $is_fluentcart_layout = $is_layout_6 && ! empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) && 'fluentcart' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ];
+        $is_woo_layout = $is_layout_6 && ( empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) || 'woocommerce' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] );
 
         $better_payment_keys = [
             'public_key' => 'yes' === sanitize_text_field( $el_settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $el_settings[ 'better_payment_stripe_public_key_live' ] ) : sanitize_text_field( $el_settings[ 'better_payment_stripe_public_key' ] ),
@@ -203,8 +226,9 @@ class Actions {
         }
 
         $amount_quantity = ! empty( $_POST['fields']['payment_amount_quantity'] ) ? intval( $_POST['fields']['payment_amount_quantity'] ) : '';
-
-        if ( $is_woo_layout ) {
+        $product_quantities = ! empty( $_POST['fields']['payment_amount_quantity'] ) && is_array( $_POST['fields']['payment_amount_quantity'] ) ? array_map( 'intval', $_POST['fields']['payment_amount_quantity'] ) : [];
+        
+        if ( $is_woo_layout || $is_fluentcart_layout ) {
             $amount_quantity = 1;
         }
 
@@ -222,6 +246,10 @@ class Actions {
         $order_id = 'stripe_' . uniqid();
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
+        $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
+        $woo_product_ids = !empty($el_settings["better_payment_form_woocommerce_product_ids"]) ? $el_settings["better_payment_form_woocommerce_product_ids"] : [0];
+        $fluentcart_product_id = !empty($el_settings["better_payment_form_fluentcart_product_id"]) ? intval($el_settings["better_payment_form_fluentcart_product_id"]) : 0;
+        $fluentcart_product_ids = !empty($el_settings["better_payment_form_fluentcart_product_ids"]) ? $el_settings["better_payment_form_fluentcart_product_ids"] : [0];
 
         if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($el_settings['better_payment_form_currency_woocommerce'])){
@@ -280,15 +308,28 @@ class Actions {
         $is_payment_recurring = ! empty( $_POST['fields']['better_payment_recurring_mode'] ) && 'subscription' === sanitize_text_field( $_POST['fields']['better_payment_recurring_mode'] );
         $recurring_price_id = ! empty( $_POST['fields']['better_payment_recurring_price_id'] ) ? sanitize_text_field( $_POST['fields']['better_payment_recurring_price_id'] ) : '';
 
+        $product_ids = [
+            'woo_product_ids' => $woo_product_ids,
+            'fluentcart_product_ids' => $fluentcart_product_ids,
+        ];
+
+        $detailed_product_info = $this->get_detailed_product_info( $product_ids, $product_quantities );
+
         //Form fields data to send via email
         $better_form_fields = [
             'amount' => $el_settings_currency_symbol . $amount,
             'referer_page_id' => $page_id,
             'referer_widget_id' => $widget_id,
+            'woo_product_id' => $woo_product_id,
+            'woo_product_ids' => maybe_serialize( $woo_product_ids ),
+            'fluentcart_product_id' => $fluentcart_product_id,
+            'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source' => 'stripe',
             'amount_quantity' => ! empty( $amount_quantity ) ? $amount_quantity : '',
             'is_woo_layout' => $is_woo_layout,
-            'stripe_coupon_code' => $coupon_code
+            'is_fluentcart_layout' => $is_fluentcart_layout,
+            'stripe_coupon_code' => $coupon_code,
+            'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         ];
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
@@ -423,7 +464,9 @@ class Actions {
         $page_id = intval( $_POST[ 'setting_data' ]['page_id'] );
         $widget_id = sanitize_text_field( $_POST[ 'setting_data' ]['widget_id'] );
         $el_settings = $this->better_payment_widget_settings( $page_id, $widget_id );
-        $is_woo_layout = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
+        $is_layout_6 = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
+        $is_fluentcart_layout = $is_layout_6 && ! empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) && 'fluentcart' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ];
+        $is_woo_layout = $is_layout_6 && ( empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) || 'woocommerce' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] );
 
         if ( empty( $el_settings ) ) {
             wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
@@ -455,6 +498,9 @@ class Actions {
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
+        $woo_product_ids = !empty($el_settings["better_payment_form_woocommerce_product_ids"]) ? $el_settings["better_payment_form_woocommerce_product_ids"] : [0];
+        $fluentcart_product_id = !empty($el_settings["better_payment_form_fluentcart_product_id"]) ? intval($el_settings["better_payment_form_fluentcart_product_id"]) : 0;
+        $fluentcart_product_ids = !empty($el_settings["better_payment_form_fluentcart_product_ids"]) ? $el_settings["better_payment_form_fluentcart_product_ids"] : [0];
 
         if(!empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($settings['better_payment_form_currency_woocommerce'])){
@@ -480,15 +526,27 @@ class Actions {
             ], $redirection_url_success ),
         ];
 
+        $product_ids = [
+            'woo_product_ids' => $woo_product_ids,
+            'fluentcart_product_ids' => $fluentcart_product_ids,
+        ];
+
+        $detailed_product_info = $this->get_detailed_product_info( $product_ids );
+
         //Form fields data to send via email
         $better_form_fields = [
             'amount' => $el_settings_currency_symbol . $amount,
             'referer_page_id' => $page_id,
             'referer_widget_id' => $widget_id,
             'woo_product_id' => $woo_product_id,
+            'woo_product_ids' => maybe_serialize( $woo_product_ids ),
+            'fluentcart_product_id' => $fluentcart_product_id,
+            'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source' => 'paystack',
             'amount_quantity' => ! empty( $amount_quantity ) ? $amount_quantity : '',
             'is_woo_layout' => $is_woo_layout,
+            'is_fluentcart_layout' => $is_fluentcart_layout,
+            'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         ];
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
@@ -557,6 +615,87 @@ class Actions {
                 'authorization_url' => $authorization_url,
             ]
         );
+    }
+
+    /**
+     * Get detailed product information
+     * @param array $product_ids Array of woo_product_ids and fluentcart_product_ids
+     * 
+     * @since 1.4.5
+     */
+    public function get_detailed_product_info( $product_ids, $product_quantities = [] ) {
+        $detailed_product_info = [];
+
+        if (function_exists('wc_get_product') && !empty($product_ids['woo_product_ids'])) {
+            foreach ($product_ids['woo_product_ids'] as $key => $product_id) {
+                if (empty($product_id)) continue;
+
+                $product = wc_get_product($product_id);
+                if ($product) {
+                    $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $product->get_id() ), 'single-post-thumbnail' );
+                    $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
+
+                    $quantity = !empty($product_quantities[$key]) ? intval($product_quantities[$key]) : 1;
+                    $price = floatval( $product->get_price() );
+                    $total_price = floatval( $price * $quantity );
+
+                    $detailed_product_info['woo_products'][$product_id] = [
+                        'name' => $product->get_name(),
+                        'product_id' => intval( $product_id ),
+                        'permalink' => esc_url( get_permalink($product->get_id()) ),
+                        'image_src' => esc_url( $product_image_src ),
+                        'price' => $price,
+                        'quantity' => $quantity,
+                        'total_price' => $total_price,
+                    ];
+                }
+            }
+        }
+
+        if (function_exists('fluentCart') && class_exists('\FluentCart\App\Models\Product') && !empty($product_ids['fluentcart_product_ids'])) {
+            foreach ($product_ids['fluentcart_product_ids'] as $key => $product_id) {
+                if (empty($product_id)) continue;
+
+                try {
+                    $fluentcart_product = \FluentCart\App\Models\Product::query()
+                        ->with(['detail', 'variants'])
+                        ->find($product_id);
+
+                    if ($fluentcart_product) {
+                        $product_price = 0;
+                        if (!empty($fluentcart_product->variants) && count($fluentcart_product->variants) > 0) {
+                            $product_price = $fluentcart_product->variants[0]->item_price;
+                        } elseif (!empty($fluentcart_product->detail)) {
+                            $product_price = $fluentcart_product->detail->min_price;
+                        }
+
+                        if ( ! empty( $product_price ) ) {
+                            $product_price = floatval( $product_price / 100 );
+                        }
+
+                        $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $fluentcart_product->ID ), 'single-post-thumbnail' );
+                        $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
+
+                        $quantity = !empty($product_quantities[$key]) ? intval($product_quantities[$key]) : 1;
+                        $total_price = floatval( $product_price * $quantity );
+
+                        $detailed_product_info['fluentcart_products'][$product_id] = [
+                            'name' => sanitize_text_field( $fluentcart_product->post_title ),
+                            'product_id' => intval( $product_id ),
+                            'permalink' => esc_url( get_permalink($fluentcart_product->ID) ),
+                            'image_src' => esc_url( $product_image_src ),
+                            'price' => $product_price,
+                            'quantity' => $quantity,
+                            'total_price' => $total_price,
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    //
+                }
+            }
+        }
+
+        return $detailed_product_info;
     }
 
     /**
@@ -632,21 +771,24 @@ class Actions {
                         $post_fields[$item_field_name] =  is_array($post_fields[$item_field_name]) ? $post_fields[$item_field_name][0] : $post_fields[$item_field_name];
                     }
 
-                    if ( 'primary_first_name' == $item_primary_field_type && isset($post_fields[$item_primary_field_type])){                        
+                    if ( 'primary_first_name' == $item_primary_field_type && isset($post_fields[$item_primary_field_type])){
                         $better_form_fields[$item_primary_field_type] =  sanitize_text_field($post_fields[$item_primary_field_type]);
                         $post_data_primary_first_name = sanitize_text_field($post_fields[$item_primary_field_type]);
-                    
+
                     }else if ( 'primary_last_name' == $item_primary_field_type && isset($post_fields[$item_primary_field_type])){
                         $better_form_fields[$item_primary_field_type] = sanitize_text_field($post_fields[$item_primary_field_type]);
                         $post_data_primary_last_name = sanitize_text_field($post_fields[$item_primary_field_type]);
-                    
+
                     }else if( 'primary_email' == $item_primary_field_type && isset($post_fields[$item_primary_field_type])){
                         $better_form_fields[$item_primary_field_type] = sanitize_email($post_fields[$item_primary_field_type]);
                         $post_data_primary_email = sanitize_email($post_fields[$item_primary_field_type]);
-                    
+
                     }else if ( 'primary_payment_amount' == $item_primary_field_type && isset($post_fields[$item_primary_field_type]) ){
                         $better_form_fields[$item_primary_field_type] = floatval($post_fields[$item_primary_field_type]);
-                    
+
+                    }else if ( 'primary_reference_number' == $item_primary_field_type && isset($post_fields[$item_primary_field_type]) ){
+                        $better_form_fields[$item_primary_field_type] = sanitize_text_field($post_fields[$item_primary_field_type]);
+
                     } else {
                         $better_form_fields[$item_field_name] = !empty($post_fields[$item_field_name]) ? sanitize_text_field($post_fields[$item_field_name]) : '';
                     }

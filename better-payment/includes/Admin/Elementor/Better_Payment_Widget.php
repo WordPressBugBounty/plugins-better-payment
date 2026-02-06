@@ -69,7 +69,7 @@ class Better_Payment_Widget extends Widget_Base {
 
     public function get_keywords() {
         return [
-            'payment', 'better-payment' ,'paypal', 'stripe', 'sell', 'donate', 'transaction', 'online-transaction', 'paystack'
+            'payment', 'better-payment', 'paypal', 'stripe', 'sell', 'donate', 'transaction', 'online-transaction', 'paystack', 'better payment'
         ];
     }
 
@@ -351,6 +351,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'options'    => [
                     'manual' => 'Manual',
                     'woocommerce' => 'WooCommerce',
+                    'fluentcart' => 'FluentCart',
                     'stripe' => 'Stripe Product',
                 ],
                 'condition' => [
@@ -403,8 +404,26 @@ class Better_Payment_Widget extends Widget_Base {
                                 'value' => 'woocommerce' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
                             ],
                             [
-                                'name' => 'better_payment_form_layout',
-                                'value' => 'layout-6-pro' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
+                                'relation' => 'and',
+                                'terms' => [
+                                    [
+                                        'name' => 'better_payment_form_layout',
+                                        'value' => 'layout-6-pro' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
+                                    ],
+                                    [
+                                        'relation' => 'or',
+                                        'terms' => [
+                                            [
+                                                'name' => 'better_payment_form_layout_6_ecommerce_platform',
+                                                'value' => '',
+                                            ],
+                                            [
+                                                'name' => 'better_payment_form_layout_6_ecommerce_platform',
+                                                'value' => 'woocommerce',
+                                            ],
+                                        ],
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -442,6 +461,22 @@ class Better_Payment_Widget extends Widget_Base {
             ],
         ] );
 
+        $this->add_control(
+            'better_payment_form_layout_6_ecommerce_platform',
+            [
+                'label'      => esc_html__( 'eCommerce Platform', 'better-payment' ),
+                'type'       => Controls_Manager::SELECT,
+                'default'    => 'woocommerce',
+                'options'    => [
+                    'woocommerce' => 'WooCommerce',
+                    'fluentcart' => 'FluentCart',
+                ],
+                'condition' => [
+                    'better_payment_form_layout' => ['layout-6-pro'],
+                ],
+            ]
+        );
+
         $this->add_control('better_payment_form_woocommerce_product_ids', [
             'label' => esc_html__('Select Products', 'better-payment'),
             'type'        => 'better-payment-select2',
@@ -449,10 +484,96 @@ class Better_Payment_Widget extends Widget_Base {
             'multiple' => true,
             'source_name' => 'post_type',
             'source_type' => 'product',
+            'placeholder' => __( ' ', 'better-payment' ),
             'condition' => [
                 'better_payment_form_layout' => ['layout-6-pro'],
+                'better_payment_form_layout_6_ecommerce_platform' => 'woocommerce',
             ],
         ]);
+
+        $this->add_control('better_payment_form_fluentcart_product_ids', [
+            'label' => esc_html__('Select Products', 'better-payment'),
+            'type'        => 'better-payment-select2',
+            'label_block' => true,
+            'multiple' => true,
+            'source_name' => 'post_type',
+            'source_type' => 'fluent-products',
+            'placeholder' => __( ' ', 'better-payment' ),
+            'condition' => [
+                'better_payment_form_layout' => ['layout-6-pro'],
+                'better_payment_form_layout_6_ecommerce_platform' => 'fluentcart',
+            ],
+        ]);
+
+        $this->add_control( 'better_payment_form_payment_source_fluentcart_notice', [
+            'type'            => Controls_Manager::RAW_HTML,
+            'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>FluentCart</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>FluentCart</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=fluentcart&tab=search&type=term') ),
+            'content_classes' => 'better-payment-warning',
+            'conditions' => [
+                'relation' => 'and',
+                'terms' => [
+                    [
+                        'relation' => 'or',
+                        'terms' => [
+                            [
+                                'relation' => 'and',
+                                'terms' => [
+                                    [
+                                        'name' => 'better_payment_form_layout',
+                                        'operator' => '!=',
+                                        'value' => 'layout-4-pro',
+                                    ],
+                                    [
+                                        'name' => 'better_payment_form_layout',
+                                        'operator' => '!=',
+                                        'value' => 'layout-5-pro',
+                                    ],
+                                    [
+                                        'name' => 'better_payment_form_layout',
+                                        'operator' => '!=',
+                                        'value' => 'layout-6-pro',
+                                    ],
+                                    [
+                                        'name' => 'better_payment_form_payment_source',
+                                        'value' => 'fluentcart' . ( ! function_exists('fluentCart') ? '' : 'exist' ),
+                                    ],
+                                ],
+                            ],
+                            [
+                                'relation' => 'and',
+                                'terms' => [
+                                    [
+                                        'name' => 'better_payment_form_layout',
+                                        'value' => 'layout-6-pro',
+                                    ],
+                                    [
+                                        'name' => 'better_payment_form_layout_6_ecommerce_platform',
+                                        'value' => 'fluentcart' . ( ! function_exists('fluentCart') ? '' : 'exist' ),
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ] );
+
+        $this->add_control( "better_payment_form_fluentcart_product_id", [
+            'label'       => __( 'Choose a FluentCart Product', 'better-payment' ),
+            'type'        => 'better-payment-select2',
+            'label_block' => true,
+            'multiple'    => false,
+            'source_name' => 'post_type',
+            'source_type' => 'fluent-products',
+            'conditions' => $this->payment_source_fluentcart_conditions(),
+            'separator' => 'after',
+            'dynamic'     => [
+                'active' => false,
+            ],
+            'condition' => [
+                'better_payment_form_layout' => ['layout-1', 'layout-2', 'layout-3'],
+            ],
+        ] );
 
         $this->add_control(
             'better_payment_form_paypal_enable',
@@ -844,6 +965,35 @@ class Better_Payment_Widget extends Widget_Base {
         return $conditions;
     }
 
+    public function payment_source_fluentcart_conditions(){
+        $conditions = [
+            'relation' => 'and',
+            'terms' => [
+                [
+                    'name' => 'better_payment_form_payment_source',
+                    'value' => 'fluentcart',
+                ],
+                [
+                    'name' => 'better_payment_form_layout',
+                    'operator' => '!=',
+                    'value' => 'layout-4-pro',
+                ],
+                [
+                    'name' => 'better_payment_form_layout',
+                    'operator' => '!=',
+                    'value' => 'layout-5-pro',
+                ],
+                [
+                    'name' => 'better_payment_form_layout',
+                    'operator' => '!=',
+                    'value' => 'layout-6-pro',
+                ],
+            ],
+        ];
+
+        return $conditions;
+    }
+
     public function form_element_settings() {
         $this->start_controls_section(
             'better_payment_form_element',
@@ -952,6 +1102,7 @@ class Better_Payment_Widget extends Widget_Base {
                     'primary_email'     => __( 'Email', 'better-payment' ),
                     'primary_payment_amount'     => __( 'Payment Amount', 'better-payment' ),
                     'primary_coupon_code'     => __( 'Coupon Code', 'better-payment' ),
+                    'primary_reference_number'     => __( 'Reference Number', 'better-payment' ),
                     'primary_none'     => __( 'None', 'better-payment' ),
                 ],
                 'label_block' => false,
@@ -1339,7 +1490,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'return_value' => 'yes',
                 'default'      => 'no',
                 'condition' => [
-                    'better_payment_form_payment_source!' => 'woocommerce',
+                    'better_payment_form_payment_source!' => ['woocommerce', 'fluentcart'],
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
             ]
@@ -1384,7 +1535,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{{ better_payment_amount_val }}}',
                 'condition'   => [
                     'better_payment_show_amount_list' => 'yes',
-                    'better_payment_form_payment_source!' => 'woocommerce',
+                    'better_payment_form_payment_source!' => ['woocommerce', 'fluentcart'],
                     'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
@@ -2504,6 +2655,13 @@ class Better_Payment_Widget extends Widget_Base {
                 'name'     => 'better_payment_form_sidebar_background',
                 'types'    => [ 'classic', 'gradient' ],
                 'selector' => '{{WRAPPER}} .better-payment .dynamic-amount-section, {{WRAPPER}} .better-payment .transaction-details-wrap, {{WRAPPER}} .better-payment .donation-image-wrap, {{WRAPPER}} .better-payment .order-details-wrap',
+                'fields_options' => [
+                    'color' => [
+                        'selectors' => [
+                            '{{SELECTOR}}' => 'background-color: {{VALUE}}; background-image: none;',
+                        ],
+                    ],
+                ],
             ]
         );
 

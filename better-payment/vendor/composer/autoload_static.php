@@ -12,30 +12,30 @@ class ComposerStaticInit64664aa8586b7bc862e85a42a884fd05
     );
 
     public static $prefixLengthsPsr4 = array (
-        'P' => 
+        'P' =>
         array (
             'PriyoMukul\\WPNotice\\' => 20,
         ),
-        'L' => 
+        'L' =>
         array (
             'League\\Csv\\' => 11,
         ),
-        'B' => 
+        'B' =>
         array (
             'Better_Payment\\Lite\\' => 20,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'PriyoMukul\\WPNotice\\' => 
+        'PriyoMukul\\WPNotice\\' =>
         array (
             0 => __DIR__ . '/..' . '/priyomukul/wp-notice/src',
         ),
-        'League\\Csv\\' => 
+        'League\\Csv\\' =>
         array (
             0 => __DIR__ . '/..' . '/league/csv/src',
         ),
-        'Better_Payment\\Lite\\' => 
+        'Better_Payment\\Lite\\' =>
         array (
             0 => __DIR__ . '/../..' . '/includes',
         ),
