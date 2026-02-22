@@ -174,7 +174,20 @@ class Handler extends Controller{
         }
         
         if ( !empty( $_REQUEST[ 'better_payment_error_status' ] ) ) {
-            self::failed_message_template( $settings );
+            // Determine order_id based on payment method
+            $order_id = '';
+            if ( !empty( $_REQUEST['better_payment_stripe_id'] ) ) {
+                $order_id = sanitize_text_field( $_REQUEST['better_payment_stripe_id'] );
+            } elseif ( !empty( $_REQUEST['better_payment_paystack_id'] ) ) {
+                $order_id = sanitize_text_field( $_REQUEST['better_payment_paystack_id'] );
+            } elseif ( !empty( $_REQUEST['better_payment_paypal_id'] ) ) {
+                $order_id = sanitize_text_field( $_REQUEST['better_payment_paypal_id'] );
+            }
+            
+            // Fetch transaction data from database
+            $transaction_data = self::get_failed_transaction_data( $order_id );
+            
+            self::failed_message_template( $settings, $transaction_data );
             $redirection_url_error = ! empty( $settings['better_payment_form_error_page_url']['url'] ) ? esc_url( $settings['better_payment_form_error_page_url']['url'] ) : '';
             
             if( $redirection_url_error ){
@@ -511,6 +524,7 @@ class Handler extends Controller{
         wp_enqueue_script('better-payment-admin-script');
         $image_url = BETTER_PAYMENT_ASSETS . '/img/success.svg';
         $show_icon = 0;
+        $default_icon = 1;
         $helper_obj = new Helper();
 
         $store_name = ( isset( $settings['better_payment_form_payment_source'] ) && $settings['better_payment_form_payment_source'] === 'manual' && !empty( $settings['better_payment_form_title'] ) ) 
@@ -536,9 +550,11 @@ class Handler extends Controller{
         if ( !empty( $settings[ 'better_payment_form_success_message_icon' ][ 'library' ] ) ) {
             if ( $settings[ 'better_payment_form_success_message_icon' ][ 'library' ] == 'svg' ) {
                 $image_url = $settings[ 'better_payment_form_success_message_icon' ][ 'value' ][ 'url' ];
+                $default_icon = 0;
             } else {
                 $show_icon = 1;
                 $image_url = $settings[ 'better_payment_form_success_message_icon' ][ 'value' ];
+                $default_icon = 0;
             }
         }
 
@@ -601,9 +617,31 @@ class Handler extends Controller{
         <section class="bp-thank_page">
             <div class="bp-thank_page-wrapper">
                 <div class="bp-thank_page-logo">
-                    <span class="bp-thank_page-logo_wrapper">
-                        <img src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/success-2.svg' ); ?>" alt="Better Payment logo">
-                    </span>
+                    <?php if( $default_icon ): ?>
+                        <span class="bp-thank_page-logo_wrapper">
+                            <img src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/success-2.svg' ); ?>" alt="Better Payment logo">
+                        </span>
+                    <?php endif; ?>
+                    <?php if( ! $default_icon ): ?>
+                        <?php if( $show_icon ): ?>
+                        <span class="bp-thank_page-custom-logo_wrapper-success">
+                            <?php 
+                                // Use Elementor's Icons_Manager to properly render icons with FontAwesome support
+                                if (!empty($settings['better_payment_form_success_message_icon']['value'])) {
+                                    \Elementor\Icons_Manager::render_icon($settings['better_payment_form_success_message_icon'], ['aria-hidden' => 'true']);
+                                } else {
+                                    // Fallback to default icons
+                                    echo '<i class="' . esc_attr($image_url) . '"></i>';
+                                }
+                            ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if( ! $show_icon ): ?>
+                            <span class="bp-thank_page-logo_wrapper">
+                                <img src="<?php echo esc_url($image_url); ?>" alt="Success logo">
+                            </span>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 <div class="bp-thank_page-text">
                     <h2 class="bp-font_ibm bp-page_header">
@@ -788,34 +826,132 @@ class Handler extends Controller{
      * 
      * @since 0.0.1
      */
-    public static function failed_message_template( $settings = [] ) {
+    public static function failed_message_template( $settings = [], $transaction_data = false ) {
 
         $image_url = BETTER_PAYMENT_ASSETS . '/img/fail.svg';
         $show_icon = 0;
+        $default_icon = 1;
+        $failed_heading = !empty( $settings['better_payment_form_error_message_heading'] ) ? esc_html( $settings['better_payment_form_error_message_heading'] ) : esc_html__( 'Payment Failed!', 'better-payment' );
+        $failed_sub_heading = !empty( $settings['better_payment_form_error_message_sub_heading'] ) ? esc_html( $settings['better_payment_form_error_message_sub_heading'] ) : esc_html__( 'Your payment has failed. Please check your payment details', 'better-payment' );
+        $transaction_id_text = !empty( $settings['better_payment_form_error_message_transaction_id_text'] ) ? esc_html( $settings['better_payment_form_error_message_transaction_id_text'] ) : esc_html__( 'Transaction ID', 'better-payment' );
+        $show_details_button = !empty( $settings['better_payment_form_error_details_button_switch'] ) && $settings['better_payment_form_error_details_button_switch'] == 'yes' ? true : false;
+        $details_button_text = !empty( $settings['better_payment_form_error_details_button_text'] ) ? esc_html( $settings['better_payment_form_error_details_button_text'] ) : esc_html__( 'View Details', 'better-payment' );
+        $better_payment_form_error_details_page_url = !empty( $settings['better_payment_form_error_details_page_url']['url'] ) ? esc_url( $settings['better_payment_form_error_details_page_url']['url'] ) : 'javascript:void(0)';
+        $store_name = ( isset( $settings['better_payment_form_payment_source'] ) && $settings['better_payment_form_payment_source'] === 'manual' && !empty( $settings['better_payment_form_title'] ) ) 
+            ? esc_html($settings['better_payment_form_title']) 
+            : esc_html( get_bloginfo('name') );
+
+        // Get transaction details
+        $transaction_amount = '';
+        $transaction_id = '';
+        $currency_symbol = '';
+        
+        if ( !empty( $transaction_data ) ) {
+            $transaction_amount = !empty( $transaction_data['amount'] ) ? floatval( $transaction_data['amount'] ) : '';
+            $currency_symbol = !empty( $transaction_data['currency_symbol'] ) ? esc_html( $transaction_data['currency_symbol'] ) : '';
+            $transaction_id = !empty( $transaction_data['transaction_id'] ) ? esc_html( $transaction_data['transaction_id'] ) : '';
+        }
 
         if ( !empty( $settings[ 'better_payment_form_error_message_icon' ][ 'library' ] ) ) {
             if ( $settings[ 'better_payment_form_error_message_icon' ][ 'library' ] == 'svg' ) {
                 $image_url = $settings[ 'better_payment_form_error_message_icon' ][ 'value' ][ 'url' ];
+                $default_icon = 0;
             } else {
                 $show_icon = 1;
                 $image_url = $settings[ 'better_payment_form_error_message_icon' ][ 'value' ];
+                $default_icon = 0;
             }
         }
+        // dd($settings[ 'better_payment_form_error_message_icon' ]);
         ?>
-        <div class="pb140 background__grey2">
-            <div class="better-payment-payment__report better-payment-error-report">
-                <div class="report__thumb">
-                    <?php if($show_icon) : ?>
-                        <i class="<?php echo esc_attr($image_url); ?>"></i>
-                    <?php else : ?>    
-                        <img src="<?php echo esc_url($image_url); ?>" alt="Error image">
+        <section class="payment-failed-screen-section">
+            <div class="bp-thank_page-wrapper">
+                <div class="bp-thank_page-logo">
+                    <?php if( $default_icon ): ?>
+                    <span class="bp-thank_page-logo_wrapper">
+                        <svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M40.804 10.7998H16.8039C13.9409 10.8041 11.1964 11.9434 9.17192 13.9678C7.14746 15.9923 6.00822 18.7368 6.00391 21.5998H51.604C51.5997 18.7368 50.4604 15.9923 48.436 13.9678C46.4115 11.9434 43.667 10.8041 40.804 10.7998ZM6.00391 26.3998V35.9998C6.00822 38.8628 7.14746 41.6073 9.17192 43.6318C11.1964 45.6562 13.9409 46.7955 16.8039 46.7998H40.804C43.667 46.7955 46.4115 45.6562 48.436 43.6318C50.4604 41.6073 51.5997 38.8628 51.604 35.9998V26.3998H6.00391ZM24.0039 38.3998H16.8039C16.1674 38.3998 15.557 38.1469 15.1069 37.6968C14.6568 37.2468 14.4039 36.6363 14.4039 35.9998C14.4039 35.3633 14.6568 34.7529 15.1069 34.3028C15.557 33.8527 16.1674 33.5998 16.8039 33.5998H24.0039C24.6404 33.5998 25.2509 33.8527 25.7009 34.3028C26.151 34.7529 26.4039 35.3633 26.4039 35.9998C26.4039 36.6363 26.151 37.2468 25.7009 37.6968C25.2509 38.1469 24.6404 38.3998 24.0039 38.3998Z" fill="#F44336"></path>
+                            <circle cx="45.5" cy="41.5" r="6.5" fill="white"></circle>
+                            <foreignObject x="21.4686" y="17.3701" width="47.2066" height="47.3399">
+                                <div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(6.36px);clip-path:url(#bgblur_0_3595_8284_clip_path);height:100%;width:100%">
+                                </div>
+                            </foreignObject>
+                            <g filter="url(#filter0_d_3595_8284)" data-figma-bg-blur-radius="12.71">
+                                <path d="M55.765 38.782C55.3067 36.6386 54.2191 34.6825 52.6429 33.1664C50.6276 31.1788 47.9133 30.0699 45.0893 30.0804C42.1969 30.0848 39.4243 31.2411 37.3791 33.2958C35.334 35.3505 34.183 38.136 34.1786 41.0417V41.8849C34.2614 43.0459 34.5336 44.1853 34.9843 45.2576C36.0299 47.7766 37.9733 49.8131 40.4344 50.9688C42.8955 52.1245 45.6972 52.3162 48.2915 51.5064C50.8859 50.6967 53.0862 48.9437 54.4622 46.5904C55.8381 44.2371 56.2907 41.4528 55.7314 38.782H55.765ZM46.4154 44.7686L45.0893 43.4364L43.7632 44.7686C43.6072 44.9266 43.4215 45.0521 43.217 45.1377C43.0124 45.2233 42.793 45.2674 42.5714 45.2674C42.3498 45.2674 42.1304 45.2233 41.9259 45.1377C41.7213 45.0521 41.5357 44.9266 41.3796 44.7686C41.2223 44.6118 41.0974 44.4253 41.0122 44.2198C40.927 44.0143 40.8831 43.7939 40.8831 43.5713C40.8831 43.3486 40.927 43.1282 41.0122 42.9227C41.0974 42.7172 41.2223 42.5307 41.3796 42.374L41.8664 41.8849L42.7057 41.0417L41.3796 39.7095C41.0636 39.3919 40.886 38.9613 40.886 38.5122C40.886 38.0631 41.0636 37.6324 41.3796 37.3149C41.6957 36.9973 42.1244 36.8189 42.5714 36.8189C43.0184 36.8189 43.4471 36.9973 43.7632 37.3149L45.0893 38.6471L46.4154 37.3149C46.7314 36.9973 47.1601 36.8189 47.6071 36.8189C48.0541 36.8189 48.4828 36.9973 48.7989 37.3149C49.115 37.6324 49.2926 38.0631 49.2926 38.5122C49.2926 38.9613 49.115 39.3919 48.7989 39.7095L47.4729 41.0417L48.2618 41.8343L48.7989 42.374C48.9563 42.5307 49.0811 42.7172 49.1664 42.9227C49.2516 43.1282 49.2954 43.3486 49.2954 43.5713C49.2954 43.7939 49.2516 44.0143 49.1664 44.2198C49.0811 44.4253 48.9563 44.6118 48.7989 44.7686C48.6429 44.9266 48.4572 45.0521 48.2527 45.1377C48.0481 45.2233 47.8287 45.2674 47.6071 45.2674C47.3855 45.2674 47.1661 45.2233 46.9616 45.1377C46.7571 45.0521 46.5714 44.9266 46.4154 44.7686Z" fill="#F44336" fill-opacity="0.5" shape-rendering="crispEdges"></path>
+                            </g>
+                            <defs>
+                                <filter id="filter0_d_3595_8284" x="21.4686" y="17.3701" width="47.2066" height="47.3399" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                    <feFlood flood-opacity="0" result="BackgroundImageFix"></feFlood>
+                                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"></feColorMatrix>
+                                    <feOffset dx="-4"></feOffset>
+                                    <feGaussianBlur stdDeviation="2"></feGaussianBlur>
+                                    <feComposite in2="hardAlpha" operator="out"></feComposite>
+                                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0"></feColorMatrix>
+                                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_3595_8284"></feBlend>
+                                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_3595_8284" result="shape"></feBlend>
+                                </filter>
+                                <clipPath id="bgblur_0_3595_8284_clip_path" transform="translate(-21.4686 -17.3701)">
+                                    <path d="M55.765 38.782C55.3067 36.6386 54.2191 34.6825 52.6429 33.1664C50.6276 31.1788 47.9133 30.0699 45.0893 30.0804C42.1969 30.0848 39.4243 31.2411 37.3791 33.2958C35.334 35.3505 34.183 38.136 34.1786 41.0417V41.8849C34.2614 43.0459 34.5336 44.1853 34.9843 45.2576C36.0299 47.7766 37.9733 49.8131 40.4344 50.9688C42.8955 52.1245 45.6972 52.3162 48.2915 51.5064C50.8859 50.6967 53.0862 48.9437 54.4622 46.5904C55.8381 44.2371 56.2907 41.4528 55.7314 38.782H55.765ZM46.4154 44.7686L45.0893 43.4364L43.7632 44.7686C43.6072 44.9266 43.4215 45.0521 43.217 45.1377C43.0124 45.2233 42.793 45.2674 42.5714 45.2674C42.3498 45.2674 42.1304 45.2233 41.9259 45.1377C41.7213 45.0521 41.5357 44.9266 41.3796 44.7686C41.2223 44.6118 41.0974 44.4253 41.0122 44.2198C40.927 44.0143 40.8831 43.7939 40.8831 43.5713C40.8831 43.3486 40.927 43.1282 41.0122 42.9227C41.0974 42.7172 41.2223 42.5307 41.3796 42.374L41.8664 41.8849L42.7057 41.0417L41.3796 39.7095C41.0636 39.3919 40.886 38.9613 40.886 38.5122C40.886 38.0631 41.0636 37.6324 41.3796 37.3149C41.6957 36.9973 42.1244 36.8189 42.5714 36.8189C43.0184 36.8189 43.4471 36.9973 43.7632 37.3149L45.0893 38.6471L46.4154 37.3149C46.7314 36.9973 47.1601 36.8189 47.6071 36.8189C48.0541 36.8189 48.4828 36.9973 48.7989 37.3149C49.115 37.6324 49.2926 38.0631 49.2926 38.5122C49.2926 38.9613 49.115 39.3919 48.7989 39.7095L47.4729 41.0417L48.2618 41.8343L48.7989 42.374C48.9563 42.5307 49.0811 42.7172 49.1664 42.9227C49.2516 43.1282 49.2954 43.3486 49.2954 43.5713C49.2954 43.7939 49.2516 44.0143 49.1664 44.2198C49.0811 44.4253 48.9563 44.6118 48.7989 44.7686C48.6429 44.9266 48.4572 45.0521 48.2527 45.1377C48.0481 45.2233 47.8287 45.2674 47.6071 45.2674C47.3855 45.2674 47.1661 45.2233 46.9616 45.1377C46.7571 45.0521 46.5714 44.9266 46.4154 44.7686Z"></path>
+                                </clipPath>
+                            </defs>
+                        </svg>
+                    </span>
+                    <?php else: ?>
+                        <?php if( $show_icon ): ?>
+                        <span class="bp-thank_page-custom-logo_wrapper-error">
+                            <?php 
+                                // Use Elementor's Icons_Manager to properly render icons with FontAwesome support
+                                if (!empty($settings['better_payment_form_error_message_icon']['value'])) {
+                                    \Elementor\Icons_Manager::render_icon($settings['better_payment_form_error_message_icon'], ['aria-hidden' => 'true']);
+                                } else {
+                                    // Fallback to default icons
+                                    echo '<i class="' . esc_attr($image_url) . '"></i>';
+                                }
+                            ?>
+                        </span>
+                        <?php else: ?>
+                            <span class="bp-thank_page-logo_wrapper">
+                                <img src="<?php echo esc_url($image_url); ?>" alt="Error logo">
+                            </span>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
-                <div class="report__content">
-                    <h3 class="transaction__failed"><?php echo ( isset( $settings['better_payment_form_error_message_heading'] ) ) ? esc_html__( $settings['better_payment_form_error_message_heading'], 'better-payment' ) : esc_html__('Payment Failed', 'better-payment'); ?></h3>
+                <div class="bp-thank_page-text">
+                    <h2 class="bp-font_ibm bp-page_header"><?php echo wp_kses_post( $failed_heading ); ?></h2>
+                    <p class="bp-font_ibm bp-reason_for-text">Payment of <?php echo $currency_symbol . $transaction_amount; ?> to <?php echo $store_name; ?> failed.</p>
+                    <p class="bp-font_ibm bp-payment_info"><?php echo wp_kses_post( $failed_sub_heading ); ?></p>
+
+                    <div class="bp-flex bp-transaction_info-wrapper">
+                        <p class="bp-flex bp-font_ibm  bp-transaction_info"> <span>
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip0_2914_6421)">
+                                    <path d="M12.2002 12.825C11.8821 12.825 11.6242 13.0829 11.6242 13.401C11.6242 13.7191 11.8821 13.977 12.2002 13.977V12.825ZM17.0002 13.401L17.4075 13.8083C17.5156 13.7002 17.5762 13.5537 17.5762 13.401C17.5762 13.2482 17.5156 13.1017 17.4075 12.9937L17.0002 13.401ZM14.993 14.5937C14.768 14.8186 14.768 15.1833 14.993 15.4083C15.2179 15.6332 15.5826 15.6332 15.8075 15.4083L14.993 14.5937ZM15.8075 11.3937C15.5826 11.1687 15.2179 11.1687 14.993 11.3937C14.768 11.6186 14.768 11.9833 14.993 12.2083L15.8075 11.3937ZM10.6002 16.377C10.9184 16.377 11.1762 16.1191 11.1762 15.801C11.1762 15.4829 10.9184 15.225 10.6002 15.225V16.377ZM16.4242 9.40098C16.4242 9.71909 16.6821 9.97698 17.0002 9.97698C17.3184 9.97698 17.5762 9.71909 17.5762 9.40098H16.4242ZM7.40024 13.177C7.71836 13.177 7.97624 12.9191 7.97624 12.601C7.97624 12.2829 7.71836 12.025 7.40024 12.025V13.177ZM4.20024 12.025C3.88213 12.025 3.62424 12.2829 3.62424 12.601C3.62424 12.9191 3.88213 13.177 4.20024 13.177V12.025ZM9.80024 13.177C10.1184 13.177 10.3762 12.9191 10.3762 12.601C10.3762 12.2829 10.1184 12.025 9.80024 12.025V13.177ZM9.40024 12.025C9.08213 12.025 8.82424 12.2829 8.82424 12.601C8.82424 12.9191 9.08213 13.177 9.40024 13.177V12.025ZM1.00024 7.22498C0.682128 7.22498 0.424244 7.48286 0.424244 7.80098C0.424244 8.11909 0.682128 8.37698 1.00024 8.37698V7.22498ZM17.0002 8.37698C17.3184 8.37698 17.5762 8.11909 17.5762 7.80098C17.5762 7.48286 17.3184 7.22498 17.0002 7.22498V8.37698ZM12.2002 13.977H17.0002V12.825H12.2002V13.977ZM16.593 12.9937L14.993 14.5937L15.8075 15.4083L17.4075 13.8083L16.593 12.9937ZM17.4075 12.9937L15.8075 11.3937L14.993 12.2083L16.593 13.8083L17.4075 12.9937ZM7.40024 3.57698H10.6002V2.42498H7.40024V3.57698ZM10.6002 15.225H7.40024V16.377H10.6002V15.225ZM7.40024 15.225C5.87547 15.225 4.78983 15.2238 3.96572 15.113C3.15819 15.0044 2.68857 14.8002 2.3448 14.4564L1.53021 15.271C2.1237 15.8645 2.87695 16.1289 3.81222 16.2547C4.73093 16.3782 5.90803 16.377 7.40024 16.377V15.225ZM0.424244 9.40098C0.424244 10.8932 0.423021 12.0703 0.546538 12.989C0.672282 13.9243 0.936721 14.6775 1.53021 15.271L2.3448 14.4564C2.00103 14.1127 1.79684 13.643 1.68827 12.8355C1.57747 12.0114 1.57624 10.9258 1.57624 9.40098H0.424244ZM10.6002 3.57698C12.125 3.57698 13.2107 3.5782 14.0348 3.689C14.8423 3.79757 15.3119 4.00176 15.6557 4.34553L16.4703 3.53094C15.8768 2.93745 15.1235 2.67301 14.1883 2.54727C13.2696 2.42375 12.0925 2.42498 10.6002 2.42498V3.57698ZM17.5762 9.40098C17.5762 7.90876 17.5775 6.73166 17.4539 5.81296C17.3282 4.87768 17.0638 4.12443 16.4703 3.53094L15.6557 4.34553C15.9995 4.6893 16.2037 5.15892 16.3122 5.96646C16.423 6.79056 16.4242 7.8762 16.4242 9.40098H17.5762ZM7.40024 2.42498C5.90803 2.42498 4.73093 2.42375 3.81222 2.54727C2.87695 2.67301 2.1237 2.93745 1.53021 3.53094L2.3448 4.34553C2.68857 4.00176 3.15819 3.79757 3.96572 3.689C4.78983 3.5782 5.87547 3.57698 7.40024 3.57698V2.42498ZM1.57624 9.40098C1.57624 7.8762 1.57747 6.79056 1.68827 5.96646C1.79684 5.15892 2.00103 4.6893 2.3448 4.34553L1.53021 3.53094C0.936721 4.12443 0.672282 4.87768 0.546538 5.81296C0.423021 6.73166 0.424244 7.90876 0.424244 9.40098H1.57624ZM7.40024 12.025H4.20024V13.177H7.40024V12.025ZM9.80024 12.025H9.40024V13.177H9.80024V12.025ZM1.00024 8.37698H17.0002V7.22498H1.00024V8.37698Z" fill="#8F9AB0"></path>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_2914_6421">
+                                        <rect width="18" height="18" fill="white"></rect>
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                            </span>
+                            <span><?php echo wp_kses_post( $transaction_id_text ); ?>:</span>
+                            <span class="bp-bolt bp-transaction_id"><?php echo $transaction_id; ?></span>
+                        </p>
+
+                        <button class="bp-transaction_data-copy_btn ">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.0002 15.601C16.3257 15.601 17.4002 14.5265 17.4002 13.201V8.40098C17.4002 5.38399 17.4002 3.87549 16.463 2.93823C15.5257 2.00098 14.0172 2.00098 11.0002 2.00098H7.80024C6.47476 2.00098 5.40024 3.07549 5.40024 4.40098M10.2002 18.001H7.80024C5.5375 18.001 4.40613 18.001 3.70319 17.298C3.00024 16.5951 3.00024 15.4637 3.00024 13.201V9.20098C3.00024 6.93823 3.00024 5.80686 3.70319 5.10392C4.40613 4.40098 5.5375 4.40098 7.80024 4.40098H10.2002C12.463 4.40098 13.5944 4.40098 14.2973 5.10392C15.0002 5.80686 15.0002 6.93824 15.0002 9.20098V13.201C15.0002 15.4637 15.0002 16.5951 14.2973 17.298C13.5944 18.001 12.463 18.001 10.2002 18.001Z" stroke-width="1.152"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+                <?php if( $show_details_button ): ?>
+                <div class="bp-btn_wrapper">
+                    <a href="<?php echo $better_payment_form_error_details_page_url; ?>" target="_blank" class="bp-font_ibm bp-details_btn"><?php echo $details_button_text; ?></a>
+                </div>
+                <?php endif; ?>
             </div>
-        </div>
+        </section>
         <?php
     }
 
@@ -845,6 +981,40 @@ class Handler extends Controller{
             }
         </script>
         <?php
+    }
+
+    /**
+     * Get failed transaction data
+     * 
+     * @since 1.0.0
+     */
+    public static function get_failed_transaction_data( $order_id = '' ) {
+        if ( empty( $order_id ) ) {
+            return false;
+        }
+        
+        global $wpdb;
+        $table = "{$wpdb->prefix}better_payment";
+        
+        $result = $wpdb->get_row(
+            $wpdb->prepare( 
+                "SELECT amount, currency, transaction_id, order_id, source FROM $table WHERE order_id=%s LIMIT 1", 
+                $order_id 
+            )
+        );
+        
+        if ( !empty( $result ) ) {
+            $helper_obj = new Helper();
+            return [
+                'amount' => floatval( $result->amount ),
+                'currency' => sanitize_text_field( $result->currency ),
+                'currency_symbol' => $helper_obj->get_currency_symbol( $result->currency ),
+                'transaction_id' => !empty( $result->transaction_id ) ? sanitize_text_field( $result->transaction_id ) : 'N/A',
+                'method' => sanitize_text_field( $result->source ),
+            ];
+        }
+        
+        return false;
     }
 
     /**

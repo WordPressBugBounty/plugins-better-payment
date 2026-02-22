@@ -188,6 +188,18 @@
   font-size: 1.25rem;
 }
 
+/* FontAwesome icon styling to match BP custom icons */
+.better-payment .control.has-icons-left .icon svg,
+.better-payment .control.has-icons-right .icon svg {
+  width: 20px;
+}
+
+.better-payment .control.has-icons-left .icon svg path,
+.better-payment .control.has-icons-right .icon svg path {
+  fill: #b0b7d6;
+  stroke: #b0b7d6;
+}
+
 /* Helper Classes */
 .better-payment .columns.is-mobile {
   display: flex;
@@ -3859,4 +3871,28 @@
 
 .better-payment-dynamic-value-info {
   word-break: break-word;
+}
+
+span.bp-thank_page-custom-logo_wrapper-error svg {
+  width: 70px;
+  height: 70px;
+  background: rgba(238, 96, 89, 0.1019607843);
+  padding: 10px;
+  border-radius: 16px;
+}
+span.bp-thank_page-custom-logo_wrapper-error svg path {
+  stroke: #F44336;
+  fill: #F44336;
+}
+
+.bp-thank_page span.bp-thank_page-custom-logo_wrapper-success svg {
+  width: 70px;
+  height: 70px;
+  background: rgba(107, 89, 238, 0.1019607843);
+  padding: 10px;
+  border-radius: 16px;
+}
+.bp-thank_page span.bp-thank_page-custom-logo_wrapper-success svg path {
+  stroke: #6B59EE;
+  fill: #6B59EE;
 }

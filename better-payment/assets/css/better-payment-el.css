@@ -774,6 +774,7 @@ button:not(:disabled) {
   background: rgba(107, 89, 238, 0.1019607843);
   border-radius: 16px;
   padding: 11px;
+  line-height: 0;
 }
 
 .bp-thank_page-text {
@@ -800,6 +801,7 @@ button:not(:disabled) {
   font-size: 16px;
   font-weight: 300;
   margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .bp-transaction_info-wrapper {
@@ -1204,4 +1206,25 @@ button:not(:disabled) {
 
 .line-height-0 {
   line-height: 0;
+}
+
+.payment-failed-screen-section {
+  padding: 20px;
+}
+
+.payment-failed-screen-section .bp-thank_page-logo_wrapper {
+  background: rgba(238, 96, 89, 0.1019607843);
+  line-height: 0;
+}
+
+.payment-failed-screen-section .bp-thank_page-text {
+  border: none;
+}
+
+.payment-failed-screen-section .bp-btn_wrapper {
+  text-align: center;
+  display: block;
+}
+.payment-failed-screen-section .bp-btn_wrapper a {
+  display: inline-block;
 }

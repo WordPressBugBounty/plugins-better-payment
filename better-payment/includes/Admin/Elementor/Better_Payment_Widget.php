@@ -2608,7 +2608,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'label'       => __( 'Heading Message Text', 'better-payment' ),
                 'type'        => Controls_Manager::TEXT,
-                'default'     => __( 'Payment Failed', 'better-payment' ),
+                'default'     => __( 'Payment Failed!', 'better-payment' ),
                 'dynamic'     => [
                     'active' => true,
                 ],
@@ -2618,6 +2618,81 @@ class Better_Payment_Widget extends Widget_Base {
                 ],
             ]
         );
+
+        $this->add_control(
+            'better_payment_form_error_message_sub_heading',
+            [
+                'label'       => __( 'Sub Heading Message Text', 'better-payment' ),
+                'type'        => Controls_Manager::TEXTAREA,
+                'default'     => __( 'Your payment has failed. Please check your payment details', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_error_message_transaction_id_text',
+            [
+                'label'       => __( 'Transaction ID Text', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'Transaction ID', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_error_details_button_switch',
+            [
+                'label'        => __( 'Show Details Button', 'better-payment' ),
+                'type'         => Controls_Manager::SWITCHER,
+                'label_on'     => __( 'Show', 'better-payment' ),
+                'label_off'    => __( 'Hide', 'better-payment' ),
+                'return_value' => 'yes',
+                'default'      => 'no',
+                'separator'    => 'before',
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_form_error_details_button_text',
+            [
+                'label'       => __( 'View Details', 'better-payment' ),
+                'type'        => Controls_Manager::TEXT,
+                'default'     => __( 'View Details', 'better-payment' ),
+                'dynamic'     => [
+                    'active' => true,
+                ],
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition' => [
+                    'better_payment_form_error_details_button_switch' => 'yes',
+                ],
+            ]
+        );
+
+        $this->add_control( 'better_payment_form_error_details_page_url', [
+			'type'          => Controls_Manager::URL,
+			'label'         => __( 'User Dashboard URL', 'better-payment' ),
+			'show_external' => false,
+			'placeholder'   => __( 'eg. https://example.com/custom-page/', 'better-payment' ),
+            'condition' => [
+                'better_payment_form_error_details_button_switch' => 'yes',
+            ],
+            'description'   => __( 'Please enter the page url where <strong>User Dashboard</strong> widget is used.', 'better-payment' ),
+		] );
 
         $this->add_control( 'better_payment_form_error_page_url', [
 			'type'          => Controls_Manager::URL,

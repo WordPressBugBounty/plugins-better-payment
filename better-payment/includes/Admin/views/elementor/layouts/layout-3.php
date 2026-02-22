@@ -114,7 +114,15 @@
                                                                 <?php if ($layout_show_image) : ?>
                                                                     <img src="<?php echo esc_url($render_attribute_icon); ?>" alt="Icon" width="20">
                                                                 <?php elseif( ! $show_payment_default_symbol ) : ?>
-                                                                    <i class="<?php echo esc_attr($render_attribute_icon); ?>"></i>
+                                                                    <?php 
+                                                                    // Use Elementor's Icons_Manager to properly render icons with FontAwesome support
+                                                                    if (!empty($item['better_payment_field_icon']['value'])) {
+                                                                        \Elementor\Icons_Manager::render_icon($item['better_payment_field_icon'], ['aria-hidden' => 'true']);
+                                                                    } else {
+                                                                        // Fallback to default icons
+                                                                        echo '<i class="' . esc_attr($render_attribute_icon) . '"></i>';
+                                                                    }
+                                                                    ?>
                                                                 <?php endif; ?>
                                                             </span>
                                                         </div>

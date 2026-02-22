@@ -233,6 +233,29 @@ class Admin extends Controller{
 			]
 		);
 
+		/**
+		 * February Offer Notice
+		 */
+		$purchase_url = '//betterpayment.co/feb2026-admin-notice';
+		$february_notice_message = "<p>Streamline transactions with fast, optimized payment forms for Elementor sites - Now <strong>Flat 20% OFF! 🎁</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To PRO</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I’ll Grab It Later</button></div>";
+		
+		$friday_notice = [
+			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
+			'html'      => $february_notice_message,
+		];
+
+        $notices->add(
+			'bp_february_notice',
+			$friday_notice,
+			[
+				'start'       => strtotime( '12:00:00am 10th February, 2026' ),
+				'expire'      => strtotime( '11:59:59pm 7th March, 2026' ),
+				'refresh'     => BETTER_PAYMENT_VERSION,
+				'dismissible' => true,
+				'screens' 	  => [ 'dashboard' ],
+			]
+		);
+
 	    self::$cache_bank->create_account( $notices );
 	    self::$cache_bank->calculate_deposits( $notices );
     }

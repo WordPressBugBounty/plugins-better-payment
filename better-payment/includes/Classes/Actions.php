@@ -109,7 +109,7 @@ class Actions {
             'currency_code' => $el_settings_currency,
             'rm'            => '2',
             'return'        => esc_url_raw( $_POST[ 'return' ] ),
-            'cancel_return' => esc_url_raw( $_POST[ 'cancel_return' ] ),
+            'cancel_return' => add_query_arg( 'better_payment_paypal_id', $order_id, esc_url_raw( $_POST[ 'cancel_return' ] ) ),
             'item_number'   => $order_id,
             'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__('Better Payment', 'better-payment'),
             'amount'        => $primary_payment_amount,
@@ -524,6 +524,13 @@ class Actions {
                 'better_payment_paystack_id'     => $order_id,
                 'better_payment_widget_id'     => $widget_id
             ], $redirection_url_success ),
+            'metadata' => [
+                'cancel_action' => add_query_arg( [
+                    'better_payment_error_status' => 'error',
+                    'better_payment_paystack_id'  => $order_id,
+                    'better_payment_widget_id'    => $widget_id
+                ], $redirection_url_error )
+            ]
         ];
 
         $product_ids = [
