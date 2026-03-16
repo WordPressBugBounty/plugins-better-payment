@@ -5,7 +5,7 @@ Tags: donation, fundraising, recurring donations, payments, stripe paypal paysta
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.3
+Stable tag: 2.0.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -169,6 +169,10 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 2.0.4 - 16/03/2026 =
+- Fixed: Sidebar text style issue
+- Few minor bug fixes & improvements
 
 = 2.0.3 - 22/02/2026 =
 - Added: New controls and improved UI for the Payment Form Error Page

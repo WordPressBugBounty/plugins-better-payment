@@ -124,6 +124,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'options'    => [
                     'one-time' => 'One Time',
                     'recurring' => 'Recurring',
+                    'mixed'     => 'One Time + Recurring (Both)',
                     'split-payment' => 'Split Payment',
                 ],
                 'condition'   => [
@@ -297,6 +298,163 @@ class Better_Payment_Widget extends Widget_Base {
                 'condition'   => [
                     'better_payment_form_payment_type' => 'recurring',
                     'better_payment_form_layout' => 'layout-5-pro',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_one_time_recurring_product_id',
+            [
+                'label' => esc_html__( 'Product ID', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => 'prod_G0FvDp6vZvdwRZ',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+                'condition'  => [
+                    'better_payment_form_payment_type' => 'mixed',
+                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro'],
+                ]
+            ]
+        );
+        
+        $repeater_mixed_payment = new Repeater();
+
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_interval_type',
+            [
+                'label'   => esc_html__( 'Interval Type', 'better-payment' ),
+                'type'    => Controls_Manager::SELECT,
+                'default' => 'day',
+                'options' => [
+                    'day'   => 'Day',
+                    'week'  => 'Week',
+                    'month' => 'Month',
+                    'year'  => 'Year',
+                ],
+            ]
+        );
+        
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_name',
+            [
+                'label' => esc_html__( 'Interval Name', 'better-payment' ),
+                'type'  => Controls_Manager::TEXT,
+                'placeholder' => 'Interval Name',
+                'label_block' => true,
+                'ai' => [
+                    'active' => false,
+                ],
+            ]
+        );
+
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_interval_day',
+            [
+                'label' => esc_html__( 'Interval', 'better-payment' ),
+                'type'  => Controls_Manager::NUMBER,
+                'min'   => 1,
+                'max'   => 1095,
+                'condition'   => [
+                    'better_payment_mixed_interval_type' => ['day'],
+                ],
+            ]
+        );
+
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_interval_month',
+            [
+                'label' => esc_html__( 'Interval', 'better-payment' ),
+                'type'  => Controls_Manager::NUMBER,
+                'min'   => 1,
+                'max'   => 36,
+                'condition'   => [
+                    'better_payment_mixed_interval_type' => ['month'],
+                ],
+            ]
+        );
+
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_interval_week',
+            [
+                'label' => esc_html__( 'Interval', 'better-payment' ),
+                'type'  => Controls_Manager::NUMBER,
+                'min'   => 1,
+                'max'   => 156,
+                'condition'   => [
+                    'better_payment_mixed_interval_type' => ['week'],
+                ],
+            ]
+        );
+
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_interval_year',
+            [
+                'label' => esc_html__( 'Interval', 'better-payment' ),
+                'type'  => Controls_Manager::NUMBER,
+                'min'   => 1,
+                'max'   => 3,
+                'condition'   => [
+                    'better_payment_mixed_interval_type' => ['year'],
+                ],
+            ]
+        );
+
+        $repeater_mixed_payment->add_control(
+            'better_payment_mixed_installment_options_note1',
+            [
+                'type'        => Controls_Manager::RAW_HTML,
+                'raw' => sprintf( 
+                    __( '<p>Maximum interval: 3 years or equivalent.</p>', 'better-payment' ),  
+                ),
+                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
+            ]
+        );
+
+        $this->add_control(
+            'better_payment_mixed_installment_options',
+            [
+                'label'       => esc_html__( 'Mixed Intervals', 'better-payment' ),
+                'type'        => Controls_Manager::REPEATER,
+                'separator'   => 'after',
+                'default'     => [
+                    [
+                        'better_payment_mixed_name' => 'Monthly',
+                        'better_payment_mixed_interval_month' => 1,
+                        'better_payment_mixed_interval_type' => 'month',
+                    ],
+                    [
+                        'better_payment_mixed_name' => 'Daily',
+                        'better_payment_mixed_interval_day' => 1,
+                        'better_payment_mixed_interval_type' => 'day',
+                    ],
+                    [
+                        'better_payment_mixed_name' => 'Weekly',
+                        'better_payment_mixed_interval_week' => 1,
+                        'better_payment_mixed_interval_type' => 'week',
+                    ],
+                    [
+                        'better_payment_mixed_name' => 'Yearly',
+                        'better_payment_mixed_interval_year' => 1,
+                        'better_payment_mixed_interval_type' => 'year',
+                    ],
+                    [
+                        'better_payment_mixed_name' => 'Every 3 Months',
+                        'better_payment_mixed_interval_month' => 3,
+                        'better_payment_mixed_interval_type' => 'month',
+                    ],
+                    [
+                        'better_payment_mixed_name' => 'Every 6 Months',
+                        'better_payment_mixed_interval_month' => 6,
+                        'better_payment_mixed_interval_type' => 'month',
+                    ],
+                ],
+                'fields'      => $repeater_mixed_payment->get_controls(),
+                'title_field' => '<i class="{{ better_payment_mixed_name }}" aria-hidden="true"></i> {{{ better_payment_mixed_name }}}',
+                'condition'   => [
+                    'better_payment_form_payment_type' => 'mixed',
+                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro'],
                 ],
             ]
         );
@@ -3124,7 +3282,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'type'      => Controls_Manager::HEADING,
                 'separator' => 'before',
                 'condition' => [
-                    'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
+                    'better_payment_form_layout!' => ['layout-1', 'layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
             ],
         );

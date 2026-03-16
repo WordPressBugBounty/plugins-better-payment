@@ -307,6 +307,34 @@ class Actions {
 
         $is_payment_recurring = ! empty( $_POST['fields']['better_payment_recurring_mode'] ) && 'subscription' === sanitize_text_field( $_POST['fields']['better_payment_recurring_mode'] );
         $recurring_price_id = ! empty( $_POST['fields']['better_payment_recurring_price_id'] ) ? sanitize_text_field( $_POST['fields']['better_payment_recurring_price_id'] ) : '';
+        $mixed_payment_selection_data = $this->get_mixed_payment_selection_data( $el_settings, $_POST['fields'] );
+        
+        if ( is_wp_error( $mixed_payment_selection_data ) ) {
+            wp_send_json_error( $mixed_payment_selection_data->get_error_message() );
+        }
+
+        $is_payment_mixed_recurring = ! empty( $mixed_payment_selection_data['is_mixed_recurring'] );
+        $mixed_dynamic_recurring_price = [];
+
+        if ( $is_payment_mixed_recurring ) {
+            $mixed_dynamic_recurring_price = $this->create_mixed_recurring_stripe_price(
+                $header_info,
+                $amount,
+                $el_settings_currency,
+                $order_id,
+                $widget_id,
+                $mixed_payment_selection_data,
+                $el_settings
+            );
+
+            if ( is_wp_error( $mixed_dynamic_recurring_price ) ) {
+                wp_send_json_error( $mixed_dynamic_recurring_price->get_error_message() );
+            }
+
+            // Reuse existing recurring checkout flow with a runtime-generated recurring Stripe Price.
+            $is_payment_recurring = true;
+            $recurring_price_id = ! empty( $mixed_dynamic_recurring_price['price_id'] ) ? sanitize_text_field( $mixed_dynamic_recurring_price['price_id'] ) : '';
+        }
 
         $product_ids = [
             'woo_product_ids' => $woo_product_ids,
@@ -333,6 +361,19 @@ class Actions {
         ];
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
+
+        if ( ! empty( $mixed_payment_selection_data['is_payment_mixed'] ) ) {
+            $better_form_fields['is_payment_mixed'] = 1;
+            $better_form_fields['mixed_payment_selected_type'] = ! empty( $mixed_payment_selection_data['selected_type'] ) ? sanitize_text_field( $mixed_payment_selection_data['selected_type'] ) : 'one-time';
+        }
+
+        if ( $is_payment_mixed_recurring ) {
+            $better_form_fields['mixed_payment_selected_type'] = 'recurring';
+            $better_form_fields['mixed_payment_recurring_interval_count'] = ! empty( $mixed_payment_selection_data['interval_count'] ) ? absint( $mixed_payment_selection_data['interval_count'] ) : 1;
+            $better_form_fields['mixed_payment_recurring_interval'] = ! empty( $mixed_payment_selection_data['interval'] ) ? sanitize_text_field( $mixed_payment_selection_data['interval'] ) : 'month';
+            $better_form_fields['mixed_payment_dynamic_price_id'] = ! empty( $mixed_dynamic_recurring_price['price_id'] ) ? sanitize_text_field( $mixed_dynamic_recurring_price['price_id'] ) : '';
+            $better_form_fields['mixed_payment_dynamic_product_id'] = ! empty( $mixed_dynamic_recurring_price['product_id'] ) ? sanitize_text_field( $mixed_dynamic_recurring_price['product_id'] ) : '';
+        }
 
         if ( !empty( $better_form_fields['primary_first_name'] ) ) {
             $request[ 'customer_name' ] = $better_form_fields['primary_first_name'];
@@ -435,6 +476,191 @@ class Actions {
 
             wp_send_json_error( $error_message );
         }
+    }
+
+    /**
+     * Parse mixed payment selection payload.
+     *
+     * @param array $el_settings
+     * @param array $fields
+     *
+     * @return array|\WP_Error
+     */
+    private function get_mixed_payment_selection_data( $el_settings = [], $fields = [] ) {
+        $selection_data = [
+            'is_payment_mixed' => 0,
+            'selected_type' => 'one-time',
+            'is_mixed_recurring' => 0,
+            'interval_count' => 1,
+            'interval' => 'month',
+        ];
+
+        $is_payment_mixed = ! empty( $el_settings['better_payment_form_payment_type'] ) && 'mixed' === sanitize_text_field( $el_settings['better_payment_form_payment_type'] );
+        if ( ! $is_payment_mixed ) {
+            return $selection_data;
+        }
+
+        $selection_data['is_payment_mixed'] = 1;
+        $selected_type = ! empty( $fields['better_payment_mixed_selected_type'] ) ? sanitize_text_field( $fields['better_payment_mixed_selected_type'] ) : '';
+        if ( ! empty( $fields['payment_type'] ) && in_array( $fields['payment_type'], [ 'one-time', 'recurring' ], true ) ) {
+            $selected_type = sanitize_text_field( $fields['payment_type'] );
+        }
+
+        $selected_type = in_array( $selected_type, [ 'one-time', 'recurring' ], true ) ? $selected_type : 'one-time';
+        $selection_data['selected_type'] = $selected_type;
+        $selection_data['is_mixed_recurring'] = 'recurring' === $selected_type ? 1 : 0;
+
+        if ( ! $selection_data['is_mixed_recurring'] ) {
+            return $selection_data;
+        }
+
+        $allowed_intervals = [ 'day', 'week', 'month', 'year' ];
+        $mixed_interval_value = ! empty( $fields['better_payment_mixed_interval'] ) ? sanitize_text_field( $fields['better_payment_mixed_interval'] ) : '';
+
+        if ( empty( $mixed_interval_value ) ) {
+            $interval_type = ! empty( $fields['better_payment_mixed_interval_type'] ) ? sanitize_key( $fields['better_payment_mixed_interval_type'] ) : '';
+
+            if ( empty( $interval_type ) ) {
+                if ( ! empty( $fields['better_payment_mixed_interval_day'] ) ) {
+                    $interval_type = 'day';
+                } elseif ( ! empty( $fields['better_payment_mixed_interval_week'] ) ) {
+                    $interval_type = 'week';
+                } elseif ( ! empty( $fields['better_payment_mixed_interval_month'] ) ) {
+                    $interval_type = 'month';
+                } elseif ( ! empty( $fields['better_payment_mixed_interval_year'] ) ) {
+                    $interval_type = 'year';
+                }
+            }
+
+            $interval_type = in_array( $interval_type, $allowed_intervals, true ) ? $interval_type : '';
+            $interval_count = 0;
+
+            switch ( $interval_type ) {
+                case 'day':
+                    $interval_count = ! empty( $fields['better_payment_mixed_interval_day'] ) ? absint( $fields['better_payment_mixed_interval_day'] ) : 0;
+                    break;
+                case 'week':
+                    $interval_count = ! empty( $fields['better_payment_mixed_interval_week'] ) ? absint( $fields['better_payment_mixed_interval_week'] ) : 0;
+                    break;
+                case 'year':
+                    $interval_count = ! empty( $fields['better_payment_mixed_interval_year'] ) ? absint( $fields['better_payment_mixed_interval_year'] ) : 0;
+                    break;
+                case 'month':
+                default:
+                    $interval_count = ! empty( $fields['better_payment_mixed_interval_month'] ) ? absint( $fields['better_payment_mixed_interval_month'] ) : 0;
+                    break;
+            }
+
+            if ( ! empty( $interval_count ) && ! empty( $interval_type ) ) {
+                $mixed_interval_value = "{$interval_count}|{$interval_type}";
+            }
+        }
+
+        if ( empty( $mixed_interval_value ) || false === strpos( $mixed_interval_value, '|' ) ) {
+            return new \WP_Error( 'mixed_interval_missing', __( 'Recurring time period is required for mixed recurring payment.', 'better-payment' ) );
+        }
+
+        list( $interval_count_raw, $interval_raw ) = array_pad( explode( '|', $mixed_interval_value, 2 ), 2, '' );
+        $interval_count = absint( $interval_count_raw );
+        $interval = sanitize_key( $interval_raw );
+
+        if ( empty( $interval_count ) || ! in_array( $interval, $allowed_intervals, true ) ) {
+            return new \WP_Error( 'mixed_interval_invalid', __( 'Invalid recurring time period selected for mixed payment.', 'better-payment' ) );
+        }
+
+        $selection_data['interval_count'] = $interval_count;
+        $selection_data['interval'] = $interval;
+
+        return $selection_data;
+    }
+
+    /**
+     * Create a runtime Stripe recurring Price (and Product) for mixed recurring payments.
+     *
+     * @param array  $header_info
+     * @param float  $amount
+     * @param string $currency
+     * @param string $order_id
+     * @param string $widget_id
+     * @param array  $selection_data
+     * @param array  $el_settings
+     *
+     * @return array|\WP_Error
+     */
+    private function create_mixed_recurring_stripe_price( $header_info = [], $amount = 0, $currency = '', $order_id = '', $widget_id = '', $selection_data = [], $el_settings = [] ) {
+        $unit_amount = (int) round( floatval( $amount ) * 100 );
+        if ( $unit_amount < 1 ) {
+            return new \WP_Error( 'mixed_amount_invalid', __( 'Payment Amount field is required!', 'better-payment' ) );
+        }
+
+        $product_id = ! empty( $el_settings['better_payment_one_time_recurring_product_id'] )
+            ? sanitize_text_field( $el_settings['better_payment_one_time_recurring_product_id'] )
+            : '';
+
+        if ( empty( $product_id ) ) {
+            return new \WP_Error(
+                'mixed_product_id_missing',
+                __( 'Stripe Product ID is required for mixed recurring payments. Please provide it in the widget settings.', 'better-payment' )
+            );
+        }
+
+        $interval = ! empty( $selection_data['interval'] ) ? sanitize_key( $selection_data['interval'] ) : 'month';
+        $interval_count = ! empty( $selection_data['interval_count'] ) ? absint( $selection_data['interval_count'] ) : 1;
+        $currency = ! empty( $currency ) ? strtolower( sanitize_text_field( $currency ) ) : 'usd';
+
+        $form_name = ! empty( $el_settings['better_payment_form_title'] ) ? sanitize_text_field( $el_settings['better_payment_form_title'] ) : __( 'Better Payment', 'better-payment' );
+
+        $interval_label = $interval;
+        if ( $interval_count > 1 ) {
+            $interval_label = $interval_count . ' ' . $interval . 's';
+        }
+
+        $common_metadata = [
+            'order_id' => sanitize_text_field( $order_id ),
+            'widget_id' => sanitize_text_field( $widget_id ),
+            'is_mixed_payment' => '1',
+            'mixed_interval' => $interval,
+            'mixed_interval_count' => strval( $interval_count ),
+        ];
+
+        $price_request = [
+            'currency' => $currency,
+            'unit_amount' => $unit_amount,
+            'recurring' => [
+                'interval' => $interval,
+                'interval_count' => $interval_count,
+            ],
+            'product' => $product_id,
+            'nickname' => sprintf( '%s - %s', $form_name, $interval_label ),
+            'metadata' => $common_metadata,
+        ];
+
+        $response = wp_safe_remote_post(
+            'https://api.stripe.com/v1/prices',
+            [
+                'method'  => 'POST',
+                'headers' => $header_info,
+                'body'    => $price_request,
+                'timeout' => 70,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return new \WP_Error( 'mixed_price_request_failed', $response->get_error_message() );
+        }
+
+        $response_body = wp_remote_retrieve_body( $response );
+        $response_ar = ! empty( $response_body ) ? json_decode( $response_body ) : null;
+        $error_message = ! empty( $response_ar->error->message ) ? sanitize_text_field( $response_ar->error->message ) : __( 'Unable to create recurring Stripe price for mixed payment.', 'better-payment' );
+
+        if ( empty( $response_ar ) || empty( $response_ar->id ) ) {
+            return new \WP_Error( 'mixed_price_create_failed', $error_message );
+        }
+
+        return [
+            'price_id' => sanitize_text_field( $response_ar->id ),
+            'product_id' => $product_id,
+        ];
     }
 
     /**
@@ -807,4 +1033,3 @@ class Actions {
         return $better_form_fields;
     }
 }
-

@@ -266,6 +266,8 @@ class Admin extends Controller{
         if ($current_screen && str_contains( $current_screen->id, 'better-payment' ) ) {
             remove_all_actions('user_admin_notices');
             remove_all_actions('admin_notices');
+            remove_all_actions('all_admin_notices');
+            remove_all_actions('network_admin_notices');
 
 			// To show notice in better payment settings page we have to use 'better_payment_admin_notices' action hook
 			add_action( 'admin_notices', function () {

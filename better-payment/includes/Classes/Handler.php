@@ -407,6 +407,8 @@ class Handler extends Controller{
                     'method' => 'stripe',
                     'is_payment_recurring' => $is_payment_recurring,
                     'is_payment_split_payment' => $is_payment_split_payment,
+                    'is_payment_mixed' => ! empty( $form_fields_info['is_payment_mixed'] ) ? intval( $form_fields_info['is_payment_mixed'] ) : 0,
+                    'mixed_payment_selected_type' => ! empty( $form_fields_info['mixed_payment_selected_type'] ) ? sanitize_text_field( $form_fields_info['mixed_payment_selected_type'] ) : '',
                 ];
 
                 if ( $is_payment_split_payment ) {
@@ -590,6 +592,17 @@ class Handler extends Controller{
                 $better_payment_form_payment_type_value = esc_html__( 'One Time Payment', 'better-payment' );
             } elseif (  'recurring' === $better_payment_form_payment_type ) {
                 $better_payment_form_payment_type_value = esc_html__( 'Recurring Payment', 'better-payment' );
+            } elseif ( 'mixed' === $better_payment_form_payment_type ) {
+                $mixed_payment_selected_type = ! empty( $tr_id['mixed_payment_selected_type'] ) ? sanitize_text_field( $tr_id['mixed_payment_selected_type'] ) : '';
+                $is_mixed_recurring = 'recurring' === $mixed_payment_selected_type;
+
+                if ( empty( $mixed_payment_selected_type ) ) {
+                    $is_mixed_recurring = ! empty( $tr_id['is_payment_recurring'] ) && empty( $tr_id['is_payment_split_payment'] );
+                }
+
+                $better_payment_form_payment_type_value = $is_mixed_recurring
+                    ? esc_html__( 'Recurring Payment', 'better-payment' )
+                    : esc_html__( 'One Time Payment', 'better-payment' );
             } else {
                 $better_payment_form_payment_type_value = esc_html__( 'Split Payment', 'better-payment' );
             }
