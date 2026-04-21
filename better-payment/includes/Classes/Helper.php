@@ -22,61 +22,6 @@ class Helper extends Controller
     use TraitsHelper;
 
     /**
-     * Check if elementor plugin is activated
-     *
-     * @since 0.0.2
-     */
-    public function elementor_not_loaded()
-    {
-        if (!current_user_can('activate_plugins')) {
-            return;
-        }
-
-        if (isset($_GET['page']) && $_GET['page'] == 'better-payment-setup-wizard') {
-            return;
-        }
-
-        if(wp_doing_ajax()){
-            return;
-        }
-
-        $elementor = 'elementor/elementor.php';
-
-        if ($this->is_plugin_installed($elementor)) {
-            $activation_url = wp_nonce_url('plugins.php?action=activate&amp;plugin=' . $elementor . '&amp;plugin_status=all&amp;paged=1&amp;s', 'activate-plugin_' . $elementor);
-
-            $message = sprintf(__('%1$sBetter Payment%2$s requires %1$sElementor%2$s plugin to be active. Please activate Elementor to continue.', 'better-payment'), "<strong>", "</strong>");
-
-            $button_text = __('Activate Elementor', 'better-payment');
-        } else {
-            $activation_url = wp_nonce_url(self_admin_url('update.php?action=install-plugin&plugin=elementor'), 'install-plugin_elementor');
-
-            $message = sprintf(__('%1$sBetter Payment%2$s requires %1$sElementor%2$s plugin to be installed and activated. Please install Elementor to continue.', 'better-payment'), '<strong>', '</strong>');
-            $button_text = __('Install Elementor', 'better-payment');
-        }
-
-        $button = '<p><a href="' . esc_url_raw($activation_url) . '" class="button-primary">' . $button_text . '</a></p>';
-
-        printf('<div class="error"><p>%1$s</p>%2$s</div>', wp_kses( __( $message, 'better-payment' ), $this->bp_allowed_tags() ), wp_kses( $button, $this->bp_allowed_tags() ) );
-    }
-
-    /**
-     * Check if a plugin is installed
-     *
-     * @since 0.0.2
-     */
-    public function is_plugin_installed($basename)
-    {
-        if (!function_exists('get_plugins')) {
-            include_once ABSPATH . 'wp-admin/includes/plugin.php';
-        }
-
-        $plugins = get_plugins();
-
-        return isset($plugins[$basename]);
-    }
-
-    /**
 	 * check is plugin active or not
 	 *
 	 * @param $plugin
@@ -163,6 +108,12 @@ class Helper extends Controller
     }
 
     public function titleToSnake($text, $divider = '_') {
+        // Handle null or empty values to prevent deprecated warnings.
+        if ( null === $text || '' === $text ) {
+            return 'n_a';
+        }
+
+        $text = (string) $text;
         $text = preg_replace('~[^\pL\d]+~u', $divider, $text);
         $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
         $text = preg_replace('~[^-\w]+~', '', $text);

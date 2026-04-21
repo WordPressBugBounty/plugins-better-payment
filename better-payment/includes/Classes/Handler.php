@@ -637,17 +637,24 @@ class Handler extends Controller{
                     <?php endif; ?>
                     <?php if( ! $default_icon ): ?>
                         <?php if( $show_icon ): ?>
-                        <span class="bp-thank_page-custom-logo_wrapper-success">
-                            <?php 
-                                // Use Elementor's Icons_Manager to properly render icons with FontAwesome support
-                                if (!empty($settings['better_payment_form_success_message_icon']['value'])) {
-                                    \Elementor\Icons_Manager::render_icon($settings['better_payment_form_success_message_icon'], ['aria-hidden' => 'true']);
+                        <?php
+                            // Add 'pf-block' class if this is a Gutenberg block (not Elementor)
+                            $success_wrapper_class = 'bp-thank_page-custom-logo_wrapper-success';
+                            if ( ! empty( $settings['better_payment_form_source'] ) && 'block' === $settings['better_payment_form_source'] ) {
+                                $success_wrapper_class .= ' pf-block';
+                            }
+                        ?>
+                        <div class="<?php echo esc_attr( $success_wrapper_class ); ?>">
+                            <?php
+                                // Render icon safely (handles FontAwesome, Dashicons, SVG with or without Elementor)
+                                if (!empty($settings['better_payment_form_success_message_icon'])) {
+                                    self::render_icon($settings['better_payment_form_success_message_icon'], ['aria-hidden' => 'true']);
                                 } else {
                                     // Fallback to default icons
                                     echo '<i class="' . esc_attr($image_url) . '"></i>';
                                 }
                             ?>
-                        </span>
+                        </div>
                         <?php endif; ?>
                         <?php if( ! $show_icon ): ?>
                             <span class="bp-thank_page-logo_wrapper">
@@ -911,17 +918,24 @@ class Handler extends Controller{
                     </span>
                     <?php else: ?>
                         <?php if( $show_icon ): ?>
-                        <span class="bp-thank_page-custom-logo_wrapper-error">
-                            <?php 
-                                // Use Elementor's Icons_Manager to properly render icons with FontAwesome support
-                                if (!empty($settings['better_payment_form_error_message_icon']['value'])) {
-                                    \Elementor\Icons_Manager::render_icon($settings['better_payment_form_error_message_icon'], ['aria-hidden' => 'true']);
+                        <?php
+                            // Add 'pf-block' class if this is a Gutenberg block (not Elementor)
+                            $error_wrapper_class = 'bp-thank_page-custom-logo_wrapper-error';
+                            if ( ! empty( $settings['better_payment_form_source'] ) && 'block' === $settings['better_payment_form_source'] ) {
+                                $error_wrapper_class .= ' pf-block';
+                            }
+                        ?>
+                        <div class="<?php echo esc_attr( $error_wrapper_class ); ?>">
+                            <?php
+                                // Render icon safely (handles FontAwesome, Dashicons, SVG with or without Elementor)
+                                if (!empty($settings['better_payment_form_error_message_icon'])) {
+                                    self::render_icon($settings['better_payment_form_error_message_icon'], ['aria-hidden' => 'true']);
                                 } else {
                                     // Fallback to default icons
                                     echo '<i class="' . esc_attr($image_url) . '"></i>';
                                 }
                             ?>
-                        </span>
+                        </div>
                         <?php else: ?>
                             <span class="bp-thank_page-logo_wrapper">
                                 <img src="<?php echo esc_url($image_url); ?>" alt="Error logo">
@@ -1512,7 +1526,7 @@ class Handler extends Controller{
     /**
      * String helper method
      * helps to convert string to title case
-     * 
+     *
      * @return string
      * @since  0.0.1
      */
@@ -1520,5 +1534,126 @@ class Handler extends Controller{
         $string = str_replace('_',' ', $string);
         $string = ucwords($string);
         return $string;
+    }
+
+    /**
+     * Safe icon rendering for payment form messages
+     *
+     * Handles multiple icon types: FontAwesome, Dashicons, SVG from media library
+     * Works with or without Elementor being active
+     *
+     * @param array $icon_settings Icon settings from block/widget controls
+     * @param array $html_attributes Optional HTML attributes for the icon element
+     *
+     * @return void (outputs HTML directly)
+     * @since 2.0.4
+     */
+    public static function render_icon( $icon_settings = [], $html_attributes = [] ) {
+        // Bail if no settings provided
+        if ( empty( $icon_settings ) || ! is_array( $icon_settings ) ) {
+            return;
+        }
+
+        // If value is empty, nothing to render
+        if ( empty( $icon_settings['value'] ) ) {
+            return;
+        }
+
+        $library = ! empty( $icon_settings['library'] ) ? $icon_settings['library'] : '';
+        $value   = $icon_settings['value'];
+
+        // Try to use Elementor's Icons_Manager if it's available and loaded
+        if ( did_action( 'elementor/loaded' ) && class_exists( '\Elementor\Icons_Manager' ) ) {
+            try {
+                \Elementor\Icons_Manager::render_icon( $icon_settings, $html_attributes );
+                return;
+            } catch ( \Exception $e ) {
+                // If Elementor rendering fails, fall back to manual rendering
+            }
+        }
+
+        // Handle SVG (uploaded via media library)
+        if ( $library === 'svg' ) {
+            if ( is_array( $value ) && ! empty( $value['url'] ) ) {
+                $svg_url = esc_url( $value['url'] );
+                echo '<img src="' . $svg_url . '" alt="Icon" class="bp-icon-svg" />';
+                return;
+            }
+        }
+
+        // Handle FontAwesome icons (all variants: fa, fas, far, fab, fal, fad, etc.)
+        if ( in_array( $library, [ 'fa', 'fas', 'far', 'fab', 'fal', 'fad', 'fontawesome', 'font-awesome' ], true ) ) {
+            if ( is_string( $value ) && ! empty( $value ) ) {
+                // Build complete FontAwesome class
+                $icon_class = 'fa';
+
+                // Add variant if specified (fas, far, fab, fal)
+                if ( ! empty( $library ) && $library !== 'fa' && $library !== 'fontawesome' && $library !== 'font-awesome' ) {
+                    $icon_class = esc_attr( $library );
+                } else {
+                    // Default to 'fas' if no variant specified
+                    $icon_class = 'fas';
+                }
+
+                // Add the specific icon class
+                $icon_class .= ' ' . esc_attr( $value );
+
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
+
+                echo '<i class="' . $icon_class . $html_class . '"' . $aria_hidden . '></i>';
+                return;
+            }
+        }
+
+        // Handle Dashicons
+        if ( in_array( $library, [ 'dashicons' ], true ) ) {
+            if ( is_string( $value ) && ! empty( $value ) ) {
+                $icon_class = 'dashicons dashicons-' . esc_attr( $value );
+
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
+
+                echo '<span class="' . $icon_class . $html_class . '"' . $aria_hidden . '></span>';
+                return;
+            }
+        }
+
+        // Handle custom CSS classes (like 'bp-icon bp-check-circle')
+        // These are custom icon fonts or CSS-based icons defined by the theme/plugin
+        if ( 'custom' === $library ) {
+            if ( is_string( $value ) && ! empty( $value ) ) {
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
+
+                echo '<i class="' . esc_attr( $value ) . $html_class . '"' . $aria_hidden . '></i>';
+                return;
+            }
+        }
+
+        // If value is a plain string (might be a FontAwesome class without library specified)
+        if ( is_string( $value ) && ! empty( $value ) && empty( $library ) ) {
+            // Check if it looks like a FontAwesome class
+            if ( strpos( $value, 'fa' ) !== false || strpos( $value, 'fa-' ) !== false ) {
+                $icon_class = 'fas ' . esc_attr( $value );
+
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
+
+                echo '<i class="' . $icon_class . $html_class . '"' . $aria_hidden . '></i>';
+                return;
+            }
+
+            // Check if it looks like a dashicon
+            if ( strpos( $value, 'dashicon' ) !== false || strpos( $value, 'dashicons-' ) !== false ) {
+                $icon_class = 'dashicons ' . esc_attr( $value );
+
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
+
+                echo '<span class="' . $icon_class . $html_class . '"' . $aria_hidden . '></span>';
+                return;
+            }
+        }
     }
 }

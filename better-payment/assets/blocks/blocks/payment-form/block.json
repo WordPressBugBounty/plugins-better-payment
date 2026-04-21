@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "better-payment/payment-form",
+  "version": "1.0.0",
+  "title": "Payment Form",
+  "category": "better-payment",
+  "icon": "money-alt",
+  "description": "A payment form block for accepting payments through Stripe, PayPal, and Paystack.",
+  "keywords": [
+    "payment",
+    "stripe",
+    "paypal",
+    "paystack",
+    "donate",
+    "transaction",
+    "better payment"
+  ],
+  "textdomain": "better-payment",
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ],
+    "anchor": true,
+    "className": true,
+    "customClassName": true
+  },
+  "example": {
+    "attributes": {
+      "formTitle": "Payment Form",
+      "formLayout": "layout-1",
+      "showTitle": true
+    }
+  }
+}

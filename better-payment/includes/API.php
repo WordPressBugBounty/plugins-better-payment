@@ -25,10 +25,10 @@ class API extends Controller {
      */
     public function __construct() {
         add_action( 'rest_api_init', [ $this, 'register_api' ] );
-        
+
         new AdminAPI();
     }
-    
+
     /**
      * Register the API
      *

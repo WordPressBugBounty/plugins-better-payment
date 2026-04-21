@@ -452,11 +452,11 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
 
             update_option( 'better_payment_setup_wizard', 'complete' );
 
-            if (!did_action('elementor/loaded')) {
-                wp_send_json_success( [ 'redirect_url' => admin_url() ] );
-            }else {
+            // if (!did_action('elementor/loaded')) {
+            //     wp_send_json_success( [ 'redirect_url' => admin_url() ] );
+            // }else {
                 wp_send_json_success( [ 'redirect_url' => admin_url( 'admin.php?page=better-payment-admin&tab=dashboard' ) ] );
-            }
+            // }
         }catch (\Exception $e) {
             wp_send_json_error($e->getMessage());            
         }

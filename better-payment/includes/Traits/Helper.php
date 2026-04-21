@@ -495,20 +495,33 @@ trait Helper
 
 	/**
      * Widget settings
-     * 
+     *
      * @since 1.0.0
      */
     public function get_elementor_widget_settings( $page_id, $widget_id ) {
-        $document = \Elementor\Plugin::$instance->documents->get( $page_id );
         $settings = [];
-        if ( $document ) {
-            $elements    = \Elementor\Plugin::instance()->documents->get( $page_id )->get_elements_data();
-            $widget_data = $this->find_element_recursive( $elements, $widget_id );
-            $widget      = ! empty( $widget_data ) && is_array( $widget_data ) ? \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data ) : '';
-            if ( ! empty( $widget ) ) {
-                $settings = $widget->get_settings_for_display();
+
+        // First, check for Gutenberg block settings stored in transient.
+        // This is used when the form is rendered via a Gutenberg block.
+        $transient_key    = 'bp_block_settings_' . $page_id . '_' . $widget_id;
+        $block_settings   = get_transient( $transient_key );
+        if ( ! empty( $block_settings ) && is_array( $block_settings ) ) {
+            return $block_settings;
+        }
+
+        // Fallback to Elementor widget settings.
+        if ( class_exists( '\Elementor\Plugin' ) && ! empty( \Elementor\Plugin::$instance ) ) {
+            $document = \Elementor\Plugin::$instance->documents->get( $page_id );
+            if ( $document ) {
+                $elements    = \Elementor\Plugin::instance()->documents->get( $page_id )->get_elements_data();
+                $widget_data = $this->find_element_recursive( $elements, $widget_id );
+                $widget      = ! empty( $widget_data ) && is_array( $widget_data ) ? \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data ) : '';
+                if ( ! empty( $widget ) ) {
+                    $settings = $widget->get_settings_for_display();
+                }
             }
         }
+
         return $settings;
     }
 

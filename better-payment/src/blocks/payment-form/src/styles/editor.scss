@@ -1,0 +1,172 @@
+/**
+ * Editor styles for the Payment Form block.
+ *
+ * These styles are applied only in the block editor.
+ *
+ * @package Better_Payment
+ * @since 1.0.0
+ */
+
+// Editor-specific variables
+$editor-placeholder-bg: #f0f0f0;
+$editor-border-color: #ddd;
+$editor-text-color: #1e1e1e;
+$editor-help-color: #757575;
+$editor-icon-color: #007cba;
+$editor-border-radius: 4px;
+
+// Editor container styles
+.better-payment-block {
+    .bp-radio-box input[type=radio]:checked {
+        -webkit-appearance: progress-bar;
+    }
+    .bp-radio-box input[type=radio]:focus {
+        box-shadow: none;
+    }
+    .bp-radio-box input[type=radio]:checked::before {
+        background-color: transparent !important;
+    }
+    // In the editor, add a visual border to show the block bounds
+    // border: 1px dashed $editor-border-color;
+    border-radius: $editor-border-radius;
+    padding: 20px;
+    background-color: #fff;
+    transition: border-color 0.2s ease;
+
+    &.is-selected {
+        border-color: $editor-icon-color;
+        border-style: solid;
+    }
+
+    // Inner container
+    &__inner {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    // Title styles
+    &__title {
+        margin: 0 0 12px;
+        padding: 0;
+        font-size: 1.5em;
+        font-weight: 600;
+        color: $editor-text-color;
+        line-height: 1.3;
+    }
+
+    // Content container
+    &__content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    // Placeholder styles
+    &__placeholder {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background-color: $editor-placeholder-bg;
+        border-radius: $editor-border-radius;
+        border: 1px solid $editor-border-color;
+    }
+
+    // Icon styles
+    &__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background-color: $editor-icon-color;
+        border-radius: 50%;
+        color: #fff;
+        flex-shrink: 0;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    // Text styles
+    &__text {
+        margin: 0;
+        font-size: 1.1em;
+        font-weight: 500;
+        color: $editor-text-color;
+    }
+
+    // Description styles
+    &__description {
+        margin: 0;
+        font-size: 0.9em;
+        color: $editor-help-color;
+        line-height: 1.5;
+    }
+
+    // Help text (shown when block is selected)
+    &__help {
+        margin: 0;
+        padding: 12px;
+        font-size: 0.85em;
+        color: $editor-icon-color;
+        background-color: rgba(0, 124, 186, 0.05);
+        border-left: 3px solid $editor-icon-color;
+        border-radius: 0 $editor-border-radius $editor-border-radius 0;
+    }
+}
+
+// Inspector panel tab styles
+.bp-inspector-tabs {
+    margin: 0;
+    padding: 0;
+
+    // Tab list container
+    .components-tab-panel__tabs {
+        display: flex;
+        margin: 0;
+        padding: 0;
+        border-bottom: 1px solid #ddd;
+        background-color: #f0f0f0;
+    }
+
+    // Individual tab buttons
+    .components-tab-panel__tabs-item {
+        flex: 1;
+        padding: 12px 16px;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        background-color: transparent;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1e1e1e;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+
+        &:hover {
+            background-color: #e0e0e0;
+        }
+
+        &:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+        &.is-active {
+            background-color: #fff;
+            color: $editor-icon-color;
+            border-bottom: 2px solid $editor-icon-color;
+            margin-bottom: -1px;
+        }
+    }
+
+    // Tab content area
+    .components-tab-panel__tab-content {
+        padding: 0;
+    }
+}
+

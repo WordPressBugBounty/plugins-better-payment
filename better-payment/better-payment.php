@@ -2,10 +2,10 @@
 
 /**
  * Plugin Name: Better Payment
- * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor website.
+ * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.0.4
+ * Version: 2.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -21,7 +21,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 /**
  * The plugin main class
- * 
+ *
  * @since 0.0.1
  */
 final class Better_Payment {
@@ -34,11 +34,11 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.0.4';
+    const version = '2.1.0';
 
     /**
      * Class construcotr
-     * 
+     *
      * @since 0.0.1
      */
     private function __construct() {
@@ -131,6 +131,13 @@ final class Better_Payment {
 
         new Better_Payment\Lite\API();
 
+        // Initialize Gutenberg blocks
+        Better_Payment\Lite\Blocks\BlockManager::get_instance();
+        Better_Payment\Lite\Blocks\StyleHandler::init();
+
+        // Initialize Block Actions for payment processing (runs before Elementor Actions)
+        new Better_Payment\Lite\Blocks\BlockActions();
+
         if (defined('ELEMENTOR_VERSION')) {
             new Better_Payment\Lite\Classes\Actions();
             $el_integration = new Better_Payment\Lite\Admin\Elementor\EL_Integration();
@@ -162,7 +169,7 @@ function better_payment_migrator() {
 
 /**
  * On wp load
- * 
+ *
  * @return void
  * @since 0.0.1
  */

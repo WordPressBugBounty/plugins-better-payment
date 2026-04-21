@@ -17,23 +17,23 @@ if (!defined('ABSPATH')) {
 
 /**
  * Admin REST API Controller
- * 
+ *
  * @since 1.5.0
  */
 class AdminAPI extends WP_REST_Controller
 {
     use Helper;
-    
+
     /**
      * Namespace
-     * 
+     *
      * @var string
      */
     protected $namespace = 'better-payment/v1';
 
     /**
      * Constructor
-     * 
+     *
      * @since 1.5.0
      */
     public function __construct()
@@ -43,7 +43,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Register REST API routes
-     * 
+     *
      * @since 1.5.0
      */
     public function register_routes()
@@ -132,11 +132,53 @@ class AdminAPI extends WP_REST_Controller
             'callback' => [$this, 'get_options'],
             'permission_callback' => [$this, 'check_admin_permissions']
         ]);
+
+        // FluentCart product search
+        register_rest_route($this->namespace, '/fluentcart-products', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'search_fluentcart_products'],
+            'permission_callback' => [$this, 'check_admin_permissions'],
+            'args' => [
+                'search' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field'
+                ]
+            ]
+        ]);
+
+        // FluentCart single product
+        register_rest_route($this->namespace, '/fluentcart-product/(?P<id>\d+)', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_fluentcart_product'],
+            'permission_callback' => [$this, 'check_admin_permissions'],
+            'args' => [
+                'id' => [
+                    'required' => true,
+                    'type' => 'integer',
+                    'sanitize_callback' => 'absint'
+                ]
+            ]
+        ]);
+
+        // Stripe price details - fetches product name and price from Stripe API
+        register_rest_route($this->namespace, '/stripe-price', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_stripe_price'],
+            'permission_callback' => [$this, 'check_admin_permissions'],
+            'args' => [
+                'price_id' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field'
+                ]
+            ]
+        ]);
     }
 
     /**
      * Get transaction count
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -145,7 +187,7 @@ class AdminAPI extends WP_REST_Controller
         if (!$this->bp_valid_nonce($request)) {
             return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
         }
-        
+
         $all = DB::get_transaction_count();
         $completed = DB::get_transaction_count('', 'v2', 0, 'completed');
         $incomplete = DB::get_transaction_count('', 'v2', 1, 'incomplete');
@@ -175,7 +217,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Check if sale info is dismissed
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -195,7 +237,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Dismiss sale info
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -215,7 +257,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Dismiss dismissible section
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -235,7 +277,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Validate nonce
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return bool
@@ -250,7 +292,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Get dismissible section data
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -274,7 +316,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Check if dismissible section should be shown
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -294,7 +336,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Check admin permissions
-     * 
+     *
      * @since 1.5.0
      * @return bool
      */
@@ -308,7 +350,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Get transactions with filters
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -361,7 +403,7 @@ class AdminAPI extends WP_REST_Controller
             }
 
             $transactions = DB::get_transactions($filters, 0, 'v2');
-            
+
             foreach ($transactions as $key => $transaction) {
                 $transactions[$key]->form_fields_info = maybe_unserialize($transaction->form_fields_info);
             }
@@ -382,7 +424,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Get single transaction
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -575,7 +617,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Get settings
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -596,7 +638,7 @@ class AdminAPI extends WP_REST_Controller
 
     /**
      * Update settings
-     * 
+     *
      * @since 1.5.0
      * @param WP_REST_Request $request
      * @return WP_REST_Response|WP_Error
@@ -606,7 +648,7 @@ class AdminAPI extends WP_REST_Controller
         if (!$this->bp_valid_nonce($request)) {
             return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
         }
-        
+
         try {
             $settings = $request->get_json_params();
             $settings = $this->sanitize_settings($settings);
@@ -623,8 +665,192 @@ class AdminAPI extends WP_REST_Controller
     }
 
     /**
+     * Search FluentCart products
+     *
+     * @since 1.5.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function search_fluentcart_products($request) {
+        $search = $request->get_param('search');
+
+        if (!function_exists('fluentCart') || !class_exists('\FluentCart\App\Models\Product')) {
+            return rest_ensure_response([]);
+        }
+
+        try {
+            $product_model = new \FluentCart\App\Models\Product();
+
+            $query = $product_model->newQuery()
+                ->where('post_status', 'publish')
+                ->limit(10);
+
+            if (!empty($search)) {
+                $query->where('post_title', 'LIKE', '%' . sanitize_text_field($search) . '%');
+            }
+
+            $products = $query->get();
+            $product_list = [];
+
+            if (!empty($products)) {
+                foreach ($products as $product) {
+                    $product_list[] = [
+                        'value' => strval($product->ID),
+                        'label' => $product->post_title
+                    ];
+                }
+            }
+
+            return rest_ensure_response($product_list);
+        } catch (\Exception $e) {
+            return rest_ensure_response([]);
+        }
+    }
+
+    /**
+     * Get single FluentCart product
+     *
+     * @since 1.5.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_fluentcart_product($request) {
+        $product_id = absint($request->get_param('id'));
+
+        if (!function_exists('fluentCart') || !class_exists('\FluentCart\App\Models\Product')) {
+            return new WP_Error('fluentcart_not_available', 'FluentCart is not available', ['status' => 404]);
+        }
+
+        try {
+            $product = \FluentCart\App\Models\Product::with('detail', 'variants')->find($product_id);
+
+            if (!$product) {
+                return new WP_Error('product_not_found', 'Product not found', ['status' => 404]);
+            }
+
+            $price = '';
+            if ($product->detail && $product->detail->min_price) {
+                $price = strval($product->detail->min_price);
+            } elseif ($product->variants && count($product->variants) > 0) {
+                $price = strval($product->variants[0]->item_price);
+            }
+
+            return rest_ensure_response([
+                'name' => $product->post_title,
+                'price' => $price,
+                'permalink' => get_permalink($product->ID) ?: ''
+            ]);
+        } catch (\Exception $e) {
+            return new WP_Error('product_error', $e->getMessage(), ['status' => 500]);
+        }
+    }
+
+    /**
+     * Get Stripe price details
+     *
+     * Fetches product name and price from Stripe API using the price ID.
+     *
+     * @since 1.5.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_stripe_price($request) {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        $price_id = sanitize_text_field($request->get_param('price_id'));
+
+        // Validate price ID format (should start with 'price_')
+        if (empty($price_id) || strpos($price_id, 'price_') !== 0) {
+            return new WP_Error('invalid_price_id', 'Invalid Stripe Price ID format', ['status' => 400]);
+        }
+
+        // Get Stripe settings
+        $global_settings = get_option('better_payment_settings');
+        $is_live_mode = !empty($global_settings['better_payment_settings_payment_stripe_live_mode'])
+            && 'yes' === $global_settings['better_payment_settings_payment_stripe_live_mode'];
+
+        $secret_key = $is_live_mode
+            ? (!empty($global_settings['better_payment_settings_payment_stripe_live_secret'])
+                ? $global_settings['better_payment_settings_payment_stripe_live_secret'] : '')
+            : (!empty($global_settings['better_payment_settings_payment_stripe_test_secret'])
+                ? $global_settings['better_payment_settings_payment_stripe_test_secret'] : '');
+
+        if (empty($secret_key)) {
+            return new WP_Error('missing_api_key', 'Stripe API key not configured', ['status' => 400]);
+        }
+
+        // Fetch price details from Stripe using Helper trait method
+        $price_details = $this->get_stripe_price_details($price_id, $secret_key);
+
+        if (empty($price_details) || isset($price_details['error'])) {
+            $error_message = isset($price_details['error']['message'])
+                ? $price_details['error']['message']
+                : 'Failed to fetch Stripe price details';
+            return new WP_Error('stripe_api_error', $error_message, ['status' => 500]);
+        }
+
+        // Extract product name - need to fetch product details separately
+        $product_name = '';
+        if (!empty($price_details['product'])) {
+            $product_id = $price_details['product'];
+            $product_details = $this->get_stripe_product_details($product_id, $secret_key);
+            $product_name = !empty($product_details['name']) ? $product_details['name'] : '';
+        }
+
+        // Extract price amount and currency
+        $amount = isset($price_details['unit_amount']) ? floatval($price_details['unit_amount']) / 100 : 0;
+        $currency = isset($price_details['currency']) ? strtoupper($price_details['currency']) : 'USD';
+
+        return rest_ensure_response([
+            'success' => true,
+            'product_name' => $product_name,
+            'amount' => $amount,
+            'currency' => $currency,
+            'formatted_price' => $currency . ' ' . number_format($amount, 2)
+        ]);
+    }
+
+    /**
+     * Get Stripe product details
+     *
+     * @since 1.5.0
+     * @param string $product_id Stripe product ID
+     * @param string $secret_key Stripe secret key
+     * @return array Product details or empty array
+     */
+    private function get_stripe_product_details($product_id, $secret_key) {
+        if (empty($product_id) || empty($secret_key)) {
+            return [];
+        }
+
+        $api_url = 'https://api.stripe.com/v1/products/' . $product_id;
+
+        $response = wp_remote_get($api_url, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $secret_key,
+            ],
+            'timeout' => 20,
+        ]);
+
+        if (is_wp_error($response)) {
+            return [];
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (!isset($data) || !is_array($data)) {
+            return [];
+        }
+
+        return $data;
+    }
+
+    /**
      * Sanitize settings
-     * 
+     *
      * @since 1.5.0
      * @param array $settings
      * @return array

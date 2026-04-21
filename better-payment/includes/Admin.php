@@ -47,15 +47,8 @@ class Admin extends Controller{
         new ReactAdmin();
         // new Settings();
 
-        if ( ! did_action('elementor/loaded') ) {
-            $helper = new Helper();
-            add_action( 'admin_notices', array( $helper, 'elementor_not_loaded' ) );
-			add_action( 'better_payment_admin_notices', array( $helper, 'elementor_not_loaded' ) );
-        }
-
-        if (did_action('elementor/loaded')) {
-            add_filter('plugin_action_links', array($this, 'plugin_actions_links'), 10, 2);
-        }
+        // Add plugin action links - works with or without Elementor
+        add_filter('plugin_action_links', array($this, 'plugin_actions_links'), 10, 2);
 
         if ( ! $this->pro_enabled ) {
             $this->admin_notice();
@@ -250,6 +243,29 @@ class Admin extends Controller{
 			[
 				'start'       => strtotime( '12:00:00am 10th February, 2026' ),
 				'expire'      => strtotime( '11:59:59pm 7th March, 2026' ),
+				'refresh'     => BETTER_PAYMENT_VERSION,
+				'dismissible' => true,
+				'screens' 	  => [ 'dashboard' ],
+			]
+		);
+
+		/**
+		 * Spring Offer Notice
+		 */
+		$purchase_url = '//betterpayment.co/spring2026-admin-notice';
+		$spring_notice_message = "<p>🌸 <strong>Spring Savings:</strong> Streamline transactions with fast, optimized payment forms on your Elementor sites – now <strong>Flat 25% OFF! 💳️</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>Maybe Later</button></div>";
+		
+		$spring_notice = [
+			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
+			'html'      => $spring_notice_message,
+		];
+
+        $notices->add(
+			'bp_spring_notice',
+			$spring_notice,
+			[
+				'start'       => $notices->time(),
+				'expire'      => strtotime( '11:59:59pm 10th May, 2026' ),
 				'refresh'     => BETTER_PAYMENT_VERSION,
 				'dismissible' => true,
 				'screens' 	  => [ 'dashboard' ],

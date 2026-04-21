@@ -1,31 +1,31 @@
 === Better Payment – Instant Payments, Donations, Fundraising with Subscriptions & More ===
-Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, rahatsheikhleon, fuadragib
+Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, fuadragib, rahatsheikhleon
 Donate link: https://wpdeveloper.com
 Tags: donation, fundraising, recurring donations, payments, stripe paypal paystack
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.4
+Stable tag: 2.1.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Better Payment allows you to automate payment transactions to manage payments, donations, subscriptions, sell products, etc on your Elementor website.
+Better Payment allows you to automate payment transactions to manage payments, donations, subscriptions, sell products, etc on your Elementor and Gutenberg website.
 
 == Description ==
 
 **Transform your WordPress payment process with the leading plugin, [Better Payment](https://wpdeveloper.com/better-payment/) which comes with versatile payment form styles, unlimited customization, and fundraising platform.**
 
-Better Payment allows you to manage your own website payments with one click, without any hassle. With seamless integration with Elementor, your customers can pay through PayPal, Stripe, or others; skipping the long checkout process. 💳
+Better Payment allows you to manage your own website payments with one click, without any hassle. With seamless integration with Elementor & Gutenberg, your customers can pay through PayPal, Stripe, Paystack; skipping the long checkout process. 💳
 
 👉Simply by clicking the pay button, customers can complete their transactions for donations, subscriptions, fundraising, membership, eCommerce products, and the list goes on. You can easily send personalized success messages to customers without any coding. Also, retrieve all the payment history instantly at any time you want. 💰
 
-## ⚙️ POPULAR WEBSITE BUILDER, ELEMENTOR COMPATIBILITY
-Better Payment is fully compatible with Elementor. You can make tweaks using Elementor to your Better Payment form. Also, you can integrate with Elementor Form and make the appearance of the payment form more stunning.
+## ⚙️ ELEMENTOR & GUTENBERG COMPATIBILITY
+Better Payment is fully compatible with Elementor & Gutenberg. You can make tweaks to the way you want to your Better Payment form. Also, you can integrate with Elementor Form and make the appearance of the payment form more stunning.
 
 ## 🛠️ ONE-CLICK STRIPE PAYMENT INTEGRATION
 Better Payment lets you easily integrate your Stripe account into your website with one click. You will get a Stripe Elements Checkout option with a securely embedded feature, an on-site checkout option, etc.
 
-Additionally, Better Payment provides credit cards, American Express, Visa, Master Card, and other payment methods as ways to finish the transaction.
+Additionally, Better Payment provides credit cards, American Express, Visa, Master Card, and other payment methods as ways to complete the transaction.
 
 ## 🔌 PAYPAL PAYMENT GATEWAY INTEGRATION
 Better Payment gives you another integration option; it offers a PayPal payment gateway, where you can easily connect your PayPal account and start accepting payments and donations.
@@ -39,7 +39,7 @@ With Better Payment, you can effortlessly integrate with Paystack to donate & co
 You can easily set up multiple currencies in Better Payment to facilitate your customers’ complete payments in their currency, regardless of where your business is set. At present, Better Payment supports 22+ global currencies.
 
 ## 🎨 ONE PLUGIN WITH VERSATILE PAYMENT FORM TEMPLATES
-Whether you want to add a simple payment form to your website or manage donation and product payments, you can do all with Better Payment. It offers a variety of payment form styling.
+Whether you want to add a simple payment form to your website or manage donation and product payments, you can do all with Better Payment. It offers a variety of payment form styles.
 
 ### 🖌️ GENERAL FORM STYLES [FREE]
 For general purposes, you can design custom payment forms with these beautiful general layouts, showing a custom name, email, payment amount, and total payment summaries. You can adjust the height, width, margin, etc.
@@ -96,7 +96,6 @@ Better Payment reign doesn’t stop here; more advanced and exclusive features a
 - Advanced email templates
 - Coupon management
 - New payment forms layouts
-- Dedicated Gutenberg payment block
 - Campaign builders
 
 🙌 After reading this feature list, you can probably imagine that Better Payment is the best WordPress payment plugin on the market. So, do you want to unlock the advanced features? [Upgrade to our Pro version](https://wpdeveloper.com/better-payment/#pricing).
@@ -141,7 +140,7 @@ Yes, it will work with any standard WordPress theme.
 
 = Can I Create Multiple Payment Forms? =
 
-Yes, you can create as many forms as needed on your website, donation, fundraising, product selling, etc. We provide a widget as well as integration with the Elementor form widget.
+Yes, you can create as many forms as needed on your website, donation, fundraising, product selling, etc. We provide a widget and a block as well as integration with the Elementor form widget.
 
 = Can I Collect More Than Just Payment Data? =
 
@@ -149,7 +148,7 @@ Currently only collecting payment data is available. But soon, you can gather mo
 
 = Can I Accept Payment Without Leaving My Website? =
 
-Currently, we are redirecting to PayPal or Stripe. And after the completion of payment, we will redirect users back to your website.
+Currently, we are redirecting to PayPal or Stripe or Paystack. And after the completion of payment, we will redirect users back to your website.
 
 = Can I Build Contact Forms or Others Without Payment Methods? =
 
@@ -169,6 +168,10 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 2.1.0 - 21/04/2026 =
+- Added: Dedicated Payment Form Block for Gutenberg
+- Few minor bug fixes and improvements
 
 = 2.0.4 - 16/03/2026 =
 - Fixed: Sidebar text style issue

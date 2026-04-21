@@ -1,0 +1,136 @@
+/**
+ * Frontend styles for the Payment Form block.
+ *
+ * These styles are applied on both the frontend and in the editor.
+ *
+ * @package Better_Payment
+ * @since 1.0.0
+ */
+
+// Frontend variables
+$primary-color: #007cba;
+$text-color: #1e1e1e;
+$light-text-color: #666;
+$background-color: #fff;
+$border-color: #e2e4e7;
+$border-radius: 8px;
+$box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+// Main block container
+.better-payment-block {
+    // "None" alignment: constrain block to content column width.
+    // WordPress generates --wp--style--global--content-size from theme.json layout.contentSize.
+    // Fallback 800px matches hello-elementor's contentSize value.
+    max-width: var(--wp--style--global--content-size, 800px);
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+
+    // Inner container
+    &__inner {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px;
+        background-color: $background-color;
+        border: 1px solid $border-color;
+        border-radius: $border-radius;
+        box-shadow: $box-shadow;
+    }
+
+    // Title
+    &__title {
+        margin: 0;
+        padding: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: $text-color;
+        line-height: 1.3;
+    }
+
+    // Content area
+    &__content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    // Placeholder (Hello World message)
+    &__placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        border-radius: $border-radius;
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: $primary-color;
+        text-align: center;
+    }
+
+    // Description text
+    &__description {
+        margin: 0;
+        font-size: 0.95rem;
+        color: $light-text-color;
+        line-height: 1.6;
+        text-align: center;
+    }
+}
+
+// Layout variations
+.bp-form-layout-1 {
+    .better-payment-block__inner {
+        border-left: 4px solid $primary-color;
+    }
+}
+
+.bp-form-layout-2 {
+    .better-payment-block__inner {
+        border-top: 4px solid $primary-color;
+    }
+}
+
+.bp-form-layout-3 {
+    .better-payment-block__inner {
+        border: 2px solid $primary-color;
+    }
+}
+
+// Alignment support.
+// Combined selectors (not descendant) — both useBlockProps() in the editor and
+// get_block_wrapper_attributes() in PHP add the align class directly to the
+// .better-payment-block element, never to a parent wrapper.
+.better-payment-block.alignwide {
+    // Use theme's wide-size variable to match the theme's intended wide width.
+    max-width: var(--wp--style--global--wide-size, 1200px);
+}
+
+.better-payment-block.alignfull {
+    // Must be none — not 100%, which would be constrained to the parent
+    // container width and prevent the theme's width:100vw from taking effect.
+    max-width: none;
+
+    .better-payment-block__inner {
+        border-radius: 0;
+    }
+}
+
+// Responsive styles
+@media (max-width: 600px) {
+    .better-payment-block {
+        &__inner {
+            padding: 16px;
+        }
+
+        &__title {
+            font-size: 1.25rem;
+        }
+
+        &__placeholder {
+            padding: 24px 16px;
+            font-size: 1rem;
+        }
+    }
+}
+
