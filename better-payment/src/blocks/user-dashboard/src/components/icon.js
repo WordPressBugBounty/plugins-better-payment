@@ -1,18 +1,9 @@
 /**
- * Block icon for the Payment Form block.
+ * Block icon component for User Dashboard.
  *
- * @package Better_Payment
- * @since 1.0.0
+ * @returns {JSX.Element} Icon SVG
  */
-
-import { SVG, Path } from '@wordpress/primitives';
-
-/**
- * Payment Form block icon.
- *
- * This icon represents a payment/credit card symbol.
- */
-const BlockIcon = (
+const BlockIcon = () => (
     <svg width="20" height="23" viewBox="0 0 20 23" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" clip-rule="evenodd" d="M3.75732 22.5302C4.06227 22.599 4.37952 22.6353 4.70525 22.6353H13.255C16.6235 22.6353 19.3542 19.9044 19.3542 16.5356C19.3542 13.8047 17.5597 11.4929 15.0857 10.7153L3.75732 22.5302Z" fill="#6E58F7"/>
         <path d="M0 4.03875C0 1.80821 1.80803 0 4.03834 0H13.5075C15.7379 0 17.5459 1.80821 17.5459 4.03875V9.22024C17.5459 10.2987 17.1146 11.3323 16.3482 12.0909L6.87895 21.4629C4.32893 23.9868 0 22.1803 0 18.5923V4.03875Z" fill="url(#paint0_linear_8021_12401)"/>
@@ -28,4 +19,3 @@ const BlockIcon = (
 );
 
 export default BlockIcon;
-

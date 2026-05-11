@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "better-payment/user-dashboard",
+    "version": "1.0.0",
+    "title": "User Dashboard",
+    "category": "better-payment",
+    "icon": "admin-home",
+    "description": "Get a complete overview of payments with a centralized dashboard. Transaction history, subscription status & payment analytics in one place.",
+    "keywords": [
+        "payment",
+        "dashboard",
+        "transactions",
+        "better-payment",
+        "user-profile"
+    ],
+    "textdomain": "better-payment",
+    "attributes": {
+        "align": {
+            "type": "string",
+            "default": "full"
+        }
+    },
+    "supports": {
+        "html": false,
+        "align": [
+            "wide",
+            "full"
+        ],
+        "anchor": true,
+        "className": true,
+        "customClassName": true
+    },
+    "example": {
+        "attributes": {
+            "dashboardLayout": "layout-1",
+            "sidebarShow": true,
+            "dashboardShow": true,
+            "transactionsShow": true
+        }
+    }
+}

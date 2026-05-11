@@ -21,63 +21,63 @@ msgstr ""
 msgid "Go Pro"
 msgstr ""
 
-#: ../includes/Assets.php:251, ../includes/Assets.php:269, ../includes/Admin/Setup_Wizard.php:93
+#: ../includes/Assets.php:280, ../includes/Assets.php:298, ../includes/Admin/Setup_Wizard.php:93
 msgid "Are you sure?"
 msgstr ""
 
-#: ../includes/Assets.php:252, ../includes/Assets.php:261
+#: ../includes/Assets.php:281, ../includes/Assets.php:290
 msgid "Something went wrong"
 msgstr ""
 
-#: ../includes/Assets.php:254
+#: ../includes/Assets.php:283
 msgid "Redirecting"
 msgstr ""
 
-#: ../includes/Assets.php:257
+#: ../includes/Assets.php:286
 msgid "field is required"
 msgstr ""
 
-#: ../includes/Assets.php:258
+#: ../includes/Assets.php:287
 msgid "Business Email is required"
 msgstr ""
 
-#: ../includes/Assets.php:259
+#: ../includes/Assets.php:288
 msgid "Payment Amount field is required"
 msgstr ""
 
-#: ../includes/Assets.php:260
+#: ../includes/Assets.php:289
 msgid "Minimum amount is 1"
 msgstr ""
 
-#: ../includes/Assets.php:270, ../includes/Admin/Setup_Wizard.php:94
+#: ../includes/Assets.php:299, ../includes/Admin/Setup_Wizard.php:94
 msgid "You won't be able to revert this!"
 msgstr ""
 
-#: ../includes/Assets.php:271, ../includes/Admin/Setup_Wizard.php:95
+#: ../includes/Assets.php:300, ../includes/Admin/Setup_Wizard.php:95
 msgid "Yes, delete it!"
 msgstr ""
 
-#: ../includes/Assets.php:272, ../includes/Admin/Setup_Wizard.php:96
+#: ../includes/Assets.php:301, ../includes/Admin/Setup_Wizard.php:96
 msgid "No, cancel!"
 msgstr ""
 
-#: ../includes/Assets.php:275, ../includes/Admin/Setup_Wizard.php:99
+#: ../includes/Assets.php:304, ../includes/Admin/Setup_Wizard.php:99
 msgid "Changes saved successfully!"
 msgstr ""
 
-#: ../includes/Assets.php:276, ../includes/Admin/Setup_Wizard.php:100
+#: ../includes/Assets.php:305, ../includes/Admin/Setup_Wizard.php:100
 msgid "Opps! something went wrong!"
 msgstr ""
 
-#: ../includes/Assets.php:277, ../includes/Admin/Setup_Wizard.php:101
+#: ../includes/Assets.php:306, ../includes/Admin/Setup_Wizard.php:101
 msgid "No action taken!"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:85, ../includes/Admin/ReactAdmin.php:86, ../includes/Admin/Settings.php:83, ../includes/Admin/Settings.php:84, ../includes/Blocks/BlockActions.php:279, ../includes/Blocks/BlockActions.php:523, ../includes/Blocks/BlockManager.php:1277, ../includes/Classes/Actions.php:114, ../includes/Classes/Actions.php:286, ../includes/Classes/Actions.php:292, ../includes/Classes/Actions.php:611, ../includes/Traits/ElementorHelper.php:140, ../includes/Admin/Elementor/Better_Payment_Widget.php:1188, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
+#: ../includes/Admin/ReactAdmin.php:85, ../includes/Admin/ReactAdmin.php:86, ../includes/Admin/Settings.php:83, ../includes/Admin/Settings.php:84, ../includes/Blocks/BlockActions.php:279, ../includes/Blocks/BlockActions.php:523, ../includes/Blocks/BlockManager.php:1843, ../includes/Classes/Actions.php:114, ../includes/Classes/Actions.php:286, ../includes/Classes/Actions.php:292, ../includes/Classes/Actions.php:611, ../includes/Traits/ElementorHelper.php:140, ../includes/Admin/Elementor/Better_Payment_Widget.php:1188, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
 msgid "Better Payment"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:96, ../includes/Admin/Elementor/User_Dashboard.php:164, ../includes/Admin/Elementor/User_Dashboard.php:235, ../includes/Admin/Elementor/User_Dashboard.php:238, ../includes/Admin/Elementor/User_Dashboard.php:1661, ../includes/Admin/Elementor/User_Dashboard.php:1732
+#: ../includes/Admin/ReactAdmin.php:96, ../includes/Admin/Elementor/User_Dashboard.php:164, ../includes/Admin/Elementor/User_Dashboard.php:235, ../includes/Admin/Elementor/User_Dashboard.php:238, ../includes/Admin/Elementor/User_Dashboard.php:1666, ../includes/Admin/Elementor/User_Dashboard.php:1737
 msgid "Dashboard"
 msgstr ""
 
@@ -169,7 +169,7 @@ msgstr ""
 msgid "Enable email notification for each transaction. It sends notification to the website admin and customer (who makes the payment). You can modify email settings as per your need."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:247, ../includes/Blocks/BlockManager.php:476, ../includes/Classes/Handler.php:582, ../includes/Admin/Elementor/Better_Payment_Widget.php:930, ../includes/Admin/Elementor/Better_Payment_Widget.php:2578, ../includes/Admin/Elementor/Better_Payment_Widget.php:2580, ../includes/Admin/Elementor/Better_Payment_Widget.php:2581, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:145, ../includes/Admin/views/better-payment-settings.php:224, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:57, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:58
+#: ../includes/Admin/Setup_Wizard.php:247, ../includes/Blocks/BlockManager.php:786, ../includes/Classes/Handler.php:582, ../includes/Admin/Elementor/Better_Payment_Widget.php:930, ../includes/Admin/Elementor/Better_Payment_Widget.php:2578, ../includes/Admin/Elementor/Better_Payment_Widget.php:2580, ../includes/Admin/Elementor/Better_Payment_Widget.php:2581, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:145, ../includes/Admin/views/better-payment-settings.php:224, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:57, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:58
 msgid "Currency"
 msgstr ""
 
@@ -285,7 +285,7 @@ msgstr ""
 msgid "Dismissible section dismissed"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:537, ../includes/API/AdminAPI.php:539, ../includes/API/AdminAPI.php:551, ../includes/Admin/views/better-payment-transaction-view.php:90, ../includes/Admin/views/better-payment-transaction-view.php:109, ../includes/Admin/views/better-payment-transaction-view.php:110, ../includes/Admin/views/template-transaction-list.php:142, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:168
+#: ../includes/API/AdminAPI.php:537, ../includes/API/AdminAPI.php:539, ../includes/API/AdminAPI.php:551, ../includes/Admin/views/better-payment-transaction-view.php:90, ../includes/Admin/views/better-payment-transaction-view.php:109, ../includes/Admin/views/better-payment-transaction-view.php:110, ../includes/Admin/views/template-transaction-list.php:142, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:192
 msgid "N/A"
 msgstr ""
 
@@ -321,103 +321,107 @@ msgstr ""
 msgid "Invalid response from Paystack."
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:110
+#: ../includes/Blocks/BlockManager.php:121
 msgid "Payment form template not found."
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:144
+#: ../includes/Blocks/BlockManager.php:155
 msgid "Please configure at least one payment gateway (PayPal, Stripe, or Paystack) in Better Payment settings."
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:278, ../includes/Admin/Elementor/Better_Payment_Widget.php:1740, ../includes/Admin/Elementor/Better_Payment_Widget.php:1751
+#: ../includes/Blocks/BlockManager.php:265
+msgid "User Dashboard template not found."
+msgstr ""
+
+#: ../includes/Blocks/BlockManager.php:588, ../includes/Admin/Elementor/Better_Payment_Widget.php:1740, ../includes/Admin/Elementor/Better_Payment_Widget.php:1751
 msgid "Transaction Details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:282, ../includes/Admin/Elementor/Better_Payment_Widget.php:1764
+#: ../includes/Blocks/BlockManager.php:592, ../includes/Admin/Elementor/Better_Payment_Widget.php:1764
 msgid "Total payment of your product in the following:"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:286, ../includes/Admin/Elementor/Better_Payment_Widget.php:1793, ../includes/Admin/views/better-payment-transaction-view.php:151
+#: ../includes/Blocks/BlockManager.php:596, ../includes/Admin/Elementor/Better_Payment_Widget.php:1793, ../includes/Admin/views/better-payment-transaction-view.php:151
 msgid "Amount:"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:290, ../includes/Admin/Elementor/Better_Payment_Widget.php:1777
+#: ../includes/Blocks/BlockManager.php:600, ../includes/Admin/Elementor/Better_Payment_Widget.php:1777
 msgid "Title:"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:339, ../includes/Classes/Handler.php:1056, ../includes/Admin/Elementor/Better_Payment_Widget.php:2154, ../includes/Admin/Elementor/Better_Payment_Widget.php:2321
+#: ../includes/Blocks/BlockManager.php:649, ../includes/Classes/Handler.php:1056, ../includes/Admin/Elementor/Better_Payment_Widget.php:2154, ../includes/Admin/Elementor/Better_Payment_Widget.php:2321
 msgid "Better Payment transaction on %s"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:464, ../includes/Admin/views/better-payment-transaction-view.php:156, ../includes/Admin/views/better-payment-transaction-view.php:249
+#: ../includes/Blocks/BlockManager.php:774, ../includes/Admin/views/better-payment-transaction-view.php:156, ../includes/Admin/views/better-payment-transaction-view.php:249
 msgid "Transaction ID:"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:468
+#: ../includes/Blocks/BlockManager.php:778
 msgid "Thank you for your payment."
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:472, ../includes/Blocks/BlockManager.php:815, ../includes/Classes/Handler.php:579, ../includes/Admin/Elementor/Better_Payment_Widget.php:1529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2561, ../includes/Admin/Elementor/Better_Payment_Widget.php:2563, ../includes/Admin/Elementor/Better_Payment_Widget.php:2564, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:584, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:626, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2186, ../includes/Admin/Elementor/User_Dashboard.php:1893, ../includes/Admin/Elementor/User_Dashboard.php:2014, ../includes/Admin/Elementor/User_Dashboard.php:2017, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:334, ../includes/Admin/views/template-transaction-list.php:38
+#: ../includes/Blocks/BlockManager.php:782, ../includes/Blocks/BlockManager.php:1125, ../includes/Classes/Handler.php:579, ../includes/Admin/Elementor/Better_Payment_Widget.php:1529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2561, ../includes/Admin/Elementor/Better_Payment_Widget.php:2563, ../includes/Admin/Elementor/Better_Payment_Widget.php:2564, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:584, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:626, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2186, ../includes/Admin/Elementor/User_Dashboard.php:1898, ../includes/Admin/Elementor/User_Dashboard.php:2019, ../includes/Admin/Elementor/User_Dashboard.php:2022, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:334, ../includes/Admin/views/template-transaction-list.php:38
 msgid "Amount"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:480, ../includes/Classes/Handler.php:583, ../includes/Admin/Elementor/Better_Payment_Widget.php:2595, ../includes/Admin/Elementor/Better_Payment_Widget.php:2597, ../includes/Admin/Elementor/Better_Payment_Widget.php:2598, ../includes/Admin/Elementor/Better_Payment_Widget.php:3677
+#: ../includes/Blocks/BlockManager.php:790, ../includes/Classes/Handler.php:583, ../includes/Admin/Elementor/Better_Payment_Widget.php:2595, ../includes/Admin/Elementor/Better_Payment_Widget.php:2597, ../includes/Admin/Elementor/Better_Payment_Widget.php:2598, ../includes/Admin/Elementor/Better_Payment_Widget.php:3677
 msgid "Payment Method"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:484, ../includes/Classes/Handler.php:586, ../includes/Admin/Elementor/Better_Payment_Widget.php:120, ../includes/Admin/Elementor/Better_Payment_Widget.php:2612, ../includes/Admin/Elementor/Better_Payment_Widget.php:2614, ../includes/Admin/Elementor/Better_Payment_Widget.php:2615, ../includes/Admin/Elementor/User_Dashboard.php:1905, ../includes/Admin/Elementor/User_Dashboard.php:2027, ../includes/Admin/Elementor/User_Dashboard.php:2030, ../includes/Admin/views/template-transaction-list.php:41
+#: ../includes/Blocks/BlockManager.php:794, ../includes/Classes/Handler.php:586, ../includes/Admin/Elementor/Better_Payment_Widget.php:120, ../includes/Admin/Elementor/Better_Payment_Widget.php:2612, ../includes/Admin/Elementor/Better_Payment_Widget.php:2614, ../includes/Admin/Elementor/Better_Payment_Widget.php:2615, ../includes/Admin/Elementor/User_Dashboard.php:1910, ../includes/Admin/Elementor/User_Dashboard.php:2032, ../includes/Admin/Elementor/User_Dashboard.php:2035, ../includes/Admin/views/template-transaction-list.php:41
 msgid "Payment Type"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:488, ../includes/Classes/Handler.php:612, ../includes/Admin/Elementor/Better_Payment_Widget.php:2629, ../includes/Admin/Elementor/Better_Payment_Widget.php:2631, ../includes/Admin/Elementor/Better_Payment_Widget.php:2632
+#: ../includes/Blocks/BlockManager.php:798, ../includes/Classes/Handler.php:612, ../includes/Admin/Elementor/Better_Payment_Widget.php:2629, ../includes/Admin/Elementor/Better_Payment_Widget.php:2631, ../includes/Admin/Elementor/Better_Payment_Widget.php:2632
 msgid "Merchant Details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:492, ../includes/Classes/Handler.php:618, ../includes/Admin/Elementor/Better_Payment_Widget.php:2646, ../includes/Admin/Elementor/Better_Payment_Widget.php:2648, ../includes/Admin/Elementor/Better_Payment_Widget.php:2649
+#: ../includes/Blocks/BlockManager.php:802, ../includes/Classes/Handler.php:618, ../includes/Admin/Elementor/Better_Payment_Widget.php:2646, ../includes/Admin/Elementor/Better_Payment_Widget.php:2648, ../includes/Admin/Elementor/Better_Payment_Widget.php:2649
 msgid "Paid Amount"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:496, ../includes/Classes/Handler.php:621, ../includes/Admin/Elementor/Better_Payment_Widget.php:2663, ../includes/Admin/Elementor/Better_Payment_Widget.php:2665, ../includes/Admin/Elementor/Better_Payment_Widget.php:2666
+#: ../includes/Blocks/BlockManager.php:806, ../includes/Classes/Handler.php:621, ../includes/Admin/Elementor/Better_Payment_Widget.php:2663, ../includes/Admin/Elementor/Better_Payment_Widget.php:2665, ../includes/Admin/Elementor/Better_Payment_Widget.php:2666
 msgid "Purchase Details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:500, ../includes/Classes/Handler.php:624, ../includes/Admin/Elementor/Better_Payment_Widget.php:2680, ../includes/Admin/Elementor/Better_Payment_Widget.php:2682, ../includes/Admin/Elementor/Better_Payment_Widget.php:2683
+#: ../includes/Blocks/BlockManager.php:810, ../includes/Classes/Handler.php:624, ../includes/Admin/Elementor/Better_Payment_Widget.php:2680, ../includes/Admin/Elementor/Better_Payment_Widget.php:2682, ../includes/Admin/Elementor/Better_Payment_Widget.php:2683
 msgid "Print"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:504, ../includes/Blocks/BlockManager.php:540, ../includes/Classes/Handler.php:627, ../includes/Classes/Handler.php:858, ../includes/Admin/Elementor/Better_Payment_Widget.php:2697, ../includes/Admin/Elementor/Better_Payment_Widget.php:2699, ../includes/Admin/Elementor/Better_Payment_Widget.php:2700, ../includes/Admin/Elementor/Better_Payment_Widget.php:2828, ../includes/Admin/Elementor/Better_Payment_Widget.php:2830
+#: ../includes/Blocks/BlockManager.php:814, ../includes/Blocks/BlockManager.php:850, ../includes/Classes/Handler.php:627, ../includes/Classes/Handler.php:858, ../includes/Admin/Elementor/Better_Payment_Widget.php:2697, ../includes/Admin/Elementor/Better_Payment_Widget.php:2699, ../includes/Admin/Elementor/Better_Payment_Widget.php:2700, ../includes/Admin/Elementor/Better_Payment_Widget.php:2828, ../includes/Admin/Elementor/Better_Payment_Widget.php:2830
 msgid "View Details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:526
+#: ../includes/Blocks/BlockManager.php:836
 msgid "Payment Failed"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:530, ../includes/Classes/Handler.php:855, ../includes/Admin/Elementor/Better_Payment_Widget.php:2785
+#: ../includes/Blocks/BlockManager.php:840, ../includes/Classes/Handler.php:855, ../includes/Admin/Elementor/Better_Payment_Widget.php:2785
 msgid "Your payment has failed. Please check your payment details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:534, ../includes/Classes/Handler.php:576, ../includes/Classes/Handler.php:856, ../includes/Admin/Elementor/Better_Payment_Widget.php:2529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2530, ../includes/Admin/Elementor/Better_Payment_Widget.php:2801, ../includes/Admin/Elementor/User_Dashboard.php:1917, ../includes/Admin/Elementor/User_Dashboard.php:2040, ../includes/Admin/Elementor/User_Dashboard.php:2043, ../includes/Admin/views/template-transaction-list.php:44
+#: ../includes/Blocks/BlockManager.php:844, ../includes/Classes/Handler.php:576, ../includes/Classes/Handler.php:856, ../includes/Admin/Elementor/Better_Payment_Widget.php:2529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2530, ../includes/Admin/Elementor/Better_Payment_Widget.php:2801, ../includes/Admin/Elementor/User_Dashboard.php:1922, ../includes/Admin/Elementor/User_Dashboard.php:2045, ../includes/Admin/Elementor/User_Dashboard.php:2048, ../includes/Admin/views/template-transaction-list.php:44
 msgid "Transaction ID"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:785, ../includes/Blocks/BlockManager.php:786, ../includes/Admin/Elementor/Better_Payment_Widget.php:1258, ../includes/Admin/Elementor/Better_Payment_Widget.php:1456, ../includes/Admin/Elementor/Better_Payment_Widget.php:1457
+#: ../includes/Blocks/BlockManager.php:1095, ../includes/Blocks/BlockManager.php:1096, ../includes/Admin/Elementor/Better_Payment_Widget.php:1258, ../includes/Admin/Elementor/Better_Payment_Widget.php:1456, ../includes/Admin/Elementor/Better_Payment_Widget.php:1457
 msgid "First Name"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:795, ../includes/Blocks/BlockManager.php:796, ../includes/Admin/Elementor/Better_Payment_Widget.php:1259, ../includes/Admin/Elementor/Better_Payment_Widget.php:1465, ../includes/Admin/Elementor/Better_Payment_Widget.php:1466
+#: ../includes/Blocks/BlockManager.php:1105, ../includes/Blocks/BlockManager.php:1106, ../includes/Admin/Elementor/Better_Payment_Widget.php:1259, ../includes/Admin/Elementor/Better_Payment_Widget.php:1465, ../includes/Admin/Elementor/Better_Payment_Widget.php:1466
 msgid "Last Name"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:805, ../includes/Admin/Elementor/Better_Payment_Widget.php:1233, ../includes/Admin/Elementor/Better_Payment_Widget.php:1260, ../includes/Admin/Elementor/Better_Payment_Widget.php:1520, ../includes/Admin/views/better-payment-settings.php:109
+#: ../includes/Blocks/BlockManager.php:1115, ../includes/Admin/Elementor/Better_Payment_Widget.php:1233, ../includes/Admin/Elementor/Better_Payment_Widget.php:1260, ../includes/Admin/Elementor/Better_Payment_Widget.php:1520, ../includes/Admin/views/better-payment-settings.php:109
 msgid "Email"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:806, ../includes/Admin/Elementor/Better_Payment_Widget.php:1474, ../includes/Admin/Elementor/Better_Payment_Widget.php:1475, ../includes/Admin/Elementor/User_Dashboard.php:1881, ../includes/Admin/Elementor/User_Dashboard.php:2001, ../includes/Admin/Elementor/User_Dashboard.php:2004, ../includes/Admin/views/better-payment-transaction-list.php:228, ../includes/Admin/views/template-transaction-list.php:35
+#: ../includes/Blocks/BlockManager.php:1116, ../includes/Admin/Elementor/Better_Payment_Widget.php:1474, ../includes/Admin/Elementor/Better_Payment_Widget.php:1475, ../includes/Admin/Elementor/User_Dashboard.php:1886, ../includes/Admin/Elementor/User_Dashboard.php:2006, ../includes/Admin/Elementor/User_Dashboard.php:2009, ../includes/Admin/views/better-payment-transaction-list.php:228, ../includes/Admin/views/template-transaction-list.php:35
 msgid "Email Address"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:816, ../includes/Admin/Elementor/Better_Payment_Widget.php:1261, ../includes/Admin/Elementor/Better_Payment_Widget.php:1483, ../includes/Admin/Elementor/Better_Payment_Widget.php:1484, ../includes/Admin/Elementor/Better_Payment_Widget.php:1635, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:31, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:93
+#: ../includes/Blocks/BlockManager.php:1126, ../includes/Admin/Elementor/Better_Payment_Widget.php:1261, ../includes/Admin/Elementor/Better_Payment_Widget.php:1483, ../includes/Admin/Elementor/Better_Payment_Widget.php:1484, ../includes/Admin/Elementor/Better_Payment_Widget.php:1635, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Field.php:31, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:93
 msgid "Payment Amount"
 msgstr ""
 
@@ -577,24 +581,32 @@ msgstr ""
 msgid "Just Deactivate"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:754
-msgid "Install ( if not installed yet ) and Activate Elementor"
+#: ../includes/Traits/Helper.php:848
+msgid "Add your Stripe, PayPal, or Paystack API keys in <a href=\"%s\">Payment Settings</a>"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:786
-msgid "Insert sandbox/test API keys for Stripe, PayPal & Paystack on <a href=\"%s\">Payment Settings</a>"
+#: ../includes/Traits/Helper.php:858
+msgid "Open your page in"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:794
-msgid "Edit page with Elementor and add Better Payment widget to use it. You can check this"
+#: ../includes/Traits/Helper.php:858
+msgid "Elementor"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:794
-msgid "doc"
+#: ../includes/Traits/Helper.php:858
+msgid " or "
 msgstr ""
 
-#: ../includes/Traits/Helper.php:802
-msgid "Customize the widget as your own and save the changes"
+#: ../includes/Traits/Helper.php:858
+msgid "Gutenberg"
+msgstr ""
+
+#: ../includes/Traits/Helper.php:858
+msgid " and insert the Better Payment widget/block."
+msgstr ""
+
+#: ../includes/Traits/Helper.php:866
+msgid "Customize the settings to fit your needs, then save and publish"
 msgstr ""
 
 #: ../includes/Admin/Elementor/Better_Payment_Widget.php:59
@@ -849,7 +861,7 @@ msgstr ""
 msgid "Select an icon for this field (not applicable for primary field - Payment Amount and layout 4, 5, 6)."
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1283, ../includes/Admin/Elementor/Better_Payment_Widget.php:2817, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:157, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:170, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:192, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:207, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:245, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:275, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:323, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:367, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:411, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:555, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:570, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:666, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:699, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:852, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:884, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:929, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1054, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1205, ../includes/Admin/Elementor/User_Dashboard.php:124, ../includes/Admin/Elementor/User_Dashboard.php:136, ../includes/Admin/Elementor/User_Dashboard.php:151, ../includes/Admin/Elementor/User_Dashboard.php:166, ../includes/Admin/Elementor/User_Dashboard.php:178, ../includes/Admin/Elementor/User_Dashboard.php:190, ../includes/Admin/Elementor/User_Dashboard.php:202, ../includes/Admin/Elementor/User_Dashboard.php:1672, ../includes/Admin/Elementor/User_Dashboard.php:1684, ../includes/Admin/Elementor/User_Dashboard.php:1696, ../includes/Admin/Elementor/User_Dashboard.php:1708, ../includes/Admin/Elementor/User_Dashboard.php:1720, ../includes/Admin/Elementor/User_Dashboard.php:1871, ../includes/Admin/Elementor/User_Dashboard.php:1883, ../includes/Admin/Elementor/User_Dashboard.php:1895, ../includes/Admin/Elementor/User_Dashboard.php:1907, ../includes/Admin/Elementor/User_Dashboard.php:1919, ../includes/Admin/Elementor/User_Dashboard.php:1931, ../includes/Admin/Elementor/User_Dashboard.php:1943, ../includes/Admin/Elementor/User_Dashboard.php:1955
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:1283, ../includes/Admin/Elementor/Better_Payment_Widget.php:2817, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:157, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:170, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:192, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:207, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:245, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:275, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:323, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:367, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:411, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:555, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:570, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:666, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:699, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:852, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:884, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:929, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1054, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1205, ../includes/Admin/Elementor/User_Dashboard.php:124, ../includes/Admin/Elementor/User_Dashboard.php:136, ../includes/Admin/Elementor/User_Dashboard.php:151, ../includes/Admin/Elementor/User_Dashboard.php:166, ../includes/Admin/Elementor/User_Dashboard.php:178, ../includes/Admin/Elementor/User_Dashboard.php:190, ../includes/Admin/Elementor/User_Dashboard.php:202, ../includes/Admin/Elementor/User_Dashboard.php:1677, ../includes/Admin/Elementor/User_Dashboard.php:1689, ../includes/Admin/Elementor/User_Dashboard.php:1701, ../includes/Admin/Elementor/User_Dashboard.php:1713, ../includes/Admin/Elementor/User_Dashboard.php:1725, ../includes/Admin/Elementor/User_Dashboard.php:1876, ../includes/Admin/Elementor/User_Dashboard.php:1888, ../includes/Admin/Elementor/User_Dashboard.php:1900, ../includes/Admin/Elementor/User_Dashboard.php:1912, ../includes/Admin/Elementor/User_Dashboard.php:1924, ../includes/Admin/Elementor/User_Dashboard.php:1936, ../includes/Admin/Elementor/User_Dashboard.php:1948, ../includes/Admin/Elementor/User_Dashboard.php:1960
 msgid "Show"
 msgstr ""
 
@@ -1193,7 +1205,7 @@ msgstr ""
 msgid "Show Details Button"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2818, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:158, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:171, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:193, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:208, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:246, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:276, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:556, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:571, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:667, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:700, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:853, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:885, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1206, ../includes/Admin/Elementor/User_Dashboard.php:125, ../includes/Admin/Elementor/User_Dashboard.php:137, ../includes/Admin/Elementor/User_Dashboard.php:152, ../includes/Admin/Elementor/User_Dashboard.php:167, ../includes/Admin/Elementor/User_Dashboard.php:179, ../includes/Admin/Elementor/User_Dashboard.php:191, ../includes/Admin/Elementor/User_Dashboard.php:203, ../includes/Admin/Elementor/User_Dashboard.php:1673, ../includes/Admin/Elementor/User_Dashboard.php:1685, ../includes/Admin/Elementor/User_Dashboard.php:1697, ../includes/Admin/Elementor/User_Dashboard.php:1709, ../includes/Admin/Elementor/User_Dashboard.php:1721, ../includes/Admin/Elementor/User_Dashboard.php:1872, ../includes/Admin/Elementor/User_Dashboard.php:1884, ../includes/Admin/Elementor/User_Dashboard.php:1896, ../includes/Admin/Elementor/User_Dashboard.php:1908, ../includes/Admin/Elementor/User_Dashboard.php:1920, ../includes/Admin/Elementor/User_Dashboard.php:1932, ../includes/Admin/Elementor/User_Dashboard.php:1944, ../includes/Admin/Elementor/User_Dashboard.php:1956
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2818, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:158, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:171, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:193, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:208, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:246, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:276, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:556, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:571, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:667, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:700, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:853, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:885, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1206, ../includes/Admin/Elementor/User_Dashboard.php:125, ../includes/Admin/Elementor/User_Dashboard.php:137, ../includes/Admin/Elementor/User_Dashboard.php:152, ../includes/Admin/Elementor/User_Dashboard.php:167, ../includes/Admin/Elementor/User_Dashboard.php:179, ../includes/Admin/Elementor/User_Dashboard.php:191, ../includes/Admin/Elementor/User_Dashboard.php:203, ../includes/Admin/Elementor/User_Dashboard.php:1678, ../includes/Admin/Elementor/User_Dashboard.php:1690, ../includes/Admin/Elementor/User_Dashboard.php:1702, ../includes/Admin/Elementor/User_Dashboard.php:1714, ../includes/Admin/Elementor/User_Dashboard.php:1726, ../includes/Admin/Elementor/User_Dashboard.php:1877, ../includes/Admin/Elementor/User_Dashboard.php:1889, ../includes/Admin/Elementor/User_Dashboard.php:1901, ../includes/Admin/Elementor/User_Dashboard.php:1913, ../includes/Admin/Elementor/User_Dashboard.php:1925, ../includes/Admin/Elementor/User_Dashboard.php:1937, ../includes/Admin/Elementor/User_Dashboard.php:1949, ../includes/Admin/Elementor/User_Dashboard.php:1961
 msgid "Hide"
 msgstr ""
 
@@ -1509,7 +1521,7 @@ msgstr ""
 msgid "⮑ Our Team"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1165, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3393, ../includes/Admin/Elementor/User_Dashboard.php:1869, ../includes/Admin/Elementor/User_Dashboard.php:1988, ../includes/Admin/Elementor/User_Dashboard.php:1991, ../includes/Admin/views/template-transaction-list.php:32
+#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1165, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3393, ../includes/Admin/Elementor/User_Dashboard.php:1874, ../includes/Admin/Elementor/User_Dashboard.php:1993, ../includes/Admin/Elementor/User_Dashboard.php:1996, ../includes/Admin/views/template-transaction-list.php:32
 msgid "Name"
 msgstr ""
 
@@ -1721,71 +1733,71 @@ msgstr ""
 msgid "Cancel Button"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1670
+#: ../includes/Admin/Elementor/User_Dashboard.php:1675
 msgid "Transaction Summary"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1682
+#: ../includes/Admin/Elementor/User_Dashboard.php:1687
 msgid "Analytics Report"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1694, ../includes/Admin/Elementor/User_Dashboard.php:1819, ../includes/Admin/Elementor/User_Dashboard.php:1822
+#: ../includes/Admin/Elementor/User_Dashboard.php:1699, ../includes/Admin/Elementor/User_Dashboard.php:1824, ../includes/Admin/Elementor/User_Dashboard.php:1827
 msgid "Recent Transactions"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1706
+#: ../includes/Admin/Elementor/User_Dashboard.php:1711
 msgid "Recurring Subscription"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1718
+#: ../includes/Admin/Elementor/User_Dashboard.php:1723
 msgid "Split Subscription"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1741, ../includes/Admin/Elementor/User_Dashboard.php:1744, ../includes/Admin/views/template-email-notification.php:261
+#: ../includes/Admin/Elementor/User_Dashboard.php:1746, ../includes/Admin/Elementor/User_Dashboard.php:1749, ../includes/Admin/views/template-email-notification.php:261
 msgid "Total Amount"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1754, ../includes/Admin/Elementor/User_Dashboard.php:1757
+#: ../includes/Admin/Elementor/User_Dashboard.php:1759, ../includes/Admin/Elementor/User_Dashboard.php:1762
 msgid "Completed Amount"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1767, ../includes/Admin/Elementor/User_Dashboard.php:1770
+#: ../includes/Admin/Elementor/User_Dashboard.php:1772, ../includes/Admin/Elementor/User_Dashboard.php:1775
 msgid "Incomplete Amount"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1780, ../includes/Admin/Elementor/User_Dashboard.php:1783
+#: ../includes/Admin/Elementor/User_Dashboard.php:1785, ../includes/Admin/Elementor/User_Dashboard.php:1788
 msgid "Refunded Amount"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1793, ../includes/Admin/Elementor/User_Dashboard.php:1796
+#: ../includes/Admin/Elementor/User_Dashboard.php:1798, ../includes/Admin/Elementor/User_Dashboard.php:1801
 msgid "View All"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1806, ../includes/Admin/Elementor/User_Dashboard.php:1809
+#: ../includes/Admin/Elementor/User_Dashboard.php:1811, ../includes/Admin/Elementor/User_Dashboard.php:1814
 msgid "Analytics Reports"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1832, ../includes/Admin/Elementor/User_Dashboard.php:1835
+#: ../includes/Admin/Elementor/User_Dashboard.php:1837, ../includes/Admin/Elementor/User_Dashboard.php:1840
 msgid "Recurring Subscriptions"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1845, ../includes/Admin/Elementor/User_Dashboard.php:1848
+#: ../includes/Admin/Elementor/User_Dashboard.php:1850, ../includes/Admin/Elementor/User_Dashboard.php:1853
 msgid "Split Subscriptions"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1860, ../includes/Admin/Elementor/User_Dashboard.php:1979
+#: ../includes/Admin/Elementor/User_Dashboard.php:1865, ../includes/Admin/Elementor/User_Dashboard.php:1984
 msgid "Transactions List"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1929, ../includes/Admin/Elementor/User_Dashboard.php:2053, ../includes/Admin/Elementor/User_Dashboard.php:2056, ../includes/Admin/views/better-payment-transaction-list.php:272, ../includes/Admin/views/better-payment-transaction-list.php:275, ../includes/Admin/views/template-transaction-list.php:47
+#: ../includes/Admin/Elementor/User_Dashboard.php:1934, ../includes/Admin/Elementor/User_Dashboard.php:2058, ../includes/Admin/Elementor/User_Dashboard.php:2061, ../includes/Admin/views/better-payment-transaction-list.php:272, ../includes/Admin/views/better-payment-transaction-list.php:275, ../includes/Admin/views/template-transaction-list.php:47
 msgid "Source"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1941, ../includes/Admin/Elementor/User_Dashboard.php:2066, ../includes/Admin/Elementor/User_Dashboard.php:2069, ../includes/Admin/views/better-payment-transaction-list.php:179, ../includes/Admin/views/better-payment-transaction-list.php:198, ../includes/Admin/views/template-transaction-list.php:50
+#: ../includes/Admin/Elementor/User_Dashboard.php:1946, ../includes/Admin/Elementor/User_Dashboard.php:2071, ../includes/Admin/Elementor/User_Dashboard.php:2074, ../includes/Admin/views/better-payment-transaction-list.php:179, ../includes/Admin/views/better-payment-transaction-list.php:198, ../includes/Admin/views/template-transaction-list.php:50
 msgid "Status"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1953, ../includes/Admin/Elementor/User_Dashboard.php:2079, ../includes/Admin/Elementor/User_Dashboard.php:2082, ../includes/Admin/views/template-transaction-list.php:53
+#: ../includes/Admin/Elementor/User_Dashboard.php:1958, ../includes/Admin/Elementor/User_Dashboard.php:2084, ../includes/Admin/Elementor/User_Dashboard.php:2087, ../includes/Admin/views/template-transaction-list.php:53
 msgid "Date"
 msgstr ""
 
@@ -2173,7 +2185,7 @@ msgstr ""
 msgid "Email Address:"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-view.php:138, ../includes/Admin/views/better-payment-transaction-view.php:160, ../includes/Admin/views/better-payment-transaction-view.php:251, ../includes/Admin/views/template-transaction-list.php:104, ../includes/Admin/views/template-transaction-list.php:121, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:122, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:143
+#: ../includes/Admin/views/better-payment-transaction-view.php:138, ../includes/Admin/views/better-payment-transaction-view.php:160, ../includes/Admin/views/better-payment-transaction-view.php:251, ../includes/Admin/views/template-transaction-list.php:104, ../includes/Admin/views/template-transaction-list.php:121, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:146, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:167
 msgid "Copy"
 msgstr ""
 
@@ -2333,11 +2345,11 @@ msgstr ""
 msgid "Action"
 msgstr ""
 
-#: ../includes/Admin/views/template-transaction-list.php:99, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:116
+#: ../includes/Admin/views/template-transaction-list.php:99, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:140
 msgid "Imported"
 msgstr ""
 
-#: ../includes/Admin/views/template-transaction-list.php:152, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:184
+#: ../includes/Admin/views/template-transaction-list.php:152, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:208
 msgid "View"
 msgstr ""
 

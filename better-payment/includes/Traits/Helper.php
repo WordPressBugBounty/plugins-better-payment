@@ -586,15 +586,22 @@ trait Helper
      * @since 1.0.0
      */
     public function bp_init_widget_usage() {
-        // Run initial scan if not done yet
+        // Run initial Elementor widget scan if not done yet
         if (!get_option('bp_widget_usage_initial_scan_done', false)) {
             $this->scan_existing_pages_for_widgets();
             update_option('bp_widget_usage_initial_scan_done', true);
         }
+
+        // Run initial Gutenberg block scan independently — separate flag so it
+        // still runs on sites where the widget scan already completed.
+        if (!get_option('bp_block_usage_initial_scan_done', false)) {
+            $this->scan_existing_pages_for_blocks();
+            update_option('bp_block_usage_initial_scan_done', true);
+        }
     }
 
     /**
-     * Track widget usage when a post is saved
+     * Track widget and block usage when a post is saved
      *
      * @since 1.0.0
      * @param int $post_id
@@ -614,20 +621,25 @@ trait Helper
             return;
         }
 
-        // Only track pages that support Elementor
+        // Only track pages and posts
         $post_type = get_post_type($post_id);
         if (!in_array($post_type, ['page', 'post'])) {
             return;
         }
 
-        // Check if this page uses Elementor
+        // Check Elementor widget usage
         $elementor_data = get_post_meta($post_id, '_elementor_data', true);
-        if (empty($elementor_data)) {
-            return;
+        if (!empty($elementor_data)) {
+            $this->update_widget_usage_flags($post_id, $elementor_data);
         }
 
-        // Parse and check for Better Payment widgets
-        $this->update_widget_usage_flags($post_id, $elementor_data);
+        // Check Gutenberg block usage
+        $post = get_post($post_id);
+        if ($post && has_blocks($post->post_content)) {
+            if ($this->detect_better_payment_blocks(parse_blocks($post->post_content))) {
+                update_option('better_payment_any_block_used', true);
+            }
+        }
     }
 
     /**
@@ -726,6 +738,63 @@ trait Helper
         return get_option('better_payment_any_widget_used', false) ? '1' : '0';
     }
 
+    /**
+     * Scan all existing published posts/pages for Better Payment Gutenberg blocks
+     *
+     * @since 2.0.0
+     */
+    public function scan_existing_pages_for_blocks() {
+        global $wpdb;
+
+        $block_found = $wpdb->get_var(
+            "SELECT ID FROM {$wpdb->posts}
+             WHERE post_status = 'publish'
+             AND post_content LIKE '%<!-- wp:better-payment/%'
+             LIMIT 1"
+        );
+
+        if ( $block_found ) {
+            update_option( 'better_payment_any_block_used', true );
+        }
+    }
+
+    /**
+     * Recursively detect Better Payment blocks in parsed Gutenberg block data
+     *
+     * @since 2.0.0
+     * @param array $blocks Parsed blocks from parse_blocks()
+     * @return bool
+     */
+    public function detect_better_payment_blocks( $blocks ) {
+		dd('ok');
+        $bp_block_names = [ 'better-payment/payment-form', 'better-payment/user-dashboard' ];
+
+        foreach ( $blocks as $block ) {
+            if ( in_array( $block['blockName'], $bp_block_names, true ) ) {
+                return true;
+            }
+
+            // Recursively check inner blocks
+            if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+                if ( $this->detect_better_payment_blocks( $block['innerBlocks'] ) ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if any Better Payment Gutenberg block is being used
+     *
+     * @since 2.0.0
+     * @return string '1' or '0'
+     */
+    public function is_any_better_payment_block_used() {
+        return get_option( 'better_payment_any_block_used', false ) ? '1' : '0';
+    }
+
 	/**
 	 * Check if dismissible section should be shown
 	 *
@@ -747,14 +816,7 @@ trait Helper
 	public function bp_calculate_progress_steps($settings) {
 		$steps = [];
 
-		// Step 1: Check if Elementor is installed and active
-		$elementor_active = defined('ELEMENTOR_VERSION') && class_exists('Elementor\Plugin');
-		$steps[] = [
-			'completed' => $elementor_active,
-			'text' => __('Install ( if not installed yet ) and Activate Elementor', 'better-payment')
-		];
-
-		// Step 2: Check if API keys are configured
+		// Step 1: Check if API keys are configured
 		// Check PayPal keys
 		$paypal_business_email = !empty($settings['better_payment_settings_payment_paypal_email']);
 
@@ -783,23 +845,25 @@ trait Helper
 
 		$steps[] = [
 			'completed' => $api_keys_configured,
-			'text' => sprintf(__('Insert sandbox/test API keys for Stripe, PayPal & Paystack on <a href="%s">Payment Settings</a>', 'better-payment'), $payment_settings_url)
+			'text' => sprintf(__('Add your Stripe, PayPal, or Paystack API keys in <a href="%s">Payment Settings</a>', 'better-payment'), $payment_settings_url)
 		];
 
-		// Step 3: Check if widget has been added
+		// Step 2: Check if Elementor widget has been added
 		$widget_used = $this->is_any_better_payment_widget_used() === '1' ? true : false;
+		// Step 3: Check if any Better Payment Gutenberg block has been added
+		$block_used = $this->is_any_better_payment_block_used() === '1' ? true : false;
 
 		$steps[] = [
-			'completed' => $widget_used,
-			'text' => __('Edit page with Elementor and add Better Payment widget to use it. You can check this', 'better-payment') . ' <a target="_blank" href="//betterpayment.co/docs/" target="_blank">' . __('doc', 'better-payment') . '</a>'
+			'completed' => $widget_used || $block_used,
+			'text' => __('Open your page in', 'better-payment') . ' <a target="_blank" href="//betterpayment.co/docs/how-to-style-payment-form-in-elementor/">' . __('Elementor', 'better-payment') . '</a>' . __( ' or ', 'better-payment' ) . '<a target="_blank" href="//betterpayment.co/docs/configure-payment-form-in-gutenberg/">' . __('Gutenberg', 'better-payment') . '</a>' . __( ' and insert the Better Payment widget/block.', 'better-payment' ),
 		];
 
 		// Step 4: Check if widget has been customized
-		$widget_customized = $widget_used;
+		$widget_customized = $widget_used || $block_used;
 
 		$steps[] = [
 			'completed' => $widget_customized,
-			'text' => __('Customize the widget as your own and save the changes', 'better-payment')
+			'text' => __('Customize the settings to fit your needs, then save and publish', 'better-payment')
 		];
 
 		return $steps;

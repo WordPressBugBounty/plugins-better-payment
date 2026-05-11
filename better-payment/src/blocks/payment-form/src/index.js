@@ -38,7 +38,7 @@ registerBlockType('better-payment/payment-form', {
      * Block description displayed in the block inspector.
      */
     description: __(
-        'A payment form block for accepting payments through Stripe, PayPal, and Paystack.',
+        'Seamlessly collect payments with Stripe, PayPal, and Paystack in just a few clicks.',
         'better-payment'
     ),
 
@@ -61,6 +61,8 @@ registerBlockType('better-payment/payment-form', {
         __('paypal', 'better-payment'),
         __('paystack', 'better-payment'),
         __('donate', 'better-payment'),
+        __('better payment', 'better-payment'),
+        __('betterpayment', 'better-payment'),
     ],
 
     /**

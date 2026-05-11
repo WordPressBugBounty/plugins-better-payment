@@ -6,10 +6,11 @@
     "title": "Payment Form",
     "category": "better-payment",
     "icon": "money-alt",
-    "description": "A payment form block for accepting payments through Stripe, PayPal, and Paystack.",
+    "description": "Seamlessly collect payments with Stripe, PayPal, and Paystack in just a few clicks.",
     "keywords": [
         "payment",
         "stripe",
+        "betterpayment",
         "paypal",
         "paystack",
         "donate",

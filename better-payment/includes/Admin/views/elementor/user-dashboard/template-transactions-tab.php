@@ -1,7 +1,10 @@
 <?php
 use Better_Payment\Lite\Classes\Helper;
 
-$transactions = $this->get_user_transactions();
+$bp_txn_result   = $this->get_user_transactions( '', 1, 20 );
+$transactions    = $bp_txn_result['transactions'];
+$bp_total_pages  = $bp_txn_result['pages'];
+$bp_current_page = 1;
 
 ?>
 
@@ -14,13 +17,33 @@ $transactions = $this->get_user_transactions();
             </div>
     <?php endif; ?>
     <h2><?php esc_html_e($bp_settings['transaction_label'], 'better-payment'); ?></h2>
-    <button class="primary-btn d-none"><a href="<?php echo the_permalink(); ?>">Refresh Stats</a></button>
+    <button class="primary-btn d-none"><a href="<?php echo esc_url( get_permalink() ); ?>">Refresh Stats</a></button>
 </div>
 <?php endif; ?>
 
 <div class="bp--body-content">
     <div class="bp--table-main-wrapper">
-        <div class="bp--table-wrapper transaction better-payment-user-dashboard-table">
+        <?php
+        $bp_txn_col_settings = wp_json_encode( [
+            'name'           => (bool) $bp_settings['transaction_table_name_show'],
+            'email'          => (bool) $bp_settings['transaction_table_email_address_show'],
+            'amount'         => (bool) $bp_settings['transaction_table_amount_show'],
+            'payment_type'   => (bool) $bp_settings['transaction_table_payment_type_show'],
+            'transaction_id' => (bool) $bp_settings['transaction_table_transaction_id_show'],
+            'source'         => (bool) $bp_settings['transaction_table_source_show'],
+            'status'         => (bool) $bp_settings['transaction_table_status_show'],
+            'date'           => (bool) $bp_settings['transaction_table_date_show'],
+            'action'         => (bool) $bp_settings['transaction_table_action_show'],
+            'no_items_label' => $bp_settings['no_items_label'],
+            'admin_url'      => admin_url( 'admin.php' ),
+            'assets_url'     => BETTER_PAYMENT_ASSETS,
+        ] );
+        ?>
+        <div class="bp--table-wrapper transaction better-payment-user-dashboard-table"
+             data-bp-tab="transactions"
+             data-bp-total-pages="<?php echo esc_attr( $bp_total_pages ); ?>"
+             data-bp-per-page="20"
+             data-bp-settings="<?php echo esc_attr( $bp_txn_col_settings ); ?>">
             <div class="better-payment-user-dashboard-table-header bp--table-header bp-min_width-1300 flex justify-between gap-1">
                 <?php if ( $bp_settings['transaction_table_name_show'] ) : ?>
                 <div class="th user-name details">
@@ -77,18 +100,19 @@ $transactions = $this->get_user_transactions();
                 <?php endif; ?>
             </div>
 
+            <div class="bp--table-tbody">
             <?php if ( is_array( $transactions ) && count($transactions)) : ?>
-                <?php 
-                $bp_txn_counter = 0; 
+                <?php
+                $bp_txn_counter = 0;
                 $allowed_sources = ['paypal', 'stripe', 'paystack'];
                 $td_source_image_url = BETTER_PAYMENT_ASSETS . '/img/stripe.svg';
                 $td_source_image_alt = 'Stripe';
-                
+
                 foreach ($transactions as $bp_transaction) :
                     $bp_txn_counter++;
-                    $bp_customer_info = maybe_unserialize($bp_transaction->customer_info); //obj 
-                    $bp_form_fields_info = maybe_unserialize($bp_transaction->form_fields_info); //array 
-                
+                    $bp_customer_info = maybe_unserialize($bp_transaction->customer_info); //obj
+                    $bp_form_fields_info = maybe_unserialize($bp_transaction->form_fields_info); //array
+
                     $is_imported = ! empty( $bp_form_fields_info['is_imported'] ) && 1 === intval($bp_form_fields_info['is_imported']) ? 1 : 0;
                     $bp_transaction_customer_name = isset($bp_form_fields_info['primary_first_name']) ? sanitize_text_field($bp_form_fields_info['primary_first_name']) : '';
                     $bp_transaction_customer_name .= ' ';
@@ -100,7 +124,7 @@ $transactions = $this->get_user_transactions();
                         $bp_transaction_customer_name .= ' ';
                         $bp_transaction_customer_name .= isset($bp_form_fields_info['last_name']) ? sanitize_text_field($bp_form_fields_info['last_name']) : '';
                     }
-                
+
                     $bp_transaction_customer_email = isset($bp_form_fields_info['primary_email']) ? sanitize_text_field($bp_form_fields_info['primary_email']) : '';
                     //legacy
                     if( empty($bp_transaction_customer_email) ){
@@ -110,7 +134,7 @@ $transactions = $this->get_user_transactions();
                     $is_subscription = ! empty( $bp_form_fields_info['subscription_id'] ) ? 'Subscription' : 'One Time';
                     ?>
                     <div class="better-payment-user-dashboard-table-body bp--table-body bp-min_width-1300 flex items-center justify-between gap-1">
-                        <?php 
+                        <?php
                         if ( $bp_settings['transaction_table_name_show'] ) : ?>
                         <div class="td details user-name flex items-center gap-3">
                             <p><?php if ( $is_imported ) : ?> <span title="<?php esc_attr_e('Imported', 'better-payment'); ?>" class="bp-icon bp-imported imported-icon"></span> <?php endif; ?> <?php echo esc_html( $bp_transaction_customer_name ); ?> </p>
@@ -138,7 +162,7 @@ $transactions = $this->get_user_transactions();
                         <?php if ( $bp_settings['transaction_table_transaction_id_show'] ) : ?>
                         <div class="td details transaction flex items-center gap-3">
                             <?php $bp_transaction_id = sanitize_text_field($bp_transaction->transaction_id);  ?>
-                            
+
                             <?php if( !empty($bp_transaction_id) ) : ?>
                                 <p> <span id="bp_copy_clipboard_input_<?php echo esc_html($bp_txn_counter); ?>"><?php echo esc_html($bp_transaction_id); ?></span> <span id="bp_copy_clipboard_<?php echo esc_attr($bp_txn_counter); ?>" class="bp-icon bp-copy-square bp-copy-clipboard" title="<?php esc_html_e('Copy', 'better-payment'); ?>" data-bp_txn_counter="<?php echo esc_attr($bp_txn_counter); ?>" ></span> </p>
                             <?php endif; ?>
@@ -153,7 +177,7 @@ $transactions = $this->get_user_transactions();
                                 $td_source_image_alt = strtolower( $bp_transaction->source ) == 'paypal' ? 'PayPal' : ucfirst( $bp_transaction->source );
                             }
                             ?>
-                            <p> <img src="<?php echo esc_url($td_source_image_url) ?>" title="<?php echo esc_attr( $td_source_image_alt ); ?>" alt="<?php echo esc_attr( $td_source_image_alt ); ?>"> </p>
+                            <img class="source--img" src="<?php echo esc_url($td_source_image_url) ?>" title="<?php echo esc_attr( $td_source_image_alt ); ?>" alt="<?php echo esc_attr( $td_source_image_alt ); ?>" />
                         </div>
                         <?php endif; ?>
 
@@ -167,7 +191,7 @@ $transactions = $this->get_user_transactions();
 
                             $bp_transaction_status = $bp_transaction->status ? sanitize_text_field($bp_transaction->status) : esc_html__('N/A', 'better-payment');
                             ?>
-                            <p class="" data-id="<?php echo esc_attr($bp_transaction->id) ?>"> <span style="color:#fff; padding:7px 15px; border-radius: 20px;background: <?php echo esc_attr($bp_transaction_status_color); ?>"><?php echo esc_html(ucfirst($td_status_btn_text_v2)); //$bp_transaction_status ?></span> </p>
+                            <p class="" data-id="<?php echo esc_attr($bp_transaction->id) ?>"> <span style="color:#fff; padding:7px 15px; border-radius: 20px;background: <?php echo esc_attr($bp_transaction_status_color); ?>"><?php echo esc_html(ucfirst($td_status_btn_text_v2)); ?></span> </p>
                         </div>
                         <?php endif; ?>
 
@@ -193,6 +217,10 @@ $transactions = $this->get_user_transactions();
                 <p class="bp-no_subscription-text"><?php esc_html_e($bp_settings['no_items_label'], 'better-payment'); ?></p>
             </div>
             <?php endif; ?>
+            </div><!-- .bp--table-tbody -->
+
+            <div class="bp--pagination transaction-pagination pagination"></div>
+
         </div>
     </div>
 </div>

@@ -442,6 +442,123 @@ class DB {
     }
 
     /**
+     * Get analytics counts and amounts for a specific user via a single SQL aggregate query.
+     * Returns the same shape as get_transactions_analytics_dashboard() without loading all rows.
+     *
+     * @param string $email
+     * @return array
+     */
+    public static function get_user_analytics_by_email( $email ) {
+        global $wpdb;
+        $table    = self::get_table_name();
+        $email    = sanitize_text_field( $email );
+        $ffi_like = '%' . $wpdb->esc_like( '"' . $email . '"' ) . '%';
+
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT
+                    COUNT(*) AS total_count,
+                    SUM(CAST(amount AS DECIMAL(10,2))) AS total_amount,
+                    SUM(CASE WHEN status IN ('paid','Completed','completed','success')
+                        THEN 1 ELSE 0 END) AS completed_count,
+                    SUM(CASE WHEN status IN ('paid','Completed','completed','success')
+                        THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS completed_amount,
+                    SUM(CASE WHEN status IN ('pending','Pending','unpaid','incomplete','Incomplete') OR status IS NULL
+                        THEN 1 ELSE 0 END) AS incomplete_count,
+                    SUM(CASE WHEN status IN ('pending','Pending','unpaid','incomplete','Incomplete') OR status IS NULL
+                        THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS incomplete_amount,
+                    SUM(CASE WHEN status = 'refunded' THEN 1 ELSE 0 END) AS refunded_count,
+                    SUM(CASE WHEN status = 'refunded'
+                        THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS refunded_amount
+                FROM $table WHERE ( email = %s OR form_fields_info LIKE %s )",
+                $email,
+                $ffi_like
+            )
+        );
+
+        if ( ! $row ) {
+            $row = (object) array_fill_keys(
+                array( 'total_count', 'total_amount', 'completed_count', 'completed_amount', 'incomplete_count', 'incomplete_amount', 'refunded_count', 'refunded_amount' ),
+                0
+            );
+        }
+
+        return [
+            'total_transactions_count'        => (int) $row->total_count,
+            'total_transactions_amount'        => (float) $row->total_amount,
+            'completed_transactions_count'     => (int) $row->completed_count,
+            'completed_transactions_amount'    => (float) $row->completed_amount,
+            'incomplete_transactions_count'    => (int) $row->incomplete_count,
+            'incomplete_transactions_amount'   => (float) $row->incomplete_amount,
+            'refunded_transactions_count'      => (int) $row->refunded_count,
+            'refunded_transactions_amount'     => (float) $row->refunded_amount,
+        ];
+    }
+
+    /**
+     * Get paginated transactions for a specific user email.
+     *
+     * @param string $email
+     * @param array  $args  page, per_page, type ('transactions'|'subscriptions')
+     * @return array { transactions: array, total: int, pages: int }
+     */
+    public static function get_user_transactions_paginated( $email, $args = [] ) {
+        global $wpdb;
+
+        $defaults = [
+            'page'     => 1,
+            'per_page' => 10,
+            'type'     => 'transactions',
+        ];
+        $args     = wp_parse_args( $args, $defaults );
+        $table    = self::get_table_name();
+        $email    = sanitize_text_field( $email );
+        $page     = max( 1, intval( $args['page'] ) );
+        $per_page = max( 1, intval( $args['per_page'] ) );
+        $offset   = ( $page - 1 ) * $per_page;
+
+        $type_where = '';
+        if ( 'subscriptions' === $args['type'] ) {
+            $type_where = " AND form_fields_info LIKE '%\"subscription_id\"%'";
+        }
+
+        // Match rows where the email column is set directly OR where the email
+        // appears as a quoted value inside the serialized form_fields_info blob.
+        // The initial payment_create() insert never writes the email column —
+        // only the payment-confirmed callback does — so many rows have the user's
+        // email exclusively inside form_fields_info.
+        $ffi_like = '%' . $wpdb->esc_like( '"' . $email . '"' ) . '%';
+
+        $email_where = 'email = %s OR form_fields_info LIKE %s';
+
+        $total = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(id) FROM $table WHERE ( $email_where )" . $type_where,
+                $email,
+                $ffi_like
+            )
+        );
+
+        $transactions = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $table WHERE ( $email_where )" . $type_where . " ORDER BY payment_date DESC LIMIT %d OFFSET %d",
+                $email,
+                $ffi_like,
+                $per_page,
+                $offset
+            )
+        );
+
+        return [
+            'transactions' => $transactions,
+            'total'        => $total,
+            'pages'        => $total > 0 ? (int) ceil( $total / $per_page ) : 1,
+            'page'         => $page,
+            'per_page'     => $per_page,
+        ];
+    }
+
+    /**
      * Delete a transaction
      *
      * @param  int $id

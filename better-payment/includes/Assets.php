@@ -19,13 +19,21 @@ if (!defined('ABSPATH')) {
 class Assets extends Controller
 {
     use TraitsHelper;
+
+    /**
+     * Guard flag — register_assets() must only build and register handles once per request.
+     *
+     * @var bool
+     */
+    private $registered = false;
+
     /**
      * Class constructor
-     * 
+     *
      * @since 0.0.1
      */
     public function __construct()
-    {   
+    {
         add_action('init', [$this, 'register_assets']);
         add_action('enqueue_block_editor_assets', [$this, 'register_localize_script']);
         add_action('wp_enqueue_scripts', [$this, 'register_assets']);
@@ -63,13 +71,17 @@ class Assets extends Controller
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/blocks/vendors/js/bundles.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/blocks/vendors/js/bundles.min.js') : BETTER_PAYMENT_VERSION,
                 'deps'    => array(),
             ],
-            // Removed: better-payment-babel-bundle - not used and unnecessary
+            'better-payment-babel-bundle' => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/blocks/vendors/js/bundle.babel.min.js',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/blocks/vendors/js/bundle.babel.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/blocks/vendors/js/bundle.babel.min.js') : BETTER_PAYMENT_VERSION,
+                'deps'    => array(),
+            ],
             'better-payment-controls' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/blocks/controls/modules.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/blocks/controls/modules.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/blocks/controls/modules.min.js') : BETTER_PAYMENT_VERSION,
                 'deps'    => array_merge(
                     $this->get_controls_dependencies(),
-                    ['wp-polyfill', 'better-payment-block-localize','better-payment-vendor-bundle']),
+                    ['wp-polyfill', 'better-payment-block-localize','better-payment-vendor-bundle', 'better-payment-babel-bundle']),
             ],
             'better-payment-controls-frontend' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/blocks/controls/frontend.min.js',
@@ -88,6 +100,13 @@ class Assets extends Controller
                 'src'     => BETTER_PAYMENT_ASSETS . '/js/better-payment.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/better-payment.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/better-payment.min.js') : BETTER_PAYMENT_VERSION,
                 'deps'    => ['jquery', 'better-payment-stripe', 'toastr-js']
+            ],
+            'bp-dashboard-pagination' => [
+                'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/js/bp-dashboard-pagination.min.js' )
+                    ? BETTER_PAYMENT_ASSETS . '/js/bp-dashboard-pagination.min.js'
+                    : BETTER_PAYMENT_ASSETS . '/js/bp-dashboard-pagination.js',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/bp-dashboard-pagination.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/bp-dashboard-pagination.min.js') : BETTER_PAYMENT_VERSION,
+                'deps'    => [],
             ],
             'toastr-js' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/vendor/toastr/js/toastr.min.js',
@@ -134,6 +153,12 @@ class Assets extends Controller
             'better-payment-common-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/common.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/common.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/common.min.css') : BETTER_PAYMENT_VERSION,
+            ],
+            'bp-dashboard-pagination-style' => [
+                'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/css/bp-dashboard-pagination.min.css' )
+                    ? BETTER_PAYMENT_ASSETS . '/css/bp-dashboard-pagination.min.css'
+                    : BETTER_PAYMENT_ASSETS . '/css/bp-dashboard-pagination.css',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/bp-dashboard-pagination.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/bp-dashboard-pagination.min.css') : BETTER_PAYMENT_VERSION,
             ],
             'better-payment-el' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/better-payment-el.min.css',
@@ -221,6 +246,10 @@ class Assets extends Controller
      */
     public function register_assets()
     {
+        if ( $this->registered ) {
+            return;
+        }
+        $this->registered = true;
 
         $scripts = $this->get_scripts();
         $styles  = $this->get_styles();

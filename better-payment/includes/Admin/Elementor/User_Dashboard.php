@@ -77,12 +77,12 @@ class User_Dashboard extends Widget_Base {
         return 'https://betterpayment.co/docs/user-dashboard-using-better-payment/';
     }
 
-    public function get_style_depends() { 
-        return apply_filters( 'better_payment/elementor/user_dashboard/editor/get_style_depends', [ 'better-payment-el', 'bp-icon-front', 'better-payment-style', 'better-payment-common-style', 'better-payment-admin-style' ] );
+    public function get_style_depends() {
+        return apply_filters( 'better_payment/elementor/user_dashboard/editor/get_style_depends', [ 'better-payment-el', 'bp-icon-front', 'better-payment-style', 'better-payment-common-style', 'better-payment-admin-style', 'bp-dashboard-pagination-style' ] );
     }
     
     public function get_script_depends() {
-        return apply_filters( 'better_payment/elementor/user_dashboard/editor/get_script_depends', [ 'better-payment-common-script', 'better-payment' ] );
+        return apply_filters( 'better_payment/elementor/user_dashboard/editor/get_script_depends', [ 'better-payment-common-script', 'better-payment', 'bp-dashboard-pagination' ] );
     }
 
     protected function register_controls() {
@@ -1513,6 +1513,11 @@ class User_Dashboard extends Widget_Base {
         do_action('better_payment/elementor/editor/manage_response_webhook', $this, $settings );
 
         wp_enqueue_script( 'better-payment' );
+        wp_localize_script( 'better-payment', 'betterPaymentUserDash', [
+            'nonce'   => wp_create_nonce( 'wp_rest' ),
+            'restUrl' => get_rest_url( null, 'better-payment/v1/user-transactions' ),
+        ] );
+        wp_enqueue_script( 'bp-dashboard-pagination' );
 
         if( $this->pro_enabled ){
             wp_enqueue_script( 'better-payment-common-script' );
@@ -2139,16 +2144,18 @@ class User_Dashboard extends Widget_Base {
         // );
 	}
 
-	public function get_user_transactions( $email = '' ){
+	public function get_user_transactions( $email = '', $page = 1, $per_page = 10 ){
         $current_user = wp_get_current_user();
 
         if( empty($email) ) {
             $email = $current_user->user_email;
         }
 
-        $transactions = DB::get_transactions_by_email( $email );
-
-        return $transactions;
+        return DB::get_user_transactions_paginated( $email, [
+            'page'     => $page,
+            'per_page' => $per_page,
+            'type'     => 'transactions',
+        ] );
     }
 
 }

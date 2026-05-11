@@ -1,0 +1,34 @@
+// /**
+//  * Frontend & Editor styles for User Dashboard block
+//  * These styles are loaded both in the Gutenberg editor and on the frontend
+//  *
+//  * @package Better_Payment
+//  */
+
+// .better-payment-user-dashboard {
+//     // Styles will be inherited from better-payment-el CSS
+//     // which contains all the dashboard styling
+
+//     // Ensure proper display of common elements
+//     .better-payment * {
+//         box-sizing: border-box;
+//     }
+
+//     // Responsive styles
+//     @media (max-width: 767px) {
+//         // Mobile-specific adjustments if needed
+//     }
+// }
+
+// // Tablet
+// @media (min-width: 768px) and (max-width: 1024px) {
+//     .better-payment-user-dashboard {
+//         // Tablet-specific adjustments if needed
+//     }
+// }
+
+@import '../../../../css/bp-dashboard-pagination';
+
+.better-payment * {
+    box-sizing: border-box;
+}

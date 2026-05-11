@@ -5,7 +5,7 @@ Tags: donation, fundraising, recurring donations, payments, stripe paypal paysta
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -168,6 +168,10 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 2.1.1 - 11/05/2026 =
+- Added: Dedicated User Dashboard Block for Gutenberg
+- Few minor bug fixes and improvements
 
 = 2.1.0 - 21/04/2026 =
 - Added: Dedicated Payment Form Block for Gutenberg

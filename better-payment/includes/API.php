@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite;
 
 use Better_Payment\Lite\API\AdminAPI;
+use Better_Payment\Lite\API\UserAPI;
 
 /**
  * Exit if accessed directly
@@ -27,6 +28,7 @@ class API extends Controller {
         add_action( 'rest_api_init', [ $this, 'register_api' ] );
 
         new AdminAPI();
+        new UserAPI();
     }
 
     /**

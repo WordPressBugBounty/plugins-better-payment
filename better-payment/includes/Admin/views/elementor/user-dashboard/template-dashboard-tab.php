@@ -8,8 +8,7 @@ if ( empty($email) ) {
     $email = $current_user->user_email;
 }
 
-$user_transactions = DB::get_transactions_by_email( $email );
-$transactions_analytics = DB::get_transactions_analytics_dashboard( $user_transactions);
+$transactions_analytics = DB::get_user_analytics_by_email( $email );
 
 $total_transactions_count = isset($transactions_analytics['total_transactions_count']) ? $transactions_analytics['total_transactions_count'] : 0;
 $completed_transactions_count = isset($transactions_analytics['completed_transactions_count']) ? $transactions_analytics['completed_transactions_count'] : 0;
@@ -157,8 +156,9 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                             $td_source_image_url = BETTER_PAYMENT_ASSETS . '/img/stripe.svg';
                             $td_source_image_alt = 'Stripe';
                         ?>
-                        <?php if ( is_array( $user_transactions ) && count( $user_transactions ) ) : ?>
-                            <?php foreach( $user_transactions as $user_transaction ) : ?>
+                        <?php $recent_transactions = DB::get_user_transactions_paginated( $email, [ 'page' => 1, 'per_page' => 5 ] )['transactions']; ?>
+                        <?php if ( is_array( $recent_transactions ) && count( $recent_transactions ) ) : ?>
+                            <?php foreach( $recent_transactions as $user_transaction ) : ?>
                                 <div class="bp-td flex items-center">
                                     <div class="td-product flex items-start w-195 flex-col">
                                         <div class="td-product_logo">

@@ -40,10 +40,20 @@ class BlockManager {
      */
     private $blocks = array(
         'payment-form' => array(
-            'name'        => 'better-payment/payment-form',
-            'path'        => 'payment-form',
-            'has_styles'  => true,
-            'has_scripts' => true,
+            'name'            => 'better-payment/payment-form',
+            'path'            => 'payment-form',
+            'has_styles'      => true,
+            'has_scripts'     => true,
+            'render_callback' => 'render_payment_form_frontend',
+            'editor_data'     => 'get_payment_form_editor_data',
+        ),
+        'user-dashboard' => array(
+            'name'            => 'better-payment/user-dashboard',
+            'path'            => 'user-dashboard',
+            'has_styles'      => true,
+            'has_scripts'     => true,
+            'render_callback' => 'render_user_dashboard_frontend',
+            'editor_data'     => 'get_user_dashboard_editor_data',
         ),
     );
 
@@ -74,6 +84,7 @@ class BlockManager {
     private function init_hooks() {
         add_action( 'init', array( $this, 'register_blocks' ) );
         add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_assets' ) );
+        add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
         add_filter( 'block_categories_all', array( $this, 'register_block_category' ), 10, 2 );
     }
 
@@ -161,8 +172,11 @@ class BlockManager {
         do_action( 'better_payment/elementor/editor/manage_response_webhook', null, $settings );
 
         // Store settings in a transient so the AJAX handler can retrieve them.
+        // Only write when missing or expired — avoids a DB write on every page load.
         $transient_key = 'bp_block_settings_' . get_the_ID() . '_' . $block_id;
-        set_transient( $transient_key, $settings, HOUR_IN_SECONDS );
+        if ( false === get_transient( $transient_key ) ) {
+            set_transient( $transient_key, $settings, HOUR_IN_SECONDS );
+        }
 
         // Create widget proxy object for layout templates.
         $widgetObj = $this->create_widget_proxy( $block_id, $settings );
@@ -210,6 +224,302 @@ class BlockManager {
         <?php
 
         return ob_get_clean();
+    }
+
+    /**
+     * Render callback for the user dashboard block frontend.
+     *
+     * Maps block attributes to widget settings and renders the user dashboard template.
+     *
+     * @param array    $attributes Block attributes.
+     * @param string   $content    Block default content.
+     * @param WP_Block $block      Block instance.
+     * @return string The rendered HTML output.
+     */
+    public function render_user_dashboard_frontend( $attributes, $content = '', $block = null ) {
+        // Get block attributes with defaults
+        $dashboard_layout = isset( $attributes['dashboardLayout'] ) ? sanitize_text_field( $attributes['dashboardLayout'] ) : 'layout-1';
+
+        // Validate layout - only allow layout-1, layout-2, layout-3 plus pro versions
+        $allowed_layouts = array( 'layout-1', 'layout-2', 'layout-3', 'layout-1-pro', 'layout-2-pro', 'layout-3-pro' );
+        if ( ! in_array( $dashboard_layout, $allowed_layouts, true ) ) {
+            $dashboard_layout = 'layout-1';
+        }
+
+        // Check if layout file exists, fallback to layout-1 if not
+        $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/' . $dashboard_layout . '.php';
+
+        // Check for pro layout if pro plugin is active
+        $is_pro_layout = strpos( $dashboard_layout, '-pro' ) !== false;
+        if ( $is_pro_layout && defined( 'BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH' ) ) {
+            $template_file = BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $dashboard_layout . '.php';
+        }
+
+        if ( ! file_exists( $template_file ) ) {
+            $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/layout-1.php';
+            if ( ! file_exists( $template_file ) ) {
+                if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                    error_log( 'Better Payment: Layout template not found at ' . $template_file );
+                }
+                return '<div class="better-payment-block better-payment-block--error">' .
+                       esc_html__( 'User Dashboard template not found.', 'better-payment' ) .
+                       '</div>';
+            }
+        }
+
+        // Generate unique block ID for this instance
+        $block_id = isset( $attributes['blockId'] ) && ! empty( $attributes['blockId'] )
+            ? sanitize_text_field( $attributes['blockId'] )
+            : 'bp-user-dashboard-' . md5( get_the_ID() . wp_json_encode( $attributes ) );
+
+        // Map block attributes to widget settings format
+        $settings = $this->build_user_dashboard_settings( $attributes );
+
+        // Build wrapper attributes using WordPress's block wrapper API
+        $wrapper_class      = 'better-payment-user-dashboard bp-' . esc_attr( $block_id ) . ' bp-dashboard-' . esc_attr( $dashboard_layout );
+        $wrapper_attributes = get_block_wrapper_attributes( array( 'class' => $wrapper_class ) );
+
+        // Prepare extra data
+        $extraDatas = array(
+            'action'    => esc_url( admin_url( 'admin-post.php' ) ),
+            'block_id'  => $block_id,
+            'setting_meta' => wp_json_encode(
+                array(
+                    'page_id'   => get_the_ID(),
+                    'widget_id' => $block_id,
+                    'source'    => 'gutenberg',
+                )
+            ),
+        );
+
+        // Enqueue necessary scripts and styles
+        wp_enqueue_style( 'better-payment-el' );
+        wp_enqueue_style( 'bp-icon-front' );
+        wp_enqueue_style( 'better-payment-style' );
+        wp_enqueue_style( 'better-payment-common-style' );
+        wp_enqueue_style( 'better-payment-admin-style' );
+        $this->enqueue_font_awesome();
+        wp_enqueue_style( 'dashicons' );
+        wp_enqueue_style( 'bp-dashboard-pagination-style' );
+        wp_enqueue_script( 'better-payment-common-script' );
+        wp_enqueue_script( 'better-payment' );
+        if ( is_user_logged_in() ) {
+            wp_localize_script( 'better-payment', 'betterPaymentUserDash', [
+                'nonce'   => wp_create_nonce( 'wp_rest' ),
+                'restUrl' => get_rest_url( null, 'better-payment/v1/user-transactions' ),
+            ] );
+        }
+        wp_enqueue_script( 'bp-dashboard-pagination' );
+
+        // Use output buffering to capture the layout output
+        ob_start();
+        ?>
+        <div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_block_wrapper_attributes() is a safe WordPress core function. ?>>
+            <?php
+            // Create widget proxy object for layout templates
+            $widgetObj = $this->create_user_dashboard_widget_proxy( $block_id, $settings );
+
+            // Create a closure to include the template with isolated scope
+            $render_layout = function ( $template_file, $settings, $widgetObj, $extraDatas ) {
+                // Make $bp_settings available to templates (templates expect this variable)
+                $bp_settings = $settings;
+                include $template_file;
+            };
+
+            // Bind the closure to the widget proxy so $this works in the template
+            $bound_render = \Closure::bind( $render_layout, $widgetObj, get_class( $widgetObj ) );
+            $bound_render( $template_file, $settings, $widgetObj, $extraDatas );
+            ?>
+        </div>
+        <?php
+
+        return ob_get_clean();
+    }
+
+    /**
+     * Build the settings array for user dashboard layout templates.
+     *
+     * Maps block attributes to the format expected by dashboard templates.
+     *
+     * @param array $attributes Block attributes.
+     * @return array Settings array for layout templates.
+     */
+    public function build_user_dashboard_settings( $attributes ) {
+        // Convert block attributes to widget settings format (like get_bp_settings does)
+        $settings = array(
+            // Visibility toggles
+            'sidebar_show'        => isset( $attributes['sidebarShow'] ) ? (bool) $attributes['sidebarShow'] : true,
+            'avatar_show'         => isset( $attributes['avatarShow'] ) ? (bool) $attributes['avatarShow'] : true,
+            'username_show'       => isset( $attributes['usernameShow'] ) ? (bool) $attributes['usernameShow'] : true,
+            'dashboard_show'      => isset( $attributes['dashboardShow'] ) ? (bool) $attributes['dashboardShow'] : true,
+            'transactions_show'   => isset( $attributes['transactionsShow'] ) ? (bool) $attributes['transactionsShow'] : true,
+            'subscriptions_show'  => isset( $attributes['subscriptionsShow'] ) ? (bool) $attributes['subscriptionsShow'] : true,
+            'header_show'         => isset( $attributes['headerShow'] ) ? (bool) $attributes['headerShow'] : true,
+
+            // Labels
+            'dashboard_label'     => isset( $attributes['dashboardLabel'] ) && ! empty( $attributes['dashboardLabel'] ) ? sanitize_text_field( $attributes['dashboardLabel'] ) : 'Dashboard',
+            'transaction_label'   => isset( $attributes['transactionLabel'] ) && ! empty( $attributes['transactionLabel'] ) ? sanitize_text_field( $attributes['transactionLabel'] ) : 'Transactions',
+            'subscription_label'  => isset( $attributes['subscriptionLabel'] ) && ! empty( $attributes['subscriptionLabel'] ) ? sanitize_text_field( $attributes['subscriptionLabel'] ) : 'Subscriptions',
+            'refresh_stats_label' => isset( $attributes['refreshStatsLabel'] ) && ! empty( $attributes['refreshStatsLabel'] ) ? sanitize_text_field( $attributes['refreshStatsLabel'] ) : 'Refresh Stats',
+            'no_items_label'      => isset( $attributes['noItemsLabel'] ) && ! empty( $attributes['noItemsLabel'] ) ? sanitize_text_field( $attributes['noItemsLabel'] ) : 'No records found!',
+
+            // Dashboard section visibility
+            'dashboard_transaction_summary_show'   => isset( $attributes['dashboardTransactionSummaryShow'] ) ? (bool) $attributes['dashboardTransactionSummaryShow'] : true,
+            'dashboard_analytics_report_show'     => isset( $attributes['dashboardAnalyticsReportShow'] ) ? (bool) $attributes['dashboardAnalyticsReportShow'] : true,
+            'dashboard_recent_transactions_show'  => isset( $attributes['dashboardRecentTransactionsShow'] ) ? (bool) $attributes['dashboardRecentTransactionsShow'] : true,
+            'dashboard_recurring_subscription_show' => isset( $attributes['dashboardRecurringSubscriptionShow'] ) ? (bool) $attributes['dashboardRecurringSubscriptionShow'] : true,
+            'dashboard_split_subscription_show'   => isset( $attributes['dashboardSplitSubscriptionShow'] ) ? (bool) $attributes['dashboardSplitSubscriptionShow'] : true,
+
+            // Dashboard labels
+            'dashboard_total_amount_label'        => isset( $attributes['dashboardTotalAmountLabel'] ) && ! empty( $attributes['dashboardTotalAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardTotalAmountLabel'] ) : 'Total Amount',
+            'dashboard_completed_amount_label'    => isset( $attributes['dashboardCompletedAmountLabel'] ) && ! empty( $attributes['dashboardCompletedAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardCompletedAmountLabel'] ) : 'Completed Amount',
+            'dashboard_incomplete_amount_label'   => isset( $attributes['dashboardIncompleteAmountLabel'] ) && ! empty( $attributes['dashboardIncompleteAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardIncompleteAmountLabel'] ) : 'Incomplete Amount',
+            'dashboard_refunded_amount_label'     => isset( $attributes['dashboardRefundedAmountLabel'] ) && ! empty( $attributes['dashboardRefundedAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardRefundedAmountLabel'] ) : 'Refunded Amount',
+            'dashboard_view_all_label'            => isset( $attributes['dashboardViewAllLabel'] ) && ! empty( $attributes['dashboardViewAllLabel'] ) ? sanitize_text_field( $attributes['dashboardViewAllLabel'] ) : 'View All',
+            'dashboard_analytics_reports_label'   => isset( $attributes['dashboardAnalyticsReportsLabel'] ) && ! empty( $attributes['dashboardAnalyticsReportsLabel'] ) ? sanitize_text_field( $attributes['dashboardAnalyticsReportsLabel'] ) : 'Analytics Reports',
+            'dashboard_recent_transactions_label' => isset( $attributes['dashboardRecentTransactionsLabel'] ) && ! empty( $attributes['dashboardRecentTransactionsLabel'] ) ? sanitize_text_field( $attributes['dashboardRecentTransactionsLabel'] ) : 'Recent Transactions',
+            'dashboard_recurring_subscriptions_label' => isset( $attributes['dashboardRecurringSubscriptionsLabel'] ) && ! empty( $attributes['dashboardRecurringSubscriptionsLabel'] ) ? sanitize_text_field( $attributes['dashboardRecurringSubscriptionsLabel'] ) : 'Recurring Subscriptions',
+            'dashboard_split_subscriptions_label' => isset( $attributes['dashboardSplitSubscriptionsLabel'] ) && ! empty( $attributes['dashboardSplitSubscriptionsLabel'] ) ? sanitize_text_field( $attributes['dashboardSplitSubscriptionsLabel'] ) : 'Split Subscriptions',
+
+            // Transaction table visibility
+            'transaction_table_name_show'          => isset( $attributes['transactionTableNameShow'] ) ? (bool) $attributes['transactionTableNameShow'] : true,
+            'transaction_table_email_address_show' => isset( $attributes['transactionTableEmailAddressShow'] ) ? (bool) $attributes['transactionTableEmailAddressShow'] : true,
+            'transaction_table_amount_show'        => isset( $attributes['transactionTableAmountShow'] ) ? (bool) $attributes['transactionTableAmountShow'] : true,
+            'transaction_table_payment_type_show'  => isset( $attributes['transactionTablePaymentTypeShow'] ) ? (bool) $attributes['transactionTablePaymentTypeShow'] : true,
+            'transaction_table_transaction_id_show' => isset( $attributes['transactionTableTransactionIdShow'] ) ? (bool) $attributes['transactionTableTransactionIdShow'] : true,
+            'transaction_table_source_show'        => isset( $attributes['transactionTableSourceShow'] ) ? (bool) $attributes['transactionTableSourceShow'] : true,
+            'transaction_table_status_show'        => isset( $attributes['transactionTableStatusShow'] ) ? (bool) $attributes['transactionTableStatusShow'] : true,
+            'transaction_table_date_show'          => isset( $attributes['transactionTableDateShow'] ) ? (bool) $attributes['transactionTableDateShow'] : true,
+            'transaction_table_action_show'        => isset( $attributes['transactionTableActionShow'] ) ? (bool) $attributes['transactionTableActionShow'] : true,
+
+            // Transaction table labels
+            'transaction_table_name_label'          => isset( $attributes['transactionTableNameLabel'] ) && ! empty( $attributes['transactionTableNameLabel'] ) ? sanitize_text_field( $attributes['transactionTableNameLabel'] ) : 'Name',
+            'transaction_table_email_address_label' => isset( $attributes['transactionTableEmailAddressLabel'] ) && ! empty( $attributes['transactionTableEmailAddressLabel'] ) ? sanitize_text_field( $attributes['transactionTableEmailAddressLabel'] ) : 'Email Address',
+            'transaction_table_amount_label'        => isset( $attributes['transactionTableAmountLabel'] ) && ! empty( $attributes['transactionTableAmountLabel'] ) ? sanitize_text_field( $attributes['transactionTableAmountLabel'] ) : 'Amount',
+            'transaction_table_payment_type_label'  => isset( $attributes['transactionTablePaymentTypeLabel'] ) && ! empty( $attributes['transactionTablePaymentTypeLabel'] ) ? sanitize_text_field( $attributes['transactionTablePaymentTypeLabel'] ) : 'Payment Type',
+            'transaction_table_transaction_id_label' => isset( $attributes['transactionTableTransactionIdLabel'] ) && ! empty( $attributes['transactionTableTransactionIdLabel'] ) ? sanitize_text_field( $attributes['transactionTableTransactionIdLabel'] ) : 'Transaction ID',
+            'transaction_table_source_label'        => isset( $attributes['transactionTableSourceLabel'] ) && ! empty( $attributes['transactionTableSourceLabel'] ) ? sanitize_text_field( $attributes['transactionTableSourceLabel'] ) : 'Source',
+            'transaction_table_status_label'        => isset( $attributes['transactionTableStatusLabel'] ) && ! empty( $attributes['transactionTableStatusLabel'] ) ? sanitize_text_field( $attributes['transactionTableStatusLabel'] ) : 'Status',
+            'transaction_table_date_label'          => isset( $attributes['transactionTableDateLabel'] ) && ! empty( $attributes['transactionTableDateLabel'] ) ? sanitize_text_field( $attributes['transactionTableDateLabel'] ) : 'Date',
+            'transaction_table_action_label'        => isset( $attributes['transactionTableActionLabel'] ) && ! empty( $attributes['transactionTableActionLabel'] ) ? sanitize_text_field( $attributes['transactionTableActionLabel'] ) : 'Action',
+
+            // Subscription table column visibility (pro feature — consumed by template-subscriptions-tab.php)
+            'subscription_table_subscription_id_show'  => isset( $attributes['subscriptionTableSubscriptionIdShow'] ) ? (bool) $attributes['subscriptionTableSubscriptionIdShow'] : true,
+            'subscription_table_plan_id_show'          => isset( $attributes['subscriptionTablePlanIdShow'] ) ? (bool) $attributes['subscriptionTablePlanIdShow'] : true,
+            'subscription_table_status_show'           => isset( $attributes['subscriptionTableStatusShow'] ) ? (bool) $attributes['subscriptionTableStatusShow'] : true,
+            'subscription_table_amount_show'           => isset( $attributes['subscriptionTableAmountShow'] ) ? (bool) $attributes['subscriptionTableAmountShow'] : true,
+            'subscription_table_created_date_show'     => isset( $attributes['subscriptionTableCreatedDateShow'] ) ? (bool) $attributes['subscriptionTableCreatedDateShow'] : true,
+            'subscription_table_current_period_show'   => isset( $attributes['subscriptionTableCurrentPeriodShow'] ) ? (bool) $attributes['subscriptionTableCurrentPeriodShow'] : true,
+            'subscription_table_action_show'           => isset( $attributes['subscriptionTableActionShow'] ) ? (bool) $attributes['subscriptionTableActionShow'] : true,
+
+            // Subscription table column labels (pro feature)
+            'subscription_table_subscription_id_label'  => ! empty( $attributes['subscriptionTableSubscriptionIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableSubscriptionIdLabel'] ) : 'Subscription ID',
+            'subscription_table_plan_id_label'          => ! empty( $attributes['subscriptionTablePlanIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTablePlanIdLabel'] ) : 'Product Name',
+            'subscription_table_status_label'           => ! empty( $attributes['subscriptionTableStatusLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusLabel'] ) : 'Status',
+            'subscription_table_amount_label'           => ! empty( $attributes['subscriptionTableAmountLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableAmountLabel'] ) : 'Amount',
+            'subscription_table_created_date_label'     => ! empty( $attributes['subscriptionTableCreatedDateLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCreatedDateLabel'] ) : 'Payment Date',
+            'subscription_table_current_period_label'   => ! empty( $attributes['subscriptionTableCurrentPeriodLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCurrentPeriodLabel'] ) : 'Renewal Date',
+            'subscription_table_action_label'           => ! empty( $attributes['subscriptionTableActionLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionLabel'] ) : 'Action',
+            'subscription_table_status_active_label'    => ! empty( $attributes['subscriptionTableStatusActiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusActiveLabel'] ) : 'Active',
+            'subscription_table_status_inactive_label'  => ! empty( $attributes['subscriptionTableStatusInactiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusInactiveLabel'] ) : 'Inactive',
+            'subscription_table_action_cancel_label'    => ! empty( $attributes['subscriptionTableActionCancelLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionCancelLabel'] ) : 'Cancel',
+        );
+
+        /**
+         * Block-specific filter for merging pro $bp_settings.
+         *
+         * Passes raw camelCase block $attributes as second arg (unlike the Elementor filter
+         * which passes raw Elementor settings with better_payment_user_dashboard_* keys).
+         *
+         * @since 3.x.x
+         *
+         * @param array $settings    The built settings array.
+         * @param array $attributes  The raw block attributes (camelCase).
+         */
+        return apply_filters( 'better_payment/block/user_dashboard/bp_settings', $settings, $attributes );
+    }
+
+    /**
+     * Create a widget proxy object for user dashboard layout templates.
+     *
+     * This provides the methods that layout files expect from $widgetObj and $this.
+     *
+     * @param string $block_id The unique block ID.
+     * @param array  $settings The settings array.
+     * @return object Widget proxy object with required methods.
+     */
+    private function create_user_dashboard_widget_proxy( $block_id, $settings ) {
+        return new class( $block_id, $settings ) {
+            /**
+             * Block ID.
+             *
+             * @var string
+             */
+            private $id;
+
+            /**
+             * Settings array.
+             *
+             * @var array
+             */
+            private $settings;
+
+            /**
+             * Pro enabled flag.
+             *
+             * @var bool
+             */
+            public $pro_enabled;
+
+            /**
+             * Constructor.
+             *
+             * @param string $id       Block ID.
+             * @param array  $settings Settings array.
+             */
+            public function __construct( $id, $settings ) {
+                $this->id          = $id;
+                $this->settings    = $settings;
+                $this->pro_enabled = apply_filters( 'better_payment/pro_enabled', false );
+            }
+
+            /**
+             * Get the block ID.
+             *
+             * @return string Block ID.
+             */
+            public function get_id() {
+                return $this->id;
+            }
+
+            /**
+             * Get user transactions by email.
+             *
+             * @param string $email User email (uses current user if empty).
+             * @return array Transaction records.
+             */
+            public function get_user_transactions( $email = '', $page = 1, $per_page = 10 ) {
+                $current_user = wp_get_current_user();
+                if ( empty( $email ) ) {
+                    $email = $current_user->user_email;
+                }
+                return \Better_Payment\Lite\Admin\DB::get_user_transactions_paginated( $email, [
+                    'page'     => $page,
+                    'per_page' => $per_page,
+                    'type'     => 'transactions',
+                ] );
+            }
+
+            /**
+             * Get analytics data for transactions.
+             *
+             * @param array $transactions Transactions array.
+             * @return array Analytics data (counts and amounts by status).
+             */
+            public function get_transactions_analytics( $transactions = array() ) {
+                return \Better_Payment\Lite\Admin\DB::get_transactions_analytics_dashboard( $transactions );
+            }
+        };
     }
 
     /**
@@ -1197,16 +1507,11 @@ class BlockManager {
             ),
         );
 
-        // Add inline script to wp-blocks (which loads early) to define the global variable
+        // Add inline script to wp-editor which is guaranteed to load in block editor
         wp_add_inline_script(
-            'wp-blocks',
-            'window.EssentialBlocksLocalize = window.EssentialBlocksLocalize || ' . wp_json_encode( $localize_data ) . ';',
-            'before'
+            'wp-editor',
+            'window.EssentialBlocksLocalize = window.EssentialBlocksLocalize || ' . wp_json_encode( $localize_data ) . ';'
         );
-
-        // Enqueue controls library (must be available for blocks that depend on it)
-        wp_enqueue_script( 'better-payment-controls' );
-        wp_enqueue_style( 'better-payment-controls-style' );
 
         // Enqueue necessary CSS files for form styles in editor (used in render.php)
         wp_enqueue_style( 'better-payment-el' );
@@ -1214,29 +1519,290 @@ class BlockManager {
         wp_enqueue_style( 'better-payment-style' );
         wp_enqueue_style( 'better-payment-common-style' );
         wp_enqueue_style( 'better-payment-admin-style' );
+        wp_enqueue_style( 'bp-dashboard-pagination-style' );
         $this->enqueue_font_awesome();
         wp_enqueue_style( 'dashicons' );
 
-        // Get site domain for email defaults
-        $site_url_parsed = wp_parse_url( get_site_url() );
-        $site_domain     = ! empty( $site_url_parsed['host'] ) ? esc_html( $site_url_parsed['host'] ) : 'example.com';
+        // Build block data: start with common keys, then merge each block's own data.
+        // To add data for a new block, implement get_{block-key}_editor_data() and add
+        // 'editor_data' => 'get_{block-key}_editor_data' to the $blocks registry above.
+        $block_data = $this->get_common_editor_data();
+        foreach ( $this->blocks as $block_config ) {
+            if ( ! empty( $block_config['editor_data'] ) && method_exists( $this, $block_config['editor_data'] ) ) {
+                $block_data = array_merge( $block_data, $this->{$block_config['editor_data']}() );
+            }
+        }
 
-        // Localize script data for blocks
-        wp_localize_script( 'better-payment-payment-form-editor', 'betterPaymentBlockData', array(
-            'ajaxurl'               => admin_url( 'admin-ajax.php' ),
-            'nonce'                 => wp_create_nonce( 'better_payment_block_nonce' ),
-            'betterPaymentSettings' => get_option( 'better_payment_settings' ),
-            'currencies'            => $this->get_currency_list(),
-            'assetsUrl'             => BETTER_PAYMENT_ASSETS,
-            'adminEmail'            => get_option( 'admin_email' ),
-            'siteName'              => get_bloginfo( 'name' ),
-            'siteDomain'            => $site_domain,
-        ) );
-        wp_localize_script('better-payment-payment-form-editor', 'eb_conditional_localize',
-            $editor_type !== false ? [
-                'editor_type' => $editor_type
-            ] : []
-		);
+        // Canonical filter for the full merged data; the legacy alias preserves backwards
+        // compatibility with any pro-plugin hooks on the old per-block filter name.
+        $block_data = apply_filters( 'better_payment/block/editor_block_data', $block_data );
+        $block_data = apply_filters( 'better_payment/block/user_dashboard/editor_block_data', $block_data );
+
+        wp_add_inline_script(
+            'wp-editor',
+            'window.betterPaymentBlockData = ' . wp_json_encode( $block_data ) . ';'
+        );
+
+        wp_add_inline_script(
+            'wp-editor',
+            'window.eb_conditional_localize = ' . wp_json_encode(
+                $editor_type !== false ? [ 'editor_type' => $editor_type ] : []
+            ) . ';'
+        );
+    }
+
+    /**
+     * Enqueue frontend assets for blocks
+     * Called on wp_enqueue_scripts hook to allow pro plugin to enqueue scripts early
+     *
+     * @return void
+     */
+    public function enqueue_frontend_assets() {
+        // Allow pro plugin to enqueue scripts for the user dashboard block
+        do_action( 'better_payment/block/user_dashboard/wp_enqueue_scripts' );
+    }
+
+    /**
+     * Return the site domain (host only, no protocol) for use in editor data.
+     *
+     * @return string
+     */
+    private function get_site_domain() {
+        $parsed = wp_parse_url( get_site_url() );
+        return ! empty( $parsed['host'] ) ? esc_html( $parsed['host'] ) : 'example.com';
+    }
+
+    /**
+     * Return plugin settings with all gateway secret/private keys removed.
+     *
+     * Safe to expose to any block editor user regardless of role. Only the keys
+     * that the editor UI actually reads (email defaults, gateway enable flags,
+     * public keys) are kept — secrets never leave the server.
+     *
+     * @return array
+     */
+    private function get_safe_settings_for_editor() {
+        $settings = get_option( 'better_payment_settings', array() );
+        if ( ! is_array( $settings ) ) {
+            return array();
+        }
+
+        $sensitive_keys = array(
+            'better_payment_settings_payment_paypal_live_secret',
+            'better_payment_settings_payment_paypal_test_secret',
+            'better_payment_settings_payment_stripe_live_secret',
+            'better_payment_settings_payment_stripe_test_secret',
+            'better_payment_settings_payment_paystack_live_secret',
+            'better_payment_settings_payment_paystack_test_secret',
+        );
+
+        foreach ( $sensitive_keys as $key ) {
+            unset( $settings[ $key ] );
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Return data shared by every registered block in the editor.
+     *
+     * All blocks can read these keys from window.betterPaymentBlockData.
+     * Adding a new block? Common data lives here; block-specific data goes in
+     * get_{block-key}_editor_data() and is registered via $blocks['editor_data'].
+     *
+     * @return array
+     */
+    private function get_common_editor_data() {
+        return array(
+            'ajaxurl'    => admin_url( 'admin-ajax.php' ),
+            'nonce'      => wp_create_nonce( 'better_payment_block_nonce' ),
+            'currencies' => $this->get_currency_list(),
+            'assetUrl'   => BETTER_PAYMENT_ASSETS,
+            'assetsUrl'  => BETTER_PAYMENT_ASSETS,
+            'siteName'   => get_bloginfo( 'name' ),
+            'siteDomain' => $this->get_site_domain(),
+            'proEnabled' => apply_filters( 'better_payment/pro_enabled', false ),
+        );
+    }
+
+    /**
+     * Return editor data specific to the payment-form block.
+     *
+     * Provides the global settings (secrets stripped) so the inspector can
+     * pre-populate email defaults, and the site admin email for the To field.
+     *
+     * @return array
+     */
+    private function get_payment_form_editor_data() {
+        return array(
+            'betterPaymentSettings' => $this->get_safe_settings_for_editor(),
+            'adminEmail'            => sanitize_email( get_option( 'admin_email' ) ),
+        );
+    }
+
+    /**
+     * Return editor data specific to the user-dashboard block.
+     *
+     * Fetches the current editor user's transactions, subscriptions, and analytics
+     * so the block preview shows real data immediately on insertion without a REST
+     * round-trip. Normalises each row to the same flat shape the UserAPI returns so
+     * the JS preview component only needs to handle one structure.
+     *
+     * @return array
+     */
+    private function get_user_dashboard_editor_data() {
+        $current_user = wp_get_current_user();
+
+        // Cache the 5 DB queries for the duration of the browser session in the editor.
+        // The cache is keyed per user so each editor sees only their own data.
+        // TTL: 5 minutes — short enough to reflect recent transactions without hammering
+        // the DB on every page navigation inside the block editor.
+        $cache_key   = 'bp_editor_dash_' . ( $current_user->ID ?? 0 );
+        $cache_group = 'better_payment';
+        $cached      = wp_cache_get( $cache_key, $cache_group );
+        if ( false !== $cached ) {
+            // Nonces are request-scoped and must never be cached; regenerate on every hit.
+            $cached['restNonce'] = wp_create_nonce( 'wp_rest' );
+            return $cached;
+        }
+
+        $user_transactions      = array();
+        $user_subscriptions     = array();
+        $user_analytics         = array();
+        $user_transactions_meta = array( 'total' => 0, 'pages' => 1, 'perPage' => 20 );
+        // Safe default ensures userSubscriptionsMeta is always fully defined even when
+        // the user has no subscriptions or is not logged in.
+        $sub_result             = array( 'total' => 0, 'pages' => 1, 'per_page' => 20, 'transactions' => array() );
+
+        // Always fetch in the editor — has_block() only checks saved content and returns
+        // false before first save, leaving the block with empty data on insertion.
+        if ( $current_user && $current_user->ID ) {
+            $user_analytics = \Better_Payment\Lite\Admin\DB::get_user_analytics_by_email( $current_user->user_email );
+
+            $paged_result = \Better_Payment\Lite\Admin\DB::get_user_transactions_paginated(
+                $current_user->user_email,
+                array(
+                    'page'     => 1,
+                    'per_page' => 20,
+                    'type'     => 'transactions',
+                )
+            );
+
+            $raw_transactions       = $paged_result['transactions'];
+            $user_transactions_meta = array(
+                'total'   => $paged_result['total'],
+                'pages'   => $paged_result['pages'],
+                'perPage' => $paged_result['per_page'],
+            );
+
+            // Unserialize and normalise to match UserAPI REST response format.
+            foreach ( $raw_transactions as $tx ) {
+                if ( ! empty( $tx->form_fields_info ) ) {
+                    $tx->form_fields_info = maybe_unserialize( $tx->form_fields_info );
+                }
+                if ( ! empty( $tx->customer_info ) ) {
+                    $tx->customer_info = maybe_unserialize( $tx->customer_info );
+                }
+
+                $ffi           = is_array( $tx->form_fields_info ) ? $tx->form_fields_info : array();
+                $customer_name = isset( $ffi['primary_first_name'] )
+                    ? trim( sanitize_text_field( $ffi['primary_first_name'] ) . ' ' . sanitize_text_field( $ffi['primary_last_name'] ?? '' ) )
+                    : '';
+                if ( empty( $customer_name ) ) {
+                    $customer_name = isset( $ffi['first_name'] )
+                        ? trim( sanitize_text_field( $ffi['first_name'] ) . ' ' . sanitize_text_field( $ffi['last_name'] ?? '' ) )
+                        : '';
+                }
+                $tx->customer_name  = $customer_name;
+                $tx->customer_email = sanitize_text_field( $ffi['primary_email'] ?? ( $ffi['email'] ?? '' ) );
+            }
+
+            $user_transactions = apply_filters( 'better_payment/block/user_dashboard/enrich_user_transactions', $raw_transactions );
+
+            // Separate query for subscriptions (not a subset of transactions page 1).
+            $sub_result        = \Better_Payment\Lite\Admin\DB::get_user_transactions_paginated(
+                $current_user->user_email,
+                array(
+                    'page'     => 1,
+                    'per_page' => 20,
+                    'type'     => 'subscriptions',
+                )
+            );
+
+            $raw_subscriptions = $sub_result['transactions'];
+            foreach ( $raw_subscriptions as $tx ) {
+                if ( ! empty( $tx->form_fields_info ) ) {
+                    $tx->form_fields_info = maybe_unserialize( $tx->form_fields_info );
+                }
+            }
+            $user_subscriptions = apply_filters( 'better_payment/block/user_dashboard/enrich_user_subscriptions', $raw_subscriptions );
+
+            // Flatten each subscription to match UserAPI flat format so JS handles one structure.
+            foreach ( $user_subscriptions as $tx ) {
+                $ffi = is_array( $tx->form_fields_info ) ? $tx->form_fields_info : array();
+
+                $tx->subscription_id                 = sanitize_text_field( $ffi['subscription_id'] ?? '' );
+                $tx->subscription_plan_id            = sanitize_text_field( $ffi['subscription_plan_id'] ?? '' );
+                $tx->subscription_status             = sanitize_text_field( $ffi['subscription_status'] ?? '' );
+                $tx->subscription_interval           = sanitize_text_field( $ffi['subscription_interval'] ?? '' );
+                $tx->subscription_created_date       = intval( $ffi['subscription_created_date'] ?? 0 );
+                $tx->subscription_current_period_end = intval( $ffi['subscription_current_period_end'] ?? 0 );
+                $tx->is_payment_split_payment        = ! empty( $ffi['is_payment_split_payment'] ) ? intval( $ffi['is_payment_split_payment'] ) : 0;
+                $tx->subscription_product_name       = sanitize_text_field( $ffi['subscription_product_name'] ?? '' );
+                $tx->is_subscription                 = ! empty( $ffi['subscription_id'] ) ? 'Subscription' : 'One Time';
+
+                $customer_name = isset( $ffi['primary_first_name'] )
+                    ? trim( sanitize_text_field( $ffi['primary_first_name'] ) . ' ' . sanitize_text_field( $ffi['primary_last_name'] ?? '' ) )
+                    : '';
+                if ( empty( $customer_name ) ) {
+                    $customer_name = isset( $ffi['first_name'] )
+                        ? trim( sanitize_text_field( $ffi['first_name'] ) . ' ' . sanitize_text_field( $ffi['last_name'] ?? '' ) )
+                        : '';
+                }
+                $tx->customer_name  = $customer_name;
+                $tx->customer_email = sanitize_text_field( $ffi['primary_email'] ?? ( $ffi['email'] ?? '' ) );
+
+                unset( $tx->form_fields_info );
+            }
+        }
+
+        $data = array(
+            'restNonce'             => wp_create_nonce( 'wp_rest' ),
+            'restUrl'               => get_rest_url( null, 'better-payment/v1/user-transactions' ),
+            'currentUser'           => array(
+                'id'             => $current_user->ID,
+                'user_email'     => $current_user->user_email,
+                'user_login'     => $current_user->user_login,
+                'user_avatar_url'=> get_avatar_url( $current_user->user_email, array( 'size' => 32 ) ),
+                'email'          => $current_user->user_email,
+                'login'          => $current_user->user_login,
+                'avatar'         => get_avatar_url( $current_user->user_email, array( 'size' => 32 ) ),
+            ),
+            'userTransactions'      => $user_transactions,
+            'userTransactionsMeta'  => $user_transactions_meta,
+            'userSubscriptions'     => $user_subscriptions,
+            'userSubscriptionsMeta' => array(
+                'total'   => (int) $sub_result['total'],
+                'pages'   => (int) $sub_result['pages'],
+                'perPage' => 20,
+            ),
+            'userAnalytics'         => $user_analytics,
+            'proAssets'             => array(
+                'analyticsReportsBanner'      => BETTER_PAYMENT_ASSETS . '/img/user-dashboard-analytics-reports-pro-banner.png',
+                'recurringSubscriptionBanner' => BETTER_PAYMENT_ASSETS . '/img/user-dashboard-recurring-subscription-pro-banner.png',
+                'splitSubscriptionBanner'     => BETTER_PAYMENT_ASSETS . '/img/user-dashboard-split-subscription-pro-banner.png',
+                'subscriptionProBanner'       => BETTER_PAYMENT_ASSETS . '/img/user-dashboard-subscription-pro-banner.png',
+            ),
+        );
+
+        // Store in the object cache for 5 minutes. nonce is excluded from the cached payload
+        // because nonces are request-scoped — storing them would return stale nonces on cache hit.
+        // The restNonce above is regenerated fresh on every request (not cached).
+        $cacheable = $data;
+        unset( $cacheable['restNonce'] );
+        wp_cache_set( $cache_key, $cacheable, $cache_group, 5 * MINUTE_IN_SECONDS );
+
+        return $data;
     }
 
     /**
@@ -1275,7 +1841,7 @@ class BlockManager {
             array(
                 'slug'  => 'better-payment',
                 'title' => __( 'Better Payment', 'better-payment' ),
-                'icon'  => 'money-alt',
+                'icon'  => '',
             )
         );
 
@@ -1384,9 +1950,9 @@ class BlockManager {
             'style'         => $style_handle,
         );
 
-        // Add render callback for payment-form block
-        if ( 'payment-form' === $block_key ) {
-            $block_args['render_callback'] = array( $this, 'render_payment_form_frontend' );
+        // Add render callback if defined in block config
+        if ( ! empty( $block_config['render_callback'] ) && method_exists( $this, $block_config['render_callback'] ) ) {
+            $block_args['render_callback'] = array( $this, $block_config['render_callback'] );
         }
 
         // Register block with WordPress
