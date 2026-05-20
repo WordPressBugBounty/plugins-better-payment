@@ -3,9 +3,9 @@ Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, fuadragib, rahatsheikh
 Donate link: https://wpdeveloper.com
 Tags: donation, fundraising, recurring donations, payments, stripe paypal paystack
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -162,12 +162,17 @@ Yes, you can build regular forms like contact forms without adding payment metho
 3. WooCommerce form layout
 4. Multiple payment methods
 5. Payment transaction details
-6. In-depth analytics for transaction
+6. In-depth analytics for transactions
 7. Payment gateway settings
 8. Custom email settings
 
 
 == Changelog ==
+
+= 2.1.2 - 20/05/2026 =
+- Added: WordPress 7.0 Compatibility
+- Fixed: User image preview issue on the User Dashboard
+- Few minor bug fixes and improvements
 
 = 2.1.1 - 11/05/2026 =
 - Added: Dedicated User Dashboard Block for Gutenberg

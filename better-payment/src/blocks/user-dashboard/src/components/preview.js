@@ -232,6 +232,7 @@ export default function DashboardPreview({ attributes }) {
                                     <img
                                         src={currentUser.user_avatar_url || currentUser.avatar || 'https://www.gravatar.com/avatar/?d=mm'}
                                         alt={currentUser.user_login || currentUser.login || 'user'}
+                                        style={{ width: '32px', height: '32px', minWidth: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, display: 'block' }}
                                     />
                                 </div>
                             )}

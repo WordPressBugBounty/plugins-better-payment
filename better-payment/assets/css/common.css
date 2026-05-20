@@ -2925,6 +2925,15 @@
   gap: 16px;
   margin-bottom: 40px;
 }
+.better-payment .bp--author img {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+}
 .better-payment .bp--author h5 {
   font-size: 20px;
   font-weight: 500;

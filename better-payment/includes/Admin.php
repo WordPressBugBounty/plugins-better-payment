@@ -155,117 +155,23 @@ class Admin extends Controller{
 			]
 		);
 
-        /**
-		 * Halloween Notice
+		/**
+		 * Summer Offer Notice
 		 */
-        // $crown_icon = BETTER_PAYMENT_URL . '/assets/img/crown.svg';
-		// $halloween_notice_message = "<p>🎃 Manage Payment forms better with Better Payment PRO and grab a <strong>flat 25% OFF</strong> this Halloween.</p><a style='display: inline-flex;column-gap:5px;' class='button button-primary' href='https://betterpayment.co/#pricing-plan' target='_blank'><img style='width:15px;' src='{$crown_icon}'/>Upgrade to PRO</a>";
+		$purchase_url = '//betterpayment.co/summer2026-admin-notice';
+		$summer_notice_message = "<p>🏖️ <strong>Summer Savings:</strong> Streamline transactions with fast, optimized payment forms on your WordPress sites – now <strong>up to $150 OFF!</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I Don't Want Any Discount</button></div>";
 
-		// $halloween_notice = [
-		// 	'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-		// 	'html'      => $halloween_notice_message,
-		// ];
-
-        // $notices->add(
-		// 	'halloween_notice',
-		// 	$halloween_notice,
-		// 	[
-		// 		'start'       => $notices->time(),
-		// 		// 'start'       => $notices->strtotime( '+7 day' ),
-		// 		// 'recurrence'  => 30,
-		// 		'expire'       => $notices->strtotime( '+10 days' ),
-		// 		'refresh'     => BETTER_PAYMENT_VERSION,
-		// 		'dismissible' => true,
-		// 		'screens' => [ 'dashboard' ],
-		// 	]
-		// );
-
-        /**
-		 * Black Friday Notice
-		 */
-		$purchase_url = 'https://betterpayment.co/bfcm2025-admin-notice';
-		$black_friday_notice_message = "<p><strong>Black Friday Mega Sale:</strong> Streamline Transactions With Fast, Optimized Payment Forms For Elementor Sites – Now <strong>Up to $200 OFF! 🎁</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To PRO</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I’ll Grab It Later</button></div>";
-
-		$black_friday_notice = [
+		$summer_notice = [
 			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $black_friday_notice_message,
+			'html'      => $summer_notice_message,
 		];
 
         $notices->add(
-			'black_friday_notice1',
-			$black_friday_notice,
+			'bp_summer_notice',
+			$summer_notice,
 			[
 				'start'       => $notices->time(),
-				'expire'       => strtotime( '11:59:59pm 4th December, 2025' ),
-				'refresh'     => BETTER_PAYMENT_VERSION,
-				'dismissible' => true,
-				'screens' => [ 'dashboard' ],
-			]
-		);
-
-		/**
-		 * Holiday Notice
-		 */
-		$purchase_url = '//betterpayment.co/holiday2025-admin-notice';
-		$holiday_notice_message = "<p><strong>Season’s Best Deal:</strong> Streamline transactions with fast, optimized payment forms for Elementor sites - <strong>Up to 25% OFF! 💳</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To PRO</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I’ll Grab It Later</button></div>";
-		
-		$holiday_notice = [
-			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $holiday_notice_message,
-		];
-
-        $notices->add(
-			'bp_holiday_notice',
-			$holiday_notice,
-			[
-				'start'       => strtotime( '12:00:00am 15th December, 2025' ),
-				'expire'      => strtotime( '11:59:59pm 7th January, 2026' ),
-				'refresh'     => BETTER_PAYMENT_VERSION,
-				'dismissible' => true,
-				'screens' 	  => [ 'dashboard' ],
-			]
-		);
-
-		/**
-		 * February Offer Notice
-		 */
-		$purchase_url = '//betterpayment.co/feb2026-admin-notice';
-		$february_notice_message = "<p>Streamline transactions with fast, optimized payment forms for Elementor sites - Now <strong>Flat 20% OFF! 🎁</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To PRO</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I’ll Grab It Later</button></div>";
-		
-		$friday_notice = [
-			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $february_notice_message,
-		];
-
-        $notices->add(
-			'bp_february_notice',
-			$friday_notice,
-			[
-				'start'       => strtotime( '12:00:00am 10th February, 2026' ),
-				'expire'      => strtotime( '11:59:59pm 7th March, 2026' ),
-				'refresh'     => BETTER_PAYMENT_VERSION,
-				'dismissible' => true,
-				'screens' 	  => [ 'dashboard' ],
-			]
-		);
-
-		/**
-		 * Spring Offer Notice
-		 */
-		$purchase_url = '//betterpayment.co/spring2026-admin-notice';
-		$spring_notice_message = "<p>🌸 <strong>Spring Savings:</strong> Streamline transactions with fast, optimized payment forms on your Elementor sites – now <strong>Flat 25% OFF! 💳️</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>Maybe Later</button></div>";
-		
-		$spring_notice = [
-			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $spring_notice_message,
-		];
-
-        $notices->add(
-			'bp_spring_notice',
-			$spring_notice,
-			[
-				'start'       => $notices->time(),
-				'expire'      => strtotime( '11:59:59pm 10th May, 2026' ),
+				'expire'      => strtotime( '11:59:59pm 25th June, 2026' ),
 				'refresh'     => BETTER_PAYMENT_VERSION,
 				'dismissible' => true,
 				'screens' 	  => [ 'dashboard' ],
