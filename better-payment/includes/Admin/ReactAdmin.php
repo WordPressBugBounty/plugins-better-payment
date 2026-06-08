@@ -5,6 +5,7 @@ namespace Better_Payment\Lite\Admin;
 use Better_Payment\Lite\Controller;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
+use Better_Payment\Lite\Campaign\Templates\TemplateManager;
 
 /**
  * Exit if accessed directly
@@ -94,6 +95,11 @@ class ReactAdmin extends Controller
         $submenu_page_list = apply_filters('better_payment/admin/get_submenu_page_list', array(
             $this->page_slug_prefix . '-admin&tab=dashboard'   => array(
                 'title'      => __('Dashboard', 'better-payment'),
+                'capability' => 'manage_options',
+                'callback'   => [$this, 'render_react_admin_page'],
+            ),
+            $this->page_slug_prefix . '-admin&tab=campaigns'   => array(
+                'title'      => __('Campaigns', 'better-payment'),
                 'capability' => 'manage_options',
                 'callback'   => [$this, 'render_react_admin_page'],
             ),
@@ -283,6 +289,8 @@ class ReactAdmin extends Controller
             ],
             'currencies' => $this->get_currency_list(),
             'currencySymbol' => $this->get_currency_symbol( $settings['better_payment_settings_general_general_currency'] ),
+            'campaignTemplates' => array_values( TemplateManager::get_all() ),
+            'adminBaseUrl' => admin_url(),
         ];
     }
     
@@ -387,6 +395,17 @@ class ReactAdmin extends Controller
             [],
             $this->file_version
         );
+
+        // Campaign-list CSS contains the template-select modal styles needed on this page too.
+        $campaign_list_css = BETTER_PAYMENT_ASSETS . '/admin/campaign-list/campaign-list.min.css';
+        if ( file_exists( BETTER_PAYMENT_PATH . '/assets/admin/campaign-list/campaign-list.min.css' ) ) {
+            wp_enqueue_style(
+                'bp-campaign-list',
+                $campaign_list_css,
+                [],
+                $this->file_version
+            );
+        }
         
         wp_add_inline_script(
             'better-payment-react-admin',

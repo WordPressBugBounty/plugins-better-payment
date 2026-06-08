@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "better-payment/campaign-display",
+    "version": "1.0.0",
+    "title": "Campaign Display",
+    "category": "better-payment",
+    "icon": "heart",
+    "description": "Display a fundraising campaign with progress bar, stats, and donation form link.",
+    "keywords": ["campaign", "fundraising", "charity", "donate", "better payment"],
+    "textdomain": "better-payment",
+    "attributes": {
+        "campaignId": {
+            "type": "integer",
+            "default": 0
+        }
+    },
+    "supports": {
+        "html": false,
+        "anchor": true,
+        "className": true
+    },
+    "editorScript": "file:./index.js"
+}

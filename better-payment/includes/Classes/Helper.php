@@ -360,29 +360,72 @@ class Helper extends Controller
 
         return esc_html( ucfirst( $interval_text ) );
     }
+
+    /**
+     * Output the page header, compatible with both classic and block themes.
+     *
+     * Block themes don't use get_header() — they rely on block template parts.
+     * We detect this with wp_is_block_theme() and render the header template
+     * part via do_blocks() so it appears correctly on CPT single pages that
+     * bypass the theme's block templates.
+     *
+     * @param string $block_header Pre-rendered header markup from do_blocks() (block themes only).
+     * @return void
+     */
+    public static function render_header( string $block_header = '' ): void {
+        if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+            ?>
+            <!doctype html>
+            <html <?php language_attributes(); ?>>
+            <head>
+                <meta charset="<?php bloginfo( 'charset' ); ?>">
+                <?php wp_head(); ?>
+            </head>
+            <body <?php body_class(); ?>>
+            <?php
+            wp_body_open();
+            echo $block_header; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        } else {
+            get_header();
+        }
+    }
+
+    /**
+     * Output the page footer, compatible with both classic and block themes.
+     *
+     * @param string $block_footer Pre-rendered footer markup from do_blocks() (block themes only).
+     * @return void
+     */
+    public static function render_footer( string $block_footer = '' ): void {
+        if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+            echo $block_footer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            wp_footer();
+            ?>
+            </body>
+            </html>
+            <?php
+        } else {
+            get_footer();
+        }
+    }
 }
 
 
-//Helper Functions
-if( !function_exists('better_payment_dd') ){
-    function better_payment_dd($data, $show_query = 0, $print_only = 0) {
+// Helper Functions
+if ( ! function_exists( 'better_payment_dd' ) ) {
+    function better_payment_dd( $data, $show_query = 0, $print_only = 0 ) {
         global $wpdb;
 
-        if(1 === $show_query){
-            // Print last SQL query string
+        if ( 1 === $show_query ) {
             echo wp_kses_post( $wpdb->last_query );
-
-            //Print last SQL query result
             echo wp_kses_post( $wpdb->last_result );
-
-            //Print last SQL query Error
             echo wp_kses_post( $wpdb->last_error );
         }
-        
-        echo "<pre>";
-        print_r($data);
-        if(!$print_only){
-            wp_die('Printed!');
+
+        echo '<pre>';
+        print_r( $data ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
+        if ( ! $print_only ) {
+            wp_die( 'Printed!' );
         }
     }
 }

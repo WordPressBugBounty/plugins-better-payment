@@ -185,7 +185,7 @@ class Admin extends Controller{
     public function hide_admin_notices(){
         $current_screen = get_current_screen();
     
-        if ($current_screen && str_contains( $current_screen->id, 'better-payment' ) ) {
+        if ($current_screen && (false !== strpos( $current_screen->id, 'better-payment' ) || false !== strpos( $current_screen->id, 'bp-campaign' )) ) {
             remove_all_actions('user_admin_notices');
             remove_all_actions('admin_notices');
             remove_all_actions('all_admin_notices');

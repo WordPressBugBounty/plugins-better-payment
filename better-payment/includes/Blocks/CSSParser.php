@@ -242,7 +242,7 @@ class CSSParser
             return true;
         }
 
-        if ( $pagenow == 'themes.php' && ! empty( $param ) && str_contains( $param, 'gutenberg-edit-site' ) ) {
+        if ( $pagenow == 'themes.php' && ! empty( $param ) && false !== strpos( $param, 'gutenberg-edit-site' ) ) {
             return true;
         }
 

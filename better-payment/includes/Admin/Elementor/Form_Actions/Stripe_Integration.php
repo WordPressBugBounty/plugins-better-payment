@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
@@ -282,6 +283,9 @@ class Stripe_Integration extends Action_Base {
                     'campaign_id'    => $campaign_id,
                 ]
             );
+            if ( $campaign_id ) {
+                CampaignStats::bust_cache( (int) $campaign_id );
+            }
             $stripe_response = [
                 'stripe_data'       => sanitize_text_field($response_ar->id),
                 'stripe_public_key' => sanitize_text_field( $record->get_form_settings( 'better_payment_stripe_public_key' ) )

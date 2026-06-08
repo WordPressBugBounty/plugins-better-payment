@@ -279,11 +279,11 @@ final class StyleHandler {
             foreach ( $all_blocks as $block ) {
                 $blockname = '';
                 $dir       = '';
-                if ( defined( 'ESSENTIAL_BLOCKS_PRO_DIR_PATH' ) && str_starts_with( $block, 'essential-blocks/pro-' ) ) {
+                if ( defined( 'ESSENTIAL_BLOCKS_PRO_DIR_PATH' ) && 0 === strpos( $block, 'essential-blocks/pro-' ) ) {
                     $split_name = explode( '/', $block );
                     $blockname  = str_replace( 'pro-', '', $split_name[ 1 ] );
                     $dir        = ESSENTIAL_BLOCKS_PRO_DIR_PATH . 'assets' . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . $blockname . DIRECTORY_SEPARATOR . 'style.css';
-                } elseif ( str_starts_with( $block, 'essential-blocks/' ) ) {
+                } elseif ( 0 === strpos( $block, 'essential-blocks/' ) ) {
                     $split_name = explode( '/', $block );
                     $blockname  = $split_name[ 1 ];
                     $dir        = ESSENTIAL_BLOCKS_DIR_PATH . 'assets' . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . $split_name[ 1 ] . DIRECTORY_SEPARATOR . 'style.css';

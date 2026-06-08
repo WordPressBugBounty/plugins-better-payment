@@ -1,0 +1,3391 @@
+// Campaign Builder — Fluent Forms-style admin UI
+@use 'sass:color';
+
+// ── Design tokens ──────────────────────────────────────────────────────────────
+$primary:        #6b63f6;
+$primary-light:  color.adjust($primary, $lightness: 40%);
+$border:         #e2e4e9;
+$text:           #1e1e2d;
+$muted:          #8a8fa6;
+$bg:             #f4f5f8;
+$white:          #fff;
+$topnav-bg:      #1e1e2d;
+$topnav-height:  52px;
+$sidebar-width:  340px;
+$danger:         #d63638;
+
+// ── Fullscreen mode — hide admin bar + sidebar + footer, fill viewport ────────
+html.bp-fullscreen {
+    padding-top: 0 !important; // removes html.wp-toolbar's 32px admin-bar offset
+}
+
+body.bp-fullscreen {
+    #wpadminbar,
+    #adminmenuwrap,
+    #adminmenuback,
+    #wpfooter { display: none !important; }
+
+    #wpcontent,
+    #wpbody-content { margin-left: 0 !important; padding-top: 0 !important; }
+
+    .bp-campaign-builder { margin: 0 !important; height: 100vh !important; }
+}
+
+// ── Outer wrapper ──────────────────────────────────────────────────────────────
+.bp-campaign-builder {
+    display: flex;
+    flex-direction: column;
+    // 32px = WP admin bar; 36px = WP admin footer (#wpfooter)
+    height: calc(100vh - 32px - 36px);
+    overflow: hidden;
+    background: $bg;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    color: $text;
+    margin: 0;
+}
+
+// ── Top nav bar ────────────────────────────────────────────────────────────────
+.bp-cb-topnav {
+    display: flex;
+    align-items: center;
+    height: $topnav-height;
+    padding: 0 14px;
+    background: $white;
+    color: $text;
+    flex-shrink: 0;
+    gap: 8px;
+    z-index: 100;
+    border-bottom: 1px solid $border;
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__tabs {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+
+    &__right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    // Back arrow
+    &__back {
+        background: none;
+        border: none;
+        color: $muted;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        &:hover { color: $text; background: $bg; }
+    }
+
+    // Pencil + campaign name (clickable)
+    &__name {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        border: 1px solid #e2e4e9;
+        color: $text;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 5px 8px;
+        border-radius: 4px;
+        max-width: 200px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        &:hover { background: $bg; }
+
+        span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        &-placeholder { color: $muted; font-weight: 400; }
+    }
+
+    // Shortcode badge
+    // Outline + Primary action buttons
+    &__btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 6px 14px;
+        white-space: nowrap;
+        line-height: 1;
+        box-sizing: border-box;
+        text-decoration: none;
+        svg { flex-shrink: 0; }
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        &--outline {
+            background: $white;
+            color: $text;
+            border: 1px solid $border;
+            &:hover:not(:disabled) { border-color: $primary; color: $primary; background: color.adjust($primary, $lightness: 44%); }
+            &:visited { color: $text; }
+            &:focus { box-shadow: none; outline: none; color: $text; }
+            &:active { color: $text; }
+        }
+
+        &--primary {
+            background: $primary;
+            color: $white;
+            &:hover:not(:disabled) { background: color.adjust($primary, $lightness: -8%); }
+        }
+
+        &--disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    }
+
+    // Icon-only buttons (fullscreen, 3-dot)
+    &__icon-btn {
+        background: none;
+        border: none;
+        color: $muted;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        &:hover { color: $text; background: $bg; }
+        &.is-active { color: $primary; }
+    }
+
+}
+
+
+// Tab buttons inside topnav
+.bp-cb-tab-btn {
+    background: none;
+    border: none;
+    color: $muted;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover:not(:disabled) { color: $text; background: $bg; }
+
+    &.is-active {
+        color: $primary;
+        background: color.adjust($primary, $lightness: 44%);
+    }
+
+    &.is-disabled,
+    &:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+    }
+}
+
+// ── Shared button styles ───────────────────────────────────────────────────────
+.bp-cb-btn {
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 16px;
+    transition: background 0.15s;
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    &--blue {
+        background: $primary;
+        color: $white;
+        &:hover:not(:disabled) { background: color.adjust($primary, $lightness: -8%); }
+    }
+
+    &--ghost-dark {
+        background: transparent;
+        color: $muted;
+        border: 1px solid $border;
+        &:hover:not(:disabled) { border-color: $muted; color: $text; }
+    }
+}
+
+// ── Error bar ──────────────────────────────────────────────────────────────────
+.bp-cb-error-bar {
+    background: $danger;
+    color: $white;
+    padding: 8px 16px;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+// ── Body ───────────────────────────────────────────────────────────────────────
+.bp-cb-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+// Settings tab full-width view
+.bp-cb-settings-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    background: $bg;
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+.bp-cb-canvas {
+    flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    background: $bg;
+
+    &--empty {
+        justify-content: center;
+        align-items: center;
+    }
+}
+
+.bp-cb-canvas-placeholder {
+    text-align: center;
+    color: $muted;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    &__add {
+        background: $white;
+        border: 2px dashed $border;
+        border-radius: 50%;
+        width: 72px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s;
+
+        &:hover {
+            border-color: $primary;
+            box-shadow: 0 0 0 4px $primary-light;
+        }
+    }
+
+    p { font-size: 13px; color: $muted; margin: 0; max-width: 280px; }
+}
+
+.bp-canvas-columns-wrap {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    min-height: 100%;
+    width: 100%;
+}
+
+// ── Column ────────────────────────────────────────────────────────────────────
+.bp-canvas-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+
+    &__label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: $muted;
+        margin-bottom: 6px;
+        padding: 0 4px;
+    }
+
+    &__drop-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-height: 80px;
+        border-radius: 8px;
+        padding: 4px;
+        transition: background 0.15s, border-color 0.15s;
+        border: 2px dashed transparent;
+    }
+
+    &--over &__drop-area {
+        background: $primary-light;
+        border-color: $primary;
+    }
+
+    &__placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 80px;
+        text-align: center;
+        color: #ccc;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        gap: 6px;
+        padding: 16px;
+        cursor: default;
+
+        .dashicons { font-size: 18px; width: 18px; height: 18px; color: #ccc; }
+        p { font-size: 11px; margin: 0; }
+    }
+}
+
+// ── Element card (on canvas) ──────────────────────────────────────────────────
+.bp-element-card {
+    position: relative;
+    background: $white;
+    border: 2px solid $border;
+    border-radius: 6px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+
+    &:active { cursor: pointer; }
+
+    &.is-selected {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.15);
+    }
+
+    &.is-drop-target {
+        border-top: 3px solid $primary;
+        margin-top: 2px;
+    }
+
+    &:hover:not(.is-selected) { border-color: color.adjust($border, $lightness: -12%); }
+
+    // Floating hover toolbar
+    &__toolbar {
+        position: absolute;
+        top: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        background: #3d3e40;
+        border-radius: 8px;
+        padding: 4px 6px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+        z-index: 20;
+        white-space: nowrap;
+    }
+
+    &:hover &__toolbar {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    &__toolbar-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: none;
+        border: none;
+        border-radius: 5px;
+        color: #e0e0e0;
+        cursor: pointer;
+        padding: 0;
+        transition: background 0.12s, color 0.12s;
+
+        &:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+        &--drag { cursor: grab; &:active { cursor: grabbing; } }
+
+        &--delete:hover { background: rgba($danger, 0.25); color: #ff8080; }
+    }
+
+    // Non-preview fallback body
+    &__body {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .dashicons {
+        color: $primary;
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+    }
+
+    &__label { flex: 1; font-weight: 500; font-size: 12px; }
+
+    // Live preview area
+    &__preview {
+        padding: 12px;
+    }
+}
+
+// ── Per-element live preview styles ───────────────────────────────────────────
+
+// Donate Amount preview
+.bp-element-preview__donate {
+    padding: 4px 0;
+}
+
+.bp-element-preview__donate-headline {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 600;
+    color: $text;
+}
+
+.bp-element-preview__donate-amounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bp-element-preview__donate-btn {
+    flex: 1 1 0;
+    min-width: 56px;
+    padding: 11px 8px;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    background: $white;
+    font-size: 15px;
+    font-weight: 700;
+    color: $text;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+
+    &:hover:not(.is-selected) {
+        border-color: #c5c8d6;
+        background: #f9fafb;
+    }
+}
+
+.bp-element-preview__donate-custom {
+    display: flex;
+    align-items: stretch;
+    margin-top: 8px;
+    border: 1.5px solid $border;
+    border-radius: 8px;
+    overflow: hidden;
+    background: $white;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus-within {
+        border-color: $primary;
+        box-shadow: 0 0 0 2px rgba(107, 99, 246, 0.18);
+    }
+}
+
+.bp-element-preview__donate-custom-prefix {
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: $muted;
+    background: #f4f5f8;
+    border-right: 1.5px solid $border;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease;
+
+    .bp-element-preview__donate-custom:focus-within & {
+        border-right-color: $primary;
+    }
+}
+
+.bp-element-preview__donate-custom input {
+    flex: 1;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 11px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text;
+    background: transparent;
+    width: 100%;
+
+    &::placeholder {
+        font-weight: 400;
+        color: #b0b5c8;
+    }
+}
+
+.bp-element-preview__donate-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $muted;
+    font-size: 12px;
+    padding: 6px 0;
+}
+
+// Organizer preview
+.bp-element-preview__organizer {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 4px 0;
+}
+
+.bp-element-preview__organizer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e5e7eb;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
+    }
+
+    .dashicons {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        color: #9ca3af;
+    }
+}
+
+.bp-element-preview__organizer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-top: 2px;
+}
+
+.bp-element-preview__organizer-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: $text;
+    line-height: 1.3;
+}
+
+.bp-element-preview__organizer-role {
+    font-size: 13px;
+    color: $muted;
+    line-height: 1.3;
+}
+
+.bp-element-preview__organizer-desc {
+    margin-top: 4px;
+    color: $text;
+    line-height: 1.5;
+    font-size: 14px;
+
+    p { margin: 0; }
+    p + p { margin-top: 6px; }
+    strong, b { font-size: 16px; font-weight: 700; }
+}
+
+// Donation Form (Donate Button) preview
+.bp-element-preview__donate-button-wrap {
+    padding: 4px 0;
+}
+
+.bp-element-preview__donate-button-btn {
+    display: inline-block;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    color: $white;
+    cursor: default;
+    letter-spacing: 0.2px;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.bp-element-preview__campaign-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+// ── Progress Bar live preview ─────────────────────────────────────────────────
+.bp-element-preview__summary {
+    padding: 4px 0;
+}
+
+.bp-element-preview__summary-headline {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 700;
+    color: $text;
+}
+
+.bp-element-preview__summary-grid {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax( 80px, 1fr ) );
+    gap: 8px;
+}
+
+.bp-element-preview__summary-item {
+    text-align: center;
+    padding: 10px 6px;
+    background: $bg;
+    border-radius: 6px;
+    border: 1px solid $border;
+    min-width: 0;
+
+    strong {
+        display: block;
+        font-size: 16px;
+        font-weight: 700;
+        color: $text;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    span {
+        font-size: 12px;
+        color: $muted;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+.bp-element-preview__progress {
+    padding: 4px 0;
+}
+
+.bp-element-preview__progress-headline {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: $text;
+}
+
+.bp-element-preview__progress-track {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bp-element-preview__progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+.bp-element-preview__progress-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.bp-element-preview__progress-donated,
+.bp-element-preview__progress-goal {
+    font-size: 13px;
+    color: $muted;
+}
+
+// ── Campaign Description live preview ─────────────────────────────────────────
+.bp-element-preview__description-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0 4px;
+    color: $muted;
+    font-size: 12px;
+    .dashicons { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.bp-element-preview__description {
+    padding: 4px 0;
+}
+
+.bp-element-preview__description-headline {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+    color: $text;
+}
+
+.bp-element-preview__description-content {
+    font-size: 16px;
+    color: $text;
+    line-height: 1.6;
+
+    p    { font-size: 16px; margin: 0 0 8px; }
+    h1   { font-size: 28px; font-weight: 700; margin: 10px 0 6px; line-height: 1.2; }
+    h2   { font-size: 24px; font-weight: 700; margin: 10px 0 5px; line-height: 1.2; }
+    h3   { font-size: 20px; font-weight: 600; margin: 10px 0 4px; line-height: 1.3; }
+    h4   { font-size: 18px; font-weight: 600; margin: 10px 0 4px; }
+    h5   { font-size: 16px; font-weight: 600; margin: 8px 0 4px; }
+    h6   { font-size: 15px; font-weight: 600; margin: 8px 0 4px; }
+    ul     { font-size: 16px; margin: 0 0 8px; padding-left: 18px; list-style: disc !important; }
+    ol     { font-size: 16px; margin: 0 0 8px; padding-left: 18px; list-style: decimal !important; }
+    li     { list-style: inherit !important; }
+    a      { color: $primary; }
+    strong, b { font-size: 16px; font-weight: 700; }
+}
+
+// ── Rich-text editor ──────────────────────────────────────────────────────────
+.bp-cb-rich-text {
+    position: relative;
+    border: 1px solid $border;
+    border-radius: 6px;
+    overflow: visible;
+    background: $white;
+}
+
+.bp-cb-rich-text__toolbar {
+    display: flex;
+    align-items: center;
+    background: color.adjust($bg, $lightness: 2%);
+
+    &--row1 {
+        padding: 6px 8px;
+        border-bottom: 1px solid $border;
+    }
+
+    &--row2 {
+        gap: 2px;
+        padding: 4px 6px;
+        border-bottom: 1px solid $border;
+    }
+}
+
+.bp-cb-rich-text__block-select {
+    width: 100%;
+    height: 32px;
+    line-height: 32px;
+    padding: 2px 8px;
+    border: 1px solid $border;
+    border-radius: 4px;
+    background: $white;
+    font-size: 12px;
+    color: $text;
+    cursor: pointer;
+    &:focus { outline: none; border-color: $primary; }
+}
+
+.bp-cb-rich-text__tool-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: $text;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    padding: 0;
+    flex-shrink: 0;
+
+    &:hover   { background: $border; color: $primary; }
+    &:active  { background: color.adjust($border, $lightness: -5%); }
+    &.is-active {
+        background: color.adjust($primary, $lightness: 44%);
+        color: $primary;
+    }
+
+    svg { display: block; }
+}
+
+.bp-cb-rich-text__editor {
+    min-height: 120px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: $text;
+    outline: none;
+
+    &:empty::before {
+        content: attr(data-placeholder);
+        color: $muted;
+        pointer-events: none;
+    }
+
+    p      { font-size: 16px; margin: 0 0 8px; }
+    h1     { font-size: 28px; font-weight: 700; margin: 8px 0 6px; line-height: 1.2; }
+    h2     { font-size: 24px; font-weight: 700; margin: 8px 0 5px; line-height: 1.2; }
+    h3     { font-size: 20px; font-weight: 600; margin: 8px 0 4px; line-height: 1.3; }
+    h4     { font-size: 18px; font-weight: 600; margin: 8px 0 4px; }
+    h5     { font-size: 16px; font-weight: 600; margin: 6px 0 4px; }
+    h6     { font-size: 15px; font-weight: 600; margin: 6px 0 4px; }
+    ul     { font-size: 16px; margin: 0 0 8px; padding-left: 18px; list-style: disc !important; }
+    ol     { font-size: 16px; margin: 0 0 8px; padding-left: 18px; list-style: decimal !important; }
+    li     { list-style: inherit !important; }
+    a      { color: $primary; }
+    strong, b { font-size: 16px; font-weight: 700; }
+}
+
+// ── Rich-text link popover ────────────────────────────────────────────────────
+.bp-cb-rich-text__link-popover {
+    position: absolute;
+    z-index: 200;
+    left: 0 !important;    // always flush with the left edge of the rich-text container
+    right: 0;              // stretch full width so it never clips on the right
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: $white;
+    border: 1px solid $border;
+    border-radius: 6px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.bp-cb-rich-text__link-label {
+    font-size: 12px;
+    color: $muted;
+    flex-shrink: 0;
+}
+
+.bp-cb-rich-text__link-input {
+    flex: 1;
+    min-width: 0;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid $border;
+    border-radius: 4px;
+    font-size: 12px;
+    color: $text;
+    &:focus { outline: none; border-color: $primary; }
+}
+
+.bp-cb-rich-text__link-save {
+    flex-shrink: 0;
+    height: 26px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 4px;
+    background: $primary;
+    color: $white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover { background: color.adjust($primary, $lightness: -8%); }
+}
+
+.bp-cb-rich-text__link-visit {
+    font-size: 12px;
+    color: $primary;
+    text-decoration: none;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &:hover { text-decoration: underline; }
+}
+
+.bp-cb-rich-text__link-sep {
+    font-size: 12px;
+    color: $muted;
+}
+
+.bp-cb-rich-text__link-action {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    color: $primary;
+    cursor: pointer;
+    &:hover { text-decoration: underline; }
+
+    &--remove {
+        color: #c0392b;
+    }
+}
+
+// ── Photo live preview ────────────────────────────────────────────────────────
+.bp-element-preview__photo {
+    padding: 0;
+    img { max-width: 100%; height: auto; }
+}
+
+.bp-element-preview__photo-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #e8e8e8;
+    border-radius: 4px;
+}
+
+// ── Image upload control ──────────────────────────────────────────────────────
+.bp-cb-image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &__hint {
+        margin: 0;
+        font-size: 11px;
+        font-style: italic;
+        color: $muted;
+    }
+
+    &__url {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid $border;
+        border-radius: 6px;
+        font-size: 12px;
+        box-sizing: border-box;
+        color: $text;
+        &:focus { border-color: $primary; outline: none; box-shadow: 0 0 0 3px rgba($primary, 0.12); }
+        &::placeholder { color: $muted; }
+    }
+
+    &__btn {
+        padding: 5px 14px;
+        border: 1.5px solid $border;
+        border-radius: 5px;
+        background: $white;
+        font-size: 12px;
+        font-weight: 600;
+        color: $text;
+        cursor: pointer;
+        transition: border-color 0.15s, color 0.15s;
+
+        &:hover { border-color: $primary; color: $primary; }
+
+        &--clear {
+            align-self: flex-start;
+            &:hover { border-color: $danger; color: $danger; }
+        }
+    }
+}
+
+// ── Image picker (Elementor-style preview area) ───────────────────────────────
+.bp-cb-image-picker {
+    position: relative;
+    border: 1px solid $border;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #f5f5f5;
+    aspect-ratio: 2 / 1;
+
+    &:hover .bp-cb-image-picker__bar { opacity: 1; }
+
+    &__img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+    }
+
+    &__placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #aaa;
+    }
+
+    &__delete {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: rgba(0,0,0,0.55);
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+        padding: 0;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+
+    &:hover &__delete { opacity: 1; }
+
+    &__bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        background: rgba(0,0,0,0.72);
+        padding: 0 6px;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+
+    &__choose {
+        flex: 1;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+        padding: 7px 4px;
+        cursor: pointer;
+
+        &:hover { color: #c5d8ff; }
+    }
+
+}
+
+// ── Range slider control ──────────────────────────────────────────────────────
+.bp-cb-range-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    input[type="range"] {
+        flex: 1;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        border-radius: 2px;
+        background: linear-gradient(to right, $primary var(--range-fill, 100%), $border var(--range-fill, 100%));
+        outline: none;
+        cursor: pointer;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: $white;
+            border: 2px solid $primary;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+        }
+
+        &::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: $white;
+            border: 2px solid $primary;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+        }
+    }
+}
+
+.bp-cb-range-value {
+    min-width: 44px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: $text;
+}
+
+// ── Info icon on control labels ───────────────────────────────────────────────
+.bp-cb-label-info {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    color: $muted;
+    cursor: help;
+    vertical-align: middle;
+    &:hover { color: $primary; }
+}
+
+// ── Social Links live preview ─────────────────────────────────────────────────
+.bp-element-preview__social-links {
+    padding: 4px 0 2px;
+}
+
+.bp-element-preview__social-headline {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 700;
+    color: $text;
+    line-height: 1.3;
+}
+
+.bp-element-preview__social-icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.bp-element-preview__social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid #d0d0d0;
+    border-radius: 50%;
+    color: $text;
+    background: $white;
+    transition: border-color 0.15s, color 0.15s;
+
+    svg { display: block; }
+
+    &:hover { border-color: $primary; color: $primary; }
+}
+
+// ── Section label (settings panel divider) ────────────────────────────────────
+.bp-cb-section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $muted;
+
+    &__info {
+        display: flex;
+        align-items: center;
+        color: $muted;
+        cursor: help;
+        &:hover { color: $primary; }
+    }
+}
+
+// ── Info note (social links panel) ────────────────────────────────────────────
+.bp-cb-social-info {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    background: color.adjust($primary, $lightness: 44%);
+    border-left: 3px solid $primary;
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: $muted;
+    line-height: 1.5;
+
+    a {
+        color: $primary;
+        text-decoration: underline;
+        &:hover { color: color.adjust($primary, $lightness: -10%); }
+    }
+}
+
+// ── Widget info note (e.g. progress bar) ─────────────────────────────────────
+.bp-cb-widget-note {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    background: #fff8e6;
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.5;
+}
+
+// ── Align control (settings panel) ────────────────────────────────────────────
+.bp-cb-align-group {
+    display: flex;
+    gap: 6px;
+}
+
+.bp-cb-align-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 2px solid $border;
+    border-radius: 6px;
+    background: $white;
+    color: $muted;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+    &:hover { border-color: $primary; color: $primary; }
+
+    &.is-active {
+        border-color: $primary;
+        color: $primary;
+        background: color.adjust($primary, $lightness: 44%);
+    }
+}
+
+// ── Drag overlay ───────────────────────────────────────────────────────────────
+.bp-drag-overlay {
+    background: $primary;
+    color: $white;
+    border-radius: 6px;
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    pointer-events: none;
+
+    .dashicons { font-size: 14px; width: 14px; height: 14px; }
+}
+
+// ── Right sidebar ──────────────────────────────────────────────────────────────
+.bp-cb-right-sidebar {
+    width: $sidebar-width;
+    background: $white;
+    border-left: 1px solid $border;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    &__tabs {
+        display: flex;
+        border-bottom: 1px solid $border;
+        flex-shrink: 0;
+    }
+
+    &__body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+    }
+}
+
+// Sidebar tab buttons
+.bp-cb-sidebar-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: $muted;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 4px;
+    text-align: center;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover { color: $text; }
+
+    &.is-active {
+        color: $primary;
+        border-bottom-color: $primary;
+    }
+}
+
+// ── Field cards grid (Input Fields tab) ───────────────────────────────────────
+.bp-cb-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.bp-cb-field-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 8px;
+    border: 1px solid $border;
+    border-radius: 6px;
+    cursor: grab;
+    background: #fafafa;
+    transition: background 0.1s, border-color 0.1s;
+    user-select: none;
+    text-align: center;
+
+    &:hover { background: #f0eeff; border-color: $primary; }
+    &.is-dragging { opacity: 0.45; }
+
+    .dashicons { color: $primary; font-size: 20px; width: 20px; height: 20px; }
+
+    &__svg-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $primary;
+        width: 20px;
+        height: 20px;
+        svg { width: 20px; height: 20px; }
+    }
+
+    &__label { font-size: 11px; font-weight: 500; color: $text; line-height: 1.2; }
+}
+
+// ── Input Customization tab ────────────────────────────────────────────────────
+.bp-cb-customization-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 40px 16px;
+    text-align: center;
+
+    p { font-size: 12px; color: $muted; margin: 0; }
+}
+
+.bp-cb-customization-hint {
+    font-size: 12px;
+    color: $muted;
+    padding: 8px 0;
+}
+
+.bp-cb-element-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 0 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid $border;
+
+        .dashicons { color: $primary; font-size: 16px; width: 16px; height: 16px; }
+    }
+
+    &__title {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 600;
+        color: $text;
+    }
+
+    &__delete {
+        background: none;
+        border: none;
+        color: $muted;
+        cursor: pointer;
+        padding: 3px;
+        border-radius: 0;
+        display: flex;
+        &:hover { color: $danger; background: rgba($danger, 0.08); }
+    }
+}
+
+// ── General / Advanced inner tabs ─────────────────────────────────────────────
+.bp-cb-inner-tabs {
+    display: flex;
+    border-bottom: 1px solid $border;
+    margin-bottom: 14px;
+}
+
+.bp-cb-inner-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    color: $muted;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 4px;
+    text-align: center;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover { color: $text; }
+
+    &.is-active {
+        color: $primary;
+        border-bottom-color: $primary;
+        font-weight: 600;
+    }
+}
+
+// ── Theme Colors panel ────────────────────────────────────────────────────────
+.bp-theme-colors {
+    padding: 4px 0 8px;
+
+    &__title {
+        font-size: 13px;
+        font-weight: 600;
+        color: $text;
+        margin: 0 0 16px;
+    }
+}
+
+.bp-theme-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    &__label {
+        font-size: 13px;
+        color: $text;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &__control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    &__swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+        transition: box-shadow 0.15s;
+
+        &:hover,
+        &.is-active { box-shadow: 0 0 0 3px $primary; }
+    }
+
+    &__input {
+        width: 82px;
+        border: 1px solid $border;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 12px;
+        color: $text;
+        background: #fff;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        text-align: center;
+
+        &:focus { outline: none; border-color: $primary; }
+    }
+}
+
+// ── Color picker popup (portal, rendered at body) ─────────────────────────────
+.bp-color-picker-popup {
+    // position: fixed + bottom/left set via inline style in JS
+    filter: drop-shadow(0 6px 24px rgba(0,0,0,0.18));
+
+    .bp-color-picker {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    // Caret pointing down (picker is above swatch)
+    &__caret {
+        position: absolute;
+        bottom: -9px;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left:  9px solid transparent;
+        border-right: 9px solid transparent;
+        border-top:   9px solid $border;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -8px;
+            border-left:  8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top:   8px solid #fff;
+        }
+
+        // Caret pointing up (picker is below swatch)
+        &.is-top {
+            bottom: auto;
+            top: -9px;
+            border-top:    none;
+            border-bottom: 9px solid $border;
+
+            &::after {
+                top: 2px;
+                border-top:    none;
+                border-bottom: 8px solid #fff;
+            }
+        }
+    }
+}
+
+// ── Color Picker ──────────────────────────────────────────────────────────────
+.bp-color-picker {
+    background: #fff;
+    border: 1px solid $border;
+    border-radius: 8px;
+    overflow: hidden;
+    user-select: none;
+
+    &__canvas-wrap {
+        position: relative;
+        cursor: crosshair;
+    }
+
+    &__canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    &__cursor {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    &__hue {
+        display: block;
+        width: 100%;
+        height: 10px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid rgba(0,0,0,0.25);
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        &::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid rgba(0,0,0,0.25);
+            cursor: pointer;
+        }
+    }
+
+    &__preview-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+    }
+
+    &__swatch-preview {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    &__text-input {
+        flex: 1;
+        border: 1.5px solid $border;
+        border-radius: 20px;
+        padding: 6px 10px;
+        font-size: 12px;
+        text-align: center;
+        letter-spacing: 0.04em;
+        outline: none;
+
+        &:focus { border-color: $primary; }
+    }
+
+    &__channel-inputs {
+        flex: 1;
+        display: flex;
+        gap: 4px;
+
+        input {
+            flex: 1;
+            border: 1.5px solid $border;
+            border-radius: 6px;
+            padding: 6px 2px;
+            font-size: 11px;
+            text-align: center;
+            min-width: 0;
+            outline: none;
+
+            &:focus { border-color: $primary; }
+        }
+    }
+
+    &__modes {
+        display: flex;
+        border-top: 1px solid $border;
+        border-bottom: 1px solid $border;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    &__mode-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        border-radius: 20px;
+        padding: 4px 6px;
+        font-size: 11px;
+        font-weight: 500;
+        color: $muted;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s;
+
+        &:hover { color: $text; background: $bg; }
+
+        &.is-active {
+            background: #444;
+            color: #fff;
+        }
+    }
+
+    &__presets {
+        display: flex;
+        gap: 6px;
+        padding: 8px 10px;
+    }
+
+    &__preset {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: transform 0.12s;
+
+        &:hover { transform: scale(1.15); }
+    }
+
+    &__actions {
+        display: flex;
+        gap: 6px;
+        padding: 4px 10px 10px;
+    }
+
+    &__action-btn {
+        flex: 1;
+        padding: 6px;
+        border-radius: 20px;
+        border: none;
+        background: #555;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.12s;
+
+        &:hover { background: #333; }
+    }
+}
+
+// ── Settings form controls (shared) ───────────────────────────────────────────
+.bp-cb-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bp-cb-control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+label.bp-cb-field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.bp-cb-settings-form,
+.bp-settings-section__body {
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid $border;
+        border-radius: 4px;
+        font-size: 12px;
+        box-sizing: border-box;
+        background: $white;
+        color: $text;
+        &:focus { border-color: $primary; outline: none; box-shadow: 0 0 0 2px rgba($primary, 0.12); }
+    }
+
+    input[type="color"] {
+        width: 36px;
+        height: 32px;
+        padding: 2px;
+        border: 1px solid $border;
+        border-radius: 4px;
+        cursor: pointer;
+        &:focus { outline: none; border-color: $primary; }
+    }
+
+    .bp-cb-hint { font-size: 11px; color: $muted; margin: 0; }
+}
+
+.bp-cb-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    input[type="checkbox"] { width: auto; cursor: pointer; }
+}
+
+// ── Switch (pill toggle) — used for Open Links In New Tab ─────────────────────
+.bp-cb-switch-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+}
+
+.bp-cb-switch-wrap {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+
+    input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+        pointer-events: none;
+
+        &:checked ~ .bp-cb-switch-track {
+            background: $primary;
+
+            &::after { transform: translateX(16px); }
+        }
+    }
+}
+
+.bp-cb-switch-track {
+    display: block;
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: #d0d5dd;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: $white;
+        top: 3px;
+        left: 3px;
+        transition: transform 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    }
+}
+
+// Color row (swatch + hex value)
+.bp-color-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bp-color-value {
+    font-size: 12px;
+    color: $muted;
+    font-family: monospace;
+}
+
+// ── Settings tab (full-width) ──────────────────────────────────
+.bp-settings-tab {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bp-settings-section {
+    background: $white;
+    border: 1px solid $border;
+    border-radius: 8px;
+    overflow: hidden;
+
+    &__header {
+        padding: 14px 20px;
+        border-bottom: 1px solid $border;
+        background: #fafafa;
+
+        h3 { margin: 0; font-size: 13px; font-weight: 600; color: $text; }
+    }
+
+    &__body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+.bp-settings-row {
+    display: flex;
+    gap: 16px;
+}
+
+.bp-settings-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    label {
+        font-size: 12px;
+        font-weight: 600;
+        color: $muted;
+    }
+
+    &--full { flex: 2; }
+}
+
+.bp-settings-hint {
+    font-size: 11px;
+    color: $muted;
+    margin: 2px 0 0;
+}
+
+.bp-settings-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    input[type="checkbox"] { width: auto; cursor: pointer; }
+}
+
+.bp-settings-future {
+    opacity: 0.6;
+}
+
+.bp-badge-soon {
+    font-size: 10px;
+    font-weight: 600;
+    background: #f0f0f0;
+    color: $muted;
+    border-radius: 10px;
+    padding: 2px 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+// ── Settings tab — prefixed input & switch row ────────────────────────────────
+.bp-settings-prefix-input {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid $border;
+    border-radius: 4px;
+    overflow: hidden;
+    background: $white;
+
+    input {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        flex: 1;
+        min-width: 0;
+    }
+
+    &:focus-within {
+        border-color: $primary;
+        box-shadow: 0 0 0 1px $primary;
+    }
+}
+
+.bp-settings-prefix {
+    padding: 0 10px;
+    font-size: 13px;
+    color: $muted;
+    font-weight: 500;
+    background: #f9fafb;
+    border-right: 1px solid $border;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.bp-settings-hint--italic {
+    font-style: italic;
+}
+
+.bp-settings-switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+}
+
+.bp-settings-switch-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: $text;
+}
+
+// ── Suggested amounts editor ──────────────────────────────────────────────────
+
+$sa-drag-w:  32px;
+$sa-radio-w: 64px;
+$sa-amt-w:   110px;
+$sa-del-w:   32px;
+
+.bp-sa-editor {
+    border: 1px solid $border;
+    border-radius: 6px;
+    overflow: hidden;
+    background: $white;
+}
+
+.bp-sa-header {
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border-bottom: 1px solid $border;
+    padding: 7px 8px 7px 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+
+    &__drag { width: $sa-drag-w; flex-shrink: 0; }
+
+    &__cell {
+        &--radio { width: $sa-radio-w; flex-shrink: 0; text-align: center; }
+        &--amount { width: $sa-amt-w; flex-shrink: 0; }
+        &--desc { flex: 1; }
+    }
+
+    &__del { width: $sa-del-w; flex-shrink: 0; }
+}
+
+.bp-sa-row {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid $border;
+    background: $white;
+    position: relative;
+
+    &:last-of-type { border-bottom: none; }
+}
+
+.bp-sa-drag {
+    width: $sa-drag-w;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    color: #c5c9d6;
+    font-size: 16px;
+    user-select: none;
+    height: 40px;
+
+    &:active { cursor: grabbing; }
+    &:hover { color: $muted; }
+}
+
+.bp-sa-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #d0d5dd;
+    background: $white;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &.is-selected {
+        border-color: $primary;
+        background: $primary;
+
+        &::after {
+            content: '';
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: $white;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    &:hover:not(.is-selected) { border-color: $primary; }
+    &:focus { outline: none; box-shadow: 0 0 0 2px rgba($primary, 0.25); }
+}
+
+.bp-sa-cell {
+    padding: 6px 6px 6px 0;
+
+    input {
+        width: 100%;
+        height: 30px;
+        padding: 4px 8px;
+        border: 1px solid $border;
+        border-radius: 4px;
+        font-size: 12px;
+        color: $text;
+        background: $white;
+
+        &:focus {
+            outline: none;
+            border-color: $primary;
+            box-shadow: 0 0 0 1px $primary;
+        }
+    }
+
+    &--radio {
+        width: $sa-radio-w;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+    }
+
+    &--amount {
+        width: $sa-amt-w;
+        flex-shrink: 0;
+    }
+
+    &--desc {
+        flex: 1;
+        padding-right: 4px;
+    }
+}
+
+.bp-sa-delete {
+    width: $sa-del-w;
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $muted;
+    font-size: 13px;
+    border-radius: 4px;
+    padding: 0;
+    line-height: 1;
+
+    &:hover {
+        color: $danger;
+        background: rgba($danger, 0.07);
+    }
+}
+
+.bp-sa-footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border-top: 1px solid $border;
+    background: #fafafa;
+}
+
+.bp-sa-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $primary;
+    background: rgba($primary, 0.06);
+    border: 1px solid rgba($primary, 0.22);
+    border-radius: 5px;
+    cursor: pointer;
+    line-height: 1.4;
+
+    &:hover { background: rgba($primary, 0.12); }
+}
+
+.bp-sa-clear {
+    font-size: 12px;
+    color: $muted;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+    line-height: 1.4;
+
+    &:hover { color: $danger; text-decoration-style: solid; }
+}
+
+// Compact mode — used inside the widget settings sidebar (no description column, $ prefix on amount)
+.bp-sa-editor--compact {
+    .bp-sa-header__cell--amount-fill,
+    .bp-sa-cell--amount-fill {
+        flex: 1;
+        width: auto;
+    }
+
+    .bp-sa-footer { padding: 8px; }
+
+    .bp-sa-add--full {
+        flex: 1;
+        justify-content: center;
+        background: #f4f5f8;
+        border-color: $border;
+        color: $text;
+        font-weight: 500;
+
+        &:hover { background: darken(#f4f5f8, 4%); }
+    }
+}
+
+.bp-sa-amount-prefix-wrap {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid $border;
+    border-radius: 4px;
+    overflow: hidden;
+    background: $white;
+    width: 100%;
+
+    input {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        flex: 1;
+        min-width: 0;
+        height: 30px;
+        padding: 0 8px;
+        font-size: 12px;
+        color: $text;
+        line-height: 30px;
+    }
+
+    &:focus-within {
+        border-color: $primary;
+        box-shadow: 0 0 0 1px $primary;
+    }
+}
+
+.bp-sa-amount-prefix {
+    padding: 0 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: $muted;
+    background: #f9fafb;
+    border-right: 1px solid $border;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+// ── Template modal ────────────────────────────────────────────────────────────
+.bp-template-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-template-modal {
+    background: $white;
+    border-radius: 12px;
+    padding: 32px;
+    width: 660px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+
+    &__header {
+        text-align: center;
+        margin-bottom: 24px;
+        h2 { font-size: 20px; font-weight: 700; margin: 0 0 6px; color: #1a1a2e; }
+        p  { color: $muted; font-size: 13px; margin: 0; }
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+}
+
+.bp-template-card {
+    border: 2px solid $border;
+    border-radius: 10px;
+    padding: 18px;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+
+    &:hover {
+        border-color: $primary;
+        background: #f5f3ff;
+        box-shadow: 0 4px 16px rgba($primary, 0.15);
+    }
+
+    &__thumb {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: $white;
+        border: 1px solid $border;
+        border-radius: 6px;
+        padding: 10px;
+        svg { display: block; }
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        strong { font-size: 13px; font-weight: 600; color: $text; }
+        span   { font-size: 11px; color: $muted; }
+    }
+}
+
+// ── Templates tab ─────────────────────────────────────────────────────────────
+.bp-templates-tab {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    font-size: 14px; // base for the whole tab
+
+    // Full-width page header (title + warning)
+    &__page-header {
+        flex-shrink: 0;
+        padding: 22px 32px 18px;
+        background: $white;
+        border-bottom: 1px solid $border;
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: $text;
+            margin: 0 0 5px;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            font-size: 14px;
+            color: $muted;
+            margin: 0;
+            line-height: 1.55;
+
+            strong { color: $text; font-weight: 600; }
+        }
+    }
+
+    // Sidebar + main area (flex row)
+    &__body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    &__sidebar {
+        width: 276px;
+        flex-shrink: 0;
+        background: $white;
+        border-right: 1px solid $border;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 20px 0 24px;
+    }
+
+    &__search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 16px 16px;
+        background: $bg;
+        border: 1px solid $border;
+        border-radius: 8px;
+        padding: 0 12px;
+        height: 36px;
+        transition: border-color 0.15s, background 0.15s;
+
+        // Subtle highlight on focus — no native browser ring
+        &:focus-within {
+            border-color: color.adjust($primary, $lightness: 28%);
+            background: $white;
+        }
+
+        svg { flex-shrink: 0; opacity: 0.55; }
+
+        input {
+            border: none !important;
+            background: none !important;
+            // Kill every browser / WP-admin focus ring
+            outline: 0 !important;
+            outline-offset: 0 !important;
+            box-shadow: none !important;
+            -webkit-appearance: none;
+            font-size: 14px;
+            color: $text;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            font-family: inherit;
+
+            &::placeholder { color: $muted; }
+        }
+    }
+
+    // Shared nav-item style used by both __all-cat and __cat
+    &__all-cat,
+    &__cat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        text-align: left;
+        color: $text;
+        padding: 9px 13px;
+        border-radius: 8px;
+        transition: color 0.12s;
+
+        &:hover {
+            background: none;
+            color: $primary;
+
+            .bp-templates-tab__cat-count,
+            .bp-templates-tab__cat-num { color: $primary; }
+        }
+
+        &.is-active {
+            background: none;
+            color: $primary;
+            font-weight: 700;
+
+            .bp-templates-tab__cat-count,
+            .bp-templates-tab__cat-num {
+                color: $primary;
+                font-weight: 700;
+            }
+        }
+    }
+
+    &__all-cat {
+        margin: 0 12px 2px;
+    }
+
+    // Count badge on "All Templates"
+    &__cat-count {
+        font-size: 15px;
+        font-weight: 500;
+        color: $muted;
+        background: none;
+        padding: 0;
+        border-radius: 0;
+        min-width: 0;
+        flex-shrink: 0;
+        text-align: right;
+        line-height: inherit;
+    }
+
+    &__divider {
+        border: none;
+        border-top: 1px solid $border;
+        margin: 10px 16px 12px;
+        opacity: 0.6;
+    }
+
+    &__cats {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        padding: 0 12px;
+    }
+
+    // Count number on individual category buttons
+    &__cat-num {
+        font-size: 15px;
+        font-weight: 500;
+        color: $muted;
+        background: none;
+        padding: 0;
+        flex-shrink: 0;
+        transition: color 0.12s;
+    }
+
+    &__sidebar-cta {
+        margin: 22px 16px 0;
+        padding: 14px 16px;
+        background: color.adjust($primary, $lightness: 44%);
+        border-radius: 10px;
+        border: 1px solid color.adjust($primary, $lightness: 34%);
+
+        strong {
+            font-size: 16px;
+            font-weight: 700;
+            color: $text;
+            display: block;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        p { margin: 0; color: $muted; font-size: 14px; line-height: 1.55; }
+
+        a { color: $primary; text-decoration: underline; font-weight: 500; }
+    }
+
+    &__main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 30px 44px;
+        background: $bg;
+    }
+
+    &__section {
+        & + & { margin-top: 36px; }
+    }
+
+    &__section-heading {
+        font-size: 14px;
+        color: $muted;
+        font-weight: 400;
+        margin: 0 0 18px;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    &__empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: $muted;
+        font-size: 15px;
+    }
+}
+
+// ── Template picker cards (bp-tpl-card) ───────────────────────────────────────
+.bp-tpl-card {
+    position: relative;
+    background: $white;
+    border: 1.5px solid $border;
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: border-color 0.22s ease-out, box-shadow 0.22s ease-out;
+    width: 100%;
+
+    &:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+
+        .bp-tpl-card__hover { opacity: 1; }
+    }
+
+    &.is-active {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 2px rgba(#22c55e, 0.18);
+    }
+
+    // Green "Active" badge (top-left)
+    &__badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 3;
+        background: #22c55e;
+        color: $white;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        line-height: 1.4;
+    }
+
+    // Thumbnail area
+    &__thumb {
+        position: relative;
+        width: 100%;
+        height: 190px;
+        overflow: hidden;
+        background: $white;
+        flex-shrink: 0;
+
+        // Direct SVG children are styled per variant (blank overrides below)
+        > svg { display: block; }
+
+        &--blank {
+            background: $white;
+
+            > svg {
+                position: absolute;
+                inset: 12px;
+                width: calc(100% - 24px);
+                height: calc(100% - 24px);
+            }
+        }
+    }
+
+    // Screenshot — absolutely inset so all 4 sides get equal padding
+    &__screenshot {
+        position: absolute;
+        inset: 12px;
+        width: calc(100% - 24px);
+        height: calc(100% - 24px);
+        object-fit: cover;
+        object-position: top center;
+        pointer-events: none;
+        border-radius: 0;
+    }
+
+    // Fallback color swatch when no screenshot exists
+    &__thumb-placeholder {
+        position: absolute;
+        inset: 12px;
+        border-radius: 6px;
+        opacity: 0.25;
+    }
+
+    // Dark overlay — inset to match image padding
+    &__hover {
+        position: absolute;
+        inset: 12px;
+        border-radius: 0;
+        background: rgba(0, 0, 0, 0.52);
+        backdrop-filter: blur(2px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.22s ease-out;
+        z-index: 2;
+        will-change: opacity;
+        transform: translateZ(0);
+    }
+
+    // Hover action buttons — equal width via align-self: stretch
+    &__hover-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-width: 130px;
+        padding: 9px 18px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 1px;
+        cursor: pointer;
+        border: 1.5px solid rgba($white, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: $white;
+        line-height: 1;
+        white-space: nowrap;
+        letter-spacing: 0.01em;
+        transition: background 0.15s, border-color 0.15s;
+
+        svg { flex-shrink: 0; width: 14px; height: 14px; }
+
+        &:hover {
+            background: rgba($white, 0.22);
+            border-color: rgba($white, 0.7);
+        }
+
+        &--primary {
+            background: $primary;
+            color: $white;
+            border-color: $primary;
+            transition: background 0.2s ease-out, border-color 0.2s ease-out;
+
+            &:hover {
+                background: darken($primary, 8%);
+                border-color: darken($primary, 8%);
+            }
+        }
+    }
+
+    &.is-active { cursor: default; }
+
+    // Card info row (label + description)
+    &__info {
+        padding: 16px 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        flex: 1;
+
+        strong { font-size: 18px; font-weight: 700; color: $text; line-height: 1.3; }
+        span   { font-size: 14px; color: $muted; line-height: 1.5; }
+    }
+}
+
+// ── Template lightbox (full-preview modal) ────────────────────────────────────
+.bp-template-lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-template-lightbox {
+    position: relative;
+    width: 780px;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: $white;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+
+    // Minimal × — absolute top-right, no background pill
+    &__close-btn {
+        position: absolute;
+        top: 20px;
+        right: 24px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        color: $muted;
+        cursor: pointer;
+        padding: 0;
+        transition: color 0.12s;
+
+        &:hover { color: $text; }
+    }
+
+    // Header — large title + description, generous padding, no border
+    &__header {
+        flex-shrink: 0;
+        padding: 36px 40px 20px;
+        // leave right space so close button never overlaps title
+        padding-right: 64px;
+    }
+
+    &__title {
+        font-size: 26px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 8px;
+        line-height: 1.25;
+    }
+
+    &__desc {
+        font-size: 13px;
+        color: $muted;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    // Scrollable preview area
+    &__body {
+        flex: 1;
+        overflow-y: auto;
+        background: $white;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 24px 40px;
+    }
+
+    &__img {
+        width: 100%;
+        max-width: 100%;
+        display: block;
+        border-radius: 6px;
+        box-shadow: none;
+    }
+
+    &__no-preview {
+        color: $muted;
+        font-size: 14px;
+        padding: 40px;
+    }
+
+    // White footer with padded, inline-sized button
+    &__use-btn {
+        flex-shrink: 0;
+        display: block;
+        width: calc(100% - 48px);
+        margin: 0 24px 20px;
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        background: $primary;
+        color: $white;
+        transition: background 0.15s;
+
+        &:hover { background: color.adjust($primary, $lightness: -8%); }
+    }
+}
+
+// ── Preview modal ──────────────────────────────────────────────────────────────
+.bp-preview-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100000; // above WP admin bar (99999)
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-preview-modal {
+    background: $white;
+    display: flex;
+    flex-direction: column;
+    width: 1200px;
+    max-width: 96vw;
+    height: 85vh;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+
+    // Header bar — title left, close right, never overlaps content
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px 0 20px;
+        height: 48px;
+        flex-shrink: 0;
+        border-bottom: 1px solid $border;
+        background: $white;
+    }
+
+    &__title {
+        font-size: 13px;
+        font-weight: 600;
+        color: $text;
+    }
+
+    &__close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: rgba(0, 0, 0, 0.06);
+        color: $text;
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background 0.12s;
+        flex-shrink: 0;
+
+        &:hover { background: rgba(0, 0, 0, 0.13); }
+    }
+
+    &__body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: #f9f9f9;
+    }
+
+    &__iframe {
+        flex: 1;
+        width: 100%;
+        border: none;
+        background: #fff;
+        overflow-y: auto;
+    }
+}
+
+.bp-preview-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    padding: 60px;
+    color: $muted;
+    font-size: 14px;
+
+    .dashicons.spin {
+        animation: bp-spin 1s linear infinite;
+        font-size: 20px; width: 20px; height: 20px;
+    }
+}
+
+@keyframes bp-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.bp-preview-content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 28px;
+    box-sizing: border-box;
+}
+
+// ── Campaign name modal ────────────────────────────────────────────────────────
+.bp-name-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-name-modal {
+    background: $white;
+    border-radius: 10px;
+    padding: 28px 28px 24px;
+    width: 420px;
+    max-width: 95vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+
+    &__title {
+        font-size: 16px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 16px;
+    }
+
+    &__input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid $border;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+        color: $text;
+        &:focus { border-color: $primary; outline: none; box-shadow: 0 0 0 3px rgba($primary, 0.12); }
+        &::placeholder { color: $muted; }
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+    }
+}
+
+.bp-title-required-modal {
+    background: $white;
+    border-radius: 12px;
+    padding: 36px 28px 28px;
+    width: 340px;
+    max-width: 95vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    text-align: center;
+
+    &__icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 20px;
+        svg { width: 100%; height: 100%; }
+    }
+
+    &__heading {
+        font-size: 17px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 10px;
+        line-height: 1.4;
+    }
+
+    &__body {
+        font-size: 14px;
+        color: $muted;
+        margin: 0 0 24px;
+        line-height: 1.5;
+    }
+
+    &__ok {
+        display: inline-block;
+        background: #E05A2B;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 48px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+        &:hover { background: darken(#E05A2B, 8%); }
+    }
+}
+
+// ── Canvas initializing spinner ────────────────────────────────────────────────
+.bp-cb-canvas-initializing {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+
+    &__spin {
+        font-size: 32px !important;
+        width: 32px !important;
+        height: 32px !important;
+        color: $muted;
+        animation: bp-lc-spin 0.8s linear infinite;
+    }
+}
+
+// ── Live Canvas ────────────────────────────────────────────────────────────────
+
+// Scrollable wrapper — fills the canvas-area flex slot
+.bp-lc-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fff;
+    position: relative;
+}
+
+// Inner shell — iframe + overlay share the same coordinate space
+.bp-lc-inner {
+    position: relative;
+    width: 100%;
+}
+
+// The rendered iframe — pointer-events disabled; overlay handles all input
+.bp-lc-iframe {
+    display: block;
+    width: 100%;
+    border: none;
+    background: #fff;
+    pointer-events: none;
+}
+
+// Transparent overlay positioned exactly over the iframe
+.bp-lc-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none; // children opt-in individually
+}
+
+// ── Element hotspot ────────────────────────────────────────────────────────────
+.bp-lc-hotspot {
+    pointer-events: all;
+    border: 2px solid transparent;
+    border-radius: 3px;
+    transition: border-color 0.12s, box-shadow 0.12s;
+    cursor: pointer;
+    box-sizing: border-box;
+
+    &:hover {
+        border-color: $primary;
+
+        .bp-lc-hotspot__toolbar {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    &.is-selected {
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba($primary, 0.15);
+
+        .bp-lc-hotspot__toolbar {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    &.is-dragging {
+        opacity: 0.35;
+        border-color: $primary;
+    }
+
+    &.is-drop-target {
+        border-top: 3px solid $primary;
+    }
+}
+
+// Floating toolbar — same visual style as ElementCard toolbar
+.bp-lc-hotspot__toolbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: auto;
+    transform: none;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: darken($primary, 10%);
+    border-radius: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+    white-space: nowrap;
+}
+
+.bp-lc-hotspot__toolbar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    color: #fff;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.12s, color 0.12s;
+
+    &:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+    &--drag    { cursor: grab; &:active { cursor: grabbing; } }
+
+    &--delete:hover { background: rgba($danger, 0.25); color: #ff8080; }
+}
+
+// ── Column drop zone ───────────────────────────────────────────────────────────
+.bp-lc-col-zone {
+    border: 2px dashed transparent;
+    border-radius: 8px;
+    transition: background 0.15s, border-color 0.15s;
+    pointer-events: none; // dnd-kit collision detection uses bounding rects, not pointer events
+
+    &.is-over {
+        background: rgba($primary, 0.05);
+        border-color: $primary;
+    }
+
+    // Empty column: show a visible 4-sided dashed border with centred hint text
+    &.is-empty {
+        border-color: #d1d3d9;
+        background: #fafafa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &.is-empty.is-over {
+        background: rgba($primary, 0.06);
+        border-color: $primary;
+
+        .bp-lc-col-zone__hint { color: $primary; }
+    }
+}
+
+// Centred hint shown inside empty column drop zones
+.bp-lc-col-zone__hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #b0b5c8;
+    font-size: 12px;
+    font-weight: 500;
+    user-select: none;
+    pointer-events: none;
+    text-align: center;
+    transition: color 0.15s;
+
+    svg { opacity: 0.7; }
+}
+
+
+// ── Preview refresh shade ──────────────────────────────────────────────────────
+// Covers the entire campaign area while the live preview re-fetches.
+// Sits above the iframe (z-index > overlay) but below the hotspot toolbar.
+.bp-lc-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+.bp-lc-spin {
+    animation: bp-lc-spin 0.8s linear infinite;
+    display: inline-block;
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+@keyframes bp-lc-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+// ── Template switch confirmation modal ────────────────────────────────────────
+.bp-template-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 100001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-template-confirm {
+    background: $white;
+    border-radius: 12px;
+    padding: 32px 28px 28px;
+    width: 420px;
+    max-width: 95vw;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    text-align: center;
+
+    &__icon {
+        margin: 0 auto 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__heading {
+        font-size: 18px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 10px;
+    }
+
+    &__body {
+        font-size: 14px;
+        color: $muted;
+        line-height: 1.55;
+        margin: 0 0 24px;
+
+        strong { color: $text; font-weight: 600; }
+    }
+
+    &__actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    &__btn {
+        flex: 1;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+        transition: background 0.15s, opacity 0.15s;
+
+        &--cancel {
+            background: $bg;
+            color: $text;
+            border: 1px solid $border;
+            &:hover { background: color.adjust($bg, $lightness: -4%); }
+        }
+
+        &--confirm {
+            background: #f59e0b;
+            color: #fff;
+            &:hover { background: color.adjust(#f59e0b, $lightness: -8%); }
+        }
+    }
+}
+
+// ── Unsaved changes modal ─────────────────────────────────────────────────────
+.bp-unsaved-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 100001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-unsaved-modal {
+    background: $white;
+    border-radius: 12px;
+    padding: 36px 32px 32px;
+    width: 420px;
+    max-width: 95vw;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    text-align: center;
+
+    &__icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #fbbf24;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+
+    &__title {
+        font-size: 18px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 10px;
+    }
+
+    &__body {
+        font-size: 14px;
+        color: $muted;
+        line-height: 1.6;
+        margin: 0 0 28px;
+    }
+
+    &__actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    &__btn {
+        flex: 1;
+        padding: 11px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+        transition: background 0.15s, opacity 0.15s;
+
+        &--stay {
+            background: $primary;
+            color: $white;
+            &:hover { background: darken($primary, 8%); }
+        }
+
+        &--leave {
+            background: #9ca3af;
+            color: $white;
+            &:hover { background: color.adjust(#9ca3af, $lightness: -8%); }
+        }
+    }
+}
+
+// ── Canvas area wrapper (holds toolbar + Canvas or LiveCanvas) ─────────────────
+.bp-cb-canvas-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding-top: 16px;
+    background: #fff;
+}
+

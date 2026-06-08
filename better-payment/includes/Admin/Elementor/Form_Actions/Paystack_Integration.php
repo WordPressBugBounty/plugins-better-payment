@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
@@ -272,6 +273,9 @@ class Paystack_Integration extends Action_Base {
                     'campaign_id'    => $campaign_id,
                 ]
             );
+            if ( $campaign_id ) {
+                CampaignStats::bust_cache( (int) $campaign_id );
+            }
 
             $authorization_url = ! empty( $response_ar->data->authorization_url ) ? esc_url_raw( $response_ar->data->authorization_url ) : '';
 

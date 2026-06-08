@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.1.2
+ * Version: 2.2.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -34,7 +34,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.1.2';
+    const version = '2.2.0';
 
     /**
      * Class construcotr
@@ -145,6 +145,68 @@ final class Better_Payment {
 
             Better_Payment\Lite\Admin\Settings::save_default_settings();
         }
+
+        // ── Campaign Builder module ────────────────────────────────────
+        $this->init_campaign_module();
+    }
+
+    /**
+     * Initialize the Campaign Builder module.
+     *
+     * @return void
+     */
+    private function init_campaign_module() {
+        $cpt = new Better_Payment\Lite\Campaign\CPT();
+
+        // CPT registration (runs on init)
+        add_action( 'init', [ $cpt, 'register' ] );
+
+        // Admin-only: builder page, submenu, asset enqueue
+        if ( is_admin() ) {
+            add_action( 'admin_menu', [ $cpt, 'register_builder_page' ], 20 );
+            add_action( 'admin_enqueue_scripts', [ $cpt, 'enqueue_builder_assets' ] );
+            add_action( 'admin_enqueue_scripts', [ $cpt, 'enqueue_list_assets' ] );
+            add_action( 'load-post-new.php',     [ $cpt, 'redirect_new_post' ] );
+            add_action( 'load-post.php',         [ $cpt, 'redirect_edit_post' ] );
+            add_filter( 'get_edit_post_link',    [ $cpt, 'filter_edit_link' ], 10, 3 );
+            add_action( 'admin_init',            [ $cpt, 'redirect_cpt_list' ] );
+
+            // Save post meta when post is saved via standard WP (rare path)
+            add_action( 'save_post_bp_campaign', [ new Better_Payment\Lite\Campaign\MetaBox(), 'save' ] );
+
+            // Custom columns on campaign list table
+            $admin_list = new Better_Payment\Lite\Campaign\CampaignListColumns();
+            add_filter( 'manage_bp_campaign_posts_columns',        [ $admin_list, 'add_columns' ] );
+            add_action( 'manage_bp_campaign_posts_custom_column',  [ $admin_list, 'render_column' ], 10, 2 );
+        }
+
+        // Serve a custom template for bp_campaign single pages so RendererService renders
+        // the campaign content instead of the theme's empty single.php.
+        add_filter( 'template_include', static function ( $template ) {
+            if ( is_singular( 'bp_campaign' ) ) {
+                $custom = BETTER_PAYMENT_PATH . '/templates/single-bp_campaign.php';
+                return file_exists( $custom ) ? $custom : $template;
+            }
+            return $template;
+        } );
+
+        // Register element types and templates (must run before CPT enqueue_builder_assets).
+        // Deferred to init so __() calls don't trigger translation loading during plugins_loaded.
+        add_action( 'init', [ 'Better_Payment\Lite\Campaign\Elements\CampaignElements', 'register_all' ], 5 );
+
+        // Campaign display block (server-side render)
+        $block = new Better_Payment\Lite\Campaign\CampaignBlock();
+        add_action( 'init', [ $block, 'register' ], 20 );
+
+        // Shortcode [bp_campaign id="42"]
+        $shortcode = new Better_Payment\Lite\Campaign\Shortcode();
+        $shortcode->register();
+
+        // REST API for campaigns
+        new Better_Payment\Lite\API\CampaignAPI();
+
+        // Bust campaign stats cache when a payment is confirmed by any gateway.
+        Better_Payment\Lite\Campaign\CampaignStats::register_hooks();
     }
 }
 

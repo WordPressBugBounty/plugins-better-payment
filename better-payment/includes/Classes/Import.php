@@ -55,7 +55,7 @@ class Import extends Controller{
             
             // Header validation
             $csvHeader = $csv->getHeader();
-            if ( isset( $csvHeader[0] ) && str_contains( $csvHeader[0], ';' ) ) {
+            if ( isset( $csvHeader[0] ) && false !== strpos( $csvHeader[0], ';' ) ) {
                 $csv->setDelimiter(';');
                 $csvHeader = $csv->getHeader();
             }

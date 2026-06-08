@@ -30,7 +30,7 @@ class Installer extends Controller {
 
     /**
      * Table creation schema
-     * 
+     *
      * @since 0.0.1
      */
     private function get_schema() {
@@ -47,13 +47,13 @@ class Installer extends Controller {
 			    email varchar(50) NOT NULL DEFAULT '',
 			    customer_info longtext,
 			    form_fields_info longtext,
-			    currency varchar(11) NOT NULL DEFAULT '', 
+			    currency varchar(11) NOT NULL DEFAULT '',
                 referer varchar(64) DEFAULT NULL,
 			    obj_id text,
 			    PRIMARY KEY (id),
 			    KEY order_id (order_id),
-			    KEY status (status)						
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 "
+			    KEY status (status)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ",
         ];
     }
 

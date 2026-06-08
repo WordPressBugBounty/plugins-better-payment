@@ -1,11 +1,11 @@
 === Better Payment – Instant Payments, Donations, Fundraising with Subscriptions & More ===
-Contributors: wpdevteam, re_enter_rupok, asif2bd, nhrrob, fuadragib, rahatsheikhleon
+Contributors: wpdevteam, re_enter_rupok, asif2bd, fuadragib, rahatsheikhleon
 Donate link: https://wpdeveloper.com
 Tags: donation, fundraising, recurring donations, payments, stripe paypal paystack
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.1.2
+Stable tag: 2.2.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -21,6 +21,9 @@ Better Payment allows you to manage your own website payments with one click, wi
 
 ## ⚙️ ELEMENTOR & GUTENBERG COMPATIBILITY
 Better Payment is fully compatible with Elementor & Gutenberg. You can make tweaks to the way you want to your Better Payment form. Also, you can integrate with Elementor Form and make the appearance of the payment form more stunning.
+
+✨ CREATE CAMPAIGNS WITH CAMPAIGN BUILDER
+Better Payment’s Campaign Builder makes it easy to create fundraising campaigns without any hassle. You can start from scratch or simply pick a ready-made template and customize it the way you want. Whether it’s for a cause, event, or fundraising goal, you get full flexibility to build a campaign that fits your needs in just a few steps.
 
 ## 🛠️ ONE-CLICK STRIPE PAYMENT INTEGRATION
 Better Payment lets you easily integrate your Stripe account into your website with one click. You will get a Stripe Elements Checkout option with a securely embedded feature, an on-site checkout option, etc.
@@ -162,12 +165,16 @@ Yes, you can build regular forms like contact forms without adding payment metho
 3. WooCommerce form layout
 4. Multiple payment methods
 5. Payment transaction details
-6. In-depth analytics for transactions
+6. In-depth analytics for transaction
 7. Payment gateway settings
 8. Custom email settings
 
 
 == Changelog ==
+
+= 2.2.0 - 08/06/2026 =
+- Added: Visual Campaign Builder
+- Few minor bug fixes & improvements
 
 = 2.1.2 - 20/05/2026 =
 - Added: WordPress 7.0 Compatibility

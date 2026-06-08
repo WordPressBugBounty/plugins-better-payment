@@ -265,13 +265,16 @@ class Handler extends Controller{
                 
                 if ( false !== $updated ) {
                     //Send email notification
-                    if ( 
-                        ( isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' ) 
+                    if (
+                        ( isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' )
                         || ( $results->referer === 'elementor-form' )
                         ) {
                         $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
                         self::better_email_notification(sanitize_text_field( $data[ 'txn_id' ] ), sanitize_email( $data[ 'payer_email' ] ), $settings, 'PayPal', $results->form_fields_info, $is_elementor_form);
                     }
+
+                    do_action( 'better_payment/payment/success', sanitize_text_field( $_REQUEST['item_number'] ?? '' ), (int) $results->id, 'paypal' );
+                    do_action( 'better_payment/payment_confirmed', (int) $results->id );
 
                     return $frontend_data;
                 }
@@ -398,6 +401,7 @@ class Handler extends Controller{
                 );
 
                 do_action('better_payment/stripe_payment/success', $action_data);
+                do_action( 'better_payment/payment_confirmed', (int) $results->id );
                 
                 $frontend_data = [
                     'amount' => $exact_paid_amount,
@@ -485,6 +489,7 @@ class Handler extends Controller{
                     ),
                     array( 'ID' => $results->id )
                 );
+                do_action( 'better_payment/payment_confirmed', (int) $results->id );
             }
 
             $better_customer_email = ! empty( $response->data->customer->email ) ? maybe_serialize( $response->data->customer->email ) : '';
@@ -500,13 +505,15 @@ class Handler extends Controller{
 
             if ( ! empty( $updated ) && $better_customer_email ) {
                 //Send email notification
-                if ( 
-                    (isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' ) 
+                if (
+                    (isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' )
                     || ( $results->referer === 'elementor-form' )
                     ) {
                     $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
-                    self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form);                    
+                    self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form);
                 }
+
+                do_action( 'better_payment/payment/success', sanitize_text_field( $data['better_payment_paystack_id'] ?? '' ), (int) $results->id, 'paystack' );
 
                 return $frontend_data;
             }

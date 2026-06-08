@@ -1,0 +1,143 @@
+// Campaign List — template-select modal
+$primary: #6b63f6;
+$border:  #e2e4e9;
+$text:    #1e1e2d;
+$muted:   #8a8fa6;
+$white:   #fff;
+
+.bp-template-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.bp-template-modal {
+    position: relative;
+    background: $white;
+    border-radius: 12px;
+    padding: 32px;
+    width: 660px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+    &__header {
+        text-align: center;
+        margin-bottom: 24px;
+        padding-right: 28px;
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 6px;
+            color: $text;
+        }
+
+        p {
+            color: $muted;
+            font-size: 13px;
+            margin: 0;
+        }
+    }
+
+    &__close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: none;
+        border: none;
+        font-size: 16px;
+        color: $muted;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 4px;
+
+        &:hover {
+            color: $text;
+            background: $border;
+        }
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    &__loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+        font-size: 14px;
+        color: $muted;
+    }
+
+    &__error {
+        background: #fef2f2;
+        border: 1px solid #fca5a5;
+        color: #b91c1c;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+}
+
+.bp-template-card {
+    border: 2px solid $border;
+    border-radius: 10px;
+    padding: 18px;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    width: 100%;
+
+    &:hover {
+        border-color: $primary;
+        background: #f5f3ff;
+        box-shadow: 0 4px 16px rgba($primary, 0.15);
+    }
+
+    &__thumb {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: $white;
+        border: 1px solid $border;
+        border-radius: 6px;
+        padding: 10px;
+
+        svg {
+            display: block;
+        }
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+
+        strong {
+            font-size: 13px;
+            font-weight: 600;
+            color: $text;
+        }
+
+        span {
+            font-size: 11px;
+            color: $muted;
+        }
+    }
+}

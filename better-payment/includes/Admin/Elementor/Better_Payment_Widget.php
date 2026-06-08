@@ -4321,7 +4321,7 @@ class Better_Payment_Widget extends Widget_Base {
         $better_payment_form_layout = in_array($better_payment_form_layout, array_keys( $this->better_payment_free_layouts() ) ) ? $better_payment_form_layout : 'layout-1';
 
         $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $better_payment_form_layout . '.php';
-        $is_pro_layout = str_contains($better_payment_form_layout, '-pro');
+        $is_pro_layout = false !== strpos( $better_payment_form_layout, '-pro' );
         
         if ( $this->pro_enabled && $is_pro_layout ){
             $template_file = BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $better_payment_form_layout . '.php';

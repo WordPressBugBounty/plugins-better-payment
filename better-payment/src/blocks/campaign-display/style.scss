@@ -1,0 +1,1402 @@
+// Frontend campaign display styles — loaded on public pages via shortcode + block.
+@use 'sass:color';
+
+$primary: #6b63f6;
+$border:  #e2e4e9;
+$text:    #1e1e2d;
+$muted:   #8a8fa6;
+$bg:      #f4f5f8;
+$white:   #fff;
+
+// Page-level wrapper used by single-bp_campaign.php template.
+// Prevents any theme body/content area from producing its own horizontal scroll.
+.bp-campaign-page-wrap {
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+
+.bp-campaign {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
+    color: $text;
+    line-height: 1.5;
+
+    // Prevent horizontal overflow and constrain content width.
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+
+    // ── Column layout ─────────────────────────────────────────────────────────
+    .bp-campaign-columns {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    // flex-shrink: 1 lets columns compress instead of overflowing the container.
+    // box-sizing: border-box keeps percentage widths accurate.
+    .bp-campaign-column {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        flex-shrink: 1;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    // ── Title ─────────────────────────────────────────────────────────────────
+    .bp-campaign-title {
+        margin: 0;
+        font-size: 32px;
+        line-height: 1.2;
+    }
+
+    // ── Description ───────────────────────────────────────────────────────────
+    .bp-campaign-description {
+        line-height: 1.6;
+        p { margin: 0 0 8px; }
+        p:last-child { margin: 0; }
+    }
+
+    .bp-campaign-description-headline {
+        font-size: 22px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 8px;
+    }
+
+    .bp-campaign-description-content {
+        line-height: 1.6;
+        font-size: 16px;
+
+        // Rich text editor headings
+        h1 { font-size: 28px; font-weight: 700; margin: 0 0 12px; line-height: 1.2; }
+        h2 { font-size: 24px; font-weight: 700; margin: 0 0 10px; line-height: 1.2; }
+        h3 { font-size: 20px; font-weight: 600; margin: 0 0 8px;  line-height: 1.3; }
+        h4 { font-size: 18px; font-weight: 600; margin: 0 0 8px;  line-height: 1.3; }
+        h5 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
+        h6 { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+
+        p  { font-size: 16px; margin: 0 0 10px; }
+        p:last-child { margin: 0; }
+
+        ul, ol { font-size: 16px; padding-left: 20px; margin: 0 0 10px; }
+        li { margin-bottom: 4px; }
+
+        strong, b { font-size: 16px; font-weight: 700; }
+        em, i     { font-style: italic; }
+
+        a { color: $primary; text-decoration: underline; }
+    }
+
+    // ── Photo ─────────────────────────────────────────────────────────────────
+    .bp-campaign-photo {
+        .bp-campaign-photo-wrap { border-radius: 8px; overflow: hidden; }
+        .bp-campaign-image      { width: auto; max-width: 100%; height: auto; display: block; }
+    }
+
+    .bp-campaign-photo-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #e8e8e8;
+        border-radius: 4px;
+    }
+
+    // ── Progress bar ──────────────────────────────────────────────────────────
+    .bp-campaign-progress { display: flex; flex-direction: column; }
+
+    .bp-progress-headline  { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+
+    .bp-progress-bar-wrap  { height: 10px; background: #e5e5e5; border-radius: 999px; overflow: hidden; }
+
+    .bp-progress-bar       { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+
+    .bp-progress-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: $muted;
+        margin-top: 6px;
+    }
+
+    .bp-progress-no-goal-note { font-size: 14px; color: $muted; margin: 0; }
+
+    // ── Summary stats ─────────────────────────────────────────────────────────
+    .bp-summary-headline {
+        font-size: 22px;
+        font-weight: 600;
+        color: $text;
+        margin: 0 0 10px;
+    }
+
+    .bp-campaign-summary {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .bp-summary-item {
+        flex: 1;
+        text-align: center;
+        padding: 12px 8px;
+        background: $bg;
+        border-radius: 8px;
+        border: 1px solid $border;
+
+        strong { display: block; font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+        span   { font-size: 12px; color: $muted; text-transform: uppercase; letter-spacing: 0.5px; }
+    }
+
+    // ── Donate amount selector (radio-based, matches fundraising-campaign.js) ──
+    .bp-donate_amounts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    // Hide the actual radio input; the label is the visible button
+    input.bp-option-amount { display: none; }
+
+    .bp-amount-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: 1.5px solid $border;
+        border-radius: 6px;
+        background: $white;
+        font-size: 15px;
+        font-weight: 500;
+        color: $text;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+        &:hover {
+            border-color: $primary;
+            background: color.adjust($primary, $lightness: 44%);
+            color: $primary;
+        }
+    }
+
+    // Checked state — sibling selector works because input + label are adjacent
+    input.bp-option-amount:checked + .bp-amount-label {
+        border-color: $primary;
+        background: color.adjust($primary, $lightness: 44%);
+        color: $primary;
+    }
+
+    .other_amount_section {
+        display: flex;
+        align-items: center;
+        border: 1.5px solid $border;
+        border-radius: 6px;
+        overflow: hidden;
+        background: $white;
+
+        &:focus-within { border-color: $primary; }
+    }
+
+    .bp-amount-currency {
+        padding: 0 10px;
+        color: $muted;
+        font-size: 15px;
+        font-weight: 500;
+        border-right: 1px solid $border;
+        background: $bg;
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+    }
+
+    .campaign-custom-amount {
+        flex: 1;
+        border: none;
+        outline: none;
+        padding: 10px 12px;
+        font-size: 15px;
+        color: $text;
+        background: transparent;
+        min-width: 0;
+
+        &::placeholder { color: $muted; }
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    }
+
+    // ── Minimum donation notice ───────────────────────────────────────────────
+    .bp-min-donation-notice {
+        margin: 0;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 14px;
+        background: $bg;
+        border: 1px solid $border;
+        color: $muted;
+        transition: background 0.2s, border-color 0.2s, color 0.2s;
+
+        &.is-error {
+            background: #fff5f5;
+            border-color: #f87171;
+            color: #dc2626;
+            font-weight: 500;
+        }
+    }
+
+    // ── Donate button ─────────────────────────────────────────────────────────
+    .bp-campaign-donate,
+    .bp-campaign-donate-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .bp-donate_btn {
+        display: block;
+        padding: 13px 28px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+        text-align: center;
+        color: #fff;
+        transition: opacity 0.15s;
+
+        // No URL configured — make the button visually inactive and non-interactive.
+        &.bp-donate_btn--no-url {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+            filter: grayscale(0.3);
+        }
+
+        &:hover,
+        &:focus { opacity: 0.9; color: #fff; text-decoration: none; }
+    }
+
+    // ── Social sharing & Social links (shared structure) ─────────────────────
+
+    .bp-social-sharing,
+    .bp-social-links {
+        border: 1px solid $border;
+        border-radius: 12px;
+        padding: 16px 20px;
+    }
+
+    .bp-social-headline {
+        font-size: 18px;
+        font-weight: 700;
+        color: $text;
+        margin: 0 0 12px;
+    }
+
+    .bp-social-icons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bp-social-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1.5px solid $border;
+        color: $text;
+        text-decoration: none;
+        flex-shrink: 0;
+        transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+        &:hover,
+        &:focus {
+            border-color: $primary;
+            color: $primary;
+            background: color.adjust($primary, $lightness: 44%);
+            text-decoration: none;
+        }
+
+        svg { display: block; }
+    }
+
+    // ── Organizer ─────────────────────────────────────────────────────────────
+    .bp-campaign-organizer {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .bp-organizer-avatar {
+        flex-shrink: 0;
+
+        img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: block;
+        }
+    }
+
+    .bp-organizer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .bp-organizer-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: $text;
+        display: block;
+    }
+
+    .bp-organizer-role {
+        font-size: 14px;
+        color: #1e1e2d;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .bp-organizer-description {
+        margin-top: 4px;
+        font-size: 14px;
+        color: $text;
+        line-height: 1.5;
+
+        p { margin: 0 0 6px; }
+        p:last-child { margin: 0; }
+        strong, b { font-size: 16px; font-weight: 700; }
+    }
+
+    // ── Responsive ────────────────────────────────────────────────────────────
+
+    // Tablet: tighten gap and reduce outer padding.
+    @media (max-width: 900px) {
+        padding: 20px 20px 32px;
+
+        .bp-campaign-columns { gap: 16px; }
+    }
+
+    // Mobile: stack columns, full-width each, tighter padding.
+    @media (max-width: 680px) {
+        padding: 16px 16px 24px;
+
+        .bp-campaign-columns {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .bp-campaign-column {
+            width: 100% !important;
+            flex-shrink: 1;
+        }
+
+        // Tighten summary cards on small screens.
+        .bp-campaign-summary { gap: 8px; }
+        .bp-summary-item     { min-width: calc(50% - 4px); }
+    }
+
+    // Very small screens.
+    @media (max-width: 380px) {
+        padding: 16px 12px;
+
+        .bp-summary-item { min-width: 100%; }
+    }
+}
+
+// ── Golf Destinations theme ───────────────────────────────────────────────────
+.bp-campaign.golf-destinations {
+    border-radius: 0;
+    overflow: hidden;
+    padding: 0;
+    max-width: 1200px;
+
+    .bp-campaign-columns {
+        gap: 0;
+        align-items: stretch;
+    }
+
+    .bp-campaign-column {
+        gap: 0;
+
+        // Left column: cream background; first photo bleeds edge-to-edge via negative margin
+        &:first-child {
+            background: #f5f0e8;
+            padding: 20px 36px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        // Right column: dark olive background
+        &:last-child {
+            background: #3a4535;
+            padding: 40px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            color: #e8e4d4;
+        }
+    }
+
+    // First photo in left column bleeds edge-to-edge (frontend + builder preview)
+    .bp-campaign-column:first-child > .bp-campaign-photo:first-child,
+    .bp-campaign-column:first-child > .bp-builder-el-wrap:first-child > .bp-campaign-photo {
+        margin: 0 -36px;
+
+        .bp-campaign-photo-wrap { border-radius: 0; }
+        .bp-campaign-image {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 300px !important;
+            object-fit: cover;
+            object-position: top center;
+            border-radius: 0 !important;
+            display: block;
+        }
+    }
+
+    // Second photo in left column: centered, auto-size
+    .bp-campaign-column:first-child > .bp-campaign-photo:not(:first-child) .bp-campaign-image,
+    .bp-campaign-column:first-child > .bp-builder-el-wrap:not(:first-child) > .bp-campaign-photo .bp-campaign-image {
+        display: block;
+        margin: 0 auto;
+        max-width: 75% !important;
+        height: auto !important;
+        border-radius: 4px !important;
+    }
+
+    // Left column: gold headline (larger, sentence case), dark body text
+    .bp-campaign-column:first-child {
+        .bp-campaign-description-headline {
+            color: #b8a46a;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.35;
+            letter-spacing: 0;
+            text-transform: none;
+            margin-bottom: 10px;
+        }
+
+        .bp-campaign-description-content {
+            color: #3a3a2e;
+            font-size: 15px;
+            line-height: 1.7;
+            p, h1, h2, h3, h4, h5, h6, li, a { color: #3a3a2e; }
+        }
+    }
+
+    // Right column: gold small-cap headline, light body text
+    .bp-campaign-column:last-child {
+        .bp-campaign-description-headline {
+            color: #b8a46a;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .bp-campaign-description-content {
+            color: #e8e4d4;
+            font-size: 16px;
+            line-height: 1.7;
+            p, h1, h2, h3, h4, h5, h6, li, a { color: #e8e4d4; }
+        }
+
+        // Summary stats
+        .bp-summary-headline { color: #e8e4d4; }
+        .bp-campaign-summary { gap: 12px; }
+        .bp-summary-item {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+            strong { color: #e8e4d4; }
+            span   { color: rgba(232, 228, 212, 0.6); }
+        }
+
+        // Progress bar
+        .bp-progress-bar-wrap { background: rgba(255, 255, 255, 0.15); height: 8px; }
+        .bp-progress-bar      { background-color: #b8a46a !important; }
+        .bp-progress-labels,
+        .bp-progress-donated,
+        .bp-progress-goal,
+        .bp-progress-no-goal-note { color: rgba(232, 228, 212, 0.6); }
+
+        // Donate button
+        .bp-donate_btn {
+            background-color: #b8a46a !important;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            font-size: 15px;
+            text-align: center;
+            &:hover, &:focus { opacity: 0.88; color: #fff; }
+        }
+    }
+
+    @media (max-width: 680px) {
+        border-radius: 0;
+
+        .bp-campaign-column:first-child { padding-left: 20px; padding-right: 20px; }
+        .bp-campaign-column:last-child  { padding: 28px 20px; }
+
+        .bp-campaign-column:first-child > .bp-campaign-photo:first-child,
+        .bp-campaign-column:first-child > .bp-builder-el-wrap:first-child > .bp-campaign-photo {
+            margin: 0 -20px;
+        }
+    }
+}
+
+// ── School Trip theme ─────────────────────────────────────────────────────────
+.bp-campaign.school-trip {
+    // Only left corners are rounded; right side is flush/square
+    border-radius: 8px 0 0 8px;
+    overflow: hidden;
+    padding: 0;
+    max-width: 1200px;
+
+    .bp-campaign-columns {
+        gap: 0;
+        align-items: stretch;
+    }
+
+    .bp-campaign-column {
+        // Left column: white background with padding
+        &:first-child {
+            padding: 40px 36px 40px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        // Right column: dark olive, top padding creates space above the photo
+        &:last-child {
+            background: #4a5c2a;
+            padding: 20px 32px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            color: #e8ead8;
+        }
+    }
+
+    // First element in right column is a photo — bleed it edge-to-edge (horizontal only).
+    // Covers both frontend (direct child) and builder preview (.bp-builder-el-wrap wrapper).
+    .bp-campaign-column:last-child > .bp-campaign-photo:first-child,
+    .bp-campaign-column:last-child > .bp-builder-el-wrap:first-child > .bp-campaign-photo {
+        margin: 0 -32px;
+
+        .bp-campaign-photo-wrap { border-radius: 0; }
+        .bp-campaign-image {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 260px !important;
+            min-height: 260px;
+            object-fit: cover;
+            border-radius: 0 !important;
+            display: block;
+        }
+    }
+
+    // Left column: title and body colours
+    .bp-campaign-column:first-child {
+        .bp-campaign-description-headline {
+            color: #5c6b38;
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 12px;
+        }
+
+        .bp-campaign-description-content {
+            color: #3a3a2e;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+    }
+
+    // Right column: all text on dark olive background
+    .bp-campaign-column:last-child {
+        .bp-campaign-description-headline {
+            color: #e8ead8;
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-bottom: 8px;
+        }
+
+        .bp-campaign-description-content {
+            color: #c8ccb8;
+            font-size: 14px;
+            line-height: 1.7;
+            p, h1, h2, h3, h4, h5, h6, li, a { color: #c8ccb8; }
+        }
+
+        // Summary stats
+        .bp-summary-headline { color: #e8ead8; }
+        .bp-campaign-summary { gap: 12px; }
+        .bp-summary-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.14);
+            strong { color: #e8ead8; }
+            span   { color: rgba(232, 234, 216, 0.6); }
+        }
+
+        // Progress bar
+        .bp-progress-bar-wrap { background: rgba(255, 255, 255, 0.15); height: 8px; }
+        .bp-progress-bar      { background-color: #8fa040 !important; }
+        .bp-progress-labels,
+        .bp-progress-donated,
+        .bp-progress-goal,
+        .bp-progress-no-goal-note { color: rgba(232, 234, 216, 0.65); }
+
+        // Social links
+        .bp-social-links-headline { color: #e8ead8; }
+        .bp-social-link           { color: rgba(232, 234, 216, 0.7); }
+
+        // Donate button
+        .bp-donate_btn {
+            background-color: #8fa040 !important;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 4px;
+            text-align: center;
+
+            &:hover, &:focus { opacity: 0.88; color: #fff; }
+        }
+    }
+
+    @media (max-width: 680px) {
+        border-radius: 0 !important;
+
+        .bp-campaign-column:first-child { padding: 28px 20px 28px 0; }
+
+        .bp-campaign-column:last-child {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .bp-campaign-column:last-child > .bp-campaign-photo:first-child,
+        .bp-campaign-column:last-child > .bp-builder-el-wrap:first-child > .bp-campaign-photo {
+            margin: 0 -20px;
+        }
+    }
+}
+
+// ── Disaster Relief theme ─────────────────────────────────────────────────────
+.bp-campaign.disaster-relief {
+    max-width: 1200px;
+
+    // Left column: small top space above first photo
+    .bp-campaign-column:first-child {
+        padding-top: 16px;
+    }
+
+    // Right column: card with border, no rounded corners
+    .bp-campaign-column:last-child {
+        border: 1px solid #e0e0e0;
+        border-radius: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    // Red headline accent — "Donate Today", "About This Campaign"
+    .bp-campaign-description-headline {
+        color: #c0392b;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+    }
+
+    .bp-campaign-description-content {
+        color: #333;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    // Summary: no percent/days shown, keep it compact
+    .bp-campaign-summary { gap: 12px; }
+
+    // Donate button
+    .bp-donate_btn {
+        background-color: #c0392b !important;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 0;
+        text-align: center;
+        &:hover, &:focus { opacity: 0.88; color: #fff; }
+    }
+
+    // Progress bar in left column
+    .bp-progress-bar      { background-color: #c0392b !important; }
+    .bp-progress-donated,
+    .bp-progress-goal,
+    .bp-progress-no-goal-note { color: #555; font-size: 14px; }
+
+    @media (max-width: 680px) {
+        .bp-campaign-column:last-child { border-left: none; border-right: none; border-radius: 0; }
+    }
+}
+
+.bp-campaign.animal-rescue {
+    max-width: 1200px;
+
+    // Stretch both columns to equal height so the sidebar border spans the full left-column height
+    .bp-campaign-columns {
+        align-items: stretch;
+    }
+
+    // Right sidebar: 4-sided border box covering the full column height
+    .bp-campaign-column:last-child {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    @media (max-width: 680px) {
+        .bp-campaign-column:last-child {
+            border-radius: 8px;
+        }
+    }
+}
+
+// ─── Tree Plantation Campaign ──────────────────────────────────────────────────
+// Layout: 50/50 two-column.
+//   Left  — full-bleed hero photo (grows to match right column height) +
+//            green-headline description + rounded bottom photo.
+//   Right — beige (#f4f0e3) background with small "Save Earth" label, large
+//            bold campaign title, body text, flat stats, and green donate button.
+// ──────────────────────────────────────────────────────────────────────────────
+.bp-campaign.tree-plantation {
+    max-width: 1200px;
+    padding: 0;
+    overflow: hidden;
+
+    // Zero gap between columns — left photo bleeds flush into right panel
+    .bp-campaign-columns {
+        gap: 0;
+        align-items: stretch;
+    }
+
+    // ── Left column ───────────────────────────────────────────────────────────
+    .bp-campaign-column:first-child {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+
+        // Element 1 wrapper (hero photo): grows to consume remaining column height
+        // so it always matches the right column's natural content height.
+        > .bp-element-wrap:first-child,
+        > .bp-builder-el-wrap:first-child {
+            flex: 1;
+            min-height: 340px;
+            overflow: hidden;
+        }
+
+        // Hero photo itself: fills the growing wrapper completely
+        > .bp-element-wrap:first-child .bp-campaign-photo,
+        > .bp-builder-el-wrap:first-child .bp-campaign-photo {
+            height: 100%;
+        }
+
+        > .bp-element-wrap:first-child .bp-campaign-image,
+        > .bp-builder-el-wrap:first-child .bp-campaign-image {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 0 !important;
+            display: block;
+        }
+
+        // Element 2 wrapper (description block): horizontal + top padding
+        > .bp-element-wrap:nth-child(2),
+        > .bp-builder-el-wrap:nth-child(2) {
+            padding: 36px 36px 20px;
+        }
+
+        // Element 3 wrapper (bottom photo): side + bottom padding
+        > .bp-element-wrap:nth-child(3),
+        > .bp-builder-el-wrap:nth-child(3) {
+            padding: 0 36px 36px;
+        }
+
+        // Bottom photo image: full-width, rounded corners, natural height
+        > .bp-element-wrap:nth-child(3) .bp-campaign-image,
+        > .bp-builder-el-wrap:nth-child(3) .bp-campaign-image {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            border-radius: 12px !important;
+            object-fit: unset;
+            display: block;
+        }
+
+        // Green headline for the description in the left column
+        .bp-campaign-description-headline {
+            color: #61aa4f;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-bottom: 12px;
+        }
+
+        .bp-campaign-description-content {
+            color: #3a3a2e;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+    }
+
+    // ── Right column ──────────────────────────────────────────────────────────
+    .bp-campaign-column:last-child {
+        background: #f4f0e3;
+        padding: 48px 52px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    // "Save Earth" label — first description element in the right column.
+    // Small, uppercase, green: acts as a category tag above the title.
+    .bp-campaign-column:last-child > .bp-element-wrap:first-child .bp-campaign-description-headline,
+    .bp-campaign-column:last-child > .bp-builder-el-wrap:first-child .bp-campaign-description-headline {
+        color: #61aa4f;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 4px;
+    }
+
+    .bp-campaign-column:last-child > .bp-element-wrap:first-child .bp-campaign-description-content,
+    .bp-campaign-column:last-child > .bp-builder-el-wrap:first-child .bp-campaign-description-content {
+        color: #555;
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    // Campaign title: extra large, heavy weight, dark
+    .bp-campaign-column:last-child .bp-campaign-title {
+        font-size: 40px;
+        font-weight: 800;
+        color: #1a1a1a;
+        line-height: 1.15;
+        margin: 0;
+    }
+
+    // Body description text in the right column
+    .bp-campaign-column:last-child .bp-campaign-description-content {
+        color: #444;
+        font-size: 16px;
+        line-height: 1.7;
+    }
+
+    // Summary stats: flat display — no card background, no border, left-aligned
+    .bp-campaign-column:last-child .bp-campaign-summary {
+        gap: 36px;
+        flex-wrap: nowrap;
+    }
+
+    .bp-campaign-column:last-child .bp-summary-item {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        text-align: left !important;
+        flex: none !important;
+    }
+
+    .bp-campaign-column:last-child .bp-summary-item strong {
+        font-size: 36px !important;
+        font-weight: 700 !important;
+        color: #1a1a1a !important;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .bp-campaign-column:last-child .bp-summary-item span {
+        font-size: 13px !important;
+        color: #888 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+
+    // Progress bar: green fill, soft green track, earthy label text
+    .bp-campaign-column:last-child .bp-progress-bar-wrap {
+        background: #d4e8d0;
+        height: 8px;
+    }
+
+    .bp-campaign-column:last-child .bp-progress-bar {
+        background-color: #61aa4f !important;
+    }
+
+    .bp-campaign-column:last-child .bp-progress-labels,
+    .bp-campaign-column:last-child .bp-progress-donated,
+    .bp-campaign-column:last-child .bp-progress-goal,
+    .bp-campaign-column:last-child .bp-progress-no-goal-note {
+        color: #5a6a58;
+        font-size: 13px;
+    }
+
+    .bp-campaign-column:last-child .bp-progress-headline {
+        color: #2a4a27;
+    }
+
+    // Donate button: green
+    .bp-campaign-column:last-child .bp-donate_btn {
+        background-color: #61aa4f !important;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 6px;
+        text-align: center;
+
+        &:hover, &:focus { opacity: 0.9; color: #fff; }
+    }
+
+    // Social sharing + social links: bordered card inside the beige panel, no fill
+    .bp-campaign-column:last-child .bp-social-sharing,
+    .bp-campaign-column:last-child .bp-social-links {
+        background: transparent;
+        border: 1px solid #b8d9b3;
+        border-radius: 10px;
+        padding: 16px 20px;
+    }
+
+    .bp-campaign-column:last-child .bp-social-headline {
+        color: #2a4a27;
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .bp-campaign-column:last-child .bp-social-icon {
+        border-color: #a8d0a3;
+        color: #2a4a27;
+        background: #fff;
+
+        &:hover, &:focus {
+            border-color: #61aa4f;
+            color: #61aa4f;
+            background: rgba(97, 170, 79, 0.12);
+        }
+    }
+
+    // ── Responsive ────────────────────────────────────────────────────────────
+    @media (max-width: 900px) {
+        .bp-campaign-column:last-child {
+            padding: 36px 32px;
+        }
+
+        .bp-campaign-column:last-child .bp-campaign-title {
+            font-size: 32px;
+        }
+    }
+
+    @media (max-width: 680px) {
+        // Stacked: reset stretch so columns behave normally when stacked
+        .bp-campaign-columns {
+            align-items: flex-start;
+        }
+
+        // Hero photo: switch from flex-grow to fixed height when stacked
+        .bp-campaign-column:first-child {
+            > .bp-element-wrap:first-child,
+            > .bp-builder-el-wrap:first-child {
+                flex: none;
+                height: 260px;
+            }
+
+            > .bp-element-wrap:nth-child(2),
+            > .bp-builder-el-wrap:nth-child(2) {
+                padding: 24px 20px 16px;
+            }
+
+            > .bp-element-wrap:nth-child(3),
+            > .bp-builder-el-wrap:nth-child(3) {
+                padding: 0 20px 24px;
+            }
+        }
+
+        .bp-campaign-column:last-child {
+            padding: 28px 20px;
+            justify-content: flex-start;
+        }
+
+        .bp-campaign-column:last-child .bp-campaign-title {
+            font-size: 26px;
+        }
+
+        .bp-campaign-column:last-child .bp-summary-item strong {
+            font-size: 26px !important;
+        }
+
+        .bp-campaign-column:last-child .bp-campaign-summary {
+            gap: 24px;
+        }
+    }
+}
+
+// ─── Child Healthcare Fund ─────────────────────────────────────────────────────
+// Layout: 50/50 two-column on a dark navy background.
+//   Left  — full-bleed hero photo (flex-grows to match right panel) +
+//            white tagline description + flat white summary stats at bottom.
+//   Right — dark panel: small golden category label, huge uppercase campaign
+//            title, flat summary row, amount-select buttons, custom-amount input,
+//            golden DONATE NOW button, and social widgets styled for dark bg.
+// ──────────────────────────────────────────────────────────────────────────────
+.bp-campaign.child-healthcare {
+    max-width: 1200px;
+    padding: 0;
+    overflow: hidden;
+    background: #152153;
+
+    .bp-campaign-columns {
+        gap: 0;
+        align-items: stretch;
+    }
+
+    // ── Left column ───────────────────────────────────────────────────────────
+    .bp-campaign-column:first-child {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+
+        // Hero photo: grows to fill column + padded so image breathes inside the dark panel
+        > .bp-element-wrap:first-child,
+        > .bp-builder-el-wrap:first-child {
+            flex: 1;
+            min-height: 280px;
+            padding: 20px 20px 0;
+        }
+
+        > .bp-element-wrap:first-child .bp-campaign-photo,
+        > .bp-builder-el-wrap:first-child .bp-campaign-photo {
+            height: 100%;
+        }
+
+        > .bp-element-wrap:first-child .bp-campaign-image,
+        > .bp-builder-el-wrap:first-child .bp-campaign-image {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+            object-position: center top;
+            border-radius: 10px !important;
+            display: block;
+        }
+
+        // Description (tagline): padding + white text
+        > .bp-element-wrap:nth-child(2),
+        > .bp-builder-el-wrap:nth-child(2) {
+            padding: 20px 24px 12px;
+        }
+
+        // Summary stats: padding + flush to bottom
+        > .bp-element-wrap:nth-child(3),
+        > .bp-builder-el-wrap:nth-child(3) {
+            padding: 0 24px 24px;
+        }
+
+        // Left-column description text: white
+        .bp-campaign-description-headline {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            margin-bottom: 8px;
+        }
+
+        .bp-campaign-description-content {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        // Left summary: flat, horizontal, large white numbers
+        .bp-campaign-summary { gap: 32px; flex-wrap: nowrap; }
+
+        .bp-summary-item {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            text-align: left !important;
+            flex: none !important;
+        }
+
+        .bp-summary-item strong {
+            font-size: 32px !important;
+            font-weight: 800 !important;
+            color: #fff !important;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .bp-summary-item span {
+            font-size: 11px !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+        }
+    }
+
+    // ── Right column ──────────────────────────────────────────────────────────
+    // padding: top right(outer-edge) bottom left(between-columns)
+    // right=20px matches the image's outer-edge padding so both sides are equal.
+    .bp-campaign-column:last-child {
+        padding: 36px 20px 36px 36px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    // Category label (first description element — small uppercase golden text)
+    .bp-campaign-column:last-child > .bp-element-wrap:first-child .bp-campaign-description-headline,
+    .bp-campaign-column:last-child > .bp-builder-el-wrap:first-child .bp-campaign-description-headline {
+        color: #ecc30b;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0;
+    }
+
+    // Campaign title: huge, uppercase, heavy, white — !important overrides the PHP inline style
+    .bp-campaign-column:last-child .bp-campaign-title {
+        font-size: 60px;
+        font-weight: 900;
+        color: #fff !important;
+        text-transform: uppercase;
+        line-height: 1.0;
+        letter-spacing: -0.5px;
+        margin: 0;
+    }
+
+    // Right summary row: same flat large style
+    .bp-campaign-column:last-child .bp-campaign-summary { gap: 32px; flex-wrap: nowrap; }
+
+    .bp-campaign-column:last-child .bp-summary-item {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        text-align: left !important;
+        flex: none !important;
+    }
+
+    .bp-campaign-column:last-child .bp-summary-item strong {
+        font-size: 32px !important;
+        font-weight: 800 !important;
+        color: #fff !important;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .bp-campaign-column:last-child .bp-summary-item span {
+        font-size: 11px !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+    }
+
+    // "Select an Amount" label (description with headline only, no content)
+    .bp-campaign-column:last-child .bp-campaign-description-headline {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0;
+    }
+
+    .bp-campaign-column:last-child .bp-campaign-description-content {
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    // Donate amount buttons: squared, white border, white text
+    .bp-donate_amounts { gap: 6px; }
+
+    .bp-amount-label {
+        background: transparent !important;
+        border: 2px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 0 !important;
+        color: #fff !important;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 12px 16px;
+        transition: border-color 0.15s, color 0.15s;
+
+        &:hover {
+            border-color: #ecc30b !important;
+            color: #ecc30b !important;
+            background: transparent !important;
+        }
+    }
+
+    input.bp-option-amount:checked + .bp-amount-label {
+        border-color: #ecc30b !important;
+        color: #ecc30b !important;
+        background: transparent !important;
+    }
+
+    // Custom amount input: dark background, white text
+    .other_amount_section {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 2px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 0 !important;
+
+        &:focus-within {
+            border-color: #ecc30b !important;
+        }
+    }
+
+    .bp-amount-currency {
+        color: rgba(255, 255, 255, 0.45) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-right-color: rgba(255, 255, 255, 0.18) !important;
+    }
+
+    .campaign-custom-amount {
+        background: transparent !important;
+        color: #fff !important;
+
+        &::placeholder { color: rgba(255, 255, 255, 0.3) !important; }
+    }
+
+    // DONATE NOW button: golden background, dark text
+    .bp-donate_btn {
+        background-color: #ecc30b !important;
+        color: #152153 !important;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        border-radius: 0;
+        font-size: 15px;
+
+        &:hover, &:focus { opacity: 0.9; color: #152153 !important; }
+    }
+
+    // Social widgets: dark-mode frosted style
+    .bp-social-sharing,
+    .bp-social-links {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 16px 20px;
+    }
+
+    .bp-social-headline {
+        color: rgba(255, 255, 255, 0.55) !important;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+    }
+
+    .bp-social-icon {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.65);
+        background: transparent;
+
+        &:hover, &:focus {
+            border-color: #ecc30b;
+            color: #ecc30b;
+            background: rgba(236, 195, 11, 0.1);
+        }
+    }
+
+    // Progress bar: golden fill, dark track, muted white labels
+    .bp-progress-bar-wrap {
+        background: rgba(255, 255, 255, 0.12);
+        height: 8px;
+    }
+
+    .bp-progress-bar {
+        background-color: #ecc30b !important;
+    }
+
+    .bp-progress-headline {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .bp-progress-labels,
+    .bp-progress-donated,
+    .bp-progress-goal,
+    .bp-progress-no-goal-note {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 12px;
+    }
+
+    // ── Responsive ────────────────────────────────────────────────────────────
+    @media (max-width: 900px) {
+        .bp-campaign-column:last-child {
+            padding: 28px 20px 28px 28px;
+        }
+
+        .bp-campaign-column:last-child .bp-campaign-title {
+            font-size: 46px;
+        }
+    }
+
+    @media (max-width: 680px) {
+        .bp-campaign-columns { align-items: flex-start; }
+
+        .bp-campaign-column:first-child {
+            > .bp-element-wrap:first-child,
+            > .bp-builder-el-wrap:first-child {
+                flex: none;
+                height: 240px;
+            }
+
+            > .bp-element-wrap:nth-child(2),
+            > .bp-builder-el-wrap:nth-child(2) { padding: 16px 16px 10px; }
+
+            > .bp-element-wrap:nth-child(3),
+            > .bp-builder-el-wrap:nth-child(3) { padding: 0 16px 20px; }
+        }
+
+        .bp-campaign-column:last-child {
+            padding: 24px 20px 24px 20px;
+            justify-content: flex-start;
+        }
+
+        .bp-campaign-column:last-child .bp-campaign-title { font-size: 32px; }
+
+        .bp-campaign-column:last-child .bp-summary-item strong { font-size: 24px !important; }
+        .bp-campaign-column:first-child .bp-summary-item strong { font-size: 24px !important; }
+    }
+}

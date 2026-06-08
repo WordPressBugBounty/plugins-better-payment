@@ -1453,7 +1453,13 @@ class BlockManager {
              * @return string Empty string for blocks.
              */
             public function render_campaign_id_hidden_field( $settings ) {
-                return '';
+                $campaign_id       = ! empty( $_GET['campaign_id'] ) ? sanitize_text_field( $_GET['campaign_id'] ) : '';
+                $campaign_currency = ! empty( $_GET['campaign_currency'] ) ? sanitize_text_field( $_GET['campaign_currency'] ) : '';
+
+                return '
+                    <input type="hidden" name="campaign_id" value="' . esc_attr( $campaign_id ) . '">
+                    <input type="hidden" name="campaign_currency" value="' . esc_attr( $campaign_currency ) . '">
+                ';
             }
         };
     }
