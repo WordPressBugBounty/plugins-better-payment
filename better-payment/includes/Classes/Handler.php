@@ -211,10 +211,52 @@ class Handler extends Controller{
             $status = self::paystack_payment_success( $settings );
         }
 
-        if ( $status ) {
+        if ( ! empty( $status['pending'] ) ) {
+            // Use home_url() instead of HTTP_HOST to avoid open-redirect via forged Host headers.
+            $return_url = home_url( $_SERVER['REQUEST_URI'] );
+            // PayPal uses rm=2 (POST redirect), so item_number arrives in $_POST and is absent from the URL.
+            // Add it explicitly so the poll-complete redirect (a plain GET) still carries item_number.
+            if ( ! empty( $status['order_id'] ) && strpos( $return_url, 'item_number=' ) === false ) {
+                $return_url = add_query_arg( 'item_number', $status['order_id'], $return_url );
+            }
+            ?>
+            <section class="bp-thank_page">
+                <div class="bp-thank_page-wrapper bp-paypal-pending"
+                     data-order-id="<?php echo esc_attr( $status['order_id'] ); ?>"
+                     data-return-url="<?php echo esc_url( $return_url ); ?>">
+
+                    <div class="bp-thank_page-logo">
+                        <span class="bp-paypal-pending__spinner-wrap">
+                            <span class="bp-paypal-pending__ring"></span>
+                            <img class="bp-paypal-pending__logo"
+                                 src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/paypal-2.svg' ); ?>"
+                                 alt="PayPal">
+                        </span>
+                    </div>
+
+                    <div class="bp-thank_page-text bp-paypal-pending__body">
+                        <h2 class="bp-font_ibm bp-page_header bp-paypal-pending__heading">
+                            <?php esc_html_e( 'Verifying your payment…', 'better-payment' ); ?>
+                        </h2>
+                        <p class="bp-font_ibm bp-payment_info bp-paypal-pending__sub">
+                            <?php esc_html_e( 'Please do not close this page. This usually takes a few seconds.', 'better-payment' ); ?>
+                        </p>
+                        <div class="bp-paypal-pending__dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+
+                    <div class="bp-paypal-pending__bar">
+                        <div class="bp-paypal-pending__bar-inner"></div>
+                    </div>
+
+                </div>
+            </section>
+            <?php
+        } elseif ( $status ) {
             self::success_message_template( $settings, $status );
             $redirection_url_success = ! empty( $settings['better_payment_form_success_page_url']['url'] ) ? esc_url( $settings['better_payment_form_success_page_url']['url'] ) : '';
-            
+
             if( $redirection_url_success ){
                 ?>
                 <script>
@@ -222,7 +264,7 @@ class Handler extends Controller{
                         window.location.replace("<?php echo esc_url( $redirection_url_success ); ?>");
                     }, 2000);
                 </script>
-                <?php 
+                <?php
             }
         }
         self::remove_arg();
@@ -232,62 +274,180 @@ class Handler extends Controller{
 
     /**
      * Paypal payment success
-     * 
+     *
+     * The DB write happens exclusively in handle_paypal_ipn() after PayPal verifies
+     * the IPN post-back. This method is read-only: it never writes to the DB.
+     *
+     * Display data priority:
+     *   1. DB row (IPN already fired and confirmed) — authoritative.
+     *   2. PayPal return-URL params ($_REQUEST) — for display only when IPN hasn't
+     *      fired yet (local dev, race condition). Safe because no DB write occurs here.
+     *
      * @since 0.0.1
      */
     public static function paypal_payment_success( $settings = [] ) {
-        $data = $_REQUEST;
-        $frontend_data = [
-            'amount' => ! empty( $data['payment_gross'] ) ? floatval( $data['payment_gross'] ) : 0,
-            'email' => ! empty( $data['payer_email'] ) ? sanitize_email( $data['payer_email'] ) : '',
-            'transaction_id' => ! empty( $data[ 'txn_id' ] ) ? sanitize_text_field( $data[ 'txn_id' ] ) : '',
-            'currency' => ! empty( $data['mc_currency'] ) ? sanitize_text_field( $data['mc_currency'] ) : __( 'USD', 'better-payment' ),
-            'method' => 'paypal',
-        ];
-        if ( !empty( $data[ 'payment_status' ] ) && !empty( $data[ 'payer_id' ] ) && !empty( $data[ 'payer_status' ] ) ) {
-            global $wpdb;
-            $table   = "{$wpdb->prefix}better_payment";
-            $results = $wpdb->get_row(
-                $wpdb->prepare( "SELECT id,form_fields_info,referer FROM $table WHERE order_id=%s and status is NULL limit 1", sanitize_text_field( $_REQUEST[ 'item_number' ] ) )
-            );
-            
-            if ( !empty( $results->id ) ) {
-                $updated = $wpdb->update(
-                    $table,
-                    array(
-                        'transaction_id' => sanitize_text_field( $data[ 'txn_id' ] ),
-                        'status'         => sanitize_text_field( $data[ 'payment_status' ] ),
-                        'email'          => sanitize_email( $data[ 'payer_email' ] ),
-                        'customer_info'  => maybe_serialize( $data ),
-                    ),
-                    array( 'ID' => $results->id )
-                );
-                
-                if ( false !== $updated ) {
-                    //Send email notification
-                    if (
-                        ( isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' )
-                        || ( $results->referer === 'elementor-form' )
-                        ) {
-                        $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
-                        self::better_email_notification(sanitize_text_field( $data[ 'txn_id' ] ), sanitize_email( $data[ 'payer_email' ] ), $settings, 'PayPal', $results->form_fields_info, $is_elementor_form);
-                    }
+        $item_number = ! empty( $_REQUEST['item_number'] ) ? sanitize_text_field( $_REQUEST['item_number'] ) : '';
 
-                    do_action( 'better_payment/payment/success', sanitize_text_field( $_REQUEST['item_number'] ?? '' ), (int) $results->id, 'paypal' );
-                    do_action( 'better_payment/payment_confirmed', (int) $results->id );
-
-                    return $frontend_data;
-                }
-            }
-        }else if($data['better_payment_paypal_status'] === 'success'){
-            return ( isset($data[ 'txn_id' ]) && !empty( sanitize_text_field( $data[ 'txn_id' ] ) ) ) ? $frontend_data : __('Payment under processing!', 'better-payment');
+        if ( empty( $item_number ) ) {
+            return false;
         }
-        return false;
+
+        global $wpdb;
+        $table = "{$wpdb->prefix}better_payment";
+        $row   = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT transaction_id, status, email, amount, currency FROM $table WHERE order_id = %s LIMIT 1",
+                $item_number
+            )
+        );
+
+        // No matching order — reject (prevents fake success display with forged item_number).
+        if ( empty( $row ) ) {
+            return false;
+        }
+
+        // IPN confirmed — return verified DB data.
+        if ( $row->status === 'Completed' ) {
+            return [
+                'amount'         => floatval( $row->amount ),
+                'email'          => sanitize_email( $row->email ),
+                'transaction_id' => sanitize_text_field( $row->transaction_id ),
+                'currency'       => sanitize_text_field( $row->currency ),
+                'method'         => 'paypal',
+            ];
+        }
+
+        // Order exists but IPN hasn't arrived yet — signal pending so JS can poll.
+        return [ 'pending' => true, 'order_id' => $item_number ];
+    }
+
+    /**
+     * PayPal IPN listener.
+     *
+     * PayPal POSTs the raw IPN body here server-to-server. We echo it back with
+     * cmd=_notify-validate; only a VERIFIED response from PayPal's servers triggers
+     * the DB write. The browser return URL (paypal_payment_success) never writes.
+     *
+     * @since 2.1.3
+     */
+    public static function handle_paypal_ipn() {
+        $raw_post = file_get_contents( 'php://input' );
+
+        if ( empty( $raw_post ) ) {
+            status_header( 400 );
+            exit;
+        }
+
+        $data = [];
+        wp_parse_str( $raw_post, $data );
+
+        // PayPal includes test_ipn=1 for sandbox notifications.
+        $verify_url = ! empty( $data['test_ipn'] )
+            ? 'https://ipnpb.sandbox.paypal.com/cgi-bin/webscr'
+            : 'https://ipnpb.paypal.com/cgi-bin/webscr';
+
+        $response = wp_remote_post(
+            $verify_url,
+            [
+                'body'      => 'cmd=_notify-validate&' . $raw_post,
+                'timeout'   => 30,
+                'sslverify' => true,
+                'headers'   => [ 'Content-Type' => 'application/x-www-form-urlencoded' ],
+            ]
+        );
+
+        // Always respond 200 to PayPal to prevent retries, but only act on VERIFIED.
+        if ( is_wp_error( $response ) || wp_remote_retrieve_body( $response ) !== 'VERIFIED' ) {
+            status_header( 200 );
+            exit;
+        }
+
+        $data = array_map( 'sanitize_text_field', $data );
+
+        if ( empty( $data['payment_status'] ) || empty( $data['item_number'] ) || $data['payment_status'] !== 'Completed' ) {
+            status_header( 200 );
+            exit;
+        }
+
+        global $wpdb;
+        $table   = "{$wpdb->prefix}better_payment";
+        $results = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT id, amount, currency, form_fields_info, referer FROM $table WHERE order_id = %s AND status IS NULL LIMIT 1",
+                $data['item_number']
+            )
+        );
+
+        if ( empty( $results->id ) ) {
+            status_header( 200 );
+            exit;
+        }
+
+        // Validate receiver_email matches the merchant's configured PayPal email.
+        $form_info      = maybe_unserialize( $results->form_fields_info );
+        $expected_email = ! empty( $form_info['paypal_business_email'] ) ? strtolower( $form_info['paypal_business_email'] ) : '';
+        $receiver       = ! empty( $data['receiver_email'] ) ? strtolower( $data['receiver_email'] ) : ( ! empty( $data['business'] ) ? strtolower( $data['business'] ) : '' );
+
+        if ( $expected_email && $receiver && $expected_email !== $receiver ) {
+            status_header( 200 );
+            exit;
+        }
+
+        // Validate the paid amount is not less than the expected order amount.
+        $paid_amount = ! empty( $data['mc_gross'] ) ? floatval( $data['mc_gross'] ) : 0;
+        if ( $paid_amount < floatval( $results->amount ) ) {
+            status_header( 200 );
+            exit;
+        }
+
+        // Validate currency matches.
+        $paid_currency = ! empty( $data['mc_currency'] ) ? strtoupper( $data['mc_currency'] ) : '';
+        if ( $paid_currency && $results->currency && strtoupper( $results->currency ) !== $paid_currency ) {
+            status_header( 200 );
+            exit;
+        }
+
+        $txn_id = ! empty( $data['txn_id'] ) ? $data['txn_id'] : '';
+
+        // Prevent txn_id replay: reject if this transaction ID was already recorded.
+        if ( $txn_id ) {
+            $existing = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT id FROM $table WHERE transaction_id = %s LIMIT 1",
+                    $txn_id
+                )
+            );
+            if ( $existing ) {
+                status_header( 200 );
+                exit;
+            }
+        }
+
+        $payer_email = ! empty( $data['payer_email'] ) ? sanitize_email( $data['payer_email'] ) : '';
+
+        $updated = $wpdb->update(
+            $table,
+            [
+                'transaction_id' => $txn_id,
+                'status'         => $data['payment_status'],
+                'email'          => $payer_email,
+                'customer_info'  => maybe_serialize( $data ),
+            ],
+            [ 'ID' => $results->id ]
+        );
+
+        if ( false !== $updated ) {
+            $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form' ? 1 : 0;
+            self::better_email_notification( $txn_id, $payer_email, [], 'PayPal', $results->form_fields_info, $is_elementor_form );
+        }
+
+        status_header( 200 );
+        exit;
     }
 
     /**
      * Stripe payment success
-     * 
+     *
      * @since 0.0.1
      */
     public static function stripe_payment_success( $settings = [] ) {
@@ -402,7 +562,7 @@ class Handler extends Controller{
 
                 do_action('better_payment/stripe_payment/success', $action_data);
                 do_action( 'better_payment/payment_confirmed', (int) $results->id );
-                
+
                 $frontend_data = [
                     'amount' => $exact_paid_amount,
                     'email' => $is_payment_recurring ? $customer_email : $customer_email_optional,
@@ -889,7 +1049,6 @@ class Handler extends Controller{
                 $default_icon = 0;
             }
         }
-        // dd($settings[ 'better_payment_form_error_message_icon' ]);
         ?>
         <section class="payment-failed-screen-section">
             <div class="bp-thank_page-wrapper">
@@ -1011,6 +1170,7 @@ class Handler extends Controller{
                 params.delete('better_payment_widget_id');
                 params.delete('better_payment_stripe_id');
                 params.delete('better_payment_paystack_id');
+                params.delete('item_number');
                 window.history.replaceState({}, '', `${location.pathname}?${params}`);
             }
         </script>

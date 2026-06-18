@@ -264,9 +264,6 @@ class RendererService {
                     $goal_fmt         = number_format( $goal, 2 );
                 }
 
-                if ( $goal <= 0 ) {
-                    break;
-                }
                 ?>
                 <div class="bp-campaign-progress"
                      style="width:<?php echo esc_attr( $width ); ?>%; justify-content:<?php echo esc_attr( $justify ); ?>">
@@ -330,15 +327,15 @@ class RendererService {
                                 <span><?php esc_html_e( 'Donors', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
-                        <?php if ( $show_percent && $goal > 0 ) : ?>
+                        <?php if ( $show_percent ) : ?>
                             <div class="bp-summary-item">
                                 <strong><?php echo esc_html( $percent ); ?>%</strong>
                                 <span><?php esc_html_e( 'Raised', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
-                        <?php if ( $show_days && ! is_null( $stats['days_remaining'] ) ) : ?>
+                        <?php if ( $show_days ) : ?>
                             <div class="bp-summary-item">
-                                <strong><?php echo esc_html( $stats['days_remaining'] ); ?></strong>
+                                <strong><?php echo esc_html( is_null( $stats['days_remaining'] ) ? 0 : $stats['days_remaining'] ); ?></strong>
                                 <span><?php esc_html_e( 'Days Left', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
@@ -358,7 +355,7 @@ class RendererService {
                 $align        = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true )
                     ? $settings['align'] : 'center';
 
-                // URL: element setting takes priority; fall back to campaign meta page ID, then '#'.
+                // URL: element setting takes priority; fall back to campaign meta page ID, then '#' default.
                 $donate_url = '';
                 if ( ! empty( $settings['url'] ) ) {
                     $donate_url = esc_url( $settings['url'] );
@@ -368,10 +365,10 @@ class RendererService {
                         $donate_url = esc_url( add_query_arg( 'campaign_id', $campaign_id, get_permalink( $page_id ) ) );
                     }
                 }
+                // Default the Payment Form Page URL to '#' so the button renders as a normal link.
                 $url_missing = false;
                 if ( ! $donate_url ) {
-                    $donate_url  = '#';
-                    $url_missing = true;
+                    $donate_url = '#';
                 }
 
                 if ( $donate_url ) :
@@ -461,6 +458,7 @@ class RendererService {
                 $allow_custom    = (bool) ( $meta['bpc_allow_custom_amount'] ?? 1 );
                 $currency        = self::global_currency();
                 $currency_symbol = self::currency_symbol( $currency );
+                $da_headline     = isset( $settings['headline'] ) ? $settings['headline'] : __( 'Donate Amount', 'better-payment' );
 
                 // Fall back to legacy comma-string or defaults when meta is empty.
                 if ( empty( $amounts_meta ) ) {
@@ -471,6 +469,9 @@ class RendererService {
                 }
                 ?>
                 <div class="bp-campaign-donate">
+                    <?php if ( $da_headline ) : ?>
+                        <h3 class="bp-donate-headline"><?php echo esc_html( $da_headline ); ?></h3>
+                    <?php endif; ?>
                     <div class="bp-donate_amounts">
                         <?php foreach ( $amounts_meta as $i => $item ) :
                             $amt        = floatval( $item['amount'] ?? 0 );

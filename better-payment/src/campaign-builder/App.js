@@ -85,6 +85,15 @@ export default function App( { campaignId, restUrl, nonce, adminUrl, campaignsUr
         document.documentElement.classList.toggle( 'bp-fullscreen', next );
     }, [ isFullscreen ] );
 
+    // Tag <body> with the active tab so the WP admin backstop (body/#wpwrap)
+    // can match each tab's surface: white for the editor (white canvas + panel),
+    // grey for templates/settings. This prevents the builder's background from
+    // seaming against WordPress's own background in the area below the frame.
+    useEffect( () => {
+        document.body.classList.toggle( 'bp-cb-tab-editor', activeTab === 'editor' );
+        return () => document.body.classList.remove( 'bp-cb-tab-editor' );
+    }, [ activeTab ] );
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
@@ -297,7 +306,7 @@ export default function App( { campaignId, restUrl, nonce, adminUrl, campaignsUr
             onDragOver={ handleDragOver }
             onDragEnd={ handleDragEnd }
         >
-            <div className="bp-campaign-builder">
+            <div className={ `bp-campaign-builder bp-campaign-builder--${ activeTab }` }>
 
                 <Toolbar
                     meta={ state.meta }

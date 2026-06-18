@@ -50,11 +50,16 @@ class CPT extends Controller {
     }
 
     /**
-     * Register the hidden campaign builder page under the Better Payment menu.
+     * Register the campaign builder page under the Better Payment menu.
+     *
+     * Registered as a real submenu of 'better-payment-admin' (not orphaned with
+     * empty parent) so WordPress keeps the sidebar open and the Campaigns item
+     * highlighted automatically. The submenu link is hidden via CSS so it doesn't
+     * appear as a visible menu entry.
      */
     public function register_builder_page() {
         add_submenu_page(
-            '',
+            'better-payment-admin',
             __( 'Campaign Builder', 'better-payment' ),
             __( 'Campaign Builder', 'better-payment' ),
             'manage_options',
@@ -62,14 +67,18 @@ class CPT extends Controller {
             [ $this, 'render_builder_page' ]
         );
 
-        // Hidden pages (parent = '') are not found by get_admin_page_title(), leaving
-        // $title null and causing a strip_tags() deprecation in admin-header.php.
-        // Set the global before the header loads.
-        add_action( 'current_screen', static function ( $screen ) {
-            if ( 'admin_page_bp-campaign-builder' === $screen->id ) {
-                global $title;
-                $title = __( 'Campaign Builder', 'better-payment' );
+        // Hide the submenu link — it should never appear in the sidebar.
+        add_action( 'admin_head', static function () {
+            echo '<style>#adminmenu a[href="admin.php?page=bp-campaign-builder"]{display:none!important}</style>';
+        } );
+
+        // Redirect the active-submenu highlight from the hidden "Campaign Builder"
+        // entry to the visible "Campaigns" tab so it appears selected in the sidebar.
+        add_filter( 'submenu_file', static function ( $submenu_file ) {
+            if ( isset( $_GET['page'] ) && 'bp-campaign-builder' === $_GET['page'] ) {
+                return 'better-payment-admin&tab=campaigns';
             }
+            return $submenu_file;
         } );
     }
 
@@ -280,11 +289,33 @@ class CPT extends Controller {
         wp_enqueue_media();
 
         // Zero out all WP admin chrome spacing so the builder fills edge-to-edge.
+        // The footer styling mirrors the Better Payment admin footer (see
+        // ReactAdmin::get_footer_version) so the builder page\'s branded footer
+        // looks identical to the other dashboard pages — the heavy React admin
+        // stylesheet is not loaded here, so the rules are inlined.
         wp_add_inline_style( 'bp-campaign-builder', '
             #wpcontent { padding-left: 0 !important; }
             #adminmenushadow { display: none !important; }
+            /* Match the WP admin surfaces to the builder background ($bg
+               #f4f5f8) so the empty band below a short builder blends in
+               instead of showing WordPress\'s default #f0f0f1. body/#wpwrap are
+               the elements that stay full-height — the content-column elements
+               (#wpcontent/#wpbody/#wpbody-content) collapse to the builder
+               height, so recoloring only those leaves the body grey exposed. */
+            body.wp-admin, #wpwrap, #wpcontent, #wpbody, #wpbody-content { background: #f4f5f8 !important; }
+            /* Editor tab is a uniform white workspace (white canvas + white
+               sidebar), so whiten the backstop too — App.js toggles
+               body.bp-cb-tab-editor with the active tab. */
+            body.bp-cb-tab-editor, body.bp-cb-tab-editor #wpwrap, body.bp-cb-tab-editor #wpcontent, body.bp-cb-tab-editor #wpbody, body.bp-cb-tab-editor #wpbody-content { background: #fff !important; }
             #wpbody-content { overflow: hidden !important; padding: 0 !important; }
             #wpbody-content .wrap { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+            #wpfooter .alignright { gap: 30px; display: flex; }
+            #wpfooter .alignright, #wpfooter .alignleft { color: #6a758c; font-weight: 400; font-size: 14px; }
+            #wpfooter .alignright a, #wpfooter .alignleft a { font-weight: 500; color: #6b59ee; }
+            #wpfooter .alignright .bp-footer-version, #wpfooter .alignleft .bp-footer-version { padding: 4px 8px; border-radius: 20px; margin: 0 8px; color: #6b59ee; background-color: #fcfcfc; }
+            #wpfooter .alignright .bp-footer-version-divider, #wpfooter .alignleft .bp-footer-version-divider { position: relative; }
+            #wpfooter .alignright .bp-footer-version-divider::after, #wpfooter .alignleft .bp-footer-version-divider::after { position: absolute; content: ""; background-color: #b9bfca; padding: 1px; top: 2px; bottom: 2px; right: -11px; }
+            #wpfooter .bp-free-version { display: flex; align-items: center; gap: 2px; }
         ' );
 
         // Global currency from plugin settings — builder uses this everywhere.

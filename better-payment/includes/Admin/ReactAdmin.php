@@ -301,8 +301,13 @@ class ReactAdmin extends Controller
      */
     public function customize_admin_footer($hook)
     {
-        // Only apply to Better Payment admin pages
-        if (strpos($hook, $this->page_slug_prefix . '-admin') === false) {
+        // Only apply to Better Payment admin pages — including the campaign
+        // builder page, whose hook is suffixed with 'bp-campaign-builder'
+        // rather than the '-admin' slug, so it shares the same branded footer.
+        if (
+            strpos($hook, $this->page_slug_prefix . '-admin') === false
+            && strpos($hook, 'bp-campaign-builder') === false
+        ) {
             return;
         }
 

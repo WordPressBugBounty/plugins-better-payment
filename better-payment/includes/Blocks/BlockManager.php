@@ -156,6 +156,18 @@ class BlockManager {
                    '</div></div>';
         }
 
+        // Enqueue scripts/styles before manage_response() so they are present even when the
+        // block returns the pending or success state early (the AJAX poller needs better-payment.js).
+        wp_enqueue_style( 'better-payment-el' );
+        wp_enqueue_style( 'bp-icon-front' );
+        wp_enqueue_style( 'better-payment-style' );
+        wp_enqueue_style( 'better-payment-common-style' );
+        wp_enqueue_style( 'better-payment-admin-style' );
+        $this->enqueue_font_awesome();
+        wp_enqueue_style( 'dashicons' );
+        wp_enqueue_script( 'better-payment-common-script' );
+        wp_enqueue_script( 'better-payment' );
+
         // Match Elementor flow:
         // - Handle response before rendering form.
         // - On success: render success notice only.
@@ -193,17 +205,6 @@ class BlockManager {
                 )
             ),
         );
-
-        // Enqueue the necessary scripts and styles.
-        wp_enqueue_style( 'better-payment-el' );
-        wp_enqueue_style( 'bp-icon-front' );
-        wp_enqueue_style( 'better-payment-style' );
-        wp_enqueue_style( 'better-payment-common-style' );
-        wp_enqueue_style( 'better-payment-admin-style' );
-        $this->enqueue_font_awesome();
-        wp_enqueue_style( 'dashicons' );
-        wp_enqueue_script( 'better-payment-common-script' );
-        wp_enqueue_script( 'better-payment' );
 
         // Use output buffering to capture the layout output.
         ob_start();

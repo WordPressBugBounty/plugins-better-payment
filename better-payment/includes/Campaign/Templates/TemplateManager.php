@@ -539,14 +539,6 @@ class TemplateManager {
                                 'settings' => [],
                             ],
                             [
-                                'id'       => 'el_amount_label',
-                                'type'     => 'campaign_description',
-                                'settings' => [
-                                    'headline' => 'Select an Amount',
-                                    'content'  => '',
-                                ],
-                            ],
-                            [
                                 'id'       => 'el_amounts',
                                 'type'     => 'donate_amount',
                                 'settings' => [

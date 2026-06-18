@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.2.0
+ * Version: 2.2.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -34,7 +34,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.2.0';
+    const version = '2.2.1';
 
     /**
      * Class construcotr
@@ -73,6 +73,9 @@ final class Better_Payment {
      */
     public function define_constants() {
         define('BETTER_PAYMENT_VERSION', self::version);
+        // Bump this whenever the campaign CPT rewrite rules change (slug, etc.) to
+        // trigger a one-time flush_rewrite_rules() on the next init for existing installs.
+        define('BETTER_PAYMENT_CAMPAIGN_REWRITE_VERSION', '1');
         define('BETTER_PAYMENT_FILE', __FILE__);
         define('BETTER_PAYMENT_BASENAME', plugin_basename(__FILE__));
         define('BETTER_PAYMENT_PATH', __DIR__);
@@ -95,6 +98,14 @@ final class Better_Payment {
     public function activate() {
         $installer = new Better_Payment\Lite\Installer();
         $installer->run();
+
+        // Register the campaign CPT and flush rewrite rules so campaign permalinks
+        // (/bp-campaign/{slug}/) resolve immediately, without needing a manual
+        // Settings → Permalinks re-save. Mark the rewrite version so the init-time
+        // self-heal flush (see init_campaign_module) does not run redundantly.
+        ( new Better_Payment\Lite\Campaign\CPT() )->register();
+        flush_rewrite_rules();
+        update_option( 'better_payment_campaign_rewrite_version', BETTER_PAYMENT_CAMPAIGN_REWRITE_VERSION );
 
         if (get_option('better_payment_plugin_installed_fresh') !== 'yes' && get_option('better_payment_plugin_installed_time_fresh') === false) {
             update_option('better_payment_plugin_installed_fresh', 'yes');
@@ -160,6 +171,17 @@ final class Better_Payment {
 
         // CPT registration (runs on init)
         add_action( 'init', [ $cpt, 'register' ] );
+
+        // Self-heal rewrite rules for installs that updated into this version
+        // (the activation hook does NOT re-run on plugin update). Runs after the
+        // CPT is registered (priority 11 > default 10) so the new rule is present
+        // when we flush, then records the version so it flushes only once.
+        add_action( 'init', static function () {
+            if ( get_option( 'better_payment_campaign_rewrite_version' ) !== BETTER_PAYMENT_CAMPAIGN_REWRITE_VERSION ) {
+                flush_rewrite_rules();
+                update_option( 'better_payment_campaign_rewrite_version', BETTER_PAYMENT_CAMPAIGN_REWRITE_VERSION );
+            }
+        }, 11 );
 
         // Admin-only: builder page, submenu, asset enqueue
         if ( is_admin() ) {

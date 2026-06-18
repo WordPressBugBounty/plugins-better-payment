@@ -26,11 +26,17 @@ class Actions {
         add_action( 'admin_post_paypal_form_handle', [ $this, 'paypal_form_handle' ] );
         add_action( 'admin_post_nopriv_paypal_form_handle', [ $this, 'paypal_form_handle' ] );
 
+        add_action( 'admin_post_better_payment_paypal_ipn', [ 'Better_Payment\Lite\Classes\Handler', 'handle_paypal_ipn' ] );
+        add_action( 'admin_post_nopriv_better_payment_paypal_ipn', [ 'Better_Payment\Lite\Classes\Handler', 'handle_paypal_ipn' ] );
+
         add_action( 'wp_ajax_better_payment_stripe_get_token', [ $this, 'better_payment_stripe_get_token' ] );
         add_action( 'wp_ajax_nopriv_better_payment_stripe_get_token', [ $this, 'better_payment_stripe_get_token' ] );
         
         add_action( 'wp_ajax_better_payment_paystack_get_token', [ $this, 'better_payment_paystack_get_token' ] );
         add_action( 'wp_ajax_nopriv_better_payment_paystack_get_token', [ $this, 'better_payment_paystack_get_token' ] );
+
+        add_action( 'wp_ajax_better_payment_check_paypal_status', [ $this, 'check_paypal_status' ] );
+        add_action( 'wp_ajax_nopriv_better_payment_check_paypal_status', [ $this, 'check_paypal_status' ] );
     }
 
 
@@ -114,6 +120,7 @@ class Actions {
             'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__('Better Payment', 'better-payment'),
             'amount'        => $primary_payment_amount,
             'cmd'           => $el_settings[ 'better_payment_paypal_button_type' ],
+            'notify_url'    => admin_url( 'admin-post.php?action=better_payment_paypal_ipn' ),
         ];
 
         $product_ids = [
@@ -137,6 +144,7 @@ class Actions {
             'is_woo_layout' => $is_woo_layout,
             'is_fluentcart_layout' => $is_fluentcart_layout,
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
+            'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
         ];
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST) );
@@ -1031,5 +1039,40 @@ class Actions {
         }
 
         return $better_form_fields;
+    }
+
+    /**
+     * AJAX: check whether a PayPal order has been confirmed by IPN.
+     *
+     * Called by the frontend polling loop after the user lands on the return URL
+     * before the IPN fires. Returns {status:'pending'} or {status:'completed'}.
+     */
+    public function check_paypal_status() {
+        check_ajax_referer( 'better-payment', 'security' );
+
+        $order_id = ! empty( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '';
+
+        if ( empty( $order_id ) ) {
+            wp_send_json_error( [ 'message' => 'Missing order_id' ] );
+        }
+
+        global $wpdb;
+        $table = "{$wpdb->prefix}better_payment";
+        $row   = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT status FROM $table WHERE order_id = %s LIMIT 1",
+                $order_id
+            )
+        );
+
+        if ( empty( $row ) ) {
+            wp_send_json_error( [ 'message' => 'Order not found' ] );
+        }
+
+        if ( $row->status === 'Completed' ) {
+            wp_send_json_success( [ 'status' => 'completed' ] );
+        }
+
+        wp_send_json_success( [ 'status' => 'pending' ] );
     }
 }

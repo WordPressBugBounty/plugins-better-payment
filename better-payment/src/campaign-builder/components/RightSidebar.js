@@ -4,6 +4,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { getAllElements, getElement } from '../fields/FieldRegistry';
 import SuggestedAmountsEditor from './SuggestedAmountsEditor';
 import { openWpMedia } from '../utils/media';
+import { getGlobalCurrencySymbol } from '../utils/currency';
 import ColorPicker from './ColorPicker';
 
 const CUSTOM_ICONS = {
@@ -167,7 +168,7 @@ function CustomizationPanel( { meta, layout, selectedElementId, selectedColumnId
 
                         { selectedElement.type === 'progress_bar' && (
                             <p className="bp-cb-widget-note">
-                                { __( 'Note: Progress bars will be visible only when there is a goal set for the campaign.', 'better-payment' ) }
+                                { __( 'Note: The progress bar is always shown. When no campaign goal is set, the goal amount displays as 0 and the donated percentage stays at 0%.', 'better-payment' ) }
                             </p>
                         ) }
 
@@ -895,6 +896,21 @@ function SettingsControl( { control, value, onChange, onMultiChange, elementSett
                 />
             ) }
 
+            { type === 'currency' && (
+                <div className="bp-settings-prefix-input">
+                    <span className="bp-settings-prefix">{ getGlobalCurrencySymbol() }</span>
+                    <input
+                        id={ `ctrl-${ key }` }
+                        type="number"
+                        min={ min ?? 0 }
+                        step={ step ?? 1 }
+                        value={ value ?? '' }
+                        placeholder={ placeholder || '0' }
+                        onChange={ ( e ) => onChange( e.target.value ) }
+                    />
+                </div>
+            ) }
+
             { type === 'color' && (
                 <div className="bp-color-row">
                     <input
@@ -962,6 +978,10 @@ function SettingsControl( { control, value, onChange, onMultiChange, elementSett
                     onChange={ onChange }
                     compact
                 />
+            ) }
+
+            { info && (
+                <p className="bp-cb-field-hint">{ info }</p>
             ) }
         </div>
     );

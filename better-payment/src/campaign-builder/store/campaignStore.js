@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { arrayMove } from '@dnd-kit/sortable';
+import { getDefaultSettings } from '../fields/FieldRegistry';
 
 /**
  * Campaign builder state — useReducer store.
@@ -86,6 +87,9 @@ function freshIds( columns ) {
         elements: ( col.elements || [] ).map( ( el ) => ( {
             ...el,
             id: 'el_' + uuidv4().replace( /-/g, '' ).slice( 0, 12 ),
+            // Merge registry defaults under the template's explicit settings so
+            // keys the template omits (e.g. headline) fall back to element defaults.
+            settings: { ...getDefaultSettings( el.type ), ...( el.settings || {} ) },
         } ) ),
     } ) );
 }

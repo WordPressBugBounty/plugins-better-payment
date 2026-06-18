@@ -570,7 +570,6 @@ trait Helper
 
 		$body = wp_remote_retrieve_body( $response );
 		$data = json_decode( $body, true );
-		// dd( $data );
 
 		if ( ! isset( $data ) || ! is_array( $data ) ) {
 			error_log( 'Stripe API response format error.' );
@@ -766,7 +765,6 @@ trait Helper
      * @return bool
      */
     public function detect_better_payment_blocks( $blocks ) {
-		dd('ok');
         $bp_block_names = [ 'better-payment/payment-form', 'better-payment/user-dashboard' ];
 
         foreach ( $blocks as $block ) {

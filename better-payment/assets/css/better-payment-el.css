@@ -1228,3 +1228,120 @@ button:not(:disabled) {
 .payment-failed-screen-section .bp-btn_wrapper a {
   display: inline-block;
 }
+
+.bp-paypal-pending__spinner-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+}
+.bp-paypal-pending__ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid rgba(107, 89, 238, 0.15);
+  border-top-color: #6E58F7;
+  border-radius: 50%;
+  animation: bp-paypal-spin 0.9s linear infinite;
+}
+.bp-paypal-pending__logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+.bp-paypal-pending__body {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.bp-paypal-pending__heading {
+  transition: color 0.3s ease;
+}
+.bp-paypal-pending__sub {
+  margin-bottom: 0;
+  transition: color 0.3s ease;
+}
+.bp-paypal-pending__dots {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 0;
+  transition: opacity 0.3s ease;
+}
+.bp-paypal-pending__dots span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #6E58F7;
+  animation: bp-paypal-dot 1.4s ease-in-out infinite;
+}
+.bp-paypal-pending__dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.bp-paypal-pending__dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.bp-paypal-pending__bar {
+  margin-top: 32px;
+  height: 4px;
+  background: #f0f3f7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bp-paypal-pending__bar-inner {
+  height: 100%;
+  width: 0;
+  background: #6E58F7;
+  border-radius: 4px;
+  animation: bp-paypal-progress 60s linear forwards;
+  transition: background 0.4s ease;
+}
+.bp-paypal-pending--timeout .bp-paypal-pending__ring {
+  border-color: rgba(229, 57, 53, 0.15);
+  border-top-color: #e53935;
+  animation: none;
+}
+.bp-paypal-pending--timeout .bp-paypal-pending__logo {
+  opacity: 0.35;
+}
+.bp-paypal-pending--timeout .bp-paypal-pending__heading {
+  color: #e53935;
+}
+.bp-paypal-pending--timeout .bp-paypal-pending__dots {
+  opacity: 0;
+  pointer-events: none;
+}
+.bp-paypal-pending--timeout .bp-paypal-pending__bar-inner {
+  animation: none;
+  width: 100%;
+  background: #e53935;
+}
+
+@keyframes bp-paypal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes bp-paypal-dot {
+  0%, 60%, 100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes bp-paypal-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}

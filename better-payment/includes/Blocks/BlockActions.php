@@ -279,6 +279,7 @@ class BlockActions {
             'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__( 'Better Payment', 'better-payment' ),
             'amount'        => $primary_payment_amount,
             'cmd'           => $paypal_button_type,
+            'notify_url'    => admin_url( 'admin-post.php?action=better_payment_paypal_ipn' ),
         );
 
         $product_ids = array(
@@ -302,6 +303,7 @@ class BlockActions {
             'is_woo_layout'        => $is_woo_layout,
             'is_fluentcart_layout' => $is_fluentcart_layout,
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
+            'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
         );
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST ) );

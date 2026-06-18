@@ -259,6 +259,8 @@ $white:   #fff;
         gap: 10px;
     }
 
+    .bp-donate-headline { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+
     .bp-donate_btn {
         display: block;
         padding: 13px 28px;
@@ -1165,6 +1167,12 @@ $white:   #fff;
             text-transform: uppercase !important;
             letter-spacing: 0.08em !important;
         }
+
+        // Summary headline ("Campaign Summary"): light text so the title is
+        // legible on the dark navy panel (base color is dark $text).
+        .bp-summary-headline {
+            color: #fff;
+        }
     }
 
     // ── Right column ──────────────────────────────────────────────────────────
@@ -1225,6 +1233,12 @@ $white:   #fff;
         color: rgba(255, 255, 255, 0.5) !important;
         text-transform: uppercase !important;
         letter-spacing: 0.08em !important;
+    }
+
+    // Donate amount headline (optional custom heading above the amount buttons):
+    // light text so it reads on the dark navy panel (base color is dark $text).
+    .bp-campaign-column:last-child .bp-donate-headline {
+        color: #fff;
     }
 
     // "Select an Amount" label (description with headline only, no content)

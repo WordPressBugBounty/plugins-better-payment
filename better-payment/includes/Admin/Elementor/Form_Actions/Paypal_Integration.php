@@ -233,7 +233,8 @@ class Paypal_Integration extends Action_Base {
             'amount'                => $currency_code . $amount,
             'referer_page_id'       => $page_id,
             'referer_widget_id'     => $widget_id,
-            'source'                => 'paypal'
+            'source'                => 'paypal',
+            'paypal_business_email' => sanitize_email( $email ),
         ];
 
         // Get campaign_id from form data if available

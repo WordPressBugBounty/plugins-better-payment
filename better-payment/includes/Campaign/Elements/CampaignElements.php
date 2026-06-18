@@ -62,8 +62,8 @@ class CampaignElements {
             'label'           => __( 'Campaign Description', 'better-payment' ),
             'icon'            => 'editor-paragraph',
             'defaultSettings' => [
-                'headline' => '',
-                'content'  => '',
+                'headline' => 'Campaign Description',
+                'content'  => "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).",
                 'width'    => 100,
                 'align'    => 'left',
             ],
@@ -161,7 +161,7 @@ class CampaignElements {
             'label'           => __( 'Progress Bar', 'better-payment' ),
             'icon'            => 'chart-bar',
             'defaultSettings' => [
-                'headline'      => '',
+                'headline'      => 'Campaign Progress',
                 'show_donated'  => true,
                 'show_goal'     => true,
                 'round_amounts' => false,
@@ -172,9 +172,10 @@ class CampaignElements {
             ],
             'settingsSchema'  => [
                 [
-                    'key'   => 'headline',
-                    'label' => __( 'Headline', 'better-payment' ),
-                    'type'  => 'text',
+                    'key'          => 'headline',
+                    'label'        => __( 'Headline', 'better-payment' ),
+                    'type'         => 'text',
+                    'defaultValue' => 'Campaign Progress',
                 ],
                 [
                     'key'   => '_campaign_info',
@@ -235,7 +236,7 @@ class CampaignElements {
             'label'           => __( 'Campaign Summary', 'better-payment' ),
             'icon'            => 'info',
             'defaultSettings' => [
-                'headline'     => '',
+                'headline'     => 'Campaign Summary',
                 'show_raised'  => true,
                 'show_donors'  => true,
                 'show_percent' => true,
@@ -245,10 +246,11 @@ class CampaignElements {
             ],
             'settingsSchema'  => [
                 [
-                    'key'         => 'headline',
-                    'label'       => __( 'Headline', 'better-payment' ),
-                    'type'        => 'text',
-                    'placeholder' => '',
+                    'key'          => 'headline',
+                    'label'        => __( 'Headline', 'better-payment' ),
+                    'type'         => 'text',
+                    'placeholder'  => '',
+                    'defaultValue' => 'Campaign Summary',
                 ],
                 [
                     'key'   => 'choose_label',
@@ -257,7 +259,7 @@ class CampaignElements {
                 ],
                 [
                     'key'   => 'summary_note',
-                    'label' => __( 'Note: Some items might not be visible or enabled depending on campaign goal and date settings. Save and refresh the builder to see updated values.', 'better-payment' ),
+                    'label' => __( 'Note: All enabled items are always shown. Amount Donated and Number of Donors update as donations come in. Percent Raised shows 0% until a campaign goal is set, and Time Remaining shows 0 days left until an end date is set. Save and refresh the builder to see updated values.', 'better-payment' ),
                     'type'  => 'note',
                 ],
                 [
@@ -302,7 +304,7 @@ class CampaignElements {
             'defaultSettings' => [
                 'button_label' => 'Donate Now',
                 'button_color' => '',
-                'url'          => '',
+                'url'          => '#',
                 'open_new_tab' => false,
                 'width'        => 100,
                 'align'        => 'center',
@@ -316,10 +318,11 @@ class CampaignElements {
                     'defaultValue' => 'Donate Now',
                 ],
                 [
-                    'key'         => 'url',
-                    'label'       => __( 'Payment Form Page URL', 'better-payment' ),
-                    'type'        => 'url',
-                    'placeholder' => 'https://',
+                    'key'          => 'url',
+                    'label'        => __( 'Payment Form Page URL', 'better-payment' ),
+                    'type'         => 'url',
+                    'placeholder'  => 'https://',
+                    'defaultValue' => '#',
                     'info'        => __( 'Link to the page containing your donation form. Overrides the Donation Page set in General Settings.', 'better-payment' ),
                 ],
                 [
@@ -410,15 +413,23 @@ class CampaignElements {
             'label'           => __( 'Donate Amount', 'better-payment' ),
             'icon'            => 'money-alt',
             'defaultSettings' => [
-                'headline' => '',
+                'headline' => 'Donate Amount',
             ],
             'settingsSchema'  => [
                 [
-                    'key'         => 'headline',
-                    'label'       => __( 'Headline', 'better-payment' ),
-                    'type'        => 'text',
-                    'placeholder' => __( 'Headline', 'better-payment' ),
-                    'info'        => __( 'Optional heading shown above the donation amounts.', 'better-payment' ),
+                    'key'          => 'headline',
+                    'label'        => __( 'Headline', 'better-payment' ),
+                    'type'         => 'text',
+                    'placeholder'  => __( 'Headline', 'better-payment' ),
+                    'defaultValue' => 'Donate Amount',
+                    'info'         => __( 'Optional heading shown above the donation amounts.', 'better-payment' ),
+                ],
+                [
+                    'key'     => 'bpc_minimum_amount',
+                    'label'   => __( 'Minimum Donation Amount', 'better-payment' ),
+                    'type'    => 'currency',
+                    'metaKey' => 'bpc_minimum_amount',
+                    'info'    => __( 'Leave empty to allow no restrictions on how small the donation can be.', 'better-payment' ),
                 ],
                 [
                     'key'     => 'bpc_suggested_amounts',
@@ -428,7 +439,7 @@ class CampaignElements {
                 ],
                 [
                     'key'          => 'bpc_allow_custom_amount',
-                    'label'        => __( 'Allow Custom Donations', 'better-payment' ),
+                    'label'        => __( 'Allow Custom Amount', 'better-payment' ),
                     'type'         => 'switch',
                     'metaKey'      => 'bpc_allow_custom_amount',
                     'defaultValue' => true,

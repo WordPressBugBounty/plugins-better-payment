@@ -376,7 +376,7 @@ export default function LiveCanvas( {
                     style={ { height: iframeHeight } }
                     onLoad={ measurePositions }
                     title={ __( 'Campaign Preview', 'better-payment' ) }
-                    sandbox="allow-same-origin"
+                    sandbox="allow-same-origin allow-scripts"
                 />
 
                 {/* Transparent interaction overlay */}

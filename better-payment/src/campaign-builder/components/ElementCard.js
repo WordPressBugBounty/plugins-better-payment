@@ -239,7 +239,7 @@ function CampaignSummaryPreview( { element, meta, campaignId } ) {
     const goal    = parseFloat( meta?.bpc_goal_amount ) || 0;
     const days    = meta?.bpc_end_date
         ? Math.max( 0, Math.ceil( ( new Date( meta.bpc_end_date ) - new Date() ) / 86400000 ) )
-        : null;
+        : 0;
     const percent = goal > 0 ? Math.min( 100, Math.round( ( raised / goal ) * 1000 ) / 10 ) : 0;
 
     const currencySymbol = getGlobalCurrencySymbol();
@@ -264,13 +264,13 @@ function CampaignSummaryPreview( { element, meta, campaignId } ) {
                         <span>{ __( 'Donors', 'better-payment' ) }</span>
                     </div>
                 ) }
-                { showPercent && goal > 0 && (
+                { showPercent && (
                     <div className="bp-element-preview__summary-item">
                         <strong>{ percent }%</strong>
                         <span>{ __( 'Funded', 'better-payment' ) }</span>
                     </div>
                 ) }
-                { showDays && days !== null && (
+                { showDays && (
                     <div className="bp-element-preview__summary-item">
                         <strong>{ days }</strong>
                         <span>{ __( 'Days Left', 'better-payment' ) }</span>
@@ -360,9 +360,7 @@ function ProgressBarPreview( { element, meta, campaignId } ) {
         ? Math.ceil( rawRatio )
         : progress; // 1-decimal float from CampaignStats
 
-    const goalFormatted = goal > 0
-        ? ( currencySymbol + ( roundAmounts ? Math.ceil( goal ).toLocaleString() : Number( goal ).toFixed( 2 ) ) )
-        : __( 'No goal set', 'better-payment' );
+    const goalFormatted = currencySymbol + ( roundAmounts ? Math.ceil( goal ).toLocaleString() : Number( goal ).toFixed( 2 ) );
 
     return (
         <div className="bp-element-preview__progress" style={ wrapStyle }>
@@ -652,7 +650,7 @@ function DonateAmountPreview( { element, meta, dispatch } ) {
         return (
             <div className="bp-element-preview__donate-empty">
                 <span className="dashicons dashicons-money-alt" />
-                <span>{ __( 'No suggested amounts yet — add some in Donation Options', 'better-payment' ) }</span>
+                <span>{ __( 'No suggested amounts yet — add some in the element settings', 'better-payment' ) }</span>
             </div>
         );
     }

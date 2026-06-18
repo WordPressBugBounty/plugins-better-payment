@@ -288,6 +288,7 @@ class Assets extends Controller
                 'payment_amount_field_is_required' => __('Payment Amount field is required', 'better-payment'),
                 'minimum_amount_is_one' => __('Minimum amount is 1', 'better-payment'),
                 'something_went_wrong' => __('Something went wrong', 'better-payment'),
+                'paypal_payment_timeout' => __('Payment verification timed out. Please contact support if your payment was charged.', 'better-payment'),
             ],
             'currency_symbols' => $this->get_currency_symbols_list(),
         ]);
