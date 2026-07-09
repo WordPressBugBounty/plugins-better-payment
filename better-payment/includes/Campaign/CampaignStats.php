@@ -16,7 +16,7 @@ class CampaignStats extends Controller {
     private static int $cache_ttl = 2 * MINUTE_IN_SECONDS;
 
     /**
-     * Get stats for a campaign, using a 1-hour transient cache.
+     * Get stats for a campaign, using a 2-minute transient cache.
      */
     public static function get_stats( int $campaign_id, bool $use_cache = true ): array {
         $transient_key = 'bpc_stats_' . $campaign_id;

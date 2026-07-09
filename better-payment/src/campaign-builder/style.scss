@@ -815,9 +815,12 @@ body.bp-fullscreen {
 
 .bp-cb-rich-text__block-select {
     width: 100%;
-    height: 32px;
-    line-height: 32px;
-    padding: 2px 8px;
+    // Match the other form selects (`.bp-cb-settings-form select`) so padding and
+    // font-size don't get split across two conflicting rules. A fixed height +
+    // large line-height fought the inherited padding and pushed the text out of
+    // vertical centre — let the native select size and centre itself instead.
+    padding: 6px 8px;
+    line-height: normal;
     border: 1px solid $border;
     border-radius: 4px;
     background: $white;
@@ -1213,6 +1216,87 @@ body.bp-fullscreen {
         color: $muted;
         cursor: help;
         &:hover { color: $primary; }
+    }
+}
+
+// ── Collapsible settings section (e.g. Typography on title/description) ────────
+.bp-cb-collapsible-section {
+    border: 1px solid $border;
+    border-radius: 6px;
+    background: $white;
+    overflow: hidden;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 10px 12px;
+        margin: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: $text;
+        text-align: left;
+        transition: background 0.15s ease;
+
+        &:hover { background: $bg; }
+        &:focus-visible {
+            outline: none;
+            box-shadow: inset 0 0 0 2px rgba($primary, 0.25);
+        }
+    }
+
+    &__title {
+        letter-spacing: 0.01em;
+    }
+
+    &__chevron {
+        flex-shrink: 0;
+        color: $muted;
+        transition: transform 0.2s ease;
+    }
+
+    &.is-open &__chevron {
+        transform: rotate( 180deg );
+    }
+
+    &__body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 4px 12px 14px;
+        border-top: 1px solid $border;
+
+        // Inline layout for every field inside the section: label on the left,
+        // control on the right. Any hint text wraps to a full-width row below.
+        .bp-cb-control {
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+
+            > label.bp-cb-field-label {
+                flex: 0 0 44%;
+                max-width: 44%;
+                margin: 0;
+                line-height: 1.3;
+            }
+
+            // The field control (select, input, color row, etc.) — every direct
+            // child that isn't the label or the hint — fills the remaining width.
+            > *:not(label):not(.bp-cb-field-hint) {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+
+            > .bp-cb-field-hint {
+                flex: 0 0 100%;
+                margin: 0;
+            }
+        }
     }
 }
 
@@ -1805,6 +1889,48 @@ label.bp-cb-field-label {
     }
 
     .bp-cb-hint { font-size: 11px; color: $muted; margin: 0; }
+}
+
+// Custom dropdown chevron for every <select> in the campaign builder sidebar.
+// Native select arrows are inconsistent (and hidden by the WP admin reset on some
+// platforms), so we suppress the native UI and paint a matching chevron. This rule
+// has the same specificity as the shared `select` rule above but comes later, so its
+// `background-image` survives that rule's `background: $white` shorthand while the
+// white background-color is inherited from it. Covers RightSidebar, SettingsPanel,
+// and the rich-text block select — all render inside `.bp-cb-settings-form`.
+.bp-cb-settings-form,
+.bp-settings-section__body {
+    select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding-right: 28px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8fa6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 12px 12px;
+        cursor: pointer;
+
+        // Hide the legacy IE/Edge native arrow.
+        &::-ms-expand { display: none; }
+    }
+}
+
+// Compact select/input heights inside the Typography collapsible section.
+// The shared rule above only sets padding, leaving WordPress admin's taller
+// min-height/line-height in place; override them for a denser typography panel.
+// Prefixed with .bp-cb-settings-form so this outranks the shared rule regardless
+// of source order.
+.bp-cb-settings-form .bp-cb-collapsible-section__body {
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        padding-top: 4px;
+        padding-bottom: 4px;
+        min-height: 0;
+        line-height: 1.4;
+    }
 }
 
 .bp-cb-toggle-label {

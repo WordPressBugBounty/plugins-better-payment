@@ -304,6 +304,8 @@ class BlockActions {
             'is_fluentcart_layout' => $is_fluentcart_layout,
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
             'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
+            // Persisted so the async PayPal IPN can rebuild the e-mail body + on/off toggle.
+            'email_settings'        => Handler::extract_email_settings( $el_settings ),
         );
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST ) );

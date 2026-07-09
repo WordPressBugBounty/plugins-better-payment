@@ -208,19 +208,10 @@ function CustomizationPanel( { meta, layout, selectedElementId, selectedColumnId
 
 // ── Theme Colors (Advanced tab) ────────────────────────────────────────────────
 
-const TEMPLATE_BUTTON_DEFAULTS = {
-    'blank-1col':       '#5AA152',
-    'blank-2col':       '#5AA152',
-    'blank-3col':       '#5AA152',
-    'charity-basic':    '#B49A5F',
-    'medical-relief':   '#7A8347',
-    'education-fund':   '#8FA040',
-    'golf-destinations':'#B8A46A',
-    'disaster-relief':  '#c0392b',
-};
-
+// Campaign background colour. The per-button colour lives on the Donate Button
+// widget now (its "Button Color" control), not here.
 const COLOR_FIELDS = [
-    { key: 'bpc_color_button', label: __( 'Button', 'better-payment' ), default: '#5AA152' },
+    { key: 'bpc_color_background', label: __( 'Background', 'better-payment' ), default: '#ffffff' },
 ];
 
 const PICKER_W     = 270;
@@ -229,8 +220,9 @@ const PICKER_H_EST = 320; // estimated picker height after size reduction
 function ThemeColors( { meta, dispatch } ) {
     const [ openKey,   setOpenKey   ] = useState( null );
     const [ pickerPos, setPickerPos ] = useState( { top: 0, left: 0, caretLeft: 0, caretAtBottom: true } );
-    const swatchRefs = useRef( {} );
-    const pickerRef  = useRef( null );
+    const swatchRefs  = useRef( {} );
+    const controlRefs = useRef( {} );
+    const pickerRef   = useRef( null );
 
     const openPickerFor = useCallback( ( key ) => {
         if ( openKey === key ) { setOpenKey( null ); return; }
@@ -259,13 +251,17 @@ function ThemeColors( { meta, dispatch } ) {
         setOpenKey( key );
     }, [ openKey ] );
 
-    // Close picker when clicking outside both the popup and the swatches.
+    // Close picker when clicking outside both the popup and the color control.
+    // The check covers the whole control (swatch + text input), not just the
+    // swatch — otherwise a mousedown on the input reads as "outside" and closes
+    // the popup, which the input's onClick then reopens (so it never toggles
+    // shut). Anchoring on the control wrapper leaves onClick as the sole toggle.
     useEffect( () => {
         if ( ! openKey ) return;
         const handler = ( e ) => {
             const inPicker  = pickerRef.current?.contains( e.target );
-            const inSwatch  = Object.values( swatchRefs.current ).some( el => el?.contains( e.target ) );
-            if ( ! inPicker && ! inSwatch ) setOpenKey( null );
+            const inControl = Object.values( controlRefs.current ).some( el => el?.contains( e.target ) );
+            if ( ! inPicker && ! inControl ) setOpenKey( null );
         };
         document.addEventListener( 'mousedown', handler );
         return () => document.removeEventListener( 'mousedown', handler );
@@ -287,7 +283,10 @@ function ThemeColors( { meta, dispatch } ) {
                 return (
                     <div key={ key } className="bp-theme-color-row">
                         <span className="bp-theme-color-row__label">{ label }</span>
-                        <div className="bp-theme-color-row__control">
+                        <div
+                            className="bp-theme-color-row__control"
+                            ref={ ( el ) => { controlRefs.current[ key ] = el; } }
+                        >
                             <button
                                 ref={ ( el ) => { swatchRefs.current[ key ] = el; } }
                                 type="button"
@@ -321,9 +320,7 @@ function ThemeColors( { meta, dispatch } ) {
                 >
                     <ColorPicker
                         value={ meta[ openKey ] || activeField.default }
-                        defaultValue={
-                            TEMPLATE_BUTTON_DEFAULTS[ meta.bpc_template_key ] || activeField.default
-                        }
+                        defaultValue={ activeField.default }
                         onChange={ ( hex ) => update( openKey, hex ) }
                         onClose={ () => setOpenKey( null ) }
                     />
@@ -353,30 +350,82 @@ function ElementSettings( { element, schema, meta, dispatch } ) {
         );
     }
 
+    // Wire a single schema control to its value + change handlers. Shared by the
+    // flat top-level controls and the children of a collapsible section so both
+    // resolve defaults, meta keys, and image-upload multi-changes identically.
+    const renderControl = ( control ) => {
+        const isMeta   = !! control.metaKey;
+        const rawValue = isMeta ? meta?.[ control.metaKey ] : s[ control.key ];
+        const value    = rawValue !== undefined && rawValue !== null ? rawValue : ( control.defaultValue ?? '' );
+        const onChange = isMeta
+            ? ( val ) => updateMeta( { [ control.metaKey ]: val } )
+            : ( val ) => updateElement( { [ control.key ]: val } );
+        const onMultiChange = ( ! isMeta && control.type === 'image_upload' )
+            ? ( patch ) => updateElement( patch )
+            : undefined;
+        const elementSettings = ( ! isMeta && control.type === 'image_upload' ) ? s : undefined;
+        return (
+            <SettingsControl
+                key={ control.key }
+                control={ control }
+                value={ value }
+                onChange={ onChange }
+                onMultiChange={ onMultiChange }
+                elementSettings={ elementSettings }
+            />
+        );
+    };
+
     return (
         <div className="bp-cb-settings-form">
             { schema.map( ( control ) => {
-                const isMeta   = !! control.metaKey;
-                const rawValue = isMeta ? meta?.[ control.metaKey ] : s[ control.key ];
-                const value    = rawValue !== undefined && rawValue !== null ? rawValue : ( control.defaultValue ?? '' );
-                const onChange = isMeta
-                    ? ( val ) => updateMeta( { [ control.metaKey ]: val } )
-                    : ( val ) => updateElement( { [ control.key ]: val } );
-                const onMultiChange = ( ! isMeta && control.type === 'image_upload' )
-                    ? ( patch ) => updateElement( patch )
-                    : undefined;
-                const elementSettings = ( ! isMeta && control.type === 'image_upload' ) ? s : undefined;
-                return (
-                    <SettingsControl
-                        key={ control.key }
-                        control={ control }
-                        value={ value }
-                        onChange={ onChange }
-                        onMultiChange={ onMultiChange }
-                        elementSettings={ elementSettings }
-                    />
-                );
+                // A `section` control (e.g. Typography on the title/description
+                // elements) renders its children inside a collapsible accordion.
+                if ( control.type === 'section' && Array.isArray( control.children ) ) {
+                    return (
+                        <CollapsibleSection
+                            key={ control.key }
+                            label={ control.label }
+                            defaultCollapsed={ control.collapsed !== false }
+                        >
+                            { control.children.map( renderControl ) }
+                        </CollapsibleSection>
+                    );
+                }
+                return renderControl( control );
             } ) }
+        </div>
+    );
+}
+
+/**
+ * Collapsible settings group with an accordion header + chevron. Keeps the
+ * builder's current light panel theme; only adds expand/collapse behaviour.
+ */
+function CollapsibleSection( { label, defaultCollapsed = true, children } ) {
+    const [ open, setOpen ] = useState( ! defaultCollapsed );
+
+    return (
+        <div className={ `bp-cb-collapsible-section${ open ? ' is-open' : '' }` }>
+            <button
+                type="button"
+                className="bp-cb-collapsible-section__header"
+                aria-expanded={ open }
+                onClick={ () => setOpen( ( v ) => ! v ) }
+            >
+                <span className="bp-cb-collapsible-section__title">{ label }</span>
+                <svg
+                    className="bp-cb-collapsible-section__chevron"
+                    width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"
+                >
+                    <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            </button>
+            { open && (
+                <div className="bp-cb-collapsible-section__body">
+                    { children }
+                </div>
+            ) }
         </div>
     );
 }
@@ -429,11 +478,17 @@ const TB = {
 };
 
 const BLOCKS = [
-    { value: 'p',  label: 'Normal' },
-    { value: 'h2', label: 'Heading 2' },
-    { value: 'h3', label: 'Heading 3' },
-    { value: 'h4', label: 'Heading 4' },
+    { value: 'p',  label: __( 'Paragraph', 'better-payment' ) },
+    { value: 'h1', label: 'H1' },
+    { value: 'h2', label: 'H2' },
+    { value: 'h3', label: 'H3' },
+    { value: 'h4', label: 'H4' },
+    { value: 'h5', label: 'H5' },
+    { value: 'h6', label: 'H6' },
 ];
+
+// Block tags recognised by the rich-text editor's block-style dropdown.
+const BLOCK_TAGS = BLOCKS.map( ( b ) => b.value );
 
 const QUERY_CMDS = [ 'bold', 'italic', 'underline', 'insertOrderedList', 'insertUnorderedList' ];
 
@@ -516,7 +571,7 @@ function RichTextControl( { value, onChange } ) {
             let node = sel.getRangeAt( 0 ).startContainer;
             while ( node && node !== editorRef.current ) {
                 const tag = node.nodeName?.toLowerCase();
-                if ( [ 'p', 'h2', 'h3', 'h4' ].includes( tag ) ) {
+                if ( BLOCK_TAGS.includes( tag ) ) {
                     setBlockValue( tag );
                     return;
                 }
@@ -889,10 +944,11 @@ function SettingsControl( { control, value, onChange, onMultiChange, elementSett
                 <input
                     id={ `ctrl-${ key }` }
                     type="number"
-                    value={ value ?? '' }
+                    value={ ( value === '' || value === null || value === undefined || Number.isNaN( value ) ) ? '' : value }
                     min={ min }
                     max={ max }
-                    onChange={ ( e ) => onChange( parseInt( e.target.value, 10 ) ) }
+                    placeholder={ placeholder || '' }
+                    onChange={ ( e ) => onChange( e.target.value === '' ? '' : parseInt( e.target.value, 10 ) ) }
                 />
             ) }
 

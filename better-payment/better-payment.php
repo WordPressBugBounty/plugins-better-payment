@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.2.1
+ * Version: 2.2.2
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -34,7 +34,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.2.1';
+    const version = '2.2.2';
 
     /**
      * Class construcotr
@@ -148,6 +148,15 @@ final class Better_Payment {
 
         // Initialize Block Actions for payment processing (runs before Elementor Actions)
         new Better_Payment\Lite\Blocks\BlockActions();
+
+        // Always register PayPal IPN listener + verification poll. These must run even
+        // when Elementor is inactive, because PayPal payments also flow through the
+        // block/campaign path. (Previously registered only inside the Elementor gate
+        // via Classes\Actions, so non-Elementor sites never confirmed PayPal payments.)
+        add_action( 'admin_post_better_payment_paypal_ipn',         [ 'Better_Payment\Lite\Classes\Handler', 'handle_paypal_ipn' ] );
+        add_action( 'admin_post_nopriv_better_payment_paypal_ipn',  [ 'Better_Payment\Lite\Classes\Handler', 'handle_paypal_ipn' ] );
+        add_action( 'wp_ajax_better_payment_check_paypal_status',        [ 'Better_Payment\Lite\Classes\Handler', 'check_paypal_status' ] );
+        add_action( 'wp_ajax_nopriv_better_payment_check_paypal_status', [ 'Better_Payment\Lite\Classes\Handler', 'check_paypal_status' ] );
 
         if (defined('ELEMENTOR_VERSION')) {
             new Better_Payment\Lite\Classes\Actions();

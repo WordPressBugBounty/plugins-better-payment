@@ -3,7 +3,7 @@
         'name' => 'better-payment/better-payment',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '28b498c3c01ed32da5af7760a0e434a9b70fc888',
+        'reference' => '360316d49d5bebb639c14d31bb24d883505e91b1',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'better-payment/better-payment' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '28b498c3c01ed32da5af7760a0e434a9b70fc888',
+            'reference' => '360316d49d5bebb639c14d31bb24d883505e91b1',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

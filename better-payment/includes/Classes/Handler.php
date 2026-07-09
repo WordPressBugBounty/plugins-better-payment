@@ -322,6 +322,44 @@ class Handler extends Controller{
     }
 
     /**
+     * AJAX: check whether a PayPal order has been confirmed by IPN.
+     *
+     * Called by the frontend polling loop after the user lands on the return URL
+     * before the IPN fires. Returns {status:'pending'} or {status:'completed'}.
+     *
+     * Lives on Handler (not Actions) so it can be registered unconditionally —
+     * PayPal payments flow through the block/campaign path without Elementor.
+     */
+    public static function check_paypal_status() {
+        check_ajax_referer( 'better-payment', 'security' );
+
+        $order_id = ! empty( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '';
+
+        if ( empty( $order_id ) ) {
+            wp_send_json_error( [ 'message' => 'Missing order_id' ] );
+        }
+
+        global $wpdb;
+        $table = "{$wpdb->prefix}better_payment";
+        $row   = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT status FROM $table WHERE order_id = %s LIMIT 1",
+                $order_id
+            )
+        );
+
+        if ( empty( $row ) ) {
+            wp_send_json_error( [ 'message' => 'Order not found' ] );
+        }
+
+        if ( $row->status === 'Completed' ) {
+            wp_send_json_success( [ 'status' => 'completed' ] );
+        }
+
+        wp_send_json_success( [ 'status' => 'pending' ] );
+    }
+
+    /**
      * PayPal IPN listener.
      *
      * PayPal POSTs the raw IPN body here server-to-server. We echo it back with
@@ -438,7 +476,23 @@ class Handler extends Controller{
 
         if ( false !== $updated ) {
             $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form' ? 1 : 0;
-            self::better_email_notification( $txn_id, $payer_email, [], 'PayPal', $results->form_fields_info, $is_elementor_form );
+
+            // Rebuild the e-mail settings persisted at payment-create time. IPN runs
+            // server-to-server with no live widget context, so without this the body
+            // would collapse to the bare transaction id (every section flag defaults
+            // to 0). Legacy / pending rows created before this fix fall back to [].
+            $email_settings = ! empty( $form_info['email_settings'] ) && is_array( $form_info['email_settings'] )
+                ? $form_info['email_settings']
+                : [];
+
+            // Mirror the Stripe / Paystack gate: honour the form's "Send Email" toggle,
+            // and always e-mail for Elementor Pro Form submissions.
+            if (
+                ( isset( $email_settings['better_payment_form_email_enable'] ) && 'yes' === $email_settings['better_payment_form_email_enable'] )
+                || $is_elementor_form
+            ) {
+                self::better_email_notification( $txn_id, $payer_email, $email_settings, 'PayPal', $results->form_fields_info, $is_elementor_form );
+            }
         }
 
         status_header( 200 );
@@ -1212,8 +1266,45 @@ class Handler extends Controller{
     }
 
     /**
+     * Whitelist the e-mail related settings that better_email_notification() reads.
+     *
+     * PayPal confirms payments asynchronously through the IPN listener
+     * (handle_paypal_ipn), where the live Elementor widget / block settings are NOT
+     * available. Stripe and Paystack build their e-mail synchronously on the return
+     * page, so they still have the full settings array in hand. To reach parity we
+     * persist this subset into the transaction's form_fields_info at payment-create
+     * time, and the IPN handler rebuilds the same $settings to produce an identical
+     * e-mail body (heading, From / To / Transaction Summary / footer sections,
+     * subjects, headers) and to honour the "Send Email" on/off toggle.
+     *
+     * @param mixed $settings Full widget / block / form settings (guarded: non-array input returns []).
+     *
+     * @return array Whitelisted e-mail settings (safe to serialize into form_fields_info).
+     * @since 2.2.2
+     */
+    public static function extract_email_settings( $settings = [] ) {
+        $email_settings = [];
+
+        if ( ! is_array( $settings ) ) {
+            return $email_settings;
+        }
+
+        foreach ( $settings as $key => $value ) {
+            if (
+                0 === strpos( $key, 'better_payment_email_' )
+                || 0 === strpos( $key, 'better_payment_form_email_' )
+                || 'better_payment_form_title' === $key
+            ) {
+                $email_settings[ $key ] = $value;
+            }
+        }
+
+        return $email_settings;
+    }
+
+    /**
      * Email template
-     * 
+     *
      * @since 0.0.1
      */
     public static function better_email_notification($transaction_id, $customer_email, $settings, $referrer='Stripe', $form_fields_info='', $is_elementor_form = 0){

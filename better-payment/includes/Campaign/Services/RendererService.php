@@ -108,23 +108,26 @@ class RendererService {
      * Only emits rules for colours that are explicitly set, so theme CSS remains
      * the default when a colour is empty. Uses !important to override any theme class.
      *
-     * @param array $meta        Campaign meta (bpc_color_primary, secondary, tertiary, button).
+     * @param array $meta        Campaign meta (bpc_color_primary, background, …).
      * @param int   $campaign_id Scopes the selectors. 0 = isolated builder preview iframe.
      * @return string <style>…</style> or ''.
      */
     private static function generate_color_style( array $meta, int $campaign_id ): string {
-        $button = ! empty( $meta['bpc_color_button'] ) ? sanitize_hex_color( $meta['bpc_color_button'] ) : '';
+        // Campaign background colour (set in the builder's Advanced tab). The
+        // per-button colour is now a property of the Donate Button widget
+        // (settings['button_color']), not a campaign-wide override.
+        $background = ! empty( $meta['bpc_color_background'] ) ? sanitize_hex_color( $meta['bpc_color_background'] ) : '';
 
-        if ( ! $button ) {
+        if ( ! $background ) {
             return '';
         }
 
-        // $campaign_id is typed int and $button is validated hex — both safe for CSS output.
+        // $campaign_id is typed int and $background is validated hex — both safe for CSS output.
         $scope = $campaign_id > 0
             ? '.bp-campaign[data-campaign-id="' . $campaign_id . '"]'
             : '.bp-campaign';
 
-        $css = $scope . ' .bp-donate_btn { background-color: ' . $button . ' !important; }';
+        $css = $scope . ' { background-color: ' . $background . ' !important; }';
 
         return '<style>' . wp_strip_all_tags( $css ) . '</style>';
     }
@@ -155,13 +158,21 @@ class RendererService {
         switch ( $type ) {
 
             case 'campaign_title':
-                $color      = ! empty( $settings['color'] ) ? $settings['color'] : '#1a1a2e';
-                $font_size  = ! empty( $settings['font_size'] ) ? $settings['font_size'] : '32px';
-                $title_text = ! empty( $settings['title'] ) ? $settings['title'] : $post->post_title;
-                $align      = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
+                $user_color  = self::css_hex_color( $settings['color'] ?? '' );
+                $user_size   = self::css_font_size( $settings['font_size'] ?? '' );
+                $title_text  = ! empty( $settings['title'] ) ? $settings['title'] : $post->post_title;
+                $align       = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
+
+                // A user-set value is emitted with !important so it wins over
+                // template rules (some templates force the title colour/size with
+                // !important). When unset we emit a plain default the template can
+                // still override.
+                $title_style  = '' !== $user_color ? 'color:' . $user_color . ' !important;' : 'color:#1a1a2e;';
+                $title_style .= '' !== $user_size  ? 'font-size:' . $user_size . ' !important;' : 'font-size:32px;';
+                $title_style .= self::decls_to_style( self::typography_common_decls( $settings ) );
+                $title_style .= 'text-align:' . $align . ';';
                 ?>
-                <h2 class="bp-campaign-title"
-                    style="color: <?php echo esc_attr( $color ); ?>; font-size: <?php echo esc_attr( $font_size ); ?>; text-align: <?php echo esc_attr( $align ); ?>;">
+                <h2 class="bp-campaign-title" style="<?php echo esc_attr( $title_style ); ?>">
                     <?php echo esc_html( $title_text ); ?>
                 </h2>
                 <?php
@@ -175,17 +186,39 @@ class RendererService {
 
                 if ( ! $desc_headline && ! $desc_content ) break;
 
+                // Wrapper carries layout only. Typography is applied directly to the
+                // headline and content elements (with !important) so it beats template
+                // rules that target those elements specifically. The headline (title)
+                // and the body each have their own independent typography set.
                 $desc_wrap = 'width:' . $desc_width . '%;';
                 if ( 'center' === $desc_align ) $desc_wrap .= 'margin:0 auto;';
                 elseif ( 'right' === $desc_align ) $desc_wrap .= 'margin-left:auto;';
+
+                // Title (headline) typography — its own set under the `title_`
+                // prefixed keys. font-size IS applied here so the title can be
+                // sized directly (empty leaves the template heading scale).
+                $title_typo          = self::prefixed_typography( $settings, 'title_' );
+                $title_color         = self::css_hex_color( $title_typo['color'] ?? '' );
+                $title_size          = self::css_font_size( $title_typo['font_size'] ?? '' );
+                $desc_headline_style = self::decls_to_style( self::typography_common_decls( $title_typo ) );
+                if ( '' !== $title_color ) $desc_headline_style .= 'color:' . $title_color . ' !important;';
+                if ( '' !== $title_size )  $desc_headline_style .= 'font-size:' . $title_size . ' !important;';
+
+                // Body (content) typography — the base (unprefixed) keys, so any
+                // previously-saved description typography still applies here.
+                $desc_color         = self::css_hex_color( $settings['color'] ?? '' );
+                $desc_size          = self::css_font_size( $settings['font_size'] ?? '' );
+                $desc_content_style = self::decls_to_style( self::typography_common_decls( $settings ) );
+                if ( '' !== $desc_color ) $desc_content_style .= 'color:' . $desc_color . ' !important;';
+                if ( '' !== $desc_size )  $desc_content_style .= 'font-size:' . $desc_size . ' !important;';
                 ?>
                 <div class="bp-campaign-description"
                      style="text-align:<?php echo esc_attr( $desc_align ); ?>; <?php echo esc_attr( $desc_wrap ); ?>">
                     <?php if ( $desc_headline ) : ?>
-                        <h3 class="bp-campaign-description-headline"><?php echo esc_html( $desc_headline ); ?></h3>
+                        <h3 class="bp-campaign-description-headline"<?php echo '' !== $desc_headline_style ? ' style="' . esc_attr( $desc_headline_style ) . '"' : ''; ?>><?php echo esc_html( $desc_headline ); ?></h3>
                     <?php endif; ?>
                     <?php if ( $desc_content ) : ?>
-                        <div class="bp-campaign-description-content"><?php echo wp_kses_post( self::scale_inline_font_sizes( $desc_content ) ); ?></div>
+                        <div class="bp-campaign-description-content"<?php echo '' !== $desc_content_style ? ' style="' . esc_attr( $desc_content_style ) . '"' : ''; ?>><?php echo wp_kses_post( self::scale_inline_font_sizes( $desc_content ) ); ?></div>
                     <?php endif; ?>
                 </div>
                 <?php
@@ -402,7 +435,7 @@ class RendererService {
                         <div class="bp-campaign-donate-btn" style="<?php echo esc_attr( $wrap_style ); ?>">
                             <a href="<?php echo $url_missing ? '#' : esc_url( $donate_url ); ?>"
                                class="<?php echo esc_attr( $btn_class ); ?>"
-                               style="background-color:<?php echo esc_attr( $button_color ); ?>;"
+                               style="background-color:<?php echo esc_attr( $button_color ); ?> !important;"
                                <?php if ( $url_missing ) : ?>
                                aria-disabled="true"
                                title="<?php esc_attr_e( 'Payment page not configured', 'better-payment' ); ?>"
@@ -669,6 +702,196 @@ class RendererService {
     }
 
     /**
+     * Normalize a stored font-size setting into a safe CSS length.
+     * Numeric values are treated as pixels. Returns '' when unset/invalid.
+     *
+     * @param mixed $val
+     */
+    private static function css_font_size( $val ): string {
+        if ( is_string( $val ) ) {
+            $val = trim( $val );
+        }
+        if ( '' === $val || null === $val ) {
+            return '';
+        }
+        if ( is_numeric( $val ) ) {
+            return ( (float) $val ) . 'px';
+        }
+        if ( is_string( $val ) && preg_match( '/^\d+(\.\d+)?(px|em|rem|%)$/', $val ) ) {
+            return $val;
+        }
+        return '';
+    }
+
+    /**
+     * Validate a stored font-family stack. Allows letters, numbers, spaces,
+     * commas, quotes and hyphens only — blocks CSS breakout. Returns '' when
+     * unset/invalid.
+     *
+     * @param mixed $val
+     */
+    private static function css_font_family( $val ): string {
+        $val = is_string( $val ) ? trim( $val ) : '';
+        if ( '' === $val ) {
+            return '';
+        }
+        return preg_match( "/^[A-Za-z0-9 ,'\"_-]+$/", $val ) ? $val : '';
+    }
+
+    /**
+     * Validate a stored font-style value. Returns '' when unset/invalid.
+     *
+     * @param mixed $val
+     */
+    private static function css_font_style( $val ): string {
+        $val = is_string( $val ) ? strtolower( trim( $val ) ) : '';
+        return in_array( $val, [ 'normal', 'italic', 'oblique' ], true ) ? $val : '';
+    }
+
+    /**
+     * Validate a stored hex color. Returns '' when unset/invalid.
+     *
+     * @param mixed $val
+     */
+    private static function css_hex_color( $val ): string {
+        $val = is_string( $val ) ? trim( $val ) : '';
+        return preg_match( '/^#[0-9a-fA-F]{3,8}$/', $val ) ? $val : '';
+    }
+
+    /**
+     * Normalize a stored CSS length (letter/word spacing, line-height). Numeric
+     * values are treated as pixels; a leading minus is allowed. Returns '' when
+     * unset/invalid.
+     *
+     * @param mixed $val
+     */
+    private static function css_length( $val ): string {
+        if ( is_string( $val ) ) {
+            $val = trim( $val );
+        }
+        if ( '' === $val || null === $val ) {
+            return '';
+        }
+        if ( is_numeric( $val ) ) {
+            return ( (float) $val ) . 'px';
+        }
+        if ( is_string( $val ) && preg_match( '/^-?\d+(\.\d+)?(px|em|rem|%)$/', $val ) ) {
+            return $val;
+        }
+        return '';
+    }
+
+    /**
+     * Validate a stored font-weight value. Returns '' when unset/invalid.
+     *
+     * @param mixed $val
+     */
+    private static function css_font_weight( $val ): string {
+        if ( is_int( $val ) ) {
+            $val = (string) $val;
+        }
+        $val     = is_string( $val ) ? strtolower( trim( $val ) ) : '';
+        $allowed = [ '100', '200', '300', '400', '500', '600', '700', '800', '900', 'normal', 'bold', 'bolder', 'lighter' ];
+        return in_array( $val, $allowed, true ) ? $val : '';
+    }
+
+    /**
+     * Validate a stored value against an allowlist of CSS keywords.
+     *
+     * @param mixed         $val
+     * @param array<string> $allowed
+     */
+    private static function css_keyword( $val, array $allowed ): string {
+        $val = is_string( $val ) ? strtolower( trim( $val ) ) : '';
+        return in_array( $val, $allowed, true ) ? $val : '';
+    }
+
+    /**
+     * Extract a prefixed typography set (e.g. 'title_font_family') back into the
+     * base keys the typography helpers expect ('font_family'). Lets one element
+     * carry more than one independent typography set (see the Description widget,
+     * which styles its title and body separately) while reusing the same helpers.
+     *
+     * @param array  $settings Element settings.
+     * @param string $prefix   Key prefix to strip (e.g. 'title_').
+     * @return array<string, mixed> Base-keyed typography settings.
+     */
+    private static function prefixed_typography( array $settings, string $prefix ): array {
+        $keys = [
+            'font_family', 'font_size', 'font_weight', 'text_transform', 'font_style',
+            'text_decoration', 'line_height', 'letter_spacing', 'word_spacing', 'color',
+        ];
+        $out = [];
+        foreach ( $keys as $key ) {
+            if ( isset( $settings[ $prefix . $key ] ) ) {
+                $out[ $key ] = $settings[ $prefix . $key ];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Build the "common" typography CSS declarations (everything except color and
+     * font-size, which callers handle per-element) from element settings.
+     * Only user-set, valid values are included.
+     *
+     * @param array $settings
+     * @return array<string, string> Map of css-property => value.
+     */
+    private static function typography_common_decls( array $settings ): array {
+        $decls = [];
+
+        $family = self::css_font_family( $settings['font_family'] ?? '' );
+        if ( '' !== $family ) {
+            $decls['font-family'] = $family;
+        }
+        $weight = self::css_font_weight( $settings['font_weight'] ?? '' );
+        if ( '' !== $weight ) {
+            $decls['font-weight'] = $weight;
+        }
+        $style = self::css_font_style( $settings['font_style'] ?? '' );
+        if ( '' !== $style ) {
+            $decls['font-style'] = $style;
+        }
+        $transform = self::css_keyword( $settings['text_transform'] ?? '', [ 'uppercase', 'lowercase', 'capitalize', 'none' ] );
+        if ( '' !== $transform ) {
+            $decls['text-transform'] = $transform;
+        }
+        $decoration = self::css_keyword( $settings['text_decoration'] ?? '', [ 'underline', 'overline', 'line-through', 'none' ] );
+        if ( '' !== $decoration ) {
+            $decls['text-decoration'] = $decoration;
+        }
+        $line_height = self::css_length( $settings['line_height'] ?? '' );
+        if ( '' !== $line_height ) {
+            $decls['line-height'] = $line_height;
+        }
+        $letter = self::css_length( $settings['letter_spacing'] ?? '' );
+        if ( '' !== $letter ) {
+            $decls['letter-spacing'] = $letter;
+        }
+        $word = self::css_length( $settings['word_spacing'] ?? '' );
+        if ( '' !== $word ) {
+            $decls['word-spacing'] = $word;
+        }
+
+        return $decls;
+    }
+
+    /**
+     * Flatten a declaration map into an inline-style string. Every declaration is
+     * emitted with !important so user overrides win over template stylesheet rules.
+     *
+     * @param array<string, string> $decls
+     */
+    private static function decls_to_style( array $decls ): string {
+        $out = '';
+        foreach ( $decls as $prop => $value ) {
+            $out .= $prop . ':' . $value . ' !important;';
+        }
+        return $out;
+    }
+
+    /**
      * Returns the global Better Payment currency code from plugin settings.
      */
     private static function global_currency(): string {
@@ -718,7 +941,7 @@ class RendererService {
         $meta = [
             'bpc_goal_amount'         => 10000,
             'bpc_color_primary'       => $template['preview_color'] ?? '#6b63f6',
-            'bpc_color_button'        => '',
+            'bpc_color_background'    => '',
             'bpc_suggested_amounts'   => [],
             'bpc_allow_custom_amount' => true,
             'bpc_minimum_amount'      => '',
@@ -829,7 +1052,7 @@ class RendererService {
         $meta_defaults = [
             'bpc_goal_amount'         => 0,
             'bpc_color_primary'       => '#6b63f6',
-            'bpc_color_button'        => '',
+            'bpc_color_background'    => '',
             'bpc_suggested_amounts'   => [],
             'bpc_allow_custom_amount' => true,
             'bpc_minimum_amount'      => '',
@@ -931,6 +1154,15 @@ class RendererService {
             . '    height: 100%;' . "\n"
             . '    display: flex;' . "\n"
             . '    flex-direction: column;' . "\n"
+            . '}' . "\n"
+            // The preview is read-only: no link/button/form control should be
+            // clickable (e.g. the Donate Now button must not navigate away).
+            // pointer-events:none only blocks pointer interaction — page scrolling
+            // still works. This document is preview-only (the live frontend uses
+            // render_campaign() directly), so real pages are unaffected.
+            . 'a, button, input, select, textarea, [role="button"] {' . "\n"
+            . '    pointer-events: none !important;' . "\n"
+            . '    cursor: default !important;' . "\n"
             . '}' . "\n"
             . '</style>' . "\n"
             . '</head>' . "\n"

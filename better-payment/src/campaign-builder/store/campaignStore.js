@@ -33,7 +33,7 @@ export const initialState = {
         bpc_minimum_amount: '',
         bpc_form_page_id: 0,
         bpc_color_primary: '#6b63f6',
-        bpc_color_button:  '',
+        bpc_color_background: '',
         bpc_css_class: '',
         bpc_template_key: '',
         bpc_suggested_amounts: [
@@ -170,20 +170,9 @@ export function reducer( state, action ) {
             }
             const layout = { layout: tpl.layout, columns };
 
-            // Set default button color per template.
-            const templateButtonColors = {
-                'blank-1col':       '#5AA152',
-                'blank-2col':       '#5AA152',
-                'blank-3col':       '#5AA152',
-                'charity-basic':    '#B49A5F',
-                'medical-relief':   '#7A8347',
-                'education-fund':   '#8FA040',
-                'golf-destinations':'#B8A46A',
-                'disaster-relief':  '#c0392b',
-            };
-            if ( templateButtonColors[ tpl.key ] ) {
-                metaUpdate.bpc_color_button = templateButtonColors[ tpl.key ];
-            }
+            // Per-button colour now travels with each Donate Button element in the
+            // template layout (settings.button_color), so there's no campaign-wide
+            // button colour to seed here.
 
             return {
                 ...state,

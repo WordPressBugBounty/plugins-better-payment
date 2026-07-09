@@ -35,6 +35,15 @@ function scaleInlineFontSizes( html ) {
     } );
 }
 
+// Mirror of RendererService::css_font_size() — numeric values are treated as px.
+function cssFontSize( val ) {
+    if ( val === '' || val === null || val === undefined || Number.isNaN( val ) ) return null;
+    if ( typeof val === 'number' ) return `${ val }px`;
+    if ( /^\d+(\.\d+)?$/.test( String( val ) ) ) return `${ val }px`;
+    if ( /^\d+(\.\d+)?(px|em|rem|%)$/.test( String( val ) ) ) return String( val );
+    return null;
+}
+
 /**
  * A single element card on the canvas — sortable via @dnd-kit/sortable.
  * Elements that have a live preview render their content directly;
@@ -295,6 +304,12 @@ function CampaignDescriptionPreview( { element } ) {
         textAlign: align,
         margin: align === 'center' ? '0 auto' : align === 'right' ? '0 0 0 auto' : '0',
     };
+    if ( s.font_family ) wrapStyle.fontFamily = s.font_family;
+    if ( s.font_style )  wrapStyle.fontStyle  = s.font_style;
+    if ( s.color )       wrapStyle.color      = s.color;
+
+    const contentFontSize = cssFontSize( s.font_size );
+    const contentStyle    = contentFontSize ? { fontSize: contentFontSize } : undefined;
 
     if ( ! headline && ! content ) {
         return (
@@ -313,6 +328,7 @@ function CampaignDescriptionPreview( { element } ) {
             { content && (
                 <div
                     className="bp-element-preview__description-content"
+                    style={ contentStyle }
                     dangerouslySetInnerHTML={ { __html: scaleInlineFontSizes( content ) } }
                 />
             ) }
@@ -587,10 +603,17 @@ function CampaignTitlePreview( { element, meta } ) {
     const title = meta?.title ?? '';
     const align = s.align || 'left';
 
+    const style = { textAlign: align };
+    if ( s.color )       style.color      = s.color;
+    if ( s.font_family ) style.fontFamily = s.font_family;
+    if ( s.font_style )  style.fontStyle  = s.font_style;
+    const fontSize = cssFontSize( s.font_size );
+    if ( fontSize )      style.fontSize   = fontSize;
+
     return (
         <h2
             className="bp-element-preview__campaign-title"
-            style={ { textAlign: align } }
+            style={ style }
         >
             { title }
         </h2>

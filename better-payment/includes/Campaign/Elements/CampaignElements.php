@@ -35,68 +35,334 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class CampaignElements {
 
+    /**
+     * Curated web-safe font-family options shared by typography-enabled elements.
+     * Value is the full CSS font stack; empty value inherits the theme font.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function font_family_options(): array {
+        $families = [
+            ''                                                     => __( 'Default', 'better-payment' ),
+            'Arial, Helvetica, sans-serif'                         => 'Arial',
+            "'Arial Black', Gadget, sans-serif"                    => 'Arial Black',
+            "'Comic Sans MS', cursive, sans-serif"                 => 'Comic Sans MS',
+            "'Courier New', Courier, monospace"                    => 'Courier New',
+            'Georgia, serif'                                       => 'Georgia',
+            "'Helvetica Neue', Helvetica, Arial, sans-serif"       => 'Helvetica',
+            'Impact, Charcoal, sans-serif'                         => 'Impact',
+            "'Lucida Sans Unicode', 'Lucida Grande', sans-serif"   => 'Lucida Sans',
+            "'Palatino Linotype', 'Book Antiqua', Palatino, serif" => 'Palatino',
+            'Tahoma, Geneva, sans-serif'                           => 'Tahoma',
+            "'Times New Roman', Times, serif"                      => 'Times New Roman',
+            "'Trebuchet MS', Helvetica, sans-serif"                => 'Trebuchet MS',
+            'Verdana, Geneva, sans-serif'                          => 'Verdana',
+        ];
+
+        $options = [];
+        foreach ( $families as $value => $label ) {
+            $options[] = [ 'value' => $value, 'label' => $label ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * Font-style options shared by typography-enabled elements.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function font_style_options(): array {
+        return [
+            [ 'value' => '',        'label' => __( 'Default', 'better-payment' ) ],
+            [ 'value' => 'normal',  'label' => __( 'Normal', 'better-payment' ) ],
+            [ 'value' => 'italic',  'label' => __( 'Italic', 'better-payment' ) ],
+            [ 'value' => 'oblique', 'label' => __( 'Oblique', 'better-payment' ) ],
+        ];
+    }
+
+    /**
+     * Font-weight options shared by typography-enabled elements.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function font_weight_options(): array {
+        return [
+            [ 'value' => '',    'label' => __( 'Default', 'better-payment' ) ],
+            [ 'value' => '100', 'label' => __( '100 (Thin)', 'better-payment' ) ],
+            [ 'value' => '200', 'label' => __( '200 (Extra Light)', 'better-payment' ) ],
+            [ 'value' => '300', 'label' => __( '300 (Light)', 'better-payment' ) ],
+            [ 'value' => '400', 'label' => __( '400 (Normal)', 'better-payment' ) ],
+            [ 'value' => '500', 'label' => __( '500 (Medium)', 'better-payment' ) ],
+            [ 'value' => '600', 'label' => __( '600 (Semi Bold)', 'better-payment' ) ],
+            [ 'value' => '700', 'label' => __( '700 (Bold)', 'better-payment' ) ],
+            [ 'value' => '800', 'label' => __( '800 (Extra Bold)', 'better-payment' ) ],
+            [ 'value' => '900', 'label' => __( '900 (Black)', 'better-payment' ) ],
+        ];
+    }
+
+    /**
+     * Text-transform options shared by typography-enabled elements.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function text_transform_options(): array {
+        return [
+            [ 'value' => '',           'label' => __( 'Default', 'better-payment' ) ],
+            [ 'value' => 'uppercase',  'label' => __( 'Uppercase', 'better-payment' ) ],
+            [ 'value' => 'lowercase',  'label' => __( 'Lowercase', 'better-payment' ) ],
+            [ 'value' => 'capitalize', 'label' => __( 'Capitalize', 'better-payment' ) ],
+            [ 'value' => 'none',       'label' => __( 'Normal', 'better-payment' ) ],
+        ];
+    }
+
+    /**
+     * Text-decoration options shared by typography-enabled elements.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function text_decoration_options(): array {
+        return [
+            [ 'value' => '',             'label' => __( 'Default', 'better-payment' ) ],
+            [ 'value' => 'underline',    'label' => __( 'Underline', 'better-payment' ) ],
+            [ 'value' => 'overline',     'label' => __( 'Overline', 'better-payment' ) ],
+            [ 'value' => 'line-through', 'label' => __( 'Line Through', 'better-payment' ) ],
+            [ 'value' => 'none',         'label' => __( 'None', 'better-payment' ) ],
+        ];
+    }
+
+    /**
+     * Full typography control group shared by typography-enabled elements,
+     * wrapped in a single collapsible "Typography" section. Mirrors Elementor's
+     * Typography group (Family, Size, Weight, Transform, Style, Decoration, Line
+     * Height, Letter Spacing, Word Spacing, Color).
+     *
+     * @param array $overrides Per-control overrides keyed by control key
+     *                         (e.g. [ 'font_size' => [ 'defaultValue' => 32 ] ]).
+     *                         Values are merged into that control descriptor.
+     * @return array<int, array<string, mixed>> A single-element array holding the
+     *                         collapsible section (type 'section') whose `children`
+     *                         are the individual typography controls.
+     */
+    private static function typography_schema( array $overrides = [], string $prefix = '', string $section_label = '', string $section_key = '_typography' ): array {
+        if ( '' === $section_label ) {
+            $section_label = __( 'Typography', 'better-payment' );
+        }
+        $children = [
+            [
+                'key'          => 'font_family',
+                'label'        => __( 'Font Family', 'better-payment' ),
+                'type'         => 'select',
+                'defaultValue' => '',
+                'options'      => self::font_family_options(),
+            ],
+            [
+                'key'   => 'font_size',
+                'label' => __( 'Font Size (px)', 'better-payment' ),
+                'type'  => 'number',
+                'min'   => 8,
+                'max'   => 200,
+            ],
+            [
+                'key'          => 'font_weight',
+                'label'        => __( 'Font Weight', 'better-payment' ),
+                'type'         => 'select',
+                'defaultValue' => '',
+                'options'      => self::font_weight_options(),
+            ],
+            [
+                'key'          => 'text_transform',
+                'label'        => __( 'Text Transform', 'better-payment' ),
+                'type'         => 'select',
+                'defaultValue' => '',
+                'options'      => self::text_transform_options(),
+            ],
+            [
+                'key'          => 'font_style',
+                'label'        => __( 'Font Style', 'better-payment' ),
+                'type'         => 'select',
+                'defaultValue' => '',
+                'options'      => self::font_style_options(),
+            ],
+            [
+                'key'          => 'text_decoration',
+                'label'        => __( 'Text Decoration', 'better-payment' ),
+                'type'         => 'select',
+                'defaultValue' => '',
+                'options'      => self::text_decoration_options(),
+            ],
+            [
+                'key'   => 'line_height',
+                'label' => __( 'Line Height (px)', 'better-payment' ),
+                'type'  => 'number',
+                'min'   => 0,
+                'max'   => 400,
+            ],
+            [
+                'key'   => 'letter_spacing',
+                'label' => __( 'Letter Spacing (px)', 'better-payment' ),
+                'type'  => 'number',
+                'min'   => -20,
+                'max'   => 100,
+            ],
+            [
+                'key'   => 'word_spacing',
+                'label' => __( 'Word Spacing (px)', 'better-payment' ),
+                'type'  => 'number',
+                'min'   => -20,
+                'max'   => 100,
+            ],
+            [
+                'key'   => 'color',
+                'label' => __( 'Text Color', 'better-payment' ),
+                'type'  => 'color',
+            ],
+        ];
+
+        // Overrides are keyed by the BASE control key (e.g. 'font_size'), applied
+        // before the prefix so callers don't need to know the prefix.
+        if ( ! empty( $overrides ) ) {
+            foreach ( $children as $i => $control ) {
+                if ( isset( $overrides[ $control['key'] ] ) ) {
+                    $children[ $i ] = array_merge( $control, $overrides[ $control['key'] ] );
+                }
+            }
+        }
+
+        // Prefix the control keys so a single element can carry more than one
+        // independent typography set. The Description widget uses this to style
+        // its title and body separately ('title_font_family' vs 'font_family');
+        // the renderer strips the prefix before applying the CSS.
+        if ( '' !== $prefix ) {
+            foreach ( $children as $i => $control ) {
+                $children[ $i ]['key'] = $prefix . $control['key'];
+            }
+        }
+
+        // Return the controls wrapped in a single collapsible section (type =>
+        // 'section' with children) instead of a flat section_label + siblings.
+        // The builder renders this as one expandable accordion (see
+        // RightSidebar.js CollapsibleSection).
+        return [
+            [
+                'key'         => $section_key,
+                'label'       => $section_label,
+                'type'        => 'section',
+                'collapsible' => true,
+                'collapsed'   => true,
+                'children'    => $children,
+            ],
+        ];
+    }
+
     public static function register_all(): void {
 
         ElementRegistry::register( 'campaign_title', [
             'label'           => __( 'Campaign Title', 'better-payment' ),
             'icon'            => 'heading',
+            // Typography keys are intentionally NOT seeded here — their absence is
+            // how the renderer distinguishes a user override (emitted with
+            // !important to beat template styles) from the template default.
             'defaultSettings' => [
                 'align' => 'left',
             ],
-            'settingsSchema'  => [
+            'settingsSchema'  => array_merge(
                 [
-                    'key'         => 'title',
-                    'label'       => __( 'Campaign Title', 'better-payment' ),
-                    'type'        => 'text',
-                    'placeholder' => __( 'Campaign name', 'better-payment' ),
+                    [
+                        'key'         => 'title',
+                        'label'       => __( 'Campaign Title', 'better-payment' ),
+                        'type'        => 'text',
+                        'placeholder' => __( 'Campaign name', 'better-payment' ),
+                    ],
                 ],
+                self::typography_schema( [
+                    'font_size' => [ 'defaultValue' => 32 ],
+                    'color'     => [ 'defaultValue' => '#1a1a2e' ],
+                ] ),
                 [
-                    'key'   => 'align',
-                    'label' => __( 'Align', 'better-payment' ),
-                    'type'  => 'align',
-                ],
-            ],
+                    [
+                        'key'   => 'align',
+                        'label' => __( 'Align', 'better-payment' ),
+                        'type'  => 'align',
+                    ],
+                ]
+            ),
         ] );
 
         ElementRegistry::register( 'campaign_description', [
             'label'           => __( 'Campaign Description', 'better-payment' ),
             'icon'            => 'editor-paragraph',
+            // Typography keys are intentionally NOT seeded — their absence marks a
+            // user override, which the renderer emits with !important so it wins
+            // over template styles.
             'defaultSettings' => [
                 'headline' => 'Campaign Description',
                 'content'  => "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).",
                 'width'    => 100,
                 'align'    => 'left',
             ],
-            'settingsSchema'  => [
+            'settingsSchema'  => array_merge(
                 [
-                    'key'         => 'headline',
-                    'label'       => __( 'Headline', 'better-payment' ),
-                    'type'        => 'text',
-                    'placeholder' => __( 'Headline', 'better-payment' ),
+                    [
+                        'key'         => 'headline',
+                        'label'       => __( 'Headline', 'better-payment' ),
+                        'type'        => 'text',
+                        'placeholder' => __( 'Headline', 'better-payment' ),
+                    ],
                 ],
+                // Title Typography — styles the headline (h3) only. Uses `title_`
+                // prefixed keys so it stays independent of the body typography.
+                self::typography_schema(
+                    [
+                        'font_size' => [
+                            'info' => __( 'Leave empty to use the heading default size.', 'better-payment' ),
+                        ],
+                    ],
+                    'title_',
+                    __( 'Title Typography', 'better-payment' ),
+                    '_title_typography'
+                ),
                 [
-                    'key'   => 'content',
-                    'label' => __( 'Campaign Description', 'better-payment' ),
-                    'type'  => 'rich_text',
-                    'info'  => __( 'Supports bold, italic, underline, links, and lists.', 'better-payment' ),
+                    [
+                        'key'   => 'content',
+                        'label' => __( 'Campaign Description', 'better-payment' ),
+                        'type'  => 'rich_text',
+                        'info'  => __( 'Supports bold, italic, underline, links, and lists.', 'better-payment' ),
+                    ],
                 ],
+                // Description Typography — styles the body content. Keeps the base
+                // (unprefixed) keys so previously-saved description typography
+                // continues to apply to the content.
+                self::typography_schema(
+                    [
+                        'font_size' => [
+                            'placeholder' => '16',
+                            'info'        => __( 'Leave empty to use the template default size.', 'better-payment' ),
+                        ],
+                    ],
+                    '',
+                    __( 'Description Typography', 'better-payment' ),
+                    '_content_typography'
+                ),
                 [
-                    'key'          => 'width',
-                    'label'        => __( 'Width', 'better-payment' ),
-                    'type'         => 'range',
-                    'min'          => 10,
-                    'max'          => 100,
-                    'step'         => 1,
-                    'unit'         => '%',
-                    'defaultValue' => 100,
-                    'info'         => __( 'Content width as a percentage of its container.', 'better-payment' ),
-                ],
-                [
-                    'key'   => 'align',
-                    'label' => __( 'Align', 'better-payment' ),
-                    'type'  => 'align',
-                ],
-            ],
+                    [
+                        'key'          => 'width',
+                        'label'        => __( 'Width', 'better-payment' ),
+                        'type'         => 'range',
+                        'min'          => 10,
+                        'max'          => 100,
+                        'step'         => 1,
+                        'unit'         => '%',
+                        'defaultValue' => 100,
+                        'info'         => __( 'Content width as a percentage of its container.', 'better-payment' ),
+                    ],
+                    [
+                        'key'   => 'align',
+                        'label' => __( 'Align', 'better-payment' ),
+                        'type'  => 'align',
+                    ],
+                ]
+            ),
         ] );
 
         ElementRegistry::register( 'photo', [
@@ -316,6 +582,12 @@ class CampaignElements {
                     'type'         => 'text',
                     'placeholder'  => __( 'Donate Now', 'better-payment' ),
                     'defaultValue' => 'Donate Now',
+                ],
+                [
+                    'key'   => 'button_color',
+                    'label' => __( 'Button Color', 'better-payment' ),
+                    'type'  => 'color',
+                    'info'  => __( 'Leave empty to use the campaign primary color.', 'better-payment' ),
                 ],
                 [
                     'key'          => 'url',

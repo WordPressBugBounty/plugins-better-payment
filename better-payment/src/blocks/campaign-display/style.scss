@@ -83,13 +83,15 @@ $white:   #fff;
         h5 { font-size: 16px; font-weight: 600; margin: 0 0 6px; }
         h6 { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
 
-        p  { font-size: 16px; margin: 0 0 10px; }
+        // Body-level elements inherit the container font-size (16px default, or a
+        // per-widget override set inline) so the Font Size control takes effect.
+        p  { margin: 0 0 10px; }
         p:last-child { margin: 0; }
 
-        ul, ol { font-size: 16px; padding-left: 20px; margin: 0 0 10px; }
+        ul, ol { padding-left: 20px; margin: 0 0 10px; }
         li { margin-bottom: 4px; }
 
-        strong, b { font-size: 16px; font-weight: 700; }
+        strong, b { font-weight: 700; }
         em, i     { font-style: italic; }
 
         a { color: $primary; text-decoration: underline; }

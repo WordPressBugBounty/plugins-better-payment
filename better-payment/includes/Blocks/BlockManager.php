@@ -639,7 +639,12 @@ class BlockManager {
         }
 
         // Get email notification setting from block attributes.
-        $email_notification_enabled = isset( $attributes['emailNotificationEnabled'] ) && $attributes['emailNotificationEnabled']
+        // The editor default for emailNotificationEnabled is true, but WordPress does not
+        // serialize default attribute values into the block markup and the registered
+        // block.json declares no schema default, so the attribute is absent at render time
+        // unless explicitly toggled. Treat "unset" as enabled to match the editor default,
+        // while still honoring an explicit OFF (serialized as false).
+        $email_notification_enabled = ! isset( $attributes['emailNotificationEnabled'] ) || $attributes['emailNotificationEnabled']
             ? 'yes'
             : '';
 

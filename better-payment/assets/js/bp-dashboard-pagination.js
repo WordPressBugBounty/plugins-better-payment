@@ -25,7 +25,7 @@ eval("{/**\n * Better Payment – User Dashboard Pagination\n *\n * Shared scrip
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
-/******/ 	var __webpack_exports__ = {};
+/******/ 	let __webpack_exports__ = {};
 /******/ 	__webpack_modules__["./src/js/bp-dashboard-pagination.js"]();
 /******/ 	
 /******/ })()

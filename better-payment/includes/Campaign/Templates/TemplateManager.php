@@ -187,7 +187,7 @@ class TemplateManager {
                                 'type'     => 'donation_form',
                                 'settings' => [
                                     'button_label' => 'Donate Now',
-                                    'button_color' => '',
+                                    'button_color' => '#B49A5F',
                                     'url'          => '',
                                 ],
                             ],
@@ -284,7 +284,7 @@ class TemplateManager {
                                 'type'     => 'donation_form',
                                 'settings' => [
                                     'button_label' => 'Donate Now',
-                                    'button_color' => '',
+                                    'button_color' => '#7A8347',
                                     'url'          => '',
                                 ],
                             ],

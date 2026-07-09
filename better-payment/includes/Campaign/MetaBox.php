@@ -29,7 +29,7 @@ class MetaBox extends Controller {
             '_bpc_fields_layout'     => [ self::class, 'sanitize_json' ],
             '_bpc_status'            => 'sanitize_text_field',
             '_bpc_color_primary'     => 'sanitize_hex_color',
-            '_bpc_color_button'      => 'sanitize_hex_color',
+            '_bpc_color_background'   => 'sanitize_hex_color',
             '_bpc_css_class'         => 'sanitize_html_class',
             '_bpc_template_key'      => 'sanitize_text_field',
         ] );
