@@ -3,8 +3,10 @@
 namespace Better_Payment\Lite\Campaign;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\AI\AIManager;
 use Better_Payment\Lite\Controller;
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
+use Better_Payment\Lite\Campaign\Templates\CategoryRegistry;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -121,6 +123,11 @@ class CPT extends Controller {
             $campaign_id = 0;
         }
 
+        // Optional start mode for a new campaign: `start=ai` opens straight into the
+        // editor with the AI Assistant ready (from the "Campaign With AI" button).
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $start = isset( $_GET['start'] ) ? sanitize_key( wp_unslash( $_GET['start'] ) ) : '';
+
         wp_enqueue_script( 'bp-campaign-builder' );
         wp_enqueue_style( 'bp-campaign-builder' );
 
@@ -129,6 +136,7 @@ class CPT extends Controller {
         ?>
         <div id="bp-campaign-builder"
              data-campaign-id="<?php echo esc_attr( $campaign_id ); ?>"
+             data-start="<?php echo esc_attr( $start ); ?>"
              data-rest-url="<?php echo esc_url( rest_url( 'better-payment/v1/' ) ); ?>"
              data-nonce="<?php echo esc_attr( $nonce ); ?>"
              data-admin-url="<?php echo esc_url( admin_url() ); ?>"
@@ -241,11 +249,45 @@ class CPT extends Controller {
         );
 
         wp_localize_script( 'bp-campaign-list', 'betterPaymentCampaignData', [
-            'templates' => array_values( TemplateManager::get_all() ),
-            'restUrl'   => rest_url( 'better-payment/v1/' ),
-            'nonce'     => wp_create_nonce( 'wp_rest' ),
-            'adminUrl'  => admin_url(),
+            'templates'  => array_values( TemplateManager::get_all() ),
+            'categories' => CategoryRegistry::for_client(),
+            'restUrl'    => rest_url( 'better-payment/v1/' ),
+            'nonce'      => wp_create_nonce( 'wp_rest' ),
+            'adminUrl'   => admin_url(),
         ] );
+    }
+
+    /**
+     * Cache-busting version for a built asset — its mtime, not the plugin version.
+     *
+     * The builder bundle is rebuilt far more often than BETTER_PAYMENT_VERSION is
+     * bumped, so versioning on the plugin version pinned every developer, and every
+     * site updated in place, to whichever bundle their browser cached first. That is
+     * how a Pro install kept rendering the *free* palette — crowned, dashed, amber
+     * icons — and the free upgrade banner long after Pro was active: the localized
+     * `proEnabled` is printed inline and was always correct, only the JS that reads
+     * it was months stale.
+     *
+     * Falls back to the plugin version if the file is missing (an incomplete build),
+     * which is no worse than the old behaviour.
+     *
+     * @param string $relative_path Path below the plugin root, with a leading slash.
+     * @return string|int
+     */
+    private static function asset_version( $relative_path ) {
+        $file = self::asset_path( $relative_path );
+
+        return file_exists( $file ) ? filemtime( $file ) : BETTER_PAYMENT_VERSION;
+    }
+
+    /**
+     * Absolute path to a built asset.
+     *
+     * @param string $relative_path Path below the plugin root, with a leading slash.
+     * @return string
+     */
+    private static function asset_path( $relative_path ) {
+        return BETTER_PAYMENT_PATH . $relative_path;
     }
 
     /**
@@ -258,13 +300,11 @@ class CPT extends Controller {
             return;
         }
 
-        $version = defined( 'WP_DEBUG' ) && WP_DEBUG ? time() : BETTER_PAYMENT_VERSION;
-
         wp_register_script(
             'bp-campaign-builder',
             BETTER_PAYMENT_ASSETS . '/admin/campaign-builder/campaign-builder.min.js',
             [ 'react', 'react-dom', 'wp-element', 'wp-api-fetch', 'wp-i18n' ],
-            $version,
+            self::asset_version( '/assets/admin/campaign-builder/campaign-builder.min.js' ),
             true
         );
 
@@ -272,17 +312,20 @@ class CPT extends Controller {
             'bp-campaign-builder',
             BETTER_PAYMENT_ASSETS . '/admin/campaign-builder/campaign-builder.min.css',
             [],
-            $version
+            self::asset_version( '/assets/admin/campaign-builder/campaign-builder.min.css' )
         );
 
-        // Load campaign display CSS so the preview modal renders correctly.
-        $display_css = BETTER_PAYMENT_PATH . '/assets/blocks/campaign-display/style.min.css';
-        if ( file_exists( $display_css ) ) {
+        // Load campaign display CSS so the preview modal renders correctly. Still
+        // guarded on existence — this one is optional (an unbuilt blocks directory
+        // is a normal dev state), and enqueuing a URL that 404s is worse than
+        // skipping it.
+        $display_css = '/assets/blocks/campaign-display/style.min.css';
+        if ( file_exists( self::asset_path( $display_css ) ) ) {
             wp_enqueue_style(
                 'better-payment-campaign-display-style',
                 BETTER_PAYMENT_ASSETS . '/blocks/campaign-display/style.min.css',
                 [],
-                filemtime( $display_css )
+                self::asset_version( $display_css )
             );
         }
 
@@ -324,14 +367,70 @@ class CPT extends Controller {
             $global_currency = 'USD';
         }
 
-        // Localize element registry, templates, and global settings to JS builder.
-        wp_localize_script( 'bp-campaign-builder', 'betterPaymentCampaignData', [
+        $data = [
             'elements'       => array_values( ElementRegistry::get_all() ),
             'templates'      => array_values( TemplateManager::get_all() ),
+            // The category taxonomy, shared by the template picker's sidebar and
+            // the AI wizard's "What are you raising funds for?" tiles. Both used
+            // to hardcode their own list and drifted apart; this is the one list.
+            'categories'     => CategoryRegistry::for_client(),
             'globalCurrency' => $global_currency,
+            // Which weekday the AI wizard's calendar starts on (0 = Sunday), per
+            // Settings → General. Without it the grid would always be Sunday-first.
+            'startOfWeek'    => (int) get_option( 'start_of_week', 0 ),
             'restUrl'        => rest_url( 'better-payment/v1/' ),
             'nonce'          => wp_create_nonce( 'wp_rest' ),
             'pluginUrl'      => plugins_url( '', BETTER_PAYMENT_BASENAME ),
-        ] );
+            'proEnabled'     => (bool) apply_filters( 'better_payment/pro_enabled', false ),
+            'upgradeUrl'     => 'https://wpdeveloper.com/in/upgrade-better-payment-pro',
+            // Seed the AI enabled/configured flags synchronously so the AI panel's
+            // "disabled" / "add an API key" notice paints immediately instead of
+            // flickering in after the async /ai/config round-trip resolves. The
+            // panel still fetches the full config (providers, operations) after
+            // mount; this only pre-answers the two flags the notice reads.
+            'aiConfig'       => self::ai_config_seed(),
+        ];
+
+        /*
+         * NOT wp_localize_script(). That function was built for L10n strings and
+         * casts every *scalar* in the array to a string on the way out
+         * (`$l10n[ $key ] = html_entity_decode( (string) $value, ... )` in
+         * WP_Scripts::localize). Arrays survive; booleans and ints do not.
+         *
+         * `proEnabled => true` therefore reached JS as the string "1", and App.js
+         * tested it with `=== true`. That comparison was never once true on any
+         * install — which is why an active Pro licence still drew crowns on the
+         * palette, disabled every control in the settings panel, and showed the
+         * free upgrade banner. PHP was right the whole way down; the boolean died
+         * in transport.
+         *
+         * wp_add_inline_script + wp_json_encode preserves real types, and is what
+         * Blocks\BlockManager already does for window.betterPaymentBlockData —
+         * which is precisely why the identical `=== true` check works over there.
+         * Position 'before' puts it ahead of the bundle, same ordering as
+         * wp_localize_script gave us.
+         */
+        wp_add_inline_script(
+            'bp-campaign-builder',
+            'window.betterPaymentCampaignData = ' . wp_json_encode( $data ) . ';',
+            'before'
+        );
+    }
+
+    /**
+     * The two AI flags the builder's AI panel needs at first paint: whether the
+     * feature is enabled, and whether the active provider has an API key. Mirrors
+     * the `enabled` / `configured` fields of the `/ai/config` REST response so the
+     * seeded value is drop-in compatible with what the async fetch returns later.
+     *
+     * @return array{ enabled: bool, configured: bool }
+     */
+    private static function ai_config_seed(): array {
+        $provider = AIManager::active_provider();
+
+        return [
+            'enabled'    => AIManager::is_enabled(),
+            'configured' => null !== $provider && $provider->is_configured(),
+        ];
     }
 }

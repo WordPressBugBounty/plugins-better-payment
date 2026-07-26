@@ -6,6 +6,8 @@ use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Campaign\MetaBox;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
+use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
+use Better_Payment\Lite\Campaign\Elements\ProElementPreview;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -140,6 +142,13 @@ class RendererService {
      * @param \WP_Post $post
      * @param array    $meta        Campaign meta from MetaBox::get_all().
      * @param array    $stats       Campaign stats from CampaignStats::get_stats().
+     * @param bool     $is_preview  True when rendering for the builder canvas or the
+     *                              template picker rather than a live campaign page.
+     *                              Passed through to add-on elements as `$ctx['is_preview']`
+     *                              so they can stand in sample content — data-driven
+     *                              elements otherwise render an empty state in the
+     *                              builder, leaving their settings with no visible
+     *                              effect. Never true on the frontend.
      * @return string HTML output.
      */
     public static function render_element(
@@ -147,7 +156,8 @@ class RendererService {
         int $campaign_id,
         \WP_Post $post,
         array $meta,
-        array $stats
+        array $stats,
+        bool $is_preview = false
     ): string {
         $type     = $element['type']     ?? '';
         $settings = $element['settings'] ?? [];
@@ -160,7 +170,11 @@ class RendererService {
             case 'campaign_title':
                 $user_color  = self::css_hex_color( $settings['color'] ?? '' );
                 $user_size   = self::css_font_size( $settings['font_size'] ?? '' );
-                $title_text  = ! empty( $settings['title'] ) ? $settings['title'] : $post->post_title;
+                // isset(), not ! empty(): clearing the field is an instruction, not
+                // an accident. Only a title that was never set at all falls back to
+                // the campaign name — an emptied one stays empty (and the builder
+                // shows a placeholder in its place so it can still be selected).
+                $title_text  = isset( $settings['title'] ) ? (string) $settings['title'] : $post->post_title;
                 $align       = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
 
                 // A user-set value is emitted with !important so it wins over
@@ -179,9 +193,11 @@ class RendererService {
                 break;
 
             case 'campaign_description':
-                $desc_headline = ! empty( $settings['headline'] ) ? $settings['headline'] : '';
-                $desc_content  = ! empty( $settings['content'] )  ? $settings['content']  : $post->post_content;
-                $desc_width    = isset( $settings['width'] ) ? max( 10, min( 100, (int) $settings['width'] ) ) : 100;
+                // isset(), not ! empty(), for the same reason as the title above:
+                // clearing the body means "no body", not "show the post content".
+                $desc_headline = isset( $settings['headline'] ) ? (string) $settings['headline'] : '';
+                $desc_content  = isset( $settings['content'] ) ? (string) $settings['content'] : $post->post_content;
+                $desc_width    = self::resolve_element_width( $settings );
                 $desc_align    = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
 
                 if ( ! $desc_headline && ! $desc_content ) break;
@@ -246,7 +262,7 @@ class RendererService {
                     $src = ! empty( $settings['src'] ) ? $settings['src'] : get_the_post_thumbnail_url( $campaign_id, $size );
                 }
                 $alt_text = ! empty( $settings['alt'] ) ? $settings['alt'] : $post->post_title;
-                $ph_width = isset( $settings['width'] ) ? max( 10, min( 100, (int) $settings['width'] ) ) : 100;
+                $ph_width = self::resolve_element_width( $settings );
                 $ph_align = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'center';
 
                 if ( $src ) :
@@ -282,11 +298,20 @@ class RendererService {
                 $round_amounts = (bool) ( $settings['round_amounts'] ?? false );
                 $donate_label  = ! empty( $settings['donate_label'] ) ? $settings['donate_label'] : __( 'Donated:', 'better-payment' );
                 $goal_label    = ! empty( $settings['goal_label'] ) ? $settings['goal_label'] : __( 'Goal:', 'better-payment' );
-                $width         = isset( $settings['width'] ) ? absint( $settings['width'] ) : 100;
-                $align         = ! empty( $settings['align'] ) ? $settings['align'] : 'left';
-                $align_map     = [ 'left' => 'flex-start', 'center' => 'center', 'right' => 'flex-end' ];
-                $justify       = $align_map[ $align ] ?? 'flex-start';
+                $width         = self::resolve_element_width( $settings );
+                $align         = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
                 $currency_sym  = self::currency_symbol( $currency );
+
+                // Align the block itself within its column via auto margins — the
+                // same width/margin pattern every other element uses. (A bare
+                // `justify-content` did nothing here: `.bp-campaign-progress` is
+                // not a flex container, so center/right never took effect.)
+                $wrap_style = 'width:' . $width . '%;';
+                if ( 'center' === $align ) {
+                    $wrap_style .= 'margin:0 auto;';
+                } elseif ( 'right' === $align ) {
+                    $wrap_style .= 'margin-left:auto;';
+                }
 
                 // Progress label: ceiling (rounded up integer) when round_amounts, else 1 decimal place.
                 if ( $round_amounts ) {
@@ -299,7 +324,7 @@ class RendererService {
 
                 ?>
                 <div class="bp-campaign-progress"
-                     style="width:<?php echo esc_attr( $width ); ?>%; justify-content:<?php echo esc_attr( $justify ); ?>">
+                     style="<?php echo esc_attr( $wrap_style ); ?>">
                     <?php if ( $headline ) : ?>
                         <h3 class="bp-progress-headline"><?php echo esc_html( $headline ); ?></h3>
                     <?php endif; ?>
@@ -332,7 +357,7 @@ class RendererService {
                 $show_donors   = (bool) ( $settings['show_donors']  ?? true );
                 $show_percent  = (bool) ( $settings['show_percent'] ?? true );
                 $show_days     = (bool) ( $settings['show_days']    ?? true );
-                $sm_width      = isset( $settings['width'] ) ? max( 10, min( 100, (int) $settings['width'] ) ) : 100;
+                $sm_width      = self::resolve_element_width( $settings );
                 $sm_align      = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
                 $goal          = (float) ( $meta['bpc_goal_amount'] ?? 0 );
                 $percent       = $goal > 0 ? min( 100, round( ( (float) $stats['total_raised'] / $goal ) * 100, 1 ) ) : 0;
@@ -378,13 +403,22 @@ class RendererService {
                 break;
 
             case 'donation_form':
-                $button_label = ! empty( $settings['button_label'] )
-                    ? $settings['button_label']
-                    : ( ! empty( $settings['button_text'] ) ? $settings['button_text'] : __( 'Donate Now', 'better-payment' ) );
+                // isset(), not ! empty(): an emptied label means "no label", and
+                // must not silently come back as "Donate Now". Only a label that was
+                // never set falls back — first to the legacy `button_text` key, then
+                // to the default. (`button_text` is the pre-rename key; keep reading
+                // it so campaigns built before the rename still show their label.)
+                if ( isset( $settings['button_label'] ) ) {
+                    $button_label = (string) $settings['button_label'];
+                } elseif ( isset( $settings['button_text'] ) ) {
+                    $button_label = (string) $settings['button_text'];
+                } else {
+                    $button_label = __( 'Donate Now', 'better-payment' );
+                }
                 $primary      = $meta['bpc_color_primary'] ?: '#6b63f6';
                 $button_color = sanitize_hex_color( $settings['button_color'] ?? '' ) ?: sanitize_hex_color( $primary ) ?: '#6b63f6';
                 $open_new_tab = ! empty( $settings['open_new_tab'] );
-                $width        = isset( $settings['width'] ) ? max( 10, min( 100, (int) $settings['width'] ) ) : 100;
+                $width        = self::resolve_element_width( $settings );
                 $align        = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true )
                     ? $settings['align'] : 'center';
 
@@ -457,7 +491,7 @@ class RendererService {
                     : (int) $post->post_author;
                 $role_title  = ! empty( $settings['role_title'] ) ? $settings['role_title'] : __( 'Organizer', 'better-payment' );
                 $description = ! empty( $settings['description'] ) ? $settings['description'] : '';
-                $width       = isset( $settings['width'] ) ? max( 10, min( 100, (int) $settings['width'] ) ) : 100;
+                $width       = self::resolve_element_width( $settings );
                 $align       = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true )
                     ? $settings['align'] : 'left';
 
@@ -492,6 +526,17 @@ class RendererService {
                 $currency        = self::global_currency();
                 $currency_symbol = self::currency_symbol( $currency );
                 $da_headline     = isset( $settings['headline'] ) ? $settings['headline'] : __( 'Donate Amount', 'better-payment' );
+                $da_width        = self::resolve_element_width( $settings );
+                $da_align        = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
+
+                // Align the block within its column via auto margins — same
+                // width/margin pattern as every other element.
+                $da_wrap_style = 'width:' . $da_width . '%;';
+                if ( 'center' === $da_align ) {
+                    $da_wrap_style .= 'margin:0 auto;';
+                } elseif ( 'right' === $da_align ) {
+                    $da_wrap_style .= 'margin-left:auto;';
+                }
 
                 // Fall back to legacy comma-string or defaults when meta is empty.
                 if ( empty( $amounts_meta ) ) {
@@ -501,7 +546,7 @@ class RendererService {
                     }
                 }
                 ?>
-                <div class="bp-campaign-donate">
+                <div class="bp-campaign-donate" style="<?php echo esc_attr( $da_wrap_style ); ?>">
                     <?php if ( $da_headline ) : ?>
                         <h3 class="bp-donate-headline"><?php echo esc_html( $da_headline ); ?></h3>
                     <?php endif; ?>
@@ -564,24 +609,25 @@ class RendererService {
                     return ( $settings[ $key ] ?? true ) !== false;
                 }, ARRAY_FILTER_USE_BOTH );
 
-                if ( $active_sharing || $sh_headline ) :
+                // Same as social_links above: with every network switched off there
+                // is nothing to share, so a lone "Share Now" heading would sit on the
+                // page labelling nothing.
+                if ( $active_sharing ) :
                 ?>
                 <div class="bp-social-sharing" style="text-align:<?php echo esc_attr( $sh_align ); ?>;">
                     <?php if ( $sh_headline ) : ?>
                         <p class="bp-social-headline"><?php echo esc_html( $sh_headline ); ?></p>
                     <?php endif; ?>
-                    <?php if ( $active_sharing ) : ?>
-                        <div class="bp-social-icons" style="justify-content:<?php echo esc_attr( $sh_justify ); ?>;">
-                            <?php foreach ( $active_sharing as $key => $share_url ) : ?>
-                                <a href="<?php echo esc_url( $share_url ); ?>"
-                                   class="bp-social-icon"
-                                   <?php echo $sh_target; ?>
-                                   title="<?php echo esc_attr( ucfirst( $key ) ); ?>">
-                                    <?php echo self::social_icon_svg( $key ); ?>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="bp-social-icons" style="justify-content:<?php echo esc_attr( $sh_justify ); ?>;">
+                        <?php foreach ( $active_sharing as $key => $share_url ) : ?>
+                            <a href="<?php echo esc_url( $share_url ); ?>"
+                               class="bp-social-icon"
+                               <?php echo $sh_target; ?>
+                               title="<?php echo esc_attr( ucfirst( $key ) ); ?>">
+                                <?php echo self::social_icon_svg( $key ); ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <?php
                 endif;
@@ -602,37 +648,145 @@ class RendererService {
                     }
                 }
 
-                if ( $active_links || $sl_headline ) :
+                // The links are the widget; the headline only labels them. With no
+                // links there is nothing to label, so a lone "Follow Now" heading is
+                // a promise the page cannot keep — render nothing instead. (Was
+                // `$active_links || $sl_headline`, which kept the heading alive on
+                // its own because the headline defaults to a non-empty string.)
+                if ( $active_links ) :
                 ?>
                 <div class="bp-social-links" style="text-align:<?php echo esc_attr( $sl_align ); ?>;">
                     <?php if ( $sl_headline ) : ?>
                         <p class="bp-social-headline"><?php echo esc_html( $sl_headline ); ?></p>
                     <?php endif; ?>
-                    <?php if ( $active_links ) : ?>
-                        <div class="bp-social-icons" style="justify-content:<?php echo esc_attr( $sl_justify ); ?>;">
-                            <?php foreach ( $active_links as $key => $url ) : ?>
-                                <a href="<?php echo esc_url( $url ); ?>"
-                                   class="bp-social-icon"
-                                   <?php echo $sl_target; ?>
-                                   title="<?php echo esc_attr( ucfirst( $key ) ); ?>">
-                                    <?php echo self::social_icon_svg( $key ); ?>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                    <div class="bp-social-icons" style="justify-content:<?php echo esc_attr( $sl_justify ); ?>;">
+                        <?php foreach ( $active_links as $key => $url ) : ?>
+                            <a href="<?php echo esc_url( $url ); ?>"
+                               class="bp-social-icon"
+                               <?php echo $sl_target; ?>
+                               title="<?php echo esc_attr( ucfirst( $key ) ); ?>">
+                                <?php echo self::social_icon_svg( $key ); ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <?php
                 endif;
                 break;
+
+            default:
+                // Extensibility seam: element types registered by add-ons (e.g. the
+                // Pro plugin, via the `better_payment/campaign_elements` filter) are
+                // not handled by any case above. Dispatch a type-specific filter so
+                // the add-on can render its own markup. The listener receives the
+                // full render context and MUST return already-escaped HTML (same
+                // contract as the built-in cases, which echo markup directly).
+                //
+                // With no listener (e.g. Pro deactivated) the filter returns '',
+                // so a saved layout containing an unknown type degrades to empty
+                // output instead of fataling.
+                $ctx = [
+                    'element'     => $element,
+                    'settings'    => $settings,
+                    'campaign_id' => $campaign_id,
+                    'post'        => $post,
+                    'meta'        => $meta,
+                    'stats'       => $stats,
+                    'is_preview'  => $is_preview,
+                ];
+                echo apply_filters( "better_payment/campaign/render_element_{$type}", '', $ctx ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                break;
         }
 
         $html = ob_get_clean();
+
+        // An element with nothing to show needs opposite treatment in the two
+        // places it renders, and this is the one point every element type passes
+        // through — free, Pro, and anything added later — so neither behaviour can
+        // be reintroduced by an individual widget.
+        //
+        // Builder: substitute a placeholder. Without it the element occupies no
+        // space, so there is nothing to see, click, drag or delete — and because
+        // the `data-bp-element-id` wrapper below is skipped for empty output, the
+        // canvas cannot even place a hotspot over it. The author is left with an
+        // invisible element they cannot reach.
+        //
+        // Frontend: render nothing at all. "Renders nothing" is not the same as
+        // "is an empty string": an emptied Title still emits an <h2> that occupies
+        // a 32px line, and an emptied Donate button a coloured bar with no label.
+        // Both are holes in a live campaign page, so they are dropped entirely
+        // rather than shipped as blank boxes.
+        if ( self::renders_nothing_visible( (string) $html ) ) {
+            $html = $is_preview ? self::empty_element_placeholder( $type ) : '';
+        }
 
         if ( ! $html || ! $el_id ) {
             return $html;
         }
 
         return '<div class="bp-element-wrap" data-bp-element-id="' . esc_attr( $el_id ) . '">' . $html . '</div>';
+    }
+
+    /**
+     * Does this element's markup put nothing on the page a reader could see?
+     *
+     * Not the same as an empty string. An emptied Title still renders
+     * `<h1 class="bp-campaign-title" style="…"></h1>`, and a Social Links block
+     * with no URLs still renders its wrapper — both are markup, and both are
+     * invisible. Only checking for `''` would leave those elements unreachable on
+     * the canvas, which is the bug this whole placeholder exists to prevent.
+     *
+     * Errs firmly toward "not empty": wrongly blanking an element that HAS
+     * content would hide the author's work, which is far worse than missing a
+     * placeholder. So anything that can paint pixels without text — an image,
+     * an embed, a form control, a chart — counts as content immediately, and only
+     * markup with no such node AND no visible text is called empty.
+     *
+     * @param string $html Rendered element markup.
+     * @return bool True when the element would show nothing.
+     */
+    private static function renders_nothing_visible( string $html ): bool {
+        if ( '' === trim( $html ) ) {
+            return true;
+        }
+
+        // Nodes that show something without needing text content. If any is
+        // present the element is showing the author something real.
+        $visual = '#<(img|svg|iframe|video|audio|canvas|picture|object|embed|input|select|textarea|progress|meter|hr|table)[\s/>]#i';
+        if ( preg_match( $visual, $html ) ) {
+            return false;
+        }
+
+        // Otherwise it is only worth showing if it renders visible text.
+        // wp_strip_all_tags() also drops <script>/<style> bodies, so an element
+        // whose only output is a style block reads as empty — which it is.
+        return '' === trim( wp_strip_all_tags( $html ) );
+    }
+
+    /**
+     * Builder-only stand-in for an element that currently renders nothing.
+     *
+     * Deliberately empty: an outline and a minimum height, no icon, label or
+     * copy. The element's identity and its settings already live in the panel on
+     * the right the moment it is selected, so text in the canvas would repeat
+     * what the UI says anyway — and a widget's job is to show the author's
+     * content, not ours. All this needs to do is give the element enough of a
+     * body to be seen, clicked, dragged and deleted.
+     *
+     * Styles are inline rather than classed: this renders in two different
+     * preview documents (the builder canvas and the template picker) and only one
+     * of them ships a <style> block, so a self-contained placeholder cannot be
+     * broken by rendering in the wrong one.
+     *
+     * @param string $type Element type slug, exposed as a data attribute for
+     *                     debugging and E2E selectors — never shown to the user.
+     * @return string Placeholder HTML.
+     */
+    private static function empty_element_placeholder( string $type ): string {
+        $box = 'min-height:64px;border:1px dashed #c7cede;border-radius:8px;background:#fbfcfe;';
+
+        return '<div class="bp-element-empty" style="' . esc_attr( $box ) . '"'
+            . ' data-bp-empty-type="' . esc_attr( $type ) . '"></div>';
     }
 
     /**
@@ -765,6 +919,57 @@ class RendererService {
      *
      * @param mixed $val
      */
+    /**
+     * Resolve an element's percentage width setting.
+     *
+     * A blank or non-positive width means "use the default" — never 0. Without
+     * this guard an empty-string width (e.g. produced by the AI layer) becomes
+     * `(int) '' = 0`, collapsing the element to a sliver. Valid values are
+     * clamped to 10–100%.
+     *
+     * @param array $settings
+     * @param int   $default
+     */
+    private static function resolve_element_width( array $settings, int $default = 100 ): int {
+        if ( ! isset( $settings['width'] ) || '' === $settings['width'] ) {
+            return $default;
+        }
+        $width = (int) $settings['width'];
+        if ( $width <= 0 ) {
+            return $default;
+        }
+        return max( 10, min( 100, $width ) );
+    }
+
+    /**
+     * Render a line-height value. Unlike other lengths, CSS `line-height` is
+     * unitless-capable: a small value (< 4) is a multiplier (e.g. 1.5) and must
+     * NOT be emitted as pixels — `line-height: 1.5px` collapses every line on top
+     * of the next. Larger values are treated as pixels (the builder's control is
+     * labelled "px").
+     *
+     * @param mixed $val
+     */
+    private static function css_line_height( $val ): string {
+        if ( is_string( $val ) ) {
+            $val = trim( $val );
+        }
+        if ( '' === $val || null === $val ) {
+            return '';
+        }
+        if ( is_numeric( $val ) ) {
+            $num = (float) $val;
+            if ( $num > 0 && $num < 4 ) {
+                return (string) $num; // unitless multiplier
+            }
+            return $num . 'px';
+        }
+        if ( is_string( $val ) && preg_match( '/^-?\d+(\.\d+)?(px|em|rem|%)$/', $val ) ) {
+            return $val;
+        }
+        return '';
+    }
+
     private static function css_length( $val ): string {
         if ( is_string( $val ) ) {
             $val = trim( $val );
@@ -861,7 +1066,7 @@ class RendererService {
         if ( '' !== $decoration ) {
             $decls['text-decoration'] = $decoration;
         }
-        $line_height = self::css_length( $settings['line_height'] ?? '' );
+        $line_height = self::css_line_height( $settings['line_height'] ?? '' );
         if ( '' !== $line_height ) {
             $decls['line-height'] = $line_height;
         }
@@ -974,7 +1179,7 @@ class RendererService {
                          style="<?php echo $col_style; ?>">
                         <?php
                         foreach ( $column['elements'] as $element ) {
-                            echo self::render_element( $element, 0, $fake_post, $meta, $stats );
+                            echo self::render_element( $element, 0, $fake_post, $meta, $stats, true );
                         }
                         ?>
                     </div>
@@ -1108,11 +1313,49 @@ class RendererService {
                     <div class="<?php echo esc_attr( $col_class ); ?>"
                          data-bp-column-id="<?php echo esc_attr( $column['id'] ); ?>"
                          style="<?php echo esc_attr( $col_style ); ?>">
-                        <?php foreach ( $column['elements'] as $element ) : ?>
+                        <?php
+                        $locked_types = self::pro_locked_types();
+                        foreach ( $column['elements'] as $element ) :
+                            $el_type = $element['type'] ?? '';
+                        ?>
                             <div data-bp-element-id="<?php echo esc_attr( $element['id'] ?? '' ); ?>"
                                  data-bp-column-id="<?php echo esc_attr( $column['id'] ); ?>"
                                  class="bp-builder-el-wrap">
-                                <?php echo self::render_element( $element, $campaign_id, $post, $meta, $stats ); ?>
+                                <?php
+                                // Pro elements — either dropped from the palette by a free
+                                // user, or left behind by a campaign built while Pro was
+                                // active. Either way Pro's renderer is not listening, so
+                                // rendering them normally yields nothing: no markup, no
+                                // hotspot, an element that cannot be selected or removed.
+                                //
+                                // Show a mock preview instead so the element is visible,
+                                // selectable, and demonstrates what Pro would do with the
+                                // settings shown (disabled) in the sidebar.
+                                //
+                                // This is the ONLY call site — the public render path has no
+                                // reference to ProElementPreview, and ProElementPreview::render()
+                                // re-checks the preview flag itself. Its data is fabricated;
+                                // on a live campaign page it would be a lie about who donated.
+                                if ( isset( $locked_types[ $el_type ] ) ) {
+                                    // Only our own three types have a mock. Any other
+                                    // `pro`-flagged element (a third party's, via the
+                                    // campaign_elements filter) still needs *something*
+                                    // clickable, so it falls back to the generic banner.
+                                    $mock = ProElementPreview::render(
+                                        $el_type,
+                                        isset( $element['settings'] ) && is_array( $element['settings'] ) ? $element['settings'] : [],
+                                        true
+                                    );
+
+                                    if ( '' === $mock ) {
+                                        $mock = self::pro_locked_placeholder( $locked_types[ $el_type ] );
+                                    }
+
+                                    echo $mock; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                } else {
+                                    echo self::render_element( $element, $campaign_id, $post, $meta, $stats, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                }
+                                ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -1164,12 +1407,84 @@ class RendererService {
             . '    pointer-events: none !important;' . "\n"
             . '    cursor: default !important;' . "\n"
             . '}' . "\n"
+            // Pro-locked element placeholder (editor preview only).
+            . '.bp-pro-locked { position: relative; border: 1px dashed #f0a020; background: #fff8ee; border-radius: 8px; padding: 22px 18px; text-align: center; }' . "\n"
+            . '.bp-pro-locked__badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #fff; background: linear-gradient(135deg, #f6a821, #ec6a2b); padding: 3px 8px; border-radius: 20px; margin-bottom: 8px; }' . "\n"
+            . '.bp-pro-locked__icon { color: #d9821a; }' . "\n"
+            . '.bp-pro-locked__icon .dashicons { width: 26px; height: 26px; font-size: 26px; }' . "\n"
+            . '.bp-pro-locked__title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin: 6px 0 4px; }' . "\n"
+            . '.bp-pro-locked__text { font-size: 12px; color: #7a6a52; margin: 0; line-height: 1.5; }' . "\n"
             . '</style>' . "\n"
             . '</head>' . "\n"
             . '<body>' . "\n"
             . preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $campaign_html ) . "\n"
             . '</body>' . "\n"
             . '</html>';
+    }
+
+    /**
+     * Element types that are Pro-only AND currently locked (Pro inactive).
+     *
+     * Returns a map of type => schema (label/icon) for elements that carry the
+     * `pro` flag in the filtered registry while `better_payment/pro_enabled` is
+     * false. When Pro is active these are overridden by the full schema (no `pro`
+     * flag) so the map is empty and nothing is locked. Result is cached per
+     * request.
+     *
+     * @return array<string, array>
+     */
+    private static function pro_locked_types(): array {
+        static $cache = null;
+
+        if ( null !== $cache ) {
+            return $cache;
+        }
+
+        $cache = [];
+
+        if ( apply_filters( 'better_payment/pro_enabled', false ) ) {
+            return $cache;
+        }
+
+        foreach ( ElementRegistry::get_all() as $type => $schema ) {
+            if ( ! empty( $schema['pro'] ) ) {
+                $cache[ $type ] = $schema;
+            }
+        }
+
+        return $cache;
+    }
+
+    /**
+     * Editor-only placeholder banner shown in the builder preview for a
+     * Pro-locked element (a Pro element left over from when Pro was active).
+     * Never emitted on the public frontend.
+     *
+     * @param array $schema Element schema (label, icon).
+     * @return string
+     */
+    private static function pro_locked_placeholder( array $schema ): string {
+        $label = ! empty( $schema['label'] ) ? $schema['label'] : __( 'Pro Element', 'better-payment' );
+        $icon  = ! empty( $schema['icon'] ) ? $schema['icon'] : 'lock';
+
+        ob_start();
+        ?>
+        <div class="bp-pro-locked">
+            <span class="bp-pro-locked__badge"><?php esc_html_e( 'PRO', 'better-payment' ); ?></span>
+            <div class="bp-pro-locked__icon"><span class="dashicons dashicons-<?php echo esc_attr( $icon ); ?>"></span></div>
+            <div class="bp-pro-locked__title"><?php echo esc_html( $label ); ?></div>
+            <p class="bp-pro-locked__text">
+                <?php
+                printf(
+                    /* translators: %s: element name, e.g. "Donors Wall". */
+                    esc_html__( '%s is a Better Payment Pro element. Activate Pro to display it on your campaign.', 'better-payment' ),
+                    esc_html( $label )
+                );
+                ?>
+            </p>
+        </div>
+        <?php
+        return (string) ob_get_clean();
     }
 
     private static function default_layout(): array {

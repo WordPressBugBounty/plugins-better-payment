@@ -85,7 +85,7 @@ msgstr ""
 msgid "Dashboard"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:102, ../includes/Campaign/CPT.php:25, ../includes/Campaign/CPT.php:27, ../includes/Campaign/CPT.php:102, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1425
+#: ../includes/Admin/ReactAdmin.php:102, ../includes/Campaign/CPT.php:27, ../includes/Campaign/CPT.php:29, ../includes/Campaign/CPT.php:104, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1425
 msgid "Campaigns"
 msgstr ""
 
@@ -305,7 +305,31 @@ msgstr ""
 msgid "Settings updated successfully"
 msgstr ""
 
-#: ../includes/API/CampaignAPI.php:168, ../includes/Campaign/CPT.php:32
+#: ../includes/API/AIAPI.php:127
+msgid "Message is required."
+msgstr ""
+
+#: ../includes/API/AIAPI.php:163
+msgid "A campaign brief is required."
+msgstr ""
+
+#: ../includes/API/AIAPI.php:220
+msgid "A brief is required."
+msgstr ""
+
+#: ../includes/API/AIAPI.php:244
+msgid "An image prompt is required."
+msgstr ""
+
+#: ../includes/API/AIAPI.php:322
+msgid "Invalid nonce"
+msgstr ""
+
+#: ../includes/API/AIAPI.php:342
+msgid "The AI Assistant is disabled. Enable it under Settings → AI Assistant."
+msgstr ""
+
+#: ../includes/API/CampaignAPI.php:168, ../includes/Campaign/CPT.php:34
 msgid "New Campaign"
 msgstr ""
 
@@ -377,7 +401,7 @@ msgstr ""
 msgid "Thank you for your payment."
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:788, ../includes/Blocks/BlockManager.php:1131, ../includes/Classes/Handler.php:800, ../includes/Admin/Elementor/Better_Payment_Widget.php:1529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2561, ../includes/Admin/Elementor/Better_Payment_Widget.php:2563, ../includes/Admin/Elementor/Better_Payment_Widget.php:2564, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:584, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:626, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2186, ../includes/Admin/Elementor/User_Dashboard.php:1898, ../includes/Admin/Elementor/User_Dashboard.php:2019, ../includes/Admin/Elementor/User_Dashboard.php:2022, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:334, ../includes/Admin/views/template-transaction-list.php:38
+#: ../includes/Blocks/BlockManager.php:788, ../includes/Blocks/BlockManager.php:1131, ../includes/Classes/Handler.php:800, ../includes/Admin/Elementor/Better_Payment_Widget.php:1529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2561, ../includes/Admin/Elementor/Better_Payment_Widget.php:2563, ../includes/Admin/Elementor/Better_Payment_Widget.php:2564, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:584, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:626, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2186, ../includes/Admin/Elementor/User_Dashboard.php:1898, ../includes/Admin/Elementor/User_Dashboard.php:2019, ../includes/Admin/Elementor/User_Dashboard.php:2022, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:334, ../includes/Admin/views/template-transaction-list.php:38, ../includes/Campaign/Elements/ProElementSchemas.php:143
 msgid "Amount"
 msgstr ""
 
@@ -441,7 +465,7 @@ msgstr ""
 msgid "Payment Amount"
 msgstr ""
 
-#: ../includes/Campaign/CampaignBlock.php:86
+#: ../includes/Campaign/CampaignBlock.php:95
 msgid "Please select a campaign."
 msgstr ""
 
@@ -457,39 +481,39 @@ msgstr ""
 msgid "Open Builder"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:28
+#: ../includes/Campaign/CPT.php:30
 msgid "Campaign"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:29
+#: ../includes/Campaign/CPT.php:31
 msgid "Add New"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:30
+#: ../includes/Campaign/CPT.php:32
 msgid "Add New Campaign"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:31
+#: ../includes/Campaign/CPT.php:33
 msgid "Edit Campaign"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:33
+#: ../includes/Campaign/CPT.php:35
 msgid "View Campaign"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:34
+#: ../includes/Campaign/CPT.php:36
 msgid "Search Campaigns"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:35
+#: ../includes/Campaign/CPT.php:37
 msgid "No campaigns found"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:36
+#: ../includes/Campaign/CPT.php:38
 msgid "No campaigns found in trash"
 msgstr ""
 
-#: ../includes/Campaign/CPT.php:63, ../includes/Campaign/CPT.php:64
+#: ../includes/Campaign/CPT.php:65, ../includes/Campaign/CPT.php:66
 msgid "Campaign Builder"
 msgstr ""
 
@@ -1197,7 +1221,7 @@ msgstr ""
 msgid "Content"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2507
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:2507, ../includes/Campaign/Elements/ProElementSchemas.php:274
 msgid "Heading"
 msgstr ""
 
@@ -1385,7 +1409,7 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3796, ../includes/Admin/Elementor/Better_Payment_Widget.php:4064, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1798, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1912, ../includes/Campaign/Elements/CampaignElements.php:350, ../includes/Campaign/Elements/CampaignElements.php:409, ../includes/Campaign/Elements/CampaignElements.php:483, ../includes/Campaign/Elements/CampaignElements.php:553, ../includes/Campaign/Elements/CampaignElements.php:608, ../includes/Campaign/Elements/CampaignElements.php:667
+#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3796, ../includes/Admin/Elementor/Better_Payment_Widget.php:4064, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1798, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1912, ../includes/Campaign/Elements/CampaignElements.php:350, ../includes/Campaign/Elements/CampaignElements.php:409, ../includes/Campaign/Elements/CampaignElements.php:490, ../includes/Campaign/Elements/CampaignElements.php:560, ../includes/Campaign/Elements/CampaignElements.php:615, ../includes/Campaign/Elements/CampaignElements.php:675, ../includes/Campaign/Elements/CampaignElements.php:732, ../includes/Campaign/Elements/ProElementSchemas.php:219, ../includes/Campaign/Elements/ProElementSchemas.php:352, ../includes/Campaign/Elements/ProElementSchemas.php:444
 msgid "Width"
 msgstr ""
 
@@ -1601,11 +1625,11 @@ msgstr ""
 msgid "Designation"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1203, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3477, ../includes/Campaign/Elements/CampaignElements.php:807
+#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1203, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3477, ../includes/Campaign/Elements/CampaignElements.php:835
 msgid "Social Links"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1215, ../includes/Campaign/Elements/CampaignElements.php:758
+#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1215, ../includes/Campaign/Elements/CampaignElements.php:786
 msgid "Facebook"
 msgstr ""
 
@@ -1621,7 +1645,7 @@ msgstr ""
 msgid "X/Twitter Icon"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1277, ../includes/Campaign/Elements/CampaignElements.php:764
+#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1277, ../includes/Campaign/Elements/CampaignElements.php:792
 msgid "LinkedIn"
 msgstr ""
 
@@ -1673,7 +1697,7 @@ msgstr ""
 msgid "Donations"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2482, ../includes/Campaign/Services/RendererService.php:354, ../includes/Campaign/Services/RendererService.php:366
+#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2482, ../includes/Campaign/Services/RendererService.php:379, ../includes/Campaign/Services/RendererService.php:391
 msgid "Raised"
 msgstr ""
 
@@ -1725,11 +1749,11 @@ msgstr ""
 msgid "User Dashboard"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:102, ../includes/Admin/Elementor/User_Dashboard.php:112
+#: ../includes/Admin/Elementor/User_Dashboard.php:102, ../includes/Admin/Elementor/User_Dashboard.php:112, ../includes/Campaign/Elements/ProElementSchemas.php:104
 msgid "Layout"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:122, ../includes/Admin/Elementor/User_Dashboard.php:433, ../includes/Campaign/Templates/TemplateManager.php:108, ../includes/Campaign/Templates/TemplateManager.php:198, ../includes/Campaign/Templates/TemplateManager.php:261, ../includes/Campaign/Templates/TemplateManager.php:343, ../includes/Campaign/Templates/TemplateManager.php:768, ../includes/Campaign/Templates/TemplateManager.php:867
+#: ../includes/Admin/Elementor/User_Dashboard.php:122, ../includes/Admin/Elementor/User_Dashboard.php:433, ../includes/Campaign/Templates/TemplateManager.php:170, ../includes/Campaign/Templates/TemplateManager.php:263, ../includes/Campaign/Templates/TemplateManager.php:326, ../includes/Campaign/Templates/TemplateManager.php:408, ../includes/Campaign/Templates/TemplateManager.php:833, ../includes/Campaign/Templates/TemplateManager.php:932
 msgid "Sidebar"
 msgstr ""
 
@@ -1865,7 +1889,7 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:1958, ../includes/Admin/Elementor/User_Dashboard.php:2084, ../includes/Admin/Elementor/User_Dashboard.php:2087, ../includes/Admin/views/template-transaction-list.php:53
+#: ../includes/Admin/Elementor/User_Dashboard.php:1958, ../includes/Admin/Elementor/User_Dashboard.php:2084, ../includes/Admin/Elementor/User_Dashboard.php:2087, ../includes/Admin/views/template-transaction-list.php:53, ../includes/Campaign/Elements/ProElementSchemas.php:142
 msgid "Date"
 msgstr ""
 
@@ -2441,6 +2465,179 @@ msgstr ""
 msgid "100"
 msgstr ""
 
+#: ../includes/AI/Providers/AbstractProvider.php:58
+msgid "This provider does not support image generation."
+msgstr ""
+
+#. translators: %d: HTTP status code.
+#: ../includes/AI/Providers/AbstractProvider.php:150
+msgid "AI provider request failed (HTTP %d)."
+msgstr ""
+
+#: ../includes/AI/Providers/GeminiProvider.php:137, ../includes/AI/Providers/OpenAIProvider.php:151
+msgid "Image provider returned no image."
+msgstr ""
+
+#: ../includes/AI/Providers/OpenRouterProvider.php:40
+msgid "Image generation is not available via OpenRouter in this plugin."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:57
+msgid "A 4–10 word headline naming who or what the money helps and why it is urgent. Specific, not a category (\"Get Amara Back on Her Feet\", never \"Medical Fundraiser\"). No trailing period, no organisation name on its own, and never the same wording you use anywhere else on the page."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:59
+msgid "The story, and the only long-form copy on the page: 2–4 short paragraphs in `content`. Open on the person or situation, give concrete verifiable detail (what happened, what the money buys, what changes if it is funded), and close on what a donation does. Use `headline` only as a section heading for the story (\"Amara's Story\") — never a restatement of the campaign title."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:61
+msgid "Write `alt` only, and write it as a real description of the scene the image shows for a reader who cannot see it. Never set `src` — the system supplies the actual image and any URL you invent is a broken link."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:63
+msgid "A live figure widget: it renders the real raised/goal numbers itself. `headline` is an optional one-line status in words, not numbers (\"Nearly there\" / \"Every donation moves this bar\"). `goal_label` and `donate_label` are short prefixes the renderer appends the amount to — write \"Our goal:\" and stop."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:65
+msgid "A compact live stats block (raised, donors, percent, days left) — the numbers come from the campaign, never from you. `headline` names the block in 2–4 words (\"Where we stand\"). Turn off any stat the campaign cannot support: `show_days` on a campaign with no end date shows nothing useful."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:67
+msgid "The primary call to action. `button_label` is an imperative of 2–4 words, specific to the cause where it can be (\"Fund Amara's Surgery\", \"Give Shelter Tonight\") rather than a bare \"Submit\". An amount inside the button text is fine here — unlike a `*_label` key, this one is echoed on its own."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:69
+msgid "Who is behind the campaign, for trust. `role_title` is the role or relationship (\"Amara's sister\", \"Shelter Director\"), never a personal name — the name comes from the linked WordPress user. `description` is 1–2 sentences of credibility in the organiser's own first-person voice."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:71
+msgid "The giving tiers. `headline` invites a choice in a few words (\"Choose your impact\"). The tiers themselves go in the separate `set_donation_amounts` operation, where each amount's description states what that specific sum concretely does (\"Feeds one family for a week\") — an impact, never a restatement of the number."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:73
+msgid "Share buttons for this page. `headline` is a short ask (\"Share Amara's story\"). The network toggles only decide which buttons appear — the links are generated from the campaign URL, so there is nothing for you to write into them."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:75
+msgid "Links to the organiser's OWN existing profiles. Set a network's URL ONLY if the brief gives you that exact address; otherwise leave every URL unset and let the element stay empty. Never construct a plausible handle — an invented profile link points a fundraising page at an account nobody involved controls."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:78
+msgid "A live list of real donors, rendered from actual transactions — you write no donor names, amounts or dates, and there is no setting to put them in. Your job is `headline` (\"Thank you to our supporters\") and the display options: `layout`, how many to show, and which columns are visible."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:80
+msgid "Answers to what a hesitant donor of THIS campaign would actually ask before giving. Write 3–5 items in `items`, each a real question in the donor's voice with a direct 1–3 sentence answer — how the money is used, what happens if the goal is not met, whether the payment is secure, when the help arrives. Never generic filler, and never a question the page already answers."
+msgstr ""
+
+#: ../includes/AI/Schema/ElementContentGuide.php:82
+msgid "An embedded campaign video. Set `url` ONLY if the brief contains the actual video address; a video ID you invent resolves to an unrelated stranger's video on the fundraising page. With no URL in the brief, leave `url` out entirely and set only the display options."
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:62, ../includes/AI/Services/ImageGenerator.php:33
+msgid "No AI provider is configured."
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:65
+msgid "The selected AI provider is missing its API key. Add it under Better Payment → Settings → AI."
+msgstr ""
+
+#. translators: %s: comma-separated Pro widget names (e.g. "FAQ, Video and Donors Wall").
+#: ../includes/AI/Services/AIService.php:175
+msgid "**Heads up — %s are Better Payment Pro widgets.** I added them to your campaign as you asked, but on the free plugin they show as a locked preview and stay inactive on your live page. Upgrade to Better Payment Pro to switch them on."
+msgstr ""
+
+#. translators: %s: a single Pro widget name (e.g. "FAQ").
+#: ../includes/AI/Services/AIService.php:182
+msgid "**Heads up — %s is a Better Payment Pro widget.** I added it to your campaign as you asked, but on the free plugin it shows as a locked preview and stays inactive on your live page. Upgrade to Better Payment Pro to switch it on."
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:202
+msgid "and"
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:229
+msgid "I reviewed the campaign and found nothing that needs changing."
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:230
+msgid "Here is what I would improve. Apply any suggestion below to make the change."
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:234
+msgid "I could not complete that request. Please try rephrasing."
+msgstr ""
+
+#: ../includes/AI/Services/AIService.php:235
+msgid "Done — I applied the changes."
+msgstr ""
+
+#: ../includes/AI/Services/BriefWriter.php:43
+msgid "There is no brief to refine yet."
+msgstr ""
+
+#: ../includes/AI/Services/BriefWriter.php:57
+msgid "The assistant did not return an improved brief. Please try again."
+msgstr ""
+
+#: ../includes/AI/Services/CampaignAnalyzer.php:44
+msgid "Analyze this campaign and suggest concrete, high-impact improvements."
+msgstr ""
+
+#: ../includes/AI/Services/CampaignAnalyzer.php:140
+msgid "I reviewed the campaign. Apply any suggestion below to make the change."
+msgstr ""
+
+#: ../includes/AI/Services/CampaignGenerator.php:147
+msgid "I set up the campaign details, but the page layout did not come through — the response may have been too long. Please try generating again, optionally with a shorter brief."
+msgstr ""
+
+#. translators: %s: comma-separated list of allowed element type keys.
+#: ../includes/AI/Services/CampaignGenerator.php:274
+msgid "Your previous attempt did not return a usable page layout. This time, call set_layout FIRST and keep every element's copy concise so the whole call fits in one response. Use ONLY these exact element type keys: %s."
+msgstr ""
+
+#: ../includes/AI/Services/CampaignGenerator.php:299
+msgid "PRO WIDGETS AVAILABLE — this site has Better Payment Pro, so you may also use `donors_wall`, `faq` and `video`. Use them where they genuinely strengthen THIS campaign, not as a checklist: `faq` when a donor would hesitate over how the money is spent or whether giving is safe; `donors_wall` beside the donation ask to show momentum; `video` in the hero only when the brief actually supplies a video URL. Do not write donor names, amounts or dates into `donors_wall` — it renders real donations by itself. Do not invent a `video` URL."
+msgstr ""
+
+#: ../includes/AI/Services/CampaignGenerator.php:414
+msgid "Campaign image"
+msgstr ""
+
+#. translators: 1: layout preset, 2: column count, 3: bullet list of columns.
+#: ../includes/AI/Services/CampaignGenerator.php:800
+msgid ""
+"IMPORTANT: The user has already chosen a %1$s layout with exactly %2$d column(s). Your set_layout MUST return exactly these columns, in this order, with these ids and widths — do not add, remove, or resize columns:\n"
+"%3$s\n"
+"Place appropriate elements into each column so the campaign fills the layout the user selected."
+msgstr ""
+
+#. translators: 1: hex colour, 2: mood description.
+#: ../includes/AI/Services/CampaignGenerator.php:856
+msgid "COLOUR — if the brief names a colour, a brand or an existing palette, use that and ignore this line. Only if it names none, set a primary brand colour near %1$s for a %2$s tone (call set_colors)."
+msgstr ""
+
+#: ../includes/AI/Services/ImageGenerator.php:36
+msgid "The selected AI provider cannot generate images. Choose OpenAI or Gemini under Settings → AI."
+msgstr ""
+
+#: ../includes/AI/Services/ImageGenerator.php:39
+msgid "The selected AI provider is missing its API key."
+msgstr ""
+
+#: ../includes/AI/Services/ImageGenerator.php:60
+msgid "Could not save the generated image."
+msgstr ""
+
+#: ../includes/AI/Services/ImageGenerator.php:91
+msgid "Could not create the image attachment."
+msgstr ""
+
+#: ../includes/AI/Services/ImageGenerator.php:140
+msgid "AI generated image"
+msgstr ""
+
 #: ../includes/Campaign/Elements/CampaignElements.php:46, ../includes/Campaign/Elements/CampaignElements.php:77, ../includes/Campaign/Elements/CampaignElements.php:91, ../includes/Campaign/Elements/CampaignElements.php:111, ../includes/Campaign/Elements/CampaignElements.php:126
 msgid "Default"
 msgstr ""
@@ -2557,7 +2754,7 @@ msgstr ""
 msgid "Campaign name"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:285, ../includes/Campaign/Elements/CampaignElements.php:361, ../includes/Campaign/Elements/CampaignElements.php:420, ../includes/Campaign/Elements/CampaignElements.php:494, ../includes/Campaign/Elements/CampaignElements.php:561, ../includes/Campaign/Elements/CampaignElements.php:617, ../includes/Campaign/Elements/CampaignElements.php:677, ../includes/Campaign/Elements/CampaignElements.php:800, ../includes/Campaign/Elements/CampaignElements.php:900
+#: ../includes/Campaign/Elements/CampaignElements.php:285, ../includes/Campaign/Elements/CampaignElements.php:361, ../includes/Campaign/Elements/CampaignElements.php:420, ../includes/Campaign/Elements/CampaignElements.php:501, ../includes/Campaign/Elements/CampaignElements.php:568, ../includes/Campaign/Elements/CampaignElements.php:625, ../includes/Campaign/Elements/CampaignElements.php:686, ../includes/Campaign/Elements/CampaignElements.php:743, ../includes/Campaign/Elements/CampaignElements.php:828, ../includes/Campaign/Elements/CampaignElements.php:928, ../includes/Campaign/Elements/ProElementSchemas.php:229, ../includes/Campaign/Elements/ProElementSchemas.php:362, ../includes/Campaign/Elements/ProElementSchemas.php:454
 msgid "Align"
 msgstr ""
 
@@ -2565,7 +2762,7 @@ msgstr ""
 msgid "Campaign Description"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:308, ../includes/Campaign/Elements/CampaignElements.php:310, ../includes/Campaign/Elements/CampaignElements.php:442, ../includes/Campaign/Elements/CampaignElements.php:516, ../includes/Campaign/Elements/CampaignElements.php:693, ../includes/Campaign/Elements/CampaignElements.php:695, ../includes/Campaign/Elements/CampaignElements.php:740, ../includes/Campaign/Elements/CampaignElements.php:742, ../includes/Campaign/Elements/CampaignElements.php:827, ../includes/Campaign/Elements/CampaignElements.php:829
+#: ../includes/Campaign/Elements/CampaignElements.php:308, ../includes/Campaign/Elements/CampaignElements.php:310, ../includes/Campaign/Elements/CampaignElements.php:442, ../includes/Campaign/Elements/CampaignElements.php:523, ../includes/Campaign/Elements/CampaignElements.php:704, ../includes/Campaign/Elements/CampaignElements.php:706, ../includes/Campaign/Elements/CampaignElements.php:768, ../includes/Campaign/Elements/CampaignElements.php:770, ../includes/Campaign/Elements/CampaignElements.php:855, ../includes/Campaign/Elements/CampaignElements.php:857, ../includes/Campaign/Elements/ProElementSchemas.php:98
 msgid "Headline"
 msgstr ""
 
@@ -2657,348 +2854,718 @@ msgstr ""
 msgid "Round Amounts"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:471
+#: ../includes/Campaign/Elements/CampaignElements.php:476
 msgid "Donate Label:"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:477
+#: ../includes/Campaign/Elements/CampaignElements.php:479
+msgid "Shown before the progress percentage — the percentage is added automatically. Do not type a number here."
+msgstr ""
+
+#: ../includes/Campaign/Elements/CampaignElements.php:483
 msgid "Goal Label:"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:490
+#: ../includes/Campaign/Elements/CampaignElements.php:486
+msgid "Shown before the goal amount — the amount and currency are added automatically. Do not type an amount here."
+msgstr ""
+
+#: ../includes/Campaign/Elements/CampaignElements.php:497
 msgid "Controls the width of the progress bar relative to its container."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:502
+#: ../includes/Campaign/Elements/CampaignElements.php:509
 msgid "Campaign Summary"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:523
+#: ../includes/Campaign/Elements/CampaignElements.php:530
 msgid "Choose what information to show:"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:528
+#: ../includes/Campaign/Elements/CampaignElements.php:535
 msgid "Note: All enabled items are always shown. Amount Donated and Number of Donors update as donations come in. Percent Raised shows 0% until a campaign goal is set, and Time Remaining shows 0 days left until an end date is set. Save and refresh the builder to see updated values."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:533
+#: ../includes/Campaign/Elements/CampaignElements.php:540
 msgid "Amount Donated"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:538
+#: ../includes/Campaign/Elements/CampaignElements.php:545
 msgid "Number of Donors"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:543
+#: ../includes/Campaign/Elements/CampaignElements.php:550
 msgid "Percent Raised"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:548
+#: ../includes/Campaign/Elements/CampaignElements.php:555
 msgid "Time Remaining"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:568
+#: ../includes/Campaign/Elements/CampaignElements.php:575
 msgid "Donate Button"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:581
+#: ../includes/Campaign/Elements/CampaignElements.php:588
 msgid "Button Label"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:583, ../includes/Campaign/Services/RendererService.php:383, ../includes/Admin/views/partials/campaign-vars.php:69
+#: ../includes/Campaign/Elements/CampaignElements.php:590, ../includes/Campaign/Services/RendererService.php:416, ../includes/Admin/views/partials/campaign-vars.php:69
 msgid "Donate Now"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:588
+#: ../includes/Campaign/Elements/CampaignElements.php:595
 msgid "Button Color"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:590
+#: ../includes/Campaign/Elements/CampaignElements.php:597
 msgid "Leave empty to use the campaign primary color."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:594
+#: ../includes/Campaign/Elements/CampaignElements.php:601
 msgid "Payment Form Page URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:598
+#: ../includes/Campaign/Elements/CampaignElements.php:605
 msgid "Link to the page containing your donation form. Overrides the Donation Page set in General Settings."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:602, ../includes/Campaign/Elements/CampaignElements.php:794, ../includes/Campaign/Elements/CampaignElements.php:894
+#: ../includes/Campaign/Elements/CampaignElements.php:609, ../includes/Campaign/Elements/CampaignElements.php:822, ../includes/Campaign/Elements/CampaignElements.php:922
 msgid "Open Links In New Tab"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:635, ../includes/Campaign/Services/RendererService.php:458
+#: ../includes/Campaign/Elements/CampaignElements.php:643, ../includes/Campaign/Services/RendererService.php:492
 msgid "Organizer"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:647
+#: ../includes/Campaign/Elements/CampaignElements.php:655
 msgid "Role or Title"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:651
+#: ../includes/Campaign/Elements/CampaignElements.php:659
 msgid "Shown beneath the creator's name (e.g. Organizer, Founder)."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:655
+#: ../includes/Campaign/Elements/CampaignElements.php:663
 msgid "Campaign Creator"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:661
+#: ../includes/Campaign/Elements/CampaignElements.php:669
 msgid "Organizer Description"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:663
+#: ../includes/Campaign/Elements/CampaignElements.php:671
 msgid "Brief bio or message shown beneath the creator's name."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:673
+#: ../includes/Campaign/Elements/CampaignElements.php:682
 msgid "Width of the organizer block as a percentage."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:685, ../includes/Campaign/Services/RendererService.php:494
+#: ../includes/Campaign/Elements/CampaignElements.php:694, ../includes/Campaign/Services/RendererService.php:528
 msgid "Donate Amount"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:697
+#: ../includes/Campaign/Elements/CampaignElements.php:708
 msgid "Optional heading shown above the donation amounts."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:701
+#: ../includes/Campaign/Elements/CampaignElements.php:712
 msgid "Minimum Donation Amount"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:704
+#: ../includes/Campaign/Elements/CampaignElements.php:715
 msgid "Leave empty to allow no restrictions on how small the donation can be."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:708
+#: ../includes/Campaign/Elements/CampaignElements.php:719
 msgid "Suggested Donation Amounts"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:714
+#: ../includes/Campaign/Elements/CampaignElements.php:725
 msgid "Allow Custom Amount"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:723
+#: ../includes/Campaign/Elements/CampaignElements.php:739
+msgid "Controls the width of the donation amounts relative to its container."
+msgstr ""
+
+#: ../includes/Campaign/Elements/CampaignElements.php:751
 msgid "Social Sharing"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:747
+#: ../includes/Campaign/Elements/CampaignElements.php:775
 msgid "Choose your social network(s):"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:752
+#: ../includes/Campaign/Elements/CampaignElements.php:780
 msgid "Twitter / X"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:770
+#: ../includes/Campaign/Elements/CampaignElements.php:798
 msgid "Pinterest"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:776
+#: ../includes/Campaign/Elements/CampaignElements.php:804
 msgid "Mastodon"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:782
+#: ../includes/Campaign/Elements/CampaignElements.php:810
 msgid "Threads"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:788
+#: ../includes/Campaign/Elements/CampaignElements.php:816
 msgid "Bluesky"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:834
+#: ../includes/Campaign/Elements/CampaignElements.php:862
 msgid "Twitter / X URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:840
+#: ../includes/Campaign/Elements/CampaignElements.php:868
 msgid "Facebook URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:846
+#: ../includes/Campaign/Elements/CampaignElements.php:874
 msgid "LinkedIn URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:852
+#: ../includes/Campaign/Elements/CampaignElements.php:880
 msgid "Instagram URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:858
+#: ../includes/Campaign/Elements/CampaignElements.php:886
 msgid "TikTok URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:864
+#: ../includes/Campaign/Elements/CampaignElements.php:892
 msgid "Pinterest URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:870
+#: ../includes/Campaign/Elements/CampaignElements.php:898
 msgid "YouTube URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:876
+#: ../includes/Campaign/Elements/CampaignElements.php:904
 msgid "Threads URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:882
+#: ../includes/Campaign/Elements/CampaignElements.php:910
 msgid "Bluesky URL"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:888
+#: ../includes/Campaign/Elements/CampaignElements.php:916
 msgid "Mastodon URL"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:283
+#: ../includes/Campaign/Elements/ProElementPreview.php:87, ../includes/Campaign/Elements/ProElementSchemas.php:76
+msgid "Donors Wall"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:91, ../includes/Campaign/Elements/ProElementSchemas.php:241
+msgid "FAQ"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:95, ../includes/Campaign/Elements/ProElementSchemas.php:374
+msgid "Video"
+msgstr ""
+
+#. translators: %s: element name, e.g. "Donors Wall".
+#: ../includes/Campaign/Elements/ProElementPreview.php:137
+msgid "Pro preview — %s"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:145
+msgid "Sample data shown in the editor only. Activate Better Payment Pro to use this element on your live campaign."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:200
+msgid "raised"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:204
+msgid "donors"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:211
+msgid "Ticker layout scrolls automatically on the live campaign."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:217
+msgid "Donor list hidden — “Number of Donors To Show” is set to 0."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:280
+msgid "No questions added yet."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:425
+msgid "Jordan A."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:427
+msgid "2 hours ago"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:430
+msgid "Priya S."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:432
+msgid "5 hours ago"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:435
+msgid "Marco B."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:437, ../includes/Campaign/Elements/ProElementPreview.php:442
+msgid "Yesterday"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:440
+msgid "Anonymous"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:445
+msgid "Lena K."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:447
+msgid "2 days ago"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:450
+msgid "Sam O."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementPreview.php:452
+msgid "3 days ago"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:79, ../includes/Campaign/Elements/ProElementSchemas.php:100
+msgid "Recent Donors"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:107
+msgid "List (vertical)"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:108
+msgid "Grid"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:109
+msgid "Ticker (auto-scroll)"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:118
+msgid "Grid Columns"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:123
+msgid "2 columns"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:124
+msgid "3 columns"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:125
+msgid "4 columns"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:130
+msgid "Number of Donors To Show"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:135
+msgid "Set to 0 to hide the donor list."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:139
+msgid "Order By"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:153, ../includes/Campaign/Elements/ProElementSchemas.php:163
+msgid "Order"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:157
+msgid "High to Low"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:158
+msgid "Low to High"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:167
+msgid "Newest First"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:168
+msgid "Oldest First"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:173
+msgid "Hide If No Donors"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:178
+msgid "Donor Information"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:183
+msgid "Show Totals Summary"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:188
+msgid "Show Name"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:193
+msgid "Show Amount"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:198
+msgid "Show Avatar"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:203
+msgid "Show Time"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:208, ../includes/Campaign/Elements/ProElementSchemas.php:309
+msgid "Style"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:213, ../includes/Campaign/Elements/ProElementSchemas.php:346
+msgid "Accent Color"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:215, ../includes/Campaign/Elements/ProElementSchemas.php:348
+msgid "Leave empty to inherit the campaign color."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:244, ../includes/Campaign/Elements/ProElementSchemas.php:276
+msgid "Frequently Asked Questions"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:247
+msgid "How will my donation help?"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:248
+msgid "Your donation will directly support the goals of this campaign and help make a meaningful difference for the people or cause it aims to support."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:251
+msgid "Is my donation secure?"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:252
+msgid "Yes. Donations are processed through a secure payment system to help keep your payment information safe."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:255
+msgid "Can I donate any amount?"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:256
+msgid "Yes. Every contribution matters, regardless of the amount. You can donate an amount that feels comfortable for you."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:259
+msgid "Can I share this campaign with others?"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:260
+msgid "Absolutely! Sharing the campaign with your friends, family, and social network is a great way to help spread awareness and support the cause."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:280
+msgid "FAQ Items"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:282, ../includes/Campaign/Elements/ProElementSchemas.php:289
+msgid "Question"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:284
+msgid "Add Question"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:291
+msgid "Enter a question"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:295
+msgid "Answer"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:298
+msgid "Enter the answer"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:302
+msgid "Open by default?"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:312
+msgid "Accordion (collapsible)"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:313
+msgid "Open list"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:318
+msgid "Toggle Icon"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:324
+msgid "Chevron"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:325
+msgid "Plus / Minus"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:326
+msgid "No icon"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:331
+msgid "Open One At A Time"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:335
+msgid "Opening a question closes the others (accordion only)."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:339
+msgid "Open First Item By Default"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:390
+msgid "Video URL"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:397
+msgid "Paste a YouTube or Vimeo link, or choose an uploaded video from your Media Library."
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:401
+msgid "Aspect Ratio"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:412
+msgid "Playback"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:417
+msgid "Autoplay"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:422
+msgid "Muted"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:427
+msgid "Loop"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:432
+msgid "Show Controls"
+msgstr ""
+
+#: ../includes/Campaign/Elements/ProElementSchemas.php:437
+msgid "Start Time (seconds)"
+msgstr ""
+
+#: ../includes/Campaign/Services/RendererService.php:299
 msgid "Donated:"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:284
+#: ../includes/Campaign/Services/RendererService.php:300
 msgid "Goal:"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:360
+#: ../includes/Campaign/Services/RendererService.php:385
 msgid "Donors"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:372
+#: ../includes/Campaign/Services/RendererService.php:397
 msgid "Days Left"
 msgstr ""
 
 #. translators: %s: formatted minimum amount with currency symbol
-#: ../includes/Campaign/Services/RendererService.php:429
+#: ../includes/Campaign/Services/RendererService.php:463
 msgid "The minimum donation for this campaign is %s."
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:441
+#: ../includes/Campaign/Services/RendererService.php:475
 msgid "Payment page not configured"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:536
+#: ../includes/Campaign/Services/RendererService.php:581
 msgid "Enter custom amount"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:545
+#: ../includes/Campaign/Services/RendererService.php:590
 msgid "Share Now"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:591
+#: ../includes/Campaign/Services/RendererService.php:637
 msgid "Follow Now"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:79
+#: ../includes/Campaign/Services/RendererService.php:1467
+msgid "Pro Element"
+msgstr ""
+
+#: ../includes/Campaign/Services/RendererService.php:1473
+msgid "PRO"
+msgstr ""
+
+#. translators: %s: element name, e.g. "Donors Wall".
+#: ../includes/Campaign/Services/RendererService.php:1480
+msgid "%s is a Better Payment Pro element. Activate Pro to display it on your campaign."
+msgstr ""
+
+#: ../includes/Campaign/Templates/CategoryRegistry.php:49
+msgid "Charity"
+msgstr ""
+
+#: ../includes/Campaign/Templates/CategoryRegistry.php:61
+msgid "Club / Organizations"
+msgstr ""
+
+#: ../includes/Campaign/Templates/CategoryRegistry.php:72
+msgid "Environmental"
+msgstr ""
+
+#: ../includes/Campaign/Templates/CategoryRegistry.php:87
+msgid "Medical"
+msgstr ""
+
+#: ../includes/Campaign/Templates/CategoryRegistry.php:99
+msgid "Youth / Education"
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:141
 msgid "1 Column"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:80
+#: ../includes/Campaign/Templates/TemplateManager.php:142
 msgid "Single column, vertical stack."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:85, ../includes/Campaign/Templates/TemplateManager.php:102, ../includes/Campaign/Templates/TemplateManager.php:156, ../includes/Campaign/Templates/TemplateManager.php:217, ../includes/Campaign/Templates/TemplateManager.php:315, ../includes/Campaign/Templates/TemplateManager.php:425, ../includes/Campaign/Templates/TemplateManager.php:497, ../includes/Campaign/Templates/TemplateManager.php:607, ../includes/Campaign/Templates/TemplateManager.php:726, ../includes/Campaign/Templates/TemplateManager.php:826
+#: ../includes/Campaign/Templates/TemplateManager.php:147, ../includes/Campaign/Templates/TemplateManager.php:164, ../includes/Campaign/Templates/TemplateManager.php:221, ../includes/Campaign/Templates/TemplateManager.php:282, ../includes/Campaign/Templates/TemplateManager.php:380, ../includes/Campaign/Templates/TemplateManager.php:490, ../includes/Campaign/Templates/TemplateManager.php:562, ../includes/Campaign/Templates/TemplateManager.php:672, ../includes/Campaign/Templates/TemplateManager.php:791, ../includes/Campaign/Templates/TemplateManager.php:891
 msgid "Main Content"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:96
+#: ../includes/Campaign/Templates/TemplateManager.php:158
 msgid "2 Column"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:97
+#: ../includes/Campaign/Templates/TemplateManager.php:159
 msgid "Main content area with sidebar."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:119
-msgid "3 Column"
+#: ../includes/Campaign/Templates/TemplateManager.php:181
+msgid "Custom"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:120
-msgid "Three equal-width columns."
+#: ../includes/Campaign/Templates/TemplateManager.php:182
+msgid "A full-width row, then two equal columns."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:125
-msgid "Column 1"
+#: ../includes/Campaign/Templates/TemplateManager.php:190
+msgid "Top (Full Width)"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:131
-msgid "Column 2"
+#: ../includes/Campaign/Templates/TemplateManager.php:196
+msgid "Bottom Left"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:137
-msgid "Column 3"
+#: ../includes/Campaign/Templates/TemplateManager.php:202
+msgid "Bottom Right"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:149, ../includes/Campaign/Templates/TemplateManager.php:150
+#: ../includes/Campaign/Templates/TemplateManager.php:214, ../includes/Campaign/Templates/TemplateManager.php:215
 msgid "Refugee Relief Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:151
+#: ../includes/Campaign/Templates/TemplateManager.php:216
 msgid "Support refugee communities with immediate aid and long-term recovery."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:210, ../includes/Campaign/Templates/TemplateManager.php:211
+#: ../includes/Campaign/Templates/TemplateManager.php:275, ../includes/Campaign/Templates/TemplateManager.php:276
 msgid "Medical Emergency Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:212
+#: ../includes/Campaign/Templates/TemplateManager.php:277
 msgid "Bring hope during medical emergencies through compassionate giving."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:306, ../includes/Campaign/Templates/TemplateManager.php:307
+#: ../includes/Campaign/Templates/TemplateManager.php:371, ../includes/Campaign/Templates/TemplateManager.php:372
 msgid "Student Success Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:308
+#: ../includes/Campaign/Templates/TemplateManager.php:373
 msgid "Empower the next generation through education."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:416, ../includes/Campaign/Templates/TemplateManager.php:417
+#: ../includes/Campaign/Templates/TemplateManager.php:481, ../includes/Campaign/Templates/TemplateManager.php:482
 msgid "Elite Golf Club Membership"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:418
+#: ../includes/Campaign/Templates/TemplateManager.php:483
 msgid "Join an exclusive golfing experience built for champions."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:448
+#: ../includes/Campaign/Templates/TemplateManager.php:513
 msgid "Donate"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:488, ../includes/Campaign/Templates/TemplateManager.php:489
+#: ../includes/Campaign/Templates/TemplateManager.php:553, ../includes/Campaign/Templates/TemplateManager.php:554
 msgid "Child Healthcare Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:490
+#: ../includes/Campaign/Templates/TemplateManager.php:555
 msgid "Help children access life-saving treatments, vaccinations, surgeries, and ongoing medical care."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:525
+#: ../includes/Campaign/Templates/TemplateManager.php:590
 msgid "Donation Panel"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:598, ../includes/Campaign/Templates/TemplateManager.php:599
+#: ../includes/Campaign/Templates/TemplateManager.php:663, ../includes/Campaign/Templates/TemplateManager.php:664
 msgid "Tree Plantation Campaign"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:600
+#: ../includes/Campaign/Templates/TemplateManager.php:665
 msgid "Support environmental restoration through tree planting, conservation, and climate action initiatives."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:638
+#: ../includes/Campaign/Templates/TemplateManager.php:703
 msgid "Donation Content"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:717, ../includes/Campaign/Templates/TemplateManager.php:718
+#: ../includes/Campaign/Templates/TemplateManager.php:782, ../includes/Campaign/Templates/TemplateManager.php:783
 msgid "Animal Rescue Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:719
+#: ../includes/Campaign/Templates/TemplateManager.php:784
 msgid "Help rescue abandoned, injured, and homeless animals through shelter, food, medical care, and adoption support."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:817, ../includes/Campaign/Templates/TemplateManager.php:818
+#: ../includes/Campaign/Templates/TemplateManager.php:882, ../includes/Campaign/Templates/TemplateManager.php:883
 msgid "Emergency Disaster Relief"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:819
+#: ../includes/Campaign/Templates/TemplateManager.php:884
 msgid "Help communities recover when they need it most."
 msgstr ""
 

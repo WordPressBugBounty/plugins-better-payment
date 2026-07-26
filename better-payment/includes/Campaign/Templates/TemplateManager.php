@@ -13,20 +13,82 @@ if ( ! defined( 'ABSPATH' ) ) {
  * with. Each template specifies a layout type (1-column, 2-column, 3-column)
  * and pre-places elements into columns.
  *
+ * Template shape:
+ *   'key'           => string  Unique key; must equal the array key.
+ *   'category'      => string  'blank' (wireframe starters) | 'prebuilt' (designed).
+ *   'tags'          => array   Category filters in the builder sidebar. Only tags
+ *                              known to the UI are filterable — reuse an existing
+ *                              one ('charity', 'medical', 'education',
+ *                              'environmental', 'club-organizations') unless you
+ *                              also extend the sidebar's CATEGORIES list.
+ *   'label'         => string  Card title.
+ *   'description'   => string  Card subtitle; also matched by the search box.
+ *   'layout'        => string  '1-column' | '2-column' | '3-column'.
+ *   'columns'       => array   [ [ 'id', 'label', 'width' => '65%', 'elements' => [
+ *                              [ 'id', 'type', 'settings' => [] ], ... ] ], ... ]
+ *   'default_title' => string  Optional. Seeds the campaign title when applied.
+ *   'preview_image' => string  Optional. Card thumbnail.
+ *   'preview_color' => string  Optional. Solid-colour fallback when no image loads.
+ *   'theme_class'   => string  Optional. Extra class on the campaign wrapper for
+ *                              CSS to target. Ships no styles of its own.
+ *
+ * An element `settings` key only does something where RendererService reads it.
+ * The schema (`defaultSettings` / `settingsSchema`, see CampaignElements) is what
+ * the builder UI exposes, not the full set of live keys: an unrecognised key is
+ * stored and silently ignored, while a key absent from the schema may still be
+ * honoured (`donate_amount` reads `preset_amounts` as a legacy fallback). Prefer
+ * schema-declared keys — undeclared ones can't be edited in the builder.
+ *
+ * Typography (`font_size`, `font_weight`, `letter_spacing`, `line_height`,
+ * `color`, ... on `campaign_title` / `campaign_description`) is schema-only and
+ * is where a template's visual identity comes from. Absence is meaningful: unset
+ * renders a plain default that theme CSS can beat, set is emitted inline with
+ * `!important`.
+ *
+ * Element ids are regenerated on apply, so they need only be unique within the
+ * template.
+ *
  * To register a custom template from another plugin:
  *   add_filter( 'better_payment/campaign_templates', function( $templates ) {
  *       $templates['my-template'] = [ ... ];
  *       return $templates;
  *   } );
+ *
+ * Templates registered from another plugin must supply `preview_image` as an
+ * absolute URL — a relative path is resolved against Better Payment's own
+ * directory. Registering a template that uses Pro-only element types is what
+ * makes it Pro-only: the filter simply isn't added when the add-on is inactive.
  */
 class TemplateManager {
 
     /**
+     * Per-request memo for get_all().
+     *
+     * @var array<string, array>|null
+     */
+    private static $cache = null;
+
+    /**
      * Get all available campaign templates.
+     *
+     * Memoized per request. get_all() is called on every public campaign page
+     * view (RendererService looks up `theme_class`), on the builder and campaign
+     * list screens, and from the REST route — rebuilding this array and running
+     * a get_users() query each time is pure waste, and the set cannot change
+     * within a request. Registrations via `better_payment/campaign_templates`
+     * land long before the first call (plugins register on load / plugins_loaded,
+     * every caller runs on admin_enqueue_scripts, rest_api_init or render).
+     *
+     * Tests that add or remove the filter mid-request must reset the memo first:
+     * `InvokesPrivate::set_static_property( TemplateManager::class, 'cache', null )`.
      *
      * @return array<string, array>
      */
     public static function get_all(): array {
+        if ( self::$cache !== null ) {
+            return self::$cache;
+        }
+
         $first_users      = get_users( [ 'fields' => [ 'ID' ], 'number' => 1 ] );
         $first_creator_id = ! empty( $first_users ) ? (int) $first_users[0]->ID : get_current_user_id();
         $tpl_img          = BETTER_PAYMENT_ASSETS . '/img/campaign/templates';
@@ -116,26 +178,29 @@ class TemplateManager {
                 'key'         => 'blank-3col',
                 'category'    => 'blank',
                 'tags'        => [],
-                'label'       => __( '3 Column', 'better-payment' ),
-                'description' => __( 'Three equal-width columns.', 'better-payment' ),
-                'layout'      => '3-column',
+                'label'       => __( 'Custom', 'better-payment' ),
+                'description' => __( 'A full-width row, then two equal columns.', 'better-payment' ),
+                // The 'split' preset renders as two rows: a full-width column on top,
+                // then two 50/50 columns below (scoped flex-wrap — see
+                // src/blocks/campaign-display/style.scss `.bp-campaign--split`).
+                'layout'      => 'split',
                 'columns'     => [
                     [
-                        'id'       => 'col1',
-                        'label'    => __( 'Column 1', 'better-payment' ),
-                        'width'    => '33.33%',
+                        'id'       => 'top',
+                        'label'    => __( 'Top (Full Width)', 'better-payment' ),
+                        'width'    => '100%',
                         'elements' => [],
                     ],
                     [
-                        'id'       => 'col2',
-                        'label'    => __( 'Column 2', 'better-payment' ),
-                        'width'    => '33.33%',
+                        'id'       => 'bottom-left',
+                        'label'    => __( 'Bottom Left', 'better-payment' ),
+                        'width'    => '50%',
                         'elements' => [],
                     ],
                     [
-                        'id'       => 'col3',
-                        'label'    => __( 'Column 3', 'better-payment' ),
-                        'width'    => '33.33%',
+                        'id'       => 'bottom-right',
+                        'label'    => __( 'Bottom Right', 'better-payment' ),
+                        'width'    => '50%',
                         'elements' => [],
                     ],
                 ],
@@ -927,6 +992,26 @@ class TemplateManager {
 
         ];
 
-        return apply_filters( 'better_payment/campaign_templates', $templates );
+        /**
+         * Filters the campaign templates offered in the builder.
+         *
+         * Fires once per request (the result is memoized). Add-ons key their own
+         * templates in — see the class docblock for the expected shape. Templates
+         * registered from outside this plugin must give `preview_image` as an
+         * absolute URL; plugin-relative paths resolve against Better Payment's
+         * own directory.
+         *
+         * @param array<string, array> $templates Templates keyed by template key.
+         */
+        // @var is deliberate: the @param above describes what we pass in, but a
+        // third-party listener can return anything at all.
+        /** @var mixed $filtered */
+        $filtered = apply_filters( 'better_payment/campaign_templates', $templates );
+
+        // An add-on returning a non-array must not take the built-in templates down
+        // with it, nor fatal the `: array` return — keep the unfiltered set instead.
+        self::$cache = is_array( $filtered ) ? $filtered : $templates;
+
+        return self::$cache;
     }
 }

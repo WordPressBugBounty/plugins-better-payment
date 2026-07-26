@@ -857,7 +857,17 @@ class AdminAPI extends WP_REST_Controller
      */
     private function sanitize_settings($settings)
     {
+        // Keys whose value may legitimately contain newlines — sanitize_text_field
+        // would collapse them. The AI system prompt is multi-line free text.
+        $multiline_keys = apply_filters('better_payment_settings_multiline_keys', array(
+            'better_payment_settings_ai_system_prompt',
+        ));
+
         foreach ($settings as $key => $value) {
+            if (in_array($key, $multiline_keys, true)) {
+                $settings[$key] = sanitize_textarea_field($value);
+                continue;
+            }
             $settings[$key] = sanitize_text_field($value);
         }
         return $settings;

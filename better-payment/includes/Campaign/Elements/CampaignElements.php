@@ -466,17 +466,24 @@ class CampaignElements {
                     'type'         => 'toggle',
                     'defaultValue' => false,
                 ],
+                // Both of these are PREFIXES — RendererService prints the live
+                // value straight after them ("Donated: 40%", "Goal: €5,000"). The
+                // `info` text says so because the field name alone does not, and
+                // an author (or the AI, which reads this schema) who types the
+                // whole phrase gets the value rendered twice.
                 [
                     'key'          => 'donate_label',
                     'label'        => __( 'Donate Label:', 'better-payment' ),
                     'type'         => 'text',
                     'defaultValue' => 'Donated:',
+                    'info'         => __( 'Shown before the progress percentage — the percentage is added automatically. Do not type a number here.', 'better-payment' ),
                 ],
                 [
                     'key'          => 'goal_label',
                     'label'        => __( 'Goal Label:', 'better-payment' ),
                     'type'         => 'text',
                     'defaultValue' => 'Goal:',
+                    'info'         => __( 'Shown before the goal amount — the amount and currency are added automatically. Do not type an amount here.', 'better-payment' ),
                 ],
                 [
                     'key'          => 'width',
@@ -610,6 +617,7 @@ class CampaignElements {
                     'min'          => 10,
                     'max'          => 100,
                     'step'         => 1,
+                    'unit'         => '%',
                     'defaultValue' => 100,
                 ],
                 [
@@ -669,6 +677,7 @@ class CampaignElements {
                     'min'          => 10,
                     'max'          => 100,
                     'step'         => 1,
+                    'unit'         => '%',
                     'defaultValue' => 100,
                     'info'         => __( 'Width of the organizer block as a percentage.', 'better-payment' ),
                 ],
@@ -686,6 +695,8 @@ class CampaignElements {
             'icon'            => 'money-alt',
             'defaultSettings' => [
                 'headline' => 'Donate Amount',
+                'width'    => 100,
+                'align'    => 'left',
             ],
             'settingsSchema'  => [
                 [
@@ -715,6 +726,23 @@ class CampaignElements {
                     'type'         => 'switch',
                     'metaKey'      => 'bpc_allow_custom_amount',
                     'defaultValue' => true,
+                ],
+                [
+                    'key'          => 'width',
+                    'label'        => __( 'Width', 'better-payment' ),
+                    'type'         => 'range',
+                    'min'          => 10,
+                    'max'          => 100,
+                    'step'         => 1,
+                    'unit'         => '%',
+                    'defaultValue' => 100,
+                    'info'         => __( 'Controls the width of the donation amounts relative to its container.', 'better-payment' ),
+                ],
+                [
+                    'key'          => 'align',
+                    'label'        => __( 'Align', 'better-payment' ),
+                    'type'         => 'align',
+                    'defaultValue' => 'left',
                 ],
             ],
         ] );
@@ -902,5 +930,32 @@ class CampaignElements {
                 ],
             ],
         ] );
+
+        self::register_pro_elements();
+    }
+
+    /**
+     * Register the three Pro-only elements (Donors Wall, FAQ, Video) with their
+     * FULL control schemas, flagged `pro => true`.
+     *
+     * These used to be label-and-icon stubs with an empty `settingsSchema`, which
+     * left a free user staring at a bare "upgrade" panel — no way to see what the
+     * element actually does or what it can be configured to do. Lite now ships the
+     * complete schema (see {@see ProElementSchemas}) so the builder can render
+     * every control, disabled, behind a locked banner.
+     *
+     * The `pro` flag stays on the schema whether or not Pro is installed. Nothing
+     * reads it as an entitlement — locking is decided everywhere by the live
+     * `better_payment/pro_enabled` filter, evaluated per request, so a campaign
+     * saved while Pro was active gets no special treatment once Pro is gone.
+     *
+     * Pro no longer overrides these entries. It only attaches renderers on
+     * `better_payment/campaign/render_element_{type}`; that filter having a
+     * listener IS the unlock.
+     */
+    private static function register_pro_elements(): void {
+        foreach ( ProElementSchemas::get_all() as $type => $schema ) {
+            ElementRegistry::register( $type, array_merge( $schema, [ 'pro' => true ] ) );
+        }
     }
 }

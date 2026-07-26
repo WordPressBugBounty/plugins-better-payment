@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.2.2
+ * Version: 2.3.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -34,7 +34,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.2.2';
+    const version = '2.3.0';
 
     /**
      * Class construcotr
@@ -168,6 +168,22 @@ final class Better_Payment {
 
         // ── Campaign Builder module ────────────────────────────────────
         $this->init_campaign_module();
+
+        // ── AI module (AI-native Campaign Builder) ─────────────────────
+        $this->init_ai_module();
+    }
+
+    /**
+     * Initialize the AI module (providers, operations, REST endpoints).
+     *
+     * @return void
+     */
+    private function init_ai_module() {
+        // Register providers + resolve settings-driven config.
+        ( new Better_Payment\Lite\AI\AIManager() )->init();
+
+        // REST API for AI (chat/generate/analyze/image/conversations/config).
+        new Better_Payment\Lite\API\AIAPI();
     }
 
     /**

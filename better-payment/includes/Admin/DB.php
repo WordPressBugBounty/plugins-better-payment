@@ -79,13 +79,29 @@ class DB {
             'better_payment_settings_payment_paystack_live_secret' => '',
             'better_payment_settings_payment_paystack_test_public' => '',
             'better_payment_settings_payment_paystack_test_secret' => '',
+
+            // AI Assistant (Campaign Builder). See includes/AI/.
+            'better_payment_settings_ai_enabled'          => '',
+            'better_payment_settings_ai_provider'         => 'openai',
+            'better_payment_settings_ai_model'            => '',
+            'better_payment_settings_ai_image_model'      => '',
+            'better_payment_settings_ai_temperature'      => '0.7',
+            'better_payment_settings_ai_max_tokens'       => '4096',
+            'better_payment_settings_ai_system_prompt'    => '',
+            'better_payment_settings_ai_api_key_openai'     => '',
+            'better_payment_settings_ai_api_key_claude'     => '',
+            'better_payment_settings_ai_api_key_gemini'     => '',
+            'better_payment_settings_ai_api_key_openrouter' => '',
         ));
     }
     /**
      * Get all settings value from options table.
      *
+     * Returns the full settings array when $name is empty, otherwise the single
+     * value for that key (which may be a string, array, etc.).
+     *
      * @param string $name
-     * @return array
+     * @return mixed
      * @since 0.0.1
      */
     public static function get_settings($name = '')

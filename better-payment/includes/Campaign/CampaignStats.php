@@ -10,6 +10,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Computes and caches campaign stats (total raised, donor count, progress %).
+ *
+ * `donor_count` is the count of approved donation *transactions*, not of unique
+ * donors — it must agree with the per-transaction list the Donors Wall renders
+ * (one card per approved row). Counting distinct emails made the summary read
+ * "3 Donors" above a 5-card list; a repeat donor (or a row with an empty email,
+ * which `COUNT(DISTINCT email)` drops entirely) is one transaction here.
  */
 class CampaignStats extends Controller {
 
@@ -99,7 +105,7 @@ class CampaignStats extends Controller {
             $wpdb->prepare(
                 "SELECT
                     COALESCE(SUM(amount), 0)   AS total_raised,
-                    COUNT(DISTINCT email)       AS donor_count,
+                    COUNT(*)                    AS donor_count,
                     MAX(payment_date)           AS last_donation_date
                 FROM `{$payment_table}`
                 WHERE campaign_id = %s

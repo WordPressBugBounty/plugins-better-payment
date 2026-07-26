@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" role="img" aria-label="Fundraising campaign image" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bpBg" x1="0" y1="0" x2="1200" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6b63f6"/>
+      <stop offset="0.55" stop-color="#5a7ff0"/>
+      <stop offset="1" stop-color="#28a29a"/>
+    </linearGradient>
+    <radialGradient id="bpGlow" cx="600" cy="300" r="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="640" fill="url(#bpBg)"/>
+  <rect width="1200" height="640" fill="url(#bpGlow)"/>
+
+  <!-- soft decorative circles -->
+  <circle cx="150" cy="110" r="70" fill="#ffffff" opacity="0.06"/>
+  <circle cx="1060" cy="520" r="110" fill="#ffffff" opacity="0.06"/>
+  <circle cx="990" cy="120" r="34" fill="#ffffff" opacity="0.08"/>
+  <circle cx="220" cy="540" r="26" fill="#ffffff" opacity="0.08"/>
+
+  <!-- cupped hands supporting a heart -->
+  <g transform="translate(600 320)">
+    <!-- supporting hands (two soft cupped shapes) -->
+    <path d="M-190 70 C-150 150 -70 190 0 190 C70 190 150 150 190 70 C150 120 70 145 0 145 C-70 145 -150 120 -190 70 Z"
+          fill="#ffffff" opacity="0.85"/>
+    <path d="M-150 40 C-120 108 -60 140 0 140 C60 140 120 108 150 40 C120 82 60 104 0 104 C-60 104 -120 82 -150 40 Z"
+          fill="#ffffff" opacity="0.55"/>
+
+    <!-- heart -->
+    <path d="M0 -30
+             C-26 -84 -108 -80 -132 -24
+             C-152 22 -120 66 -60 112
+             L0 156
+             L60 112
+             C120 66 152 22 132 -24
+             C108 -80 26 -84 0 -30 Z"
+          fill="#ffffff"/>
+  </g>
+</svg>

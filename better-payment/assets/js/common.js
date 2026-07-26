@@ -25,7 +25,7 @@ eval("{;\n(function ($) {\n  $(document).on('change', '.better-payment .payment-
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module can't be inlined because the eval devtool is used.
-/******/ 	let __webpack_exports__ = {};
+/******/ 	var __webpack_exports__ = {};
 /******/ 	__webpack_modules__["./src/js/common.js"]();
 /******/ 	
 /******/ })()
