@@ -1,0 +1,122 @@
+/**
+ * Better Payment — WooCommerce My Account > Subscriptions.
+ *
+ * Hand-authored (no build step, like assets/js/woocommerce-blocks.js).
+ * Enqueued on My Account pages only — see WooCommerce\MyAccount::enqueue_styles().
+ */
+
+/* Status badge */
+.bp-subscription-status {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 0.85em;
+	font-weight: 600;
+	line-height: 1.7;
+	background: #e5e7eb;
+	color: #374151;
+	white-space: nowrap;
+}
+
+.bp-subscription-status--active {
+	background: #d1fae5;
+	color: #065f46;
+}
+
+.bp-subscription-status--past_due {
+	background: #fef3c7;
+	color: #92400e;
+}
+
+.bp-subscription-status--cancelled {
+	background: #e5e7eb;
+	color: #4b5563;
+}
+
+.bp-subscription-status--completed {
+	background: #dbeafe;
+	color: #1e40af;
+}
+
+/* Single-subscription view */
+.bp-subscription-section-title {
+	margin: 1.5em 0 0.75em;
+}
+
+.bp-subscription-details th {
+	width: 35%;
+	text-align: left;
+}
+
+.bp-subscription-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 12px 16px;
+	margin-bottom: 1.5em;
+}
+
+.bp-subscription-actions form {
+	margin: 0;
+}
+
+.bp-subscription-actions form p {
+	margin: 0 0 0.5em;
+}
+
+.bp-subscription-cancel button.button {
+	background: #b32d2e;
+	border-color: #b32d2e;
+	color: #fff;
+}
+
+.bp-subscription-back {
+	margin-top: 1.5em;
+}
+
+/* -------------------------------------------------------------------------
+ * "Subscription Total" row — cart + checkout totals table
+ * ---------------------------------------------------------------------- */
+
+.bp-subscription-total__amount {
+	display: block;
+	font-weight: 600;
+}
+
+.bp-subscription-total__meta {
+	display: block;
+	margin-top: 0.25em;
+	font-size: 0.85em;
+	font-weight: 400;
+	line-height: 1.5;
+	opacity: 0.8;
+}
+
+/* Blocks Cart/Checkout. The row is rendered through WooCommerce's own
+   TotalsWrapper + TotalsItem, so the grid is already correct: the wrapper
+   supplies the separator and padding that align it with Subtotal/Total,
+   `__label { flex-grow: 1 }` pushes the amount right, and
+   `__description { width: 100% }` drops the small lines onto their own row.
+   Only the small lines need anything from us. */
+.bp-subscription-total__lines {
+	display: block;
+}
+
+/* The description is already small; without this the shared rule below
+   compounds on top of it and the lines come out unreadably tiny. */
+.bp-subscription-total__lines .bp-subscription-total__meta {
+	font-size: 1em;
+	margin-top: 0;
+}
+
+/* Fallback markup only (TotalsItem unavailable) — it has no grid of its own. */
+.bp-subscription-total--fallback {
+	display: block;
+	padding: 16px 0;
+	border-top: 1px solid rgba(127, 127, 127, 0.3);
+}
+
+.bp-subscription-total--fallback .bp-subscription-total__label {
+	display: block;
+	font-weight: 600;
+}

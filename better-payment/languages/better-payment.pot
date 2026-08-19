@@ -13,71 +13,71 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../includes/Admin.php:74, ../includes/Admin/ReactAdmin.php:117, ../includes/Admin/Settings.php:94, ../includes/Admin/Settings.php:95, ../includes/Admin/views/better-payment-settings.php:84
+#: ../includes/Admin.php:79, ../includes/Admin/ReactAdmin.php:122, ../includes/Admin/Settings.php:94, ../includes/Admin/Settings.php:95, ../includes/Admin/views/better-payment-settings.php:84
 msgid "Settings"
 msgstr ""
 
-#: ../includes/Admin.php:77
+#: ../includes/Admin.php:82
 msgid "Go Pro"
 msgstr ""
 
-#: ../includes/Assets.php:280, ../includes/Assets.php:299, ../includes/Admin/Setup_Wizard.php:93
+#: ../includes/Assets.php:284, ../includes/Assets.php:303, ../includes/Admin/Setup_Wizard.php:93
 msgid "Are you sure?"
 msgstr ""
 
-#: ../includes/Assets.php:281, ../includes/Assets.php:290
+#: ../includes/Assets.php:285, ../includes/Assets.php:294
 msgid "Something went wrong"
 msgstr ""
 
-#: ../includes/Assets.php:283
+#: ../includes/Assets.php:287
 msgid "Redirecting"
 msgstr ""
 
-#: ../includes/Assets.php:286
+#: ../includes/Assets.php:290
 msgid "field is required"
 msgstr ""
 
-#: ../includes/Assets.php:287
+#: ../includes/Assets.php:291
 msgid "Business Email is required"
 msgstr ""
 
-#: ../includes/Assets.php:288
+#: ../includes/Assets.php:292
 msgid "Payment Amount field is required"
 msgstr ""
 
-#: ../includes/Assets.php:289
+#: ../includes/Assets.php:293
 msgid "Minimum amount is 1"
 msgstr ""
 
-#: ../includes/Assets.php:291
+#: ../includes/Assets.php:295
 msgid "Payment verification timed out. Please contact support if your payment was charged."
 msgstr ""
 
-#: ../includes/Assets.php:300, ../includes/Admin/Setup_Wizard.php:94
+#: ../includes/Assets.php:304, ../includes/Admin/Setup_Wizard.php:94
 msgid "You won't be able to revert this!"
 msgstr ""
 
-#: ../includes/Assets.php:301, ../includes/Admin/Setup_Wizard.php:95
+#: ../includes/Assets.php:305, ../includes/Admin/Setup_Wizard.php:95
 msgid "Yes, delete it!"
 msgstr ""
 
-#: ../includes/Assets.php:302, ../includes/Admin/Setup_Wizard.php:96
+#: ../includes/Assets.php:306, ../includes/Admin/Setup_Wizard.php:96
 msgid "No, cancel!"
 msgstr ""
 
-#: ../includes/Assets.php:305, ../includes/Admin/Setup_Wizard.php:99
+#: ../includes/Assets.php:309, ../includes/Admin/Setup_Wizard.php:99
 msgid "Changes saved successfully!"
 msgstr ""
 
-#: ../includes/Assets.php:306, ../includes/Admin/Setup_Wizard.php:100
+#: ../includes/Assets.php:310, ../includes/Admin/Setup_Wizard.php:100
 msgid "Opps! something went wrong!"
 msgstr ""
 
-#: ../includes/Assets.php:307, ../includes/Admin/Setup_Wizard.php:101
+#: ../includes/Assets.php:311, ../includes/Admin/Setup_Wizard.php:101
 msgid "No action taken!"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:86, ../includes/Admin/ReactAdmin.php:87, ../includes/Admin/Settings.php:83, ../includes/Admin/Settings.php:84, ../includes/Blocks/BlockActions.php:279, ../includes/Blocks/BlockActions.php:527, ../includes/Blocks/BlockManager.php:1855, ../includes/Classes/Actions.php:118, ../includes/Classes/Actions.php:294, ../includes/Classes/Actions.php:300, ../includes/Classes/Actions.php:619, ../includes/Traits/ElementorHelper.php:140, ../includes/Admin/Elementor/Better_Payment_Widget.php:1188, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
+#: ../includes/Admin/ReactAdmin.php:86, ../includes/Admin/ReactAdmin.php:87, ../includes/Admin/Settings.php:83, ../includes/Admin/Settings.php:84, ../includes/Blocks/BlockActions.php:279, ../includes/Blocks/BlockActions.php:527, ../includes/Blocks/BlockManager.php:1855, ../includes/Classes/Actions.php:118, ../includes/Classes/Actions.php:294, ../includes/Classes/Actions.php:300, ../includes/Classes/Actions.php:619, ../includes/Traits/ElementorHelper.php:140, ../includes/WooCommerce/Blocks.php:106, ../includes/WooCommerce/Gateway.php:80, ../includes/Admin/Elementor/Better_Payment_Widget.php:1188, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107
 msgid "Better Payment"
 msgstr ""
 
@@ -93,19 +93,23 @@ msgstr ""
 msgid "Transactions"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:112, ../includes/Admin/Settings.php:114
+#: ../includes/Admin/ReactAdmin.php:112, ../includes/WooCommerce/MyAccount.php:151, ../includes/WooCommerce/MyAccount.php:192, ../includes/Admin/Elementor/User_Dashboard.php:188, ../includes/Admin/Elementor/User_Dashboard.php:256, ../includes/Admin/Elementor/User_Dashboard.php:259
+msgid "Subscriptions"
+msgstr ""
+
+#: ../includes/Admin/ReactAdmin.php:117, ../includes/Admin/Settings.php:114
 msgid "Analytics"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:326
+#: ../includes/Admin/ReactAdmin.php:351
 msgid "Thank you for using <a href=\"https://betterpayment.co/\" target=\"_blank\">Better Payment</a>"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:343
+#: ../includes/Admin/ReactAdmin.php:368
 msgid "<span class=\"bp-footer-version-divider\">Free Version <span class=\"bp-footer-version\">%s</span></span> <span>Pro Version <span class=\"bp-footer-version\">%s</span></span>"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:350
+#: ../includes/Admin/ReactAdmin.php:375
 msgid "<span class=\"bp-free-version\"><span>Free Version</span> <span class=\"bp-footer-version\">%s</span> </span>"
 msgstr ""
 
@@ -129,7 +133,7 @@ msgstr ""
 msgid "Failed to mark transaction as completed!"
 msgstr ""
 
-#: ../includes/Admin/Settings.php:715, ../includes/API/AdminAPI.php:493
+#: ../includes/Admin/Settings.php:715, ../includes/API/AdminAPI.php:1016
 msgid "Transaction marked as completed!"
 msgstr ""
 
@@ -177,7 +181,7 @@ msgstr ""
 msgid "Enable email notification for each transaction. It sends notification to the website admin and customer (who makes the payment). You can modify email settings as per your need."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:247, ../includes/Blocks/BlockManager.php:792, ../includes/Classes/Handler.php:803, ../includes/Admin/Elementor/Better_Payment_Widget.php:930, ../includes/Admin/Elementor/Better_Payment_Widget.php:2578, ../includes/Admin/Elementor/Better_Payment_Widget.php:2580, ../includes/Admin/Elementor/Better_Payment_Widget.php:2581, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:145, ../includes/Admin/views/better-payment-settings.php:224, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:58, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:59
+#: ../includes/Admin/Setup_Wizard.php:247, ../includes/Blocks/BlockManager.php:792, ../includes/Classes/Handler.php:815, ../includes/Admin/Elementor/Better_Payment_Widget.php:930, ../includes/Admin/Elementor/Better_Payment_Widget.php:2578, ../includes/Admin/Elementor/Better_Payment_Widget.php:2580, ../includes/Admin/Elementor/Better_Payment_Widget.php:2581, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:145, ../includes/Admin/views/better-payment-settings.php:224, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:58, ../includes/Admin/Elementor/Form_Actions/Stripe_Integration.php:59
 msgid "Currency"
 msgstr ""
 
@@ -273,35 +277,71 @@ msgstr ""
 msgid "Insufficient permissions."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:427
+#: ../includes/Admin/Setup_Wizard.php:445
 msgid "Invalid tracking parameter."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:425
+#: ../includes/Admin/Setup_Wizard.php:443
 msgid "Tracking data saved successfully."
 msgstr ""
 
-#: ../includes/Admin/Setup_Wizard.php:506
+#: ../includes/Admin/Setup_Wizard.php:542
 msgid "Quick Setup Wizard - Better Payment"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:254
+#: ../includes/API/AdminAPI.php:294
 msgid "Sale info dismissed"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:274
+#: ../includes/API/AdminAPI.php:314
 msgid "Dismissible section dismissed"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:537, ../includes/API/AdminAPI.php:539, ../includes/API/AdminAPI.php:551, ../includes/Admin/views/better-payment-transaction-view.php:90, ../includes/Admin/views/better-payment-transaction-view.php:109, ../includes/Admin/views/better-payment-transaction-view.php:110, ../includes/Admin/views/template-transaction-list.php:142, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:192
+#: ../includes/API/AdminAPI.php:697
+msgid "A subscription id and source are required."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:703
+msgid "Subscription not found."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:850
+msgid "A subscription action is required."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:873
+msgid "This subscription cannot be managed from here — its integration does not support status changes."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:884
+msgid "Subscription cancelled — no further renewals will be charged."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:885
+msgid "Subscription updated successfully."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:919
+msgid "Better Payment: subscription cancelled — it was deleted from the Better Payment admin. No further automatic renewals will be charged."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:939
+msgid "Failed to delete subscription."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:944
+msgid "Subscription deleted successfully."
+msgstr ""
+
+#: ../includes/API/AdminAPI.php:1060, ../includes/API/AdminAPI.php:1062, ../includes/API/AdminAPI.php:1074, ../includes/Admin/views/better-payment-transaction-view.php:90, ../includes/Admin/views/better-payment-transaction-view.php:109, ../includes/Admin/views/better-payment-transaction-view.php:110, ../includes/Admin/views/template-transaction-list.php:142, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:192
 msgid "N/A"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:608
+#: ../includes/API/AdminAPI.php:1131
 msgid "Transaction deleted successfully"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:659
+#: ../includes/API/AdminAPI.php:1182
 msgid "Settings updated successfully"
 msgstr ""
 
@@ -389,7 +429,7 @@ msgstr ""
 msgid "Title:"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:655, ../includes/Classes/Handler.php:1314, ../includes/Admin/Elementor/Better_Payment_Widget.php:2154, ../includes/Admin/Elementor/Better_Payment_Widget.php:2321
+#: ../includes/Blocks/BlockManager.php:655, ../includes/Classes/Handler.php:1326, ../includes/Admin/Elementor/Better_Payment_Widget.php:2154, ../includes/Admin/Elementor/Better_Payment_Widget.php:2321
 msgid "Better Payment transaction on %s"
 msgstr ""
 
@@ -401,35 +441,35 @@ msgstr ""
 msgid "Thank you for your payment."
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:788, ../includes/Blocks/BlockManager.php:1131, ../includes/Classes/Handler.php:800, ../includes/Admin/Elementor/Better_Payment_Widget.php:1529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2561, ../includes/Admin/Elementor/Better_Payment_Widget.php:2563, ../includes/Admin/Elementor/Better_Payment_Widget.php:2564, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:584, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:626, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2186, ../includes/Admin/Elementor/User_Dashboard.php:1898, ../includes/Admin/Elementor/User_Dashboard.php:2019, ../includes/Admin/Elementor/User_Dashboard.php:2022, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:334, ../includes/Admin/views/template-transaction-list.php:38, ../includes/Campaign/Elements/ProElementSchemas.php:143
+#: ../includes/Blocks/BlockManager.php:788, ../includes/Blocks/BlockManager.php:1131, ../includes/Classes/Handler.php:812, ../includes/WooCommerce/MyAccount.php:488, ../includes/Admin/Elementor/Better_Payment_Widget.php:1529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2561, ../includes/Admin/Elementor/Better_Payment_Widget.php:2563, ../includes/Admin/Elementor/Better_Payment_Widget.php:2564, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:584, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:626, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2186, ../includes/Admin/Elementor/User_Dashboard.php:1898, ../includes/Admin/Elementor/User_Dashboard.php:2019, ../includes/Admin/Elementor/User_Dashboard.php:2022, ../includes/Admin/views/better-payment-transaction-list.php:229, ../includes/Admin/views/template-email-notification.php:334, ../includes/Admin/views/template-transaction-list.php:38, ../includes/Campaign/Elements/ProElementSchemas.php:143
 msgid "Amount"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:796, ../includes/Classes/Handler.php:804, ../includes/Admin/Elementor/Better_Payment_Widget.php:2595, ../includes/Admin/Elementor/Better_Payment_Widget.php:2597, ../includes/Admin/Elementor/Better_Payment_Widget.php:2598, ../includes/Admin/Elementor/Better_Payment_Widget.php:3677
+#: ../includes/Blocks/BlockManager.php:796, ../includes/Classes/Handler.php:816, ../includes/Admin/Elementor/Better_Payment_Widget.php:2595, ../includes/Admin/Elementor/Better_Payment_Widget.php:2597, ../includes/Admin/Elementor/Better_Payment_Widget.php:2598, ../includes/Admin/Elementor/Better_Payment_Widget.php:3677
 msgid "Payment Method"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:800, ../includes/Classes/Handler.php:807, ../includes/Admin/Elementor/Better_Payment_Widget.php:120, ../includes/Admin/Elementor/Better_Payment_Widget.php:2612, ../includes/Admin/Elementor/Better_Payment_Widget.php:2614, ../includes/Admin/Elementor/Better_Payment_Widget.php:2615, ../includes/Admin/Elementor/User_Dashboard.php:1910, ../includes/Admin/Elementor/User_Dashboard.php:2032, ../includes/Admin/Elementor/User_Dashboard.php:2035, ../includes/Admin/views/template-transaction-list.php:41
+#: ../includes/Blocks/BlockManager.php:800, ../includes/Classes/Handler.php:819, ../includes/Admin/Elementor/Better_Payment_Widget.php:120, ../includes/Admin/Elementor/Better_Payment_Widget.php:2612, ../includes/Admin/Elementor/Better_Payment_Widget.php:2614, ../includes/Admin/Elementor/Better_Payment_Widget.php:2615, ../includes/Admin/Elementor/User_Dashboard.php:1910, ../includes/Admin/Elementor/User_Dashboard.php:2032, ../includes/Admin/Elementor/User_Dashboard.php:2035, ../includes/Admin/views/template-transaction-list.php:41
 msgid "Payment Type"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:804, ../includes/Classes/Handler.php:833, ../includes/Admin/Elementor/Better_Payment_Widget.php:2629, ../includes/Admin/Elementor/Better_Payment_Widget.php:2631, ../includes/Admin/Elementor/Better_Payment_Widget.php:2632
+#: ../includes/Blocks/BlockManager.php:804, ../includes/Classes/Handler.php:845, ../includes/Admin/Elementor/Better_Payment_Widget.php:2629, ../includes/Admin/Elementor/Better_Payment_Widget.php:2631, ../includes/Admin/Elementor/Better_Payment_Widget.php:2632
 msgid "Merchant Details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:808, ../includes/Classes/Handler.php:839, ../includes/Admin/Elementor/Better_Payment_Widget.php:2646, ../includes/Admin/Elementor/Better_Payment_Widget.php:2648, ../includes/Admin/Elementor/Better_Payment_Widget.php:2649
+#: ../includes/Blocks/BlockManager.php:808, ../includes/Classes/Handler.php:851, ../includes/Admin/Elementor/Better_Payment_Widget.php:2646, ../includes/Admin/Elementor/Better_Payment_Widget.php:2648, ../includes/Admin/Elementor/Better_Payment_Widget.php:2649
 msgid "Paid Amount"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:812, ../includes/Classes/Handler.php:842, ../includes/Admin/Elementor/Better_Payment_Widget.php:2663, ../includes/Admin/Elementor/Better_Payment_Widget.php:2665, ../includes/Admin/Elementor/Better_Payment_Widget.php:2666
+#: ../includes/Blocks/BlockManager.php:812, ../includes/Classes/Handler.php:854, ../includes/Admin/Elementor/Better_Payment_Widget.php:2663, ../includes/Admin/Elementor/Better_Payment_Widget.php:2665, ../includes/Admin/Elementor/Better_Payment_Widget.php:2666
 msgid "Purchase Details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:816, ../includes/Classes/Handler.php:845, ../includes/Admin/Elementor/Better_Payment_Widget.php:2680, ../includes/Admin/Elementor/Better_Payment_Widget.php:2682, ../includes/Admin/Elementor/Better_Payment_Widget.php:2683
+#: ../includes/Blocks/BlockManager.php:816, ../includes/Classes/Handler.php:857, ../includes/Admin/Elementor/Better_Payment_Widget.php:2680, ../includes/Admin/Elementor/Better_Payment_Widget.php:2682, ../includes/Admin/Elementor/Better_Payment_Widget.php:2683
 msgid "Print"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:820, ../includes/Blocks/BlockManager.php:856, ../includes/Classes/Handler.php:848, ../includes/Classes/Handler.php:1079, ../includes/Admin/Elementor/Better_Payment_Widget.php:2697, ../includes/Admin/Elementor/Better_Payment_Widget.php:2699, ../includes/Admin/Elementor/Better_Payment_Widget.php:2700, ../includes/Admin/Elementor/Better_Payment_Widget.php:2828, ../includes/Admin/Elementor/Better_Payment_Widget.php:2830
+#: ../includes/Blocks/BlockManager.php:820, ../includes/Blocks/BlockManager.php:856, ../includes/Classes/Handler.php:860, ../includes/Classes/Handler.php:1091, ../includes/Admin/Elementor/Better_Payment_Widget.php:2697, ../includes/Admin/Elementor/Better_Payment_Widget.php:2699, ../includes/Admin/Elementor/Better_Payment_Widget.php:2700, ../includes/Admin/Elementor/Better_Payment_Widget.php:2828, ../includes/Admin/Elementor/Better_Payment_Widget.php:2830
 msgid "View Details"
 msgstr ""
 
@@ -437,11 +477,11 @@ msgstr ""
 msgid "Payment Failed"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:846, ../includes/Classes/Handler.php:1076, ../includes/Admin/Elementor/Better_Payment_Widget.php:2785
+#: ../includes/Blocks/BlockManager.php:846, ../includes/Classes/Handler.php:1088, ../includes/Admin/Elementor/Better_Payment_Widget.php:2785
 msgid "Your payment has failed. Please check your payment details"
 msgstr ""
 
-#: ../includes/Blocks/BlockManager.php:850, ../includes/Classes/Handler.php:797, ../includes/Classes/Handler.php:1077, ../includes/Admin/Elementor/Better_Payment_Widget.php:2529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2530, ../includes/Admin/Elementor/Better_Payment_Widget.php:2801, ../includes/Admin/Elementor/User_Dashboard.php:1922, ../includes/Admin/Elementor/User_Dashboard.php:2045, ../includes/Admin/Elementor/User_Dashboard.php:2048, ../includes/Admin/views/template-transaction-list.php:44
+#: ../includes/Blocks/BlockManager.php:850, ../includes/Classes/Handler.php:809, ../includes/Classes/Handler.php:1089, ../includes/Admin/Elementor/Better_Payment_Widget.php:2529, ../includes/Admin/Elementor/Better_Payment_Widget.php:2530, ../includes/Admin/Elementor/Better_Payment_Widget.php:2801, ../includes/Admin/Elementor/User_Dashboard.php:1922, ../includes/Admin/Elementor/User_Dashboard.php:2045, ../includes/Admin/Elementor/User_Dashboard.php:2048, ../includes/Admin/views/template-transaction-list.php:44
 msgid "Transaction ID"
 msgstr ""
 
@@ -553,63 +593,63 @@ msgstr ""
 msgid "Please do not close this page. This usually takes a few seconds."
 msgstr ""
 
-#: ../includes/Classes/Handler.php:552, ../includes/Classes/Handler.php:573
+#: ../includes/Classes/Handler.php:564, ../includes/Classes/Handler.php:585, ../includes/Classes/StripeService.php:115, ../includes/Classes/StripeService.php:127, ../includes/Classes/StripeService.php:273, ../includes/Classes/StripeService.php:285
 msgid "There was a problem connecting to the Stripe API endpoint."
 msgstr ""
 
-#: ../includes/Classes/Handler.php:624, ../includes/Classes/Handler.php:716
+#: ../includes/Classes/Handler.php:636, ../includes/Classes/Handler.php:728
 msgid "USD"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:759, ../includes/Admin/Elementor/Better_Payment_Widget.php:2509, ../includes/Admin/Elementor/Better_Payment_Widget.php:2510, ../includes/Admin/Elementor/Better_Payment_Widget.php:2511
+#: ../includes/Classes/Handler.php:771, ../includes/Admin/Elementor/Better_Payment_Widget.php:2509, ../includes/Admin/Elementor/Better_Payment_Widget.php:2510, ../includes/Admin/Elementor/Better_Payment_Widget.php:2511
 msgid "You paid"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:759, ../includes/Admin/Elementor/Better_Payment_Widget.php:2509, ../includes/Admin/Elementor/Better_Payment_Widget.php:2510, ../includes/Admin/Elementor/Better_Payment_Widget.php:2511
+#: ../includes/Classes/Handler.php:771, ../includes/Admin/Elementor/Better_Payment_Widget.php:2509, ../includes/Admin/Elementor/Better_Payment_Widget.php:2510, ../includes/Admin/Elementor/Better_Payment_Widget.php:2511
 msgid "to"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:769
+#: ../includes/Classes/Handler.php:781
 msgid "Payment Confirmation email will be sent to "
 msgstr ""
 
-#: ../includes/Classes/Handler.php:794, ../includes/Admin/views/template-email-notification.php:173
+#: ../includes/Classes/Handler.php:806, ../includes/Admin/views/template-email-notification.php:173
 msgid "Thank You!"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:828
+#: ../includes/Classes/Handler.php:840
 msgid "Split Payment"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:825, ../includes/Classes/Handler.php:815
+#: ../includes/Classes/Handler.php:837, ../includes/Classes/Handler.php:827
 msgid "Recurring Payment"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:826, ../includes/Classes/Handler.php:813
+#: ../includes/Classes/Handler.php:838, ../includes/Classes/Handler.php:825
 msgid "One Time Payment"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1075, ../includes/Admin/Elementor/Better_Payment_Widget.php:2769
+#: ../includes/Classes/Handler.php:1087, ../includes/Admin/Elementor/Better_Payment_Widget.php:2769
 msgid "Payment Failed!"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1454, ../includes/Classes/Handler.php:1458
+#: ../includes/Classes/Handler.php:1466, ../includes/Classes/Handler.php:1470
 msgid "New better payment transaction! "
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1588
+#: ../includes/Classes/Handler.php:1600
 msgid "Field"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1589
+#: ../includes/Classes/Handler.php:1601
 msgid "Entry"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1642, ../includes/Admin/views/template-email-notification.php:258
+#: ../includes/Classes/Handler.php:1654, ../includes/Admin/views/template-email-notification.php:258
 msgid "Paid"
 msgstr ""
 
-#: ../includes/Classes/Handler.php:1645
+#: ../includes/Classes/Handler.php:1657
 msgid "Product Price: "
 msgstr ""
 
@@ -625,84 +665,682 @@ msgstr ""
 msgid "Failed to insert records into database!"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:416
+#: ../includes/Classes/Plugin_Usage_Tracker.php:485
 msgid "We can't detect any plugin information. This is most probably because you have not included the code in the plugin main file."
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:778
+#: ../includes/Classes/Plugin_Usage_Tracker.php:869
 msgid "Sorry to see you go"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:779
+#: ../includes/Classes/Plugin_Usage_Tracker.php:870
 msgid "Before you deactivate the plugin, would you quickly give us your reason for doing so?"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:782
+#: ../includes/Classes/Plugin_Usage_Tracker.php:873
 msgid "I no longer need the plugin"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:784
+#: ../includes/Classes/Plugin_Usage_Tracker.php:875
 msgid "I found a better plugin"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:785
+#: ../includes/Classes/Plugin_Usage_Tracker.php:876
 msgid "Please share which plugin"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:787
+#: ../includes/Classes/Plugin_Usage_Tracker.php:878
 msgid "I couldn't get the plugin to work"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:788
+#: ../includes/Classes/Plugin_Usage_Tracker.php:879
 msgid "It's a temporary deactivation"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:790
+#: ../includes/Classes/Plugin_Usage_Tracker.php:881
 msgid "Other"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:791
+#: ../includes/Classes/Plugin_Usage_Tracker.php:882
 msgid "Please share the reason"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:834
+#: ../includes/Classes/Plugin_Usage_Tracker.php:925
 msgid "Submitting form"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:894
+#: ../includes/Classes/Plugin_Usage_Tracker.php:985
 msgid "Submit and Deactivate"
 msgstr ""
 
-#: ../includes/Classes/Plugin_Usage_Tracker.php:894
+#: ../includes/Classes/Plugin_Usage_Tracker.php:985
 msgid "Just Deactivate"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:846
+#: ../includes/Classes/StripeService.php:92, ../includes/Classes/StripeService.php:159, ../includes/Classes/StripeService.php:199, ../includes/Classes/StripeService.php:236
+msgid "Stripe is not configured."
+msgstr ""
+
+#: ../includes/Classes/StripeService.php:121, ../includes/Classes/StripeService.php:133, ../includes/Classes/StripeService.php:279, ../includes/Classes/StripeService.php:291
+msgid "Unexpected response from the Stripe API endpoint."
+msgstr ""
+
+#: ../includes/Models/SubscriptionRelationModel.php:71
+msgid "New Subscription Order"
+msgstr ""
+
+#: ../includes/Models/SubscriptionRelationModel.php:72
+msgid "Renewal Order"
+msgstr ""
+
+#: ../includes/Models/SubscriptionRelationModel.php:92
+msgid "WooCommerce"
+msgstr ""
+
+#: ../includes/Models/SubscriptionRelationModel.php:93
+msgid "FluentCart"
+msgstr ""
+
+#: ../includes/Models/SubscriptionRelationModel.php:94
+msgid "SureCart"
+msgstr ""
+
+#: ../includes/Traits/Helper.php:914
 msgid "Add your Stripe, PayPal, or Paystack API keys in <a href=\"%s\">Payment Settings</a>"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:856
+#: ../includes/Traits/Helper.php:924
 msgid "Open your page in"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:856
+#: ../includes/Traits/Helper.php:924
 msgid "Elementor"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:856
+#: ../includes/Traits/Helper.php:924
 msgid " or "
 msgstr ""
 
-#: ../includes/Traits/Helper.php:856
+#: ../includes/Traits/Helper.php:924
 msgid "Gutenberg"
 msgstr ""
 
-#: ../includes/Traits/Helper.php:856
+#: ../includes/Traits/Helper.php:924
 msgid " and insert the Better Payment widget/block."
 msgstr ""
 
-#: ../includes/Traits/Helper.php:864
+#: ../includes/Traits/Helper.php:932
 msgid "Customize the settings to fit your needs, then save and publish"
+msgstr ""
+
+#: ../includes/WooCommerce/Blocks.php:107, ../includes/WooCommerce/Gateway.php:87
+msgid "Pay securely using Stripe via Better Payment."
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:209
+msgid "Whether the cart contains a Better Payment subscription product."
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:213
+msgid "Row label."
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:214
+msgid "Formatted recurring amount and schedule."
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:215
+msgid "Formatted date of the first renewal charge."
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:216
+msgid "Cancellation note, empty when the product does not allow user cancellation."
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:343
+msgid "Subscription Total"
+msgstr ""
+
+#: ../includes/WooCommerce/CartTotals.php:352
+msgid "Cancel anytime from your account."
+msgstr ""
+
+#. translators: 1: recurring price, 2: billing schedule (e.g. "month" or "every 3 months")
+#. translators: 1: formatted price, 2: billing schedule ("month", "every 3 months")
+#. translators: 1: price HTML, 2: billing schedule (e.g. "month" or "every 3 months")
+#: ../includes/WooCommerce/CartTotals.php:368, ../includes/WooCommerce/MyAccount.php:696, ../includes/WooCommerce/Subscriptions.php:540
+msgid "%1$s / %2$s"
+msgstr ""
+
+#. translators: %s: date of the first renewal charge
+#: ../includes/WooCommerce/CartTotals.php:383
+msgid "Next billing on: %s"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:42
+msgid "Better Payment (Stripe)"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:43
+msgid "Accept payments through Better Payment's existing Stripe integration. Stripe credentials are managed in Better Payment → Settings → Stripe."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:71
+msgid "Enable/Disable"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:73
+msgid "Enable Better Payment (Stripe)"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:77, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:243, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:457, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:474, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1070, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1146, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1609, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2026, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3087, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3183, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3352, ../includes/Admin/Elementor/Controls/Select2.php:30
+msgid "Title"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:79
+msgid "The payment method title customers see at checkout."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:84, ../includes/Admin/views/template-email-notification.php:325
+msgid "Description"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:86
+msgid "The payment method description customers see at checkout."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:113
+msgid "This gateway uses Better Payment's existing Stripe configuration."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:114
+msgid "Manage your Stripe account from Better Payment → Settings → Stripe."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:118
+msgid "Stripe keys are not configured yet — the gateway will stay hidden at checkout until they are."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:122
+msgid "Open Better Payment Stripe Settings"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:152
+msgid "Unable to process the order. Please try again."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:159
+msgid "This payment method is not configured. Please choose another payment method."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:178
+msgid "Better Payment: free trial checkout — nothing to charge. Renewal payments will be invoiced for manual payment."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:225, ../includes/WooCommerce/Gateway.php:272, ../includes/WooCommerce/Gateway.php:310
+msgid "The payment could not be started. Please try again or choose another payment method."
+msgstr ""
+
+#. translators: %s: error message
+#: ../includes/WooCommerce/Gateway.php:276
+msgid "Better Payment: could not create the Stripe Checkout Session — %s"
+msgstr ""
+
+#. translators: 1: Better Payment order id, 2: Stripe Checkout Session id
+#: ../includes/WooCommerce/Gateway.php:329
+msgid "Better Payment: redirecting to Stripe Checkout. Payment ID: %1$s, Session: %2$s."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:373
+msgid "The payment session could not be found. Please try placing the order again."
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:391
+msgid "Redirecting to secure Stripe Checkout…"
+msgstr ""
+
+#: ../includes/WooCommerce/Gateway.php:392
+msgid "Click here if you are not redirected automatically."
+msgstr ""
+
+#. translators: %d: subscription (parent order) id
+#: ../includes/WooCommerce/MyAccount.php:206
+msgid "Subscription #%d"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:209, ../includes/WooCommerce/MyAccount.php:290, ../includes/WooCommerce/MyAccount.php:308
+msgid "Subscription"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:291, ../includes/WooCommerce/MyAccount.php:313, ../includes/WooCommerce/MyAccount.php:484, ../includes/Admin/Elementor/Better_Payment_Widget.php:595
+msgid "Product"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:292, ../includes/WooCommerce/MyAccount.php:316, ../includes/WooCommerce/MyAccount.php:480, ../includes/WooCommerce/MyAccount.php:625, ../includes/WooCommerce/MyAccount.php:647, ../includes/Admin/Elementor/User_Dashboard.php:1946, ../includes/Admin/Elementor/User_Dashboard.php:2071, ../includes/Admin/Elementor/User_Dashboard.php:2074, ../includes/Admin/views/better-payment-transaction-list.php:179, ../includes/Admin/views/better-payment-transaction-list.php:198, ../includes/Admin/views/template-transaction-list.php:50
+msgid "Status"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:293, ../includes/WooCommerce/MyAccount.php:319, ../includes/WooCommerce/MyAccount.php:496
+msgid "Next payment"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:294, ../includes/WooCommerce/MyAccount.php:322, ../includes/WooCommerce/MyAccount.php:626, ../includes/WooCommerce/MyAccount.php:650
+msgid "Total"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:295, ../includes/WooCommerce/MyAccount.php:325
+msgid "Actions"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:327, ../includes/Admin/views/template-transaction-list.php:152, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:208
+msgid "View"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:350
+msgid "Browse products"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:353
+msgid "You have no subscriptions yet."
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:376
+msgid "Previous"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:381
+msgid "Next"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:435, ../includes/WooCommerce/MyAccount.php:456
+msgid "Back to subscriptions"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:450
+msgid "That subscription could not be found."
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:476
+msgid "Subscription details"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:492
+msgid "Started"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:500
+msgid "Renewals"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:505
+msgid "Free trial"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:506
+msgid "Applied on signup — the first payment was charged when the trial ended."
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:511
+msgid "Automatic renewal"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:516
+msgid "On"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:517
+msgid "Off"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:525
+msgid "Payment method"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:530
+msgid "Signup order"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:561
+msgid "Pay renewal invoice"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:576
+msgid "Manage subscription"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:618
+msgid "Related orders"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:622, ../includes/WooCommerce/MyAccount.php:636, ../includes/Campaign/Elements/ProElementSchemas.php:153, ../includes/Campaign/Elements/ProElementSchemas.php:163
+msgid "Order"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:623, ../includes/WooCommerce/MyAccount.php:641, ../includes/Admin/Elementor/User_Dashboard.php:1958, ../includes/Admin/Elementor/User_Dashboard.php:2084, ../includes/Admin/Elementor/User_Dashboard.php:2087, ../includes/Admin/views/template-transaction-list.php:53, ../includes/Campaign/Elements/ProElementSchemas.php:142
+msgid "Date"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:624, ../includes/WooCommerce/MyAccount.php:644
+msgid "Type"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:645
+msgid "Renewal"
+msgstr ""
+
+#: ../includes/WooCommerce/MyAccount.php:645
+msgid "Signup"
+msgstr ""
+
+#. translators: 1: order number, 2: site name
+#: ../includes/WooCommerce/OrderHandler.php:90
+msgid "Order %1$s — %2$s"
+msgstr ""
+
+#. translators: %s: error message
+#: ../includes/WooCommerce/OrderHandler.php:313, ../includes/WooCommerce/OrderHandler.php:388
+msgid "Better Payment: Stripe verification could not be completed — %s. The payment may still confirm on a later visit to this page."
+msgstr ""
+
+#. translators: 1: paid amount, 2: paid currency, 3: order total, 4: order currency
+#: ../includes/WooCommerce/OrderHandler.php:486
+msgid "Better Payment: verified payment amount (%1$s %2$s) does not match the order total (%3$s %4$s). Order placed on hold for manual review."
+msgstr ""
+
+#. translators: 1: Stripe transaction id, 2: Better Payment record id
+#: ../includes/WooCommerce/OrderHandler.php:504
+msgid "Better Payment: Stripe payment confirmed. Transaction ID: %1$s (Better Payment record #%2$d)."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:380
+msgid "Day"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:381
+msgid "Week"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:382
+msgid "Month"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:383
+msgid "Year"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:411
+msgid "Better Payment Subscription"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:412
+msgid "Bill this product on a recurring schedule through the Better Payment (Stripe) gateway."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:420
+msgid "Renew Every"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:439
+msgid "Billing schedule — e.g. \"3\" + \"Month\" renews every 3 months."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:446
+msgid "Free Days Before First Charge"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:454
+msgid "The customer pays nothing at checkout; the first payment is charged when the trial ends. One trial per customer per product — returning subscribers pay the regular price. 0 = no trial."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:461
+msgid "Customer Can Cancel"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:462
+msgid "Shows a Cancel button on this subscription under My Account → Subscriptions, so the buyer can stop future renewals without contacting you."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:469
+msgid "Add to Cart Button Label"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:472
+msgid "e.g. Subscribe Now"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:474
+msgid "Replaces the Add to Cart wording for this product on both the product page and the shop listings. Leave blank to keep the WooCommerce default."
+msgstr ""
+
+#. translators: %d: number of free trial days before the first payment
+#: ../includes/WooCommerce/Subscriptions.php:548
+msgid "with a %d-day free trial"
+msgid_plural "with a %d-day free trial"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../includes/WooCommerce/Subscriptions.php:706
+msgid "Only one subscription can be purchased at a time. Please remove the other subscription from your cart and buy it separately."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:710
+msgid "A subscription has to be purchased on its own. Please remove the other products from your cart and buy them separately."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1312
+msgid "day"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1313
+msgid "week"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1314
+msgid "month"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1315
+msgid "year"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1318
+msgid "days"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1319
+msgid "weeks"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1320
+msgid "months"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1321
+msgid "years"
+msgstr ""
+
+#. translators: 1: interval count, 2: period plural (e.g. "months")
+#: ../includes/WooCommerce/Subscriptions.php:1330
+msgid "every %1$d %2$s"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1350, ../includes/Admin/Elementor/Better_Payment_Widget.php:3691, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2646
+msgid "Active"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1351
+msgid "Payment past due"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1352
+msgid "Cancelled"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1353, ../includes/Admin/views/better-payment-transaction-list.php:200
+msgid "Completed"
+msgstr ""
+
+#. translators: 1: order number, 2: site name
+#: ../includes/WooCommerce/Subscriptions.php:1387
+msgid "Subscription renewal %1$s — %2$s"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1552
+msgid "The product offers a free trial but this customer already used one for it, so the regular schedule applies."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1548
+msgid "%d-day free trial — nothing was charged at checkout; the first payment is due when the trial ends."
+msgid_plural "%d-day free trial — nothing was charged at checkout; the first payment is due when the trial ends."
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: 1: billing schedule, 2: next renewal date, 3: note about the saved payment method, 4: trial note (may be empty)
+#: ../includes/WooCommerce/Subscriptions.php:1558
+msgid "Better Payment: subscription activated — renews every %1$s. Next renewal: %2$s. %3$s%4$s"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1562
+msgid "A reusable payment method was saved for automatic renewals."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1563
+msgid "No reusable payment method could be saved — renewals will need manual payment."
+msgstr ""
+
+#. translators: %d: renewal order id
+#: ../includes/WooCommerce/Subscriptions.php:1697
+msgid "Better Payment: renewal order #%d was paid but the subscription is cancelled — the schedule was not advanced."
+msgstr ""
+
+#. translators: 1: renewal order id, 2: next renewal date
+#: ../includes/WooCommerce/Subscriptions.php:1722
+msgid "Better Payment: renewal order #%1$d paid. Next renewal: %2$s."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:1848
+msgid "Better Payment: subscription renewal total is zero — nothing to charge. The renewal was completed without contacting Stripe."
+msgstr ""
+
+#. translators: %s: Stripe PaymentIntent status
+#: ../includes/WooCommerce/Subscriptions.php:1886
+msgid "the charge did not succeed (status: %s)"
+msgstr ""
+
+#. translators: 1: Stripe PaymentIntent id, 2: Better Payment record id
+#: ../includes/WooCommerce/Subscriptions.php:1917
+msgid "Better Payment: subscription renewal charged off-session. Transaction ID: %1$s (Better Payment record #%2$d)."
+msgstr ""
+
+#. translators: %d: parent order id
+#: ../includes/WooCommerce/Subscriptions.php:1992
+msgid "Better Payment: subscription renewal order for order #%d."
+msgstr ""
+
+#. translators: %s: failure reason
+#: ../includes/WooCommerce/Subscriptions.php:2031
+msgid "Better Payment: automatic renewal failed — %s. Automatic charging is paused until the pending renewal order is paid."
+msgstr ""
+
+#. translators: %s: failure reason
+#: ../includes/WooCommerce/Subscriptions.php:2043
+msgid "Better Payment: the automatic charge failed — %s. The order was invoiced to the customer for manual payment."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2084
+msgid "Better Payment: manual subscription renewal — invoiced to the customer for payment."
+msgstr ""
+
+#. translators: %d: renewal order id
+#: ../includes/WooCommerce/Subscriptions.php:2091
+msgid "Better Payment: renewal due — renewal order #%d was invoiced to the customer for manual payment."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2188
+msgid "Automatic renewal is on — renewals are charged to your saved payment method."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2189
+msgid "Automatic renewal is off — you will be emailed an invoice when each renewal is due."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2194
+msgid "Turn off automatic renewal"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2194
+msgid "Turn on automatic renewal"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2237
+msgid "Better Payment: the customer turned automatic renewal ON — due renewals are charged to the saved payment method."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2238
+msgid "Better Payment: the customer turned automatic renewal OFF — due renewals are invoiced for manual payment."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2247
+msgid "Automatic renewal is now on."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2248
+msgid "Automatic renewal is now off. We will email you an invoice when a renewal is due."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2296
+msgid "Cancel Better Payment Subscription"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2352
+msgid "Cancel this subscription? No further renewals will be charged."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2353
+msgid "Cancel subscription"
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2387
+msgid "Better Payment: subscription cancelled by the customer — no further automatic renewals will be charged."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2390
+msgid "Your subscription has been cancelled."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2424
+msgid "Better Payment: subscription cancelled — no further automatic renewals will be charged."
+msgstr ""
+
+#. translators: %s: next renewal date
+#: ../includes/WooCommerce/Subscriptions.php:2477
+msgid "Better Payment: subscription reactivated. Next renewal: %s."
+msgstr ""
+
+#. translators: %s: role slug
+#: ../includes/WooCommerce/Subscriptions.php:2590
+msgid "Better Payment: customer role set to \"%s\" — subscription active."
+msgstr ""
+
+#. translators: %s: role slug
+#: ../includes/WooCommerce/Subscriptions.php:2592
+msgid "Better Payment: customer role set to \"%s\" — subscription ended."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2968
+msgid "WooCommerce is not active, so this subscription cannot be managed."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2974
+msgid "Subscription order not found."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2980
+msgid "This action is not available for the subscription's current status."
+msgstr ""
+
+#: ../includes/WooCommerce/Subscriptions.php:2984
+msgid "Better Payment: subscription cancelled from the Better Payment admin — no further automatic renewals will be charged."
 msgstr ""
 
 #: ../includes/Admin/Elementor/Better_Payment_Widget.php:59
@@ -799,10 +1437,6 @@ msgstr ""
 
 #: ../includes/Admin/Elementor/Better_Payment_Widget.php:542
 msgid "<a href=\"%1$s\" target=\"_blank\"><strong>WooCommerce</strong></a> is not installed/activated on your site. Please install and activate <a href=\"%1$s\" target=\"_blank\"><strong>WooCommerce</strong></a> first."
-msgstr ""
-
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:595
-msgid "Product"
 msgstr ""
 
 #: ../includes/Admin/Elementor/Better_Payment_Widget.php:604
@@ -1393,10 +2027,6 @@ msgstr ""
 msgid "Border"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Better_Payment_Widget.php:3691, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2646
-msgid "Active"
-msgstr ""
-
 #: ../includes/Admin/Elementor/Better_Payment_Widget.php:3715
 msgid "Inactive"
 msgstr ""
@@ -1483,10 +2113,6 @@ msgstr ""
 
 #: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:205, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1383, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3644
 msgid "Related Campaigns"
-msgstr ""
-
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:243, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:457, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:474, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1070, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1146, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:1609, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2026, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3087, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3183, ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:3352, ../includes/Admin/Elementor/Controls/Select2.php:30
-msgid "Title"
 msgstr ""
 
 #: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:263
@@ -1765,10 +2391,6 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:188, ../includes/Admin/Elementor/User_Dashboard.php:256, ../includes/Admin/Elementor/User_Dashboard.php:259
-msgid "Subscriptions"
-msgstr ""
-
 #: ../includes/Admin/Elementor/User_Dashboard.php:227
 msgid "Label"
 msgstr ""
@@ -1883,14 +2505,6 @@ msgstr ""
 
 #: ../includes/Admin/Elementor/User_Dashboard.php:1934, ../includes/Admin/Elementor/User_Dashboard.php:2058, ../includes/Admin/Elementor/User_Dashboard.php:2061, ../includes/Admin/views/better-payment-transaction-list.php:272, ../includes/Admin/views/better-payment-transaction-list.php:275, ../includes/Admin/views/template-transaction-list.php:47
 msgid "Source"
-msgstr ""
-
-#: ../includes/Admin/Elementor/User_Dashboard.php:1946, ../includes/Admin/Elementor/User_Dashboard.php:2071, ../includes/Admin/Elementor/User_Dashboard.php:2074, ../includes/Admin/views/better-payment-transaction-list.php:179, ../includes/Admin/views/better-payment-transaction-list.php:198, ../includes/Admin/views/template-transaction-list.php:50
-msgid "Status"
-msgstr ""
-
-#: ../includes/Admin/Elementor/User_Dashboard.php:1958, ../includes/Admin/Elementor/User_Dashboard.php:2084, ../includes/Admin/Elementor/User_Dashboard.php:2087, ../includes/Admin/views/template-transaction-list.php:53, ../includes/Campaign/Elements/ProElementSchemas.php:142
-msgid "Date"
 msgstr ""
 
 #: ../includes/Admin/views/better-payment-settings.php:38
@@ -2185,10 +2799,6 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-#: ../includes/Admin/views/better-payment-transaction-list.php:200
-msgid "Completed"
-msgstr ""
-
 #: ../includes/Admin/views/better-payment-transaction-list.php:201
 msgid "Incomplete"
 msgstr ""
@@ -2405,10 +3015,6 @@ msgstr ""
 msgid "Transaction Summary:"
 msgstr ""
 
-#: ../includes/Admin/views/template-email-notification.php:325
-msgid "Description"
-msgstr ""
-
 #: ../includes/Admin/views/template-email-notification.php:328
 msgid "Rate"
 msgstr ""
@@ -2439,10 +3045,6 @@ msgstr ""
 
 #: ../includes/Admin/views/template-transaction-list.php:99, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:140
 msgid "Imported"
-msgstr ""
-
-#: ../includes/Admin/views/template-transaction-list.php:152, ../includes/Admin/views/elementor/user-dashboard/template-transactions-tab.php:208
-msgid "View"
 msgstr ""
 
 #: ../includes/Admin/views/template-transaction-list.php:153
@@ -3187,10 +3789,6 @@ msgstr ""
 msgid "Order By"
 msgstr ""
 
-#: ../includes/Campaign/Elements/ProElementSchemas.php:153, ../includes/Campaign/Elements/ProElementSchemas.php:163
-msgid "Order"
-msgstr ""
-
 #: ../includes/Campaign/Elements/ProElementSchemas.php:157
 msgid "High to Low"
 msgstr ""
@@ -3569,6 +4167,46 @@ msgstr ""
 msgid "Help communities recover when they need it most."
 msgstr ""
 
+#: ../includes/WooCommerce/Emails/SubscriptionCancelledEmail.php:30
+msgid "Better Payment Subscription Cancelled"
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCancelledEmail.php:31
+msgid "Sent to the customer when their Better Payment subscription is cancelled and no further renewals will be charged. The send is delayed briefly so a reactivated subscription is never emailed about a cancellation."
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCancelledEmail.php:51
+msgid "Your {site_title} subscription (order {order_number}) has been cancelled"
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCancelledEmail.php:60
+msgid "Subscription cancelled"
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCancelledEmail.php:69
+msgid "Changed your mind? You can subscribe again from our store at any time."
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCompletedEmail.php:32
+msgid "Better Payment Subscription Completed"
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCompletedEmail.php:33
+msgid "Sent to the customer when their Better Payment subscription completes — no further payments will be charged."
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCompletedEmail.php:53
+msgid "Your {site_title} subscription (order {order_number}) is complete"
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCompletedEmail.php:62
+msgid "Subscription completed"
+msgstr ""
+
+#: ../includes/WooCommerce/Emails/SubscriptionCompletedEmail.php:71
+msgid "Thank you for subscribing with us. You can start a new subscription from our store at any time."
+msgstr ""
+
 #: ../includes/Admin/Elementor/Controls/Select2.php:28
 msgid "Remove"
 msgstr ""
@@ -3738,4 +4376,37 @@ msgstr ""
 
 #: ../includes/Admin/views/elementor/layouts-block/layout-3.php:43
 msgid "%1$s <a href=\"%2$s\">%3$s</a>"
+msgstr ""
+
+#. translators: %s: customer first name
+#: ../templates/emails/bp-subscription-cancelled.php:30, ../templates/emails/bp-subscription-completed.php:31, ../templates/emails/plain/bp-subscription-cancelled.php:18, ../templates/emails/plain/bp-subscription-completed.php:19
+msgid "Hi %s,"
+msgstr ""
+
+#. translators: 1: order number, 2: site title
+#: ../templates/emails/bp-subscription-cancelled.php:38, ../templates/emails/plain/bp-subscription-cancelled.php:23
+msgid "Your subscription (order %1$s) on %2$s has been cancelled. No further renewal payments will be charged."
+msgstr ""
+
+#. translators: %s: comma-separated subscription product names
+#: ../templates/emails/bp-subscription-cancelled.php:50, ../templates/emails/bp-subscription-completed.php:51, ../templates/emails/plain/bp-subscription-cancelled.php:32, ../templates/emails/plain/bp-subscription-completed.php:33
+msgid "Subscription: %s"
+msgstr ""
+
+#. translators: %s: billing schedule, e.g. "month" or "every 3 months"
+#: ../templates/emails/bp-subscription-cancelled.php:59, ../templates/emails/bp-subscription-completed.php:60, ../templates/emails/plain/bp-subscription-cancelled.php:40, ../templates/emails/plain/bp-subscription-completed.php:41
+msgid "Billing schedule: %s"
+msgstr ""
+
+#: ../templates/emails/bp-subscription-cancelled.php:69, ../templates/emails/bp-subscription-completed.php:70
+msgid "View your subscription"
+msgstr ""
+
+#. translators: 1: order number, 2: site title
+#: ../templates/emails/bp-subscription-completed.php:39, ../templates/emails/plain/bp-subscription-completed.php:24
+msgid "Your subscription (order %1$s) on %2$s is complete — it reached its planned number of renewals, and no further payments will be charged."
+msgstr ""
+
+#: ../templates/emails/plain/bp-subscription-cancelled.php:50, ../templates/emails/plain/bp-subscription-completed.php:51
+msgid "View your subscription:"
 msgstr ""

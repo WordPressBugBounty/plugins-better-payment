@@ -3,9 +3,14 @@
 namespace Better_Payment\Lite\API;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Admin\SubscriptionListFilter;
+use Better_Payment\Lite\Models\SubscriptionRelationModel;
 use Better_Payment\Lite\Traits\Helper;
+use Better_Payment\Lite\WooCommerce\Subscriptions as WooSubscriptions;
 use WP_Error;
 use WP_REST_Controller;
+use WP_REST_Request;
+use WP_REST_Response;
 use WP_REST_Server;
 
 /**
@@ -51,6 +56,41 @@ class AdminAPI extends WP_REST_Controller
         register_rest_route($this->namespace, '/transactions', [
             'methods' => WP_REST_Server::READABLE,
             'callback' => [$this, 'get_transactions'],
+            'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        register_rest_route($this->namespace, '/subscriptions', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_subscriptions'],
+            'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        // Literal segment — never collides with the (?P<id>\d+) routes below,
+        // whose regex only matches digits.
+        register_rest_route($this->namespace, '/subscriptions/count', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_subscription_count'],
+            'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        // A subscription is identified by (subscription_id, source) — the id
+        // alone is ambiguous (the same numeric id can exist under two
+        // sources), so every single-subscription route requires ?source=.
+        register_rest_route($this->namespace, '/subscriptions/(?P<id>\d+)', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_subscription'],
+            'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        register_rest_route($this->namespace, '/subscriptions/(?P<id>\d+)', [
+            'methods' => WP_REST_Server::DELETABLE,
+            'callback' => [$this, 'delete_subscription'],
+            'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        register_rest_route($this->namespace, '/subscriptions/(?P<id>\d+)/status', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'update_subscription_status'],
             'permission_callback' => [$this, 'check_admin_permissions']
         ]);
 
@@ -420,6 +460,489 @@ class AdminAPI extends WP_REST_Controller
         } catch (\Exception $e) {
             return new WP_Error('transactions_error', $e->getMessage(), ['status' => 500]);
         }
+    }
+
+    /**
+     * Get paginated E-COMMERCE subscriptions, optionally narrowed by status
+     * and/or a free-text search.
+     *
+     * Data source is the `{prefix}better_payment_subscription_order` relation
+     * table — one row per distinct (subscription_id, source) — NOT the
+     * transactions table, so Better Payment's own (Elementor/campaign) Stripe
+     * subscription payments never appear here. Each row is hydrated by its
+     * integration: 'woo' via WooSubscriptions::admin_list_row() (parent-order
+     * meta), anything else via the `better_payment/admin/subscription_list_row`
+     * filter. A row that cannot hydrate (integration inactive, order deleted)
+     * still lists with its ids rather than silently disappearing.
+     *
+     * Two paths, because the filterable fields do not exist in SQL:
+     *
+     * - **Unfiltered** (every default pageview) — the relation table is
+     *   grouped, ordered and LIMITed in SQL, and only the current page's rows
+     *   are ever hydrated. Unchanged from before filtering existed.
+     * - **Filtered** — status, customer, product, source label and start date
+     *   all arrive during hydration, so there is nothing to push into a WHERE
+     *   clause:
+     *   the whole set is fetched, hydrated, filtered by
+     *   SubscriptionListFilter and paginated in PHP. The extra hydration is
+     *   the price of the feature and is confined to filtered requests.
+     *
+     * Both paths return the identical envelope, so the client cannot tell
+     * them apart.
+     *
+     * @since 2.4.0
+     * @param \WP_REST_Request $request
+     * @return \WP_REST_Response|\WP_Error
+     */
+    public function get_subscriptions($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        try {
+            $paged = $request->get_param('paged') ? intval($request->get_param('paged')) : 1;
+            $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
+
+            $status = SubscriptionListFilter::sanitize_status($request->get_param('status'));
+            $search = SubscriptionListFilter::sanitize_search($request->get_param('search_text'));
+            // Filters the "Started" column, so the params are named for it
+            // rather than borrowed from the Transactions tab's payment_date_*.
+            $date_from = SubscriptionListFilter::sanitize_date($request->get_param('start_date_from'));
+            $date_to = SubscriptionListFilter::sanitize_date($request->get_param('start_date_to'));
+
+            if (SubscriptionListFilter::is_filtered($status, $search, $date_from, $date_to)) {
+                $rows = [];
+
+                foreach (SubscriptionRelationModel::get_subscription_groups() as $relation) {
+                    $rows[] = $this->hydrate_subscription_row($relation);
+                }
+
+                $result = SubscriptionListFilter::paginate(
+                    SubscriptionListFilter::apply($rows, $status, $search, $date_from, $date_to),
+                    $paged,
+                    $per_page
+                );
+
+                $subscriptions = $result['subscriptions'];
+            } else {
+                $result = SubscriptionRelationModel::get_subscriptions_paginated([
+                    'paged'    => $paged,
+                    'per_page' => $per_page,
+                ]);
+
+                $subscriptions = [];
+
+                foreach ($result['subscriptions'] as $relation) {
+                    $subscriptions[] = $this->hydrate_subscription_row($relation);
+                }
+            }
+
+            return rest_ensure_response([
+                'subscriptions' => $subscriptions,
+                'total' => $result['total'],
+                'page' => $result['page'],
+                'per_page' => $result['per_page'],
+                'pages' => $result['pages'],
+            ]);
+        } catch (\Exception $e) {
+            return new WP_Error('subscriptions_error', $e->getMessage(), ['status' => 500]);
+        }
+    }
+
+    /**
+     * Build one admin Subscriptions list row from a relation-table group row.
+     *
+     * The single place a display row is assembled, so the filtered and
+     * unfiltered paths of get_subscriptions() can never disagree about what a
+     * row contains — which is what makes it safe for SubscriptionListFilter
+     * to match against the same fields the list renders.
+     *
+     * @since 2.4.0
+     * @param object $relation Grouped relation row (subscription_id, source, renewal_orders).
+     * @return array Display row.
+     */
+    private function hydrate_subscription_row($relation)
+    {
+        $known_sources = SubscriptionRelationModel::known_sources();
+        $source = (string) $relation->source;
+
+        $row = [
+            'subscription_id' => (int) $relation->subscription_id,
+            'source'          => $source,
+            'source_label'    => isset($known_sources[$source]) ? $known_sources[$source] : ucfirst($source),
+            'renewal_orders'  => (int) $relation->renewal_orders,
+            'customer_name'   => '',
+            'customer_email'  => '',
+            'product_name'    => '',
+            'amount'          => null,
+            'currency'        => '',
+            'interval'        => 0,
+            'period'          => '',
+            'status'          => '',
+            'renewal_count'   => 0,
+            'next_payment'    => '',
+            'start_date'      => '',
+            'order_edit_url'  => '',
+        ];
+
+        if (SubscriptionRelationModel::SOURCE_WOO === $source) {
+            $hydrated = WooSubscriptions::admin_list_row((int) $relation->subscription_id);
+            if (is_array($hydrated)) {
+                $row = array_merge($row, $hydrated);
+            }
+        }
+
+        /**
+         * Lets an e-commerce integration hydrate (or amend) its own
+         * subscription rows on the admin Subscriptions tab.
+         *
+         * Runs on every listed row, including on a filtered request — the
+         * admin list's status/search filters match on the row this filter
+         * returns, so an integration that hydrates `status` only here is
+         * still filterable.
+         *
+         * @since 2.4.0
+         *
+         * @param array  $row      Display row (see shape above).
+         * @param object $relation Raw relation-table group row (subscription_id, source, renewal_orders).
+         */
+        return apply_filters('better_payment/admin/subscription_list_row', $row, $relation);
+    }
+
+    /**
+     * Summary counts for the admin Subscriptions tab's stat cards: every
+     * recorded e-commerce subscription, plus how many are currently active
+     * or cancelled. Status comes from each subscription's integration —
+     * 'woo' via a light order-meta read (WooSubscriptions::admin_status()),
+     * anything else via the `better_payment/admin/subscription_status`
+     * filter — so a row whose integration is inactive still counts toward
+     * `all` but toward neither status bucket, mirroring how the list shows
+     * un-hydrated rows rather than dropping them.
+     *
+     * @since 2.4.0
+     * @param \WP_REST_Request $request
+     * @return \WP_REST_Response|\WP_Error
+     */
+    public function get_subscription_count($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        try {
+            $pairs = SubscriptionRelationModel::get_distinct_subscriptions();
+
+            $active = 0;
+            $cancelled = 0;
+
+            foreach ($pairs as $pair) {
+                $source = (string) $pair->source;
+                $status = '';
+
+                if (SubscriptionRelationModel::SOURCE_WOO === $source) {
+                    $status = WooSubscriptions::admin_status((int) $pair->subscription_id);
+                }
+
+                /**
+                 * Lets an e-commerce integration report one subscription's
+                 * current status for the admin tab's summary counts. Return
+                 * the raw `_bp_subscription_status`-style value ('active',
+                 * 'cancelled', 'past_due', …) or '' when unknown.
+                 *
+                 * @since 2.4.0
+                 *
+                 * @param string $status          Status resolved so far ('' unless woo).
+                 * @param int    $subscription_id Subscription id (within its source).
+                 * @param string $source          Source slug.
+                 */
+                $status = strtolower((string) apply_filters('better_payment/admin/subscription_status', $status, (int) $pair->subscription_id, $source));
+
+                if ('active' === $status) {
+                    $active++;
+                } elseif ('cancelled' === $status) {
+                    $cancelled++;
+                }
+            }
+
+            return rest_ensure_response([
+                'success' => true,
+                'count' => [
+                    'all' => count($pairs),
+                    'active' => $active,
+                    'cancelled' => $cancelled,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return new WP_Error('subscription_count_error', $e->getMessage(), ['status' => 500]);
+        }
+    }
+
+    /**
+     * Resolve and validate the (id, source) pair every single-subscription
+     * route needs. Returns [id, source, relation order rows] or a WP_Error —
+     * a pair with no relation rows is a subscription this plugin has never
+     * recorded, i.e. 404.
+     *
+     * @since 2.4.0
+     * @param WP_REST_Request $request
+     * @return array|WP_Error [int $id, string $source, object[] $orders]
+     */
+    private function resolve_subscription($request)
+    {
+        $id = intval($request->get_param('id'));
+        $source = SubscriptionRelationModel::sanitize_source($request->get_param('source'));
+
+        if (!$id || '' === $source) {
+            return new WP_Error('invalid_subscription', __('A subscription id and source are required.', 'better-payment'), ['status' => 400]);
+        }
+
+        $orders = SubscriptionRelationModel::get_orders($id, $source);
+
+        if (empty($orders)) {
+            return new WP_Error('subscription_not_found', __('Subscription not found.', 'better-payment'), ['status' => 404]);
+        }
+
+        return [$id, $source, $orders];
+    }
+
+    /**
+     * Get one e-commerce subscription for the admin details view: the list
+     * row's fields plus details-only fields (auto renew, available status
+     * actions) and the related orders recorded in the
+     * relation table. Hydration mirrors get_subscriptions(): 'woo' via the
+     * WooCommerce module, anything else via the
+     * `better_payment/admin/subscription_detail` filter. An un-hydratable
+     * subscription still returns its base row + order ids (the UI renders
+     * dashes and offers no actions).
+     *
+     * @since 2.4.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_subscription($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        $resolved = $this->resolve_subscription($request);
+        if (is_wp_error($resolved)) {
+            return $resolved;
+        }
+        list($id, $source, $relations) = $resolved;
+
+        $known_sources = SubscriptionRelationModel::known_sources();
+        $types = SubscriptionRelationModel::types();
+
+        $detail = [
+            'subscription_id'   => $id,
+            'source'            => $source,
+            'source_label'      => isset($known_sources[$source]) ? $known_sources[$source] : ucfirst($source),
+            'customer_name'     => '',
+            'customer_email'    => '',
+            'product_name'      => '',
+            'amount'            => null,
+            'currency'          => '',
+            'interval'          => 0,
+            'period'            => '',
+            'status'            => '',
+            'renewal_count'     => 0,
+            'auto_renew'        => '',
+            'next_payment'      => '',
+            // '' until the subscription has a settled renewal — the UI only
+            // renders the Last Payment row when this is non-empty.
+            'last_payment'      => '',
+            // Who cancelled: 'customer' | 'admin', with the actor's display
+            // name. '' unless the subscription is cancelled and its
+            // cancellation recorded an actor — the UI drops the row when the
+            // type is empty.
+            'cancelled_by_type' => '',
+            'cancelled_by_name' => '',
+            'start_date'        => '',
+            'order_edit_url'    => '',
+            'available_actions' => [],
+            // Billing & Shipping card: plain-text address lines (never
+            // formatted-address HTML — the React admin renders text only).
+            'billing_address'   => [],
+            'shipping_address'  => [],
+            'billing_phone'     => '',
+            'orders'            => [],
+        ];
+
+        if (SubscriptionRelationModel::SOURCE_WOO === $source) {
+            $hydrated = WooSubscriptions::admin_detail($id);
+            if (is_array($hydrated)) {
+                $detail = array_merge($detail, $hydrated);
+            }
+        }
+
+        // Related orders, newest first (the relation table stores them in
+        // recording order, oldest first).
+        foreach (array_reverse($relations) as $relation) {
+            $type = (string) $relation->type;
+
+            $order_row = [
+                'order_id'     => (int) $relation->order_id,
+                'type'         => $type,
+                'type_label'   => isset($types[$type]) ? $types[$type] : ucfirst($type),
+                'order_number' => '',
+                'date'         => '',
+                'status'       => '',
+                'status_label' => '',
+                'total'        => null,
+                'currency'     => '',
+                'edit_url'     => '',
+            ];
+
+            if (SubscriptionRelationModel::SOURCE_WOO === $source) {
+                $hydrated_order = WooSubscriptions::admin_order_row((int) $relation->order_id);
+                if (is_array($hydrated_order)) {
+                    $order_row = array_merge($order_row, $hydrated_order);
+                }
+            }
+
+            $detail['orders'][] = $order_row;
+        }
+
+        /**
+         * Lets an e-commerce integration hydrate (or amend) its own
+         * subscription's admin details view — including the related-order
+         * rows and the `available_actions` its status endpoint supports.
+         *
+         * @since 2.4.0
+         *
+         * @param array  $detail          Detail payload (see shape above).
+         * @param int    $subscription_id Subscription id within its source.
+         * @param string $source          Source slug ('woo', 'fluentcart', …).
+         */
+        $detail = apply_filters('better_payment/admin/subscription_detail', $detail, $id, $source);
+
+        return rest_ensure_response($detail);
+    }
+
+    /**
+     * Perform a status action (cancel | reactivate) on a subscription. The
+     * WooCommerce module handles its own source; any other integration may
+     * handle its subscriptions via the
+     * `better_payment/admin/subscription_status_action` filter — with no
+     * handler the action is refused rather than silently "succeeding".
+     *
+     * @since 2.4.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function update_subscription_status($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        $resolved = $this->resolve_subscription($request);
+        if (is_wp_error($resolved)) {
+            return $resolved;
+        }
+        list($id, $source) = $resolved;
+
+        $action = sanitize_key((string) $request->get_param('subscription_action'));
+
+        if ('' === $action) {
+            return new WP_Error('invalid_action', __('A subscription action is required.', 'better-payment'), ['status' => 400]);
+        }
+
+        if (SubscriptionRelationModel::SOURCE_WOO === $source) {
+            $result = WooSubscriptions::admin_status_action($id, $action);
+        } else {
+            /**
+             * Lets an e-commerce integration handle admin status actions on
+             * its own subscriptions. Return true on success, a WP_Error to
+             * refuse with a message, or leave the null default to signal the
+             * action is unsupported for this source (a handler must check
+             * $source and leave other integrations' subscriptions alone).
+             *
+             * @since 2.4.0
+             *
+             * @param null|true|WP_Error $result          Handling result.
+             * @param int                $subscription_id Subscription id within its source.
+             * @param string             $source          Source slug ('fluentcart', …).
+             * @param string             $action          Requested action slug.
+             */
+            $result = apply_filters('better_payment/admin/subscription_status_action', null, $id, $source, $action);
+
+            if (null === $result) {
+                return new WP_Error('action_not_supported', __('This subscription cannot be managed from here — its integration does not support status changes.', 'better-payment'), ['status' => 400]);
+            }
+        }
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        return rest_ensure_response([
+            'success' => true,
+            'message' => 'cancel' === $action
+                ? __('Subscription cancelled — no further renewals will be charged.', 'better-payment')
+                : __('Subscription updated successfully.', 'better-payment'),
+        ]);
+    }
+
+    /**
+     * Delete a subscription from the admin Subscriptions tab. A still-live
+     * ('woo': active/past_due) subscription is CANCELLED first — deleting
+     * only the relation rows would leave an invisible subscription renewing
+     * via cron — then its relation rows are removed so it no longer lists.
+     * Other integrations get the `better_payment/admin/subscription_delete`
+     * action to stop their side before the rows go.
+     *
+     * @since 2.4.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function delete_subscription($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        $resolved = $this->resolve_subscription($request);
+        if (is_wp_error($resolved)) {
+            return $resolved;
+        }
+        list($id, $source) = $resolved;
+
+        if (SubscriptionRelationModel::SOURCE_WOO === $source && function_exists('wc_get_order')) {
+            $order = wc_get_order($id);
+            if ($order instanceof \WC_Order) {
+                // No-op unless the subscription is active/past_due (cancel()
+                // guards itself), so deleting a cancelled/completed
+                // subscription adds no order note.
+                WooSubscriptions::cancel($order, __('Better Payment: subscription cancelled — it was deleted from the Better Payment admin. No further automatic renewals will be charged.', 'better-payment'), 'admin');
+            }
+        }
+
+        /**
+         * Fires before a subscription's relation rows are deleted from the
+         * admin Subscriptions tab. An integration should stop the
+         * subscription on its own side here — after this, Better Payment no
+         * longer tracks it.
+         *
+         * @since 2.4.0
+         *
+         * @param int    $subscription_id Subscription id within its source.
+         * @param string $source          Source slug ('woo', 'fluentcart', …).
+         */
+        do_action('better_payment/admin/subscription_delete', $id, $source);
+
+        $deleted = SubscriptionRelationModel::delete_for_subscription($id, $source);
+
+        if (!$deleted) {
+            return new WP_Error('delete_failed', __('Failed to delete subscription.', 'better-payment'), ['status' => 500]);
+        }
+
+        return rest_ensure_response([
+            'success' => true,
+            'message' => __('Subscription deleted successfully.', 'better-payment'),
+        ]);
     }
 
     /**

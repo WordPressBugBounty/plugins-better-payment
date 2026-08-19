@@ -5,7 +5,7 @@ Tags: donation, fundraising, recurring donations, payments, stripe paypal paysta
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.3.1
+Stable tag: 2.3.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -24,6 +24,11 @@ Better Payment is fully compatible with Elementor & Gutenberg. You can make twea
 
 ## ✨ CREATE CAMPAIGNS WITH CAMPAIGN BUILDER
 Better Payment’s Campaign Builder makes it easy to create fundraising campaigns without any hassle. You can start from scratch or simply pick a ready-made template and customize it the way you want. Whether it’s for a cause, event, or fundraising goal, you get full flexibility to build a campaign that fits your needs in just a few steps.
+
+## 🔄 COLLECT RECURRING PAYMENTS ON WOOCOMMERCE IN ONE CLICK
+Better Payment brings **WooCommerce subscriptions** and **recurring payments** to your store through the secure Stripe gateway. Turn any regular WooCommerce product into a subscription in a few clicks, set the billing cycle you want, and let Better Payment charge your customers automatically on schedule.
+
+No separate product type is needed. You configure everything on the same product screen you already use.
 
 ## 🛠️ ONE-CLICK STRIPE PAYMENT INTEGRATION
 Better Payment lets you easily integrate your Stripe account into your website with one click. You will get a Stripe Elements Checkout option with a securely embedded feature, an on-site checkout option, etc.
@@ -59,7 +64,7 @@ Enable recurring payments in your payment form and manage subscriptions seamless
 ### 🖌️ FUNDRAISING CAMPAIGN STYLES [FREE+PRO]
 Create a fundraising campaign for a cause and maximize collection with stylish and user-friendly payment form layouts with Better Payment. Manage collections, showcase updates, progress - get all must-have fundraising campaign features.
 
-## 🌟 POWERFUL DONATION FORMS AT YOUR FINGERTIP 🌟
+## 🌟 POWERFUL DONATION FORMS AT YOUR FINGERTIPS 🌟
 Interactive design layouts and multiple donation fundraising options come with Better Payment plugin. It is very easy to set up your website checkout with the utmost flexibility at the touch of a finger.
 
 ## 🛍️ MANAGE WOOCOMMERCE PAYMENTS EASILY
@@ -99,18 +104,17 @@ Better Payment reign doesn’t stop here; more advanced and exclusive features a
 - Advanced email templates
 - Coupon management
 - New payment forms layouts
-- Campaign builders
 
 🙌 After reading this feature list, you can probably imagine that Better Payment is the best WordPress payment plugin on the market. So, do you want to unlock the advanced features? [Upgrade to our Pro version](https://wpdeveloper.com/better-payment/#pricing).
 
 ## 🔥 WHAT’S NEXT
 Consider checking out our other WordPress solutions & boost your WordPress website:
 
-🔝 [Essential Addons For Elementor](https://essential-addons.com/elementor/) – Most popular Elementor extensions with 2 millions active users in the WordPress repository.
+🔝 [Essential Addons For Elementor](https://essential-addons.com/elementor/) – Most popular Elementor extensions with 2 million+ active users in the WordPress repository.
 
 🔔 [NotificationX](https://notificationx.com/) – Best Social Proof & FOMO Marketing Solution to increase conversion rates.
 
-📄 [EmbedPress](https://embedpress.com/): Easiest WordPress embedding plugin to add content from 150+ sources with one-click. Works in Gutenberg, Elementor, and more.
+📄 [EmbedPress](https://embedpress.com/): Easiest WordPress embedding plugin to add content from 250+ sources with one-click. Works in Gutenberg, Elementor, and more.
 
 ⏰ [SchedulePress](https://wordpress.org/plugins/wp-scheduled-posts/) – Complete solution for scheduling WordPress posts through an editorial calendar & social share.
 
@@ -171,6 +175,11 @@ Yes, you can build regular forms like contact forms without adding payment metho
 
 
 == Changelog ==
+
+= 2.3.2 - 19/08/2026 =
+- Added: Subscription for woo products
+- Added: Better Payment as woo payment gateway
+- Few minor bug fixes & improvements
 
 = 2.3.1 - 26/07/2026 =
 - Fixed: Fatal error on plugin activation caused by missing dependency files in the release package

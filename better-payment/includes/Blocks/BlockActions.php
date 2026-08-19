@@ -858,7 +858,7 @@ class BlockActions {
                         'name'        => sanitize_text_field( $product->get_name() ),
                         'product_id'  => intval( $product_id ),
                         'permalink'   => esc_url( $product->get_permalink() ),
-                        'image_src'   => esc_url( wp_get_attachment_url( $product->get_image_id() ) ),
+                        'image_src'   => esc_url( wp_get_attachment_url( (int) $product->get_image_id() ) ),
                         'price'       => $price,
                         'quantity'    => $quantity,
                         'total_price' => $total_price,

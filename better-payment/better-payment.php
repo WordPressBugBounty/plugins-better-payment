@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.3.1
+ * Version: 2.3.2
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -34,7 +34,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.3.1';
+    const version = '2.3.2';
 
     /**
      * Class construcotr
@@ -140,6 +140,29 @@ final class Better_Payment {
             new Better_Payment\Lite\Frontend();
         }
 
+        /**
+         * Usage tracking must be registered on CRON requests too, not just admin.
+         *
+         * This used to be wired only from Admin::init(), which runs solely under
+         * is_admin(). But WP-Cron executes wp-cron.php as a NON-admin request, so
+         * Plugin_Usage_Tracker::init() never ran there and its do_tracking()
+         * callback was never attached. The daily event was scheduled and fired on
+         * time — into an empty hook. The tracker therefore never sent anything on
+         * its own schedule; the only payloads that ever went out were the forced
+         * ones from the setup wizard's opt-in. Silent, and invisible from the
+         * cron listing, which shows the event as perfectly healthy.
+         *
+         * Not registered on front-end requests: nothing here is needed to render a
+         * page, and this is a payment plugin whose public pages should carry no
+         * avoidable work. Admin + cron is the complete set of contexts the tracker
+         * acts in (notice, action links, AJAX, and the scheduled send).
+         *
+         * @since 2.3.2
+         */
+        if ( is_admin() || wp_doing_cron() ) {
+            add_action( 'init', array( $this, 'start_plugin_tracking' ) );
+        }
+
         new Better_Payment\Lite\API();
 
         // Initialize Gutenberg blocks
@@ -171,6 +194,28 @@ final class Better_Payment {
 
         // ── AI module (AI-native Campaign Builder) ─────────────────────
         $this->init_ai_module();
+
+        // ── WooCommerce gateway module (Better Payment as a WC gateway) ─
+        $this->init_woocommerce_module();
+    }
+
+    /**
+     * Initialize the WooCommerce integration module.
+     *
+     * Registers the "Better Payment (Stripe)" WooCommerce payment gateway,
+     * which consumes the existing Better Payment payment engine (Stripe
+     * checkout creation, transaction persistence, verification, hooks).
+     * No-op when WooCommerce is not active — none of the module's classes
+     * load, and core never depends on WooCommerce.
+     *
+     * @return void
+     */
+    private function init_woocommerce_module() {
+        if ( ! class_exists( 'WooCommerce' ) ) {
+            return;
+        }
+
+        Better_Payment\Lite\WooCommerce\Loader::register();
     }
 
     /**

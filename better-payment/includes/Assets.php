@@ -203,6 +203,10 @@ class Assets extends Controller
                     ? filemtime( BETTER_PAYMENT_PATH . '/assets/vendor/fontawesome/css/all.min.css' )
                     : '6',
             ],
+            'better-payment-wc-subscriptions' => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/css/woocommerce-subscriptions.css',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/woocommerce-subscriptions.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/woocommerce-subscriptions.css') : BETTER_PAYMENT_VERSION,
+            ],
             'fundraising-campaign-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css') : BETTER_PAYMENT_VERSION,

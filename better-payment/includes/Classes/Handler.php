@@ -502,11 +502,23 @@ class Handler extends Controller{
     /**
      * Stripe payment success
      *
+     * Reads the transaction id from the request, EXCEPT when the caller
+     * supplies `better_payment_stripe_id` in $settings. A caller that has
+     * already authorized the id against server-side state (the WooCommerce
+     * return handler matches it to the order's own `_bp_payment_id`) must
+     * pass it explicitly: a caller-side guard that reads $_GET cannot bind
+     * this lookup, because PHP's default request_order=GP lets a POST body
+     * overwrite the query string and the two would then see different ids.
+     *
      * @since 0.0.1
      */
     public static function stripe_payment_success( $settings = [] ) {
 
         $data = $_REQUEST;
+
+        if ( ! empty( $settings[ 'better_payment_stripe_id' ] ) ) {
+            $data[ 'better_payment_stripe_id' ] = $settings[ 'better_payment_stripe_id' ];
+        }
 
         if ( !empty( $data[ 'better_payment_stripe_id' ] ) ) {
             global $wpdb;

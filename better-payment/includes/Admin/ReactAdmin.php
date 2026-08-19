@@ -108,6 +108,11 @@ class ReactAdmin extends Controller
                 'capability' => 'manage_options',
                 'callback'   => [$this, 'render_react_admin_page'],
             ),
+            $this->page_slug_prefix . '-admin&tab=subscriptions'   => array(
+                'title'      => __('Subscriptions', 'better-payment'),
+                'capability' => 'manage_options',
+                'callback'   => [$this, 'render_react_admin_page'],
+            ),
             $this->page_slug_prefix . '-admin&tab=analytics'   => array(
                 'title'      => __('Analytics', 'better-payment'),
                 'capability' => 'manage_options',
@@ -288,12 +293,32 @@ class ReactAdmin extends Controller
                 'email' => wp_get_current_user()->user_email
             ],
             'currencies' => $this->get_currency_list(),
+            'userRoles' => $this->get_user_roles_list(),
             'currencySymbol' => $this->get_currency_symbol( $settings['better_payment_settings_general_general_currency'] ),
             'campaignTemplates' => array_values( TemplateManager::get_all() ),
             'adminBaseUrl' => admin_url(),
         ];
     }
     
+    /**
+     * Get the site's user roles as a role_key => display_name map.
+     *
+     * Used by the Settings page (E-commerce > Subscription) role selects.
+     *
+     * @since 2.3.2
+     * @return array
+     */
+    private function get_user_roles_list()
+    {
+        $roles = [];
+
+        foreach (wp_roles()->roles as $role_key => $role) {
+            $roles[$role_key] = translate_user_role($role['name']);
+        }
+
+        return $roles;
+    }
+
     /**
      * Customize admin footer text and version display
      *

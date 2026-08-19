@@ -92,6 +92,15 @@ class DB {
             'better_payment_settings_ai_api_key_claude'     => '',
             'better_payment_settings_ai_api_key_gemini'     => '',
             'better_payment_settings_ai_api_key_openrouter' => '',
+
+            // E-commerce > Subscription. Booleans follow the 'yes'/'no' string
+            // convention used across this settings array.
+            'better_payment_settings_ecommerce_subscription_renewal_process'     => 'auto',
+            'better_payment_settings_ecommerce_subscription_stripe_auto_renew'   => 'yes',
+            'better_payment_settings_ecommerce_subscription_auto_renewal_toggle' => 'yes',
+            'better_payment_settings_ecommerce_subscription_myaccount_tab'       => 'yes',
+            'better_payment_settings_ecommerce_subscription_active_role'         => 'subscriber',
+            'better_payment_settings_ecommerce_subscription_inactive_role'       => 'customer',
         ));
     }
     /**

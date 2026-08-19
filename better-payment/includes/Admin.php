@@ -52,8 +52,13 @@ class Admin extends Controller{
 
         if ( ! $this->pro_enabled ) {
             $this->admin_notice();
-		    $this->start_plugin_tracking();
         }
+
+        // Usage tracking is NOT registered here any more. It is wired from
+        // Better_Payment::init_plugin() for admin *and* cron requests, because
+        // WP-Cron runs as a non-admin request and this gate hid the tracker's
+        // do_tracking() callback from its own scheduled event. See the note
+        // there. The Pro gate now lives in Helper::start_plugin_tracking().
 
         add_action('in_admin_header', array( $this, 'hide_admin_notices' ));
     }

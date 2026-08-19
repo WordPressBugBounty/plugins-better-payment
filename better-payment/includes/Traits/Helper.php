@@ -2,6 +2,7 @@
 
 namespace Better_Payment\Lite\Traits;
 
+use Better_Payment\Lite\Admin\Setup_Wizard;
 use Better_Payment\Lite\Classes\Plugin_Usage_Tracker;
 
 /**
@@ -304,6 +305,31 @@ trait Helper
      */
     public function start_plugin_tracking()
     {
+        /**
+         * Lite-only, exactly as before — this guard used to live in the
+         * `! $this->pro_enabled` block in Admin::init(). It moved here when
+         * tracking was rewired to also run on cron requests, so the single
+         * remaining caller does not have to repeat it.
+         *
+         * Evaluating the filter at `init` rather than at `plugins_loaded` is
+         * strictly safer too: every plugin has loaded by then, so Pro cannot
+         * lose a race to register its filter and have Lite start tracking on a
+         * Pro site.
+         *
+         * @since 2.3.2
+         */
+        if ( apply_filters( 'better_payment/pro_enabled', false ) ) {
+            return;
+        }
+
+        /**
+         * Must run BEFORE init() below: init() calls maybe_schedule_tracking(),
+         * which only schedules once consent is on record. Recording consent
+         * first means a fresh install gets its daily event in this same request
+         * rather than the next one.
+         */
+        $this->maybe_auto_enable_usage_tracking();
+
         $tracker = Plugin_Usage_Tracker::get_instance( BETTER_PAYMENT_FILE, [
             'opt_in'       => true,
             'goodbye_form' => true,
@@ -311,12 +337,54 @@ trait Helper
         ] );
         $tracker->set_notice_options(array(
             'notice' => 'Want to help make <strong>Better Payment</strong> even more awesome? You can get a <strong>10% discount coupon</strong> for Pro upgrade if you allow.',
-            'extra_notice' => 'We collect non-sensitive diagnostic data and plugin usage information.
-            Your site URL, WordPress & PHP version, plugins & themes and email address to send you the
-            discount coupon. This data lets us make sure this plugin always stays compatible with the most
-            popular plugins and themes. No spam, I promise.',
+            'extra_notice' => 'Nothing is sent unless you allow it. If you do: your site URL and name;
+            WordPress, PHP and server versions; language and charset; your <strong>active</strong> plugins and
+            theme (and how many inactive); which Better Payment widgets, blocks and campaign elements you use,
+            and which features and gateways you have switched on; and your admin email, for the coupon.
+            We never collect your payment or transaction data, your customers\' details, your API keys,
+            or your inactive plugin names. No spam, I promise.',
         ));
         $tracker->init();
+    }
+
+    /**
+     * Turn usage tracking on for a fresh install that never answered the wizard.
+     *
+     * The wizard's two buttons cover the cases where the user answers: "Proceed
+     * To Next Step" and "Skip It" both call Setup_Wizard::wpins_process(). A user
+     * who closes the wizard, navigates away, or never opens it at all answers
+     * neither, and this is what covers them.
+     *
+     * Three things this deliberately does:
+     *
+     *   1. **Fresh installs only.** The `pending` marker is written by
+     *      Installer::enable_setup_wizard() and only on a site with no
+     *      `better_payment_setup_wizard` option — i.e. one being installed, not
+     *      upgraded. An existing site keeps whatever tracking state it has.
+     *   2. **Exactly once.** The marker flips to `done` before any work, so this
+     *      cannot re-assert consent on a later request. That is what keeps a
+     *      future opt-out from being silently undone on the next page load, and
+     *      it holds even if the call below throws.
+     *   3. **No forced send.** `wpins_process( false )` records consent and stops.
+     *      This runs on `init` during an ordinary admin (or cron) request, and
+     *      the tracker's send is a blocking POST with a 30s timeout — it belongs
+     *      on the scheduled event, which init() arranges immediately after.
+     *
+     * Inherits start_plugin_tracking()'s Pro gate: a site running Better Payment
+     * Pro never reaches here, exactly like every other tracking code path.
+     *
+     * @return void
+     * @since 2.3.2
+     */
+    protected function maybe_auto_enable_usage_tracking()
+    {
+        if ( get_option( 'better_payment_tracking_auto_optin' ) !== 'pending' ) {
+            return;
+        }
+
+        update_option( 'better_payment_tracking_auto_optin', 'done' );
+
+        Setup_Wizard::wpins_process( false );
     }
 
 	/**

@@ -144,6 +144,12 @@ class Helper extends Controller
                     'paid',
                     'Completed',
                     'completed',
+                    // Stripe's own status for a fully-discounted / $0 Checkout
+                    // Session (100% coupon or sale, free trial). The payment
+                    // IS settled - there was simply nothing to charge - so it
+                    // must classify as completed, not fall through to the
+                    // unknown-status default. See Helper::get_type_by_transaction_status().
+                    'no_payment_required',
                 ],
                 'color' => '#0ECA86',
             ], 
@@ -172,6 +178,7 @@ class Helper extends Controller
                     'paid',
                     'Completed',
                     'completed',
+                    'no_payment_required',
                     'unpaid',
                     'refunded',
                     'pending',
@@ -193,6 +200,14 @@ class Helper extends Controller
                     'Completed',
                     'completed',
                     'success',
+                    // See the v1 note: a $0 Stripe session settles as
+                    // 'no_payment_required'. Every status bucket is also a
+                    // `status IN (...)` filter in DB::get_transactions(), so a
+                    // status missing from BOTH 'completed' and 'incomplete'
+                    // is invisible under either tab while still showing on
+                    // the unfiltered list - which is exactly how a paid $0
+                    // order looked like a stray "Incomplete" row.
+                    'no_payment_required',
                 ],
                 'color' => '#0ECA86',
             ], 
@@ -218,6 +233,7 @@ class Helper extends Controller
                     'paid',
                     'Completed',
                     'completed',
+                    'no_payment_required',
                     'unpaid',
                     'refunded',
                     'pending',

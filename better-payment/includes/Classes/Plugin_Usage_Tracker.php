@@ -88,7 +88,25 @@ class Plugin_Usage_Tracker
         $this->disabled_wp_cron     = defined('DISABLE_WP_CRON') && DISABLE_WP_CRON == true;
         $this->enable_self_cron     = $this->disabled_wp_cron == true ? true : false;
 
-        $this->event_hook             = 'put_do_weekly_action';
+        /**
+         * The cron hook MUST be scoped to this plugin.
+         *
+         * Upstream WP Insights hardcodes the bare `put_do_weekly_action`, and
+         * every plugin shipping a copy of this library hooks its own
+         * do_tracking() onto that one name — on this dev site that was Better
+         * Payment, Essential Addons, EasyJobs and NotificationX, all sharing a
+         * SINGLE scheduled event. `deactivate_this_plugin()` then calls
+         * wp_clear_scheduled_hook() on it, so deactivating Better Payment
+         * silently unscheduled all FOUR plugins' telemetry, and reactivating BP
+         * did not bring the others back (only their own activation hooks
+         * re-schedule it). Observed, not theoretical.
+         *
+         * With a plugin-scoped name we schedule and clear only our own event.
+         * We never schedule, clear, or listen on the shared one again.
+         *
+         * @since 2.3.2
+         */
+        $this->event_hook           = 'better_payment_put_do_weekly_action';
 
         $this->require_optin        = isset($args['opt_in']) ? $args['opt_in'] : true;
         $this->include_goodbye_form = isset($args['goodbye_form']) ? $args['goodbye_form'] : true;
@@ -116,6 +134,34 @@ class Plugin_Usage_Tracker
         if (!wp_next_scheduled($this->event_hook)) {
             wp_schedule_event(time(), $this->recurrence, $this->event_hook);
         }
+    }
+    /**
+     * Ensure an opted-in site actually has our event scheduled.
+     *
+     * Two ways a consenting site ends up with no schedule, and neither is
+     * self-correcting without this:
+     *
+     *   1. **The rename.** An install that opted in before 2.3.2 has consent
+     *      recorded and only the OLD shared event scheduled. Nothing re-runs
+     *      `activate_this_plugin()` or the opt-in click on upgrade, so tracking
+     *      would simply stop for every existing opted-in user — a silent
+     *      regression that looks exactly like "the tracker broke".
+     *   2. **Collateral damage.** Another plugin sharing the old hook clears it
+     *      on ITS deactivation. That is the bug being fixed here, seen from the
+     *      other side; scoping our hook stops us doing it to others, and this
+     *      recovers us when someone does it to us.
+     *
+     * Cheap enough for every admin request: both reads are autoloaded options.
+     *
+     * @since 2.3.2
+     * @return void
+     */
+    public function maybe_schedule_tracking()
+    {
+        if ($this->disabled_wp_cron || !$this->is_tracking_allowed()) {
+            return;
+        }
+        $this->schedule_tracking();
     }
     /**
      * Add the schedule event if the plugin is tracked.
@@ -160,6 +206,19 @@ class Plugin_Usage_Tracker
         delete_option('wpins_deactivation_details_' . $this->plugin_name);
         /**
          * Clear the event schedule.
+         *
+         * `$this->event_hook` is plugin-scoped (see the constructor), so this
+         * now clears only our own event.
+         *
+         * The legacy shared `put_do_weekly_action` is deliberately NOT cleaned
+         * up here, even on a site where Better Payment is the one that
+         * scheduled it. There is no way to tell a BP-scheduled event from one
+         * scheduled by Essential Addons / EasyJobs / NotificationX — the cron
+         * entry records no owner — and clearing another plugin's telemetry
+         * schedule is the exact bug this rename fixes. An orphaned event with
+         * no listeners costs a hook dispatch and nothing else.
+         *
+         * @since 2.3.2
          */
         if (!$this->disabled_wp_cron) {
             wp_clear_scheduled_hook($this->event_hook);
@@ -174,6 +233,7 @@ class Plugin_Usage_Tracker
         // $this->clicked();
         add_action('wpdeveloper_notice_clicked_for_' . $this->plugin_name, array($this, 'clicked'));
         add_action($this->event_hook, array($this, 'do_tracking'));
+        $this->maybe_schedule_tracking();
         // For Test
         // add_action( 'admin_init', array( $this, 'force_tracking' ) );
         // add_action( 'admin_notices', array( $this, 'notice' ) );
@@ -388,7 +448,16 @@ class Plugin_Usage_Tracker
         $body['server'] = isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : '';
 
         /**
-         * Collect all active and inactive plugins
+         * Collect active plugins.
+         *
+         * The full inventory of *inactive* plugins is deliberately not sent.
+         * It carries little compatibility signal (dormant code does not run)
+         * while being exactly the inventory an attacker would use to match a
+         * site against known vulnerabilities. Only the count is reported, so
+         * the "how much dormant code is installed" signal survives without
+         * shipping the list itself.
+         *
+         * @since 2.3.2
          */
         if (!function_exists('get_plugins')) {
             include ABSPATH . '/wp-admin/includes/plugin.php';
@@ -401,7 +470,7 @@ class Plugin_Usage_Tracker
             }
         }
         $body['active_plugins'] = $active_plugins;
-        $body['inactive_plugins'] = $plugins;
+        $body['inactive_plugins_count'] = count($plugins);
 
         /**
          * Text Direction.
@@ -436,6 +505,20 @@ class Plugin_Usage_Tracker
         if ($theme->Version) {
             $body['theme_version'] = sanitize_text_field($theme->Version);
         }
+
+        /**
+         * Better Payment's own feature usage — widgets, blocks, campaigns,
+         * subscriptions and feature configuration. Aggregate counts only; see
+         * Usage_Data for what is deliberately excluded (money, customers,
+         * credentials).
+         *
+         * @since 2.3.2
+         */
+        $usage = Usage_Data::collect();
+        if (!empty($usage)) {
+            $body['optional_data'] = $usage;
+        }
+
         return $body;
     }
 
@@ -475,13 +558,21 @@ class Plugin_Usage_Tracker
          * Send Initial Data to API
          */
         if ($site_id == false && $this->item_id !== false) {
-            if (isset($_SERVER['REMOTE_ADDR']) && !empty($_SERVER['REMOTE_ADDR'] && $_SERVER['REMOTE_ADDR'] != '127.0.0.1')) {
-                $country_request = wp_remote_get('http://ip-api.com/json/' . $_SERVER['REMOTE_ADDR'] . '?fields=country');
-                if (!is_wp_error($country_request) && $country_request['response']['code'] == 200) {
-                    $ip_data = json_decode($country_request["body"]);
-                    $body['country'] = isset($ip_data->country) ? $ip_data->country : 'NOT SET';
-                }
-            }
+            /**
+             * Country is intentionally NOT resolved here.
+             *
+             * This used to POST the administrator's IP address to
+             * http://ip-api.com over plain, unencrypted HTTP — a second
+             * third-party recipient of personal data, sent in the clear.
+             * ip-api.com offers no HTTPS on its free tier, so the lookup was
+             * removed outright rather than re-pointed: the receiving endpoint
+             * already sees the request IP and can resolve country server-side
+             * without any extra party or any plaintext hop.
+             *
+             * Do not reintroduce a client-side geo lookup here.
+             *
+             * @since 2.3.2
+             */
 
             $body['plugin_slug'] = $this->plugin_name;
             $body['url']         = $site_url;
@@ -561,12 +652,12 @@ class Plugin_Usage_Tracker
      *
      * @param array $data
      * @param array $args
-     * @return void
+     * @return array|\WP_Error|null
      */
     protected function remote_post($data = array(), $args = array())
     {
         if (empty($data)) {
-            return;
+            return null;
         }
 
         $args = wp_parse_args($args, array(

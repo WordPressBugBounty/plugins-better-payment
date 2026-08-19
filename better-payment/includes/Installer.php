@@ -54,6 +54,25 @@ class Installer extends Controller {
 			    KEY order_id (order_id),
 			    KEY status (status)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ",
+
+            // E-commerce subscription <-> order relation. The `source` column
+            // names the e-commerce integration that owns the row: woo,
+            // fluentcart, surecart, ...
+            // E-commerce data ONLY — Better Payment's own (Elementor/campaign)
+            // subscription payments never write here. All reads/writes go through
+            // Models\SubscriptionRelationModel.
+            "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}better_payment_subscription_order(
+                id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                subscription_id bigint(20) unsigned NOT NULL,
+                order_id bigint(20) unsigned NOT NULL,
+                order_item_id bigint(20) unsigned NOT NULL DEFAULT 0,
+                type varchar(20) NOT NULL DEFAULT 'new',
+                source varchar(50) NOT NULL,
+                PRIMARY KEY (id),
+                KEY subscription_id (subscription_id),
+                KEY order_id (order_id),
+                KEY source (source)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ",
         ];
     }
 
@@ -82,6 +101,48 @@ class Installer extends Controller {
     {
         if ( !get_option( 'better_payment_setup_wizard' ) ) {
             update_option( 'better_payment_setup_wizard', 'redirect' );
+
+            /**
+             * A missing `better_payment_setup_wizard` option is this plugin's
+             * definition of a fresh install — it is what decides that the setup
+             * wizard is owed a redirect at all. The same test marks the install
+             * as eligible for the automatic usage-tracking opt-in, so the two can
+             * never disagree about what "new install" means.
+             *
+             * Deliberately scoped to fresh installs: an existing site that has
+             * already been through (or dismissed) the wizard keeps whatever
+             * tracking state it has. See
+             * Traits\Helper::maybe_auto_enable_usage_tracking(), which consumes
+             * this marker exactly once.
+             *
+             * @since 2.3.2
+             */
+            self::mark_tracking_auto_optin_pending();
         }
+    }
+
+    /**
+     * Flag a fresh install for the automatic usage-tracking opt-in.
+     *
+     * Only ever sets the marker when the site has no tracking state at all. A
+     * site that reached consent before this option existed (an upgrade that
+     * re-runs activation, say) must not be handed a second, automatic opt-in.
+     *
+     * @return void
+     * @since 2.3.2
+     */
+    public function mark_tracking_auto_optin_pending()
+    {
+        if ( get_option( 'better_payment_tracking_auto_optin' ) ) {
+            return;
+        }
+
+        $allow_tracking = get_option( 'wpins_allow_tracking' );
+
+        if ( is_array( $allow_tracking ) && isset( $allow_tracking[ basename( BETTER_PAYMENT_FILE, '.php' ) ] ) ) {
+            return;
+        }
+
+        update_option( 'better_payment_tracking_auto_optin', 'pending' );
     }
 }

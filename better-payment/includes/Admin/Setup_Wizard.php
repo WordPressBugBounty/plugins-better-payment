@@ -419,8 +419,26 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
             return;
 		}
 
+        $context = isset( $_POST['context'] ) ? sanitize_key( wp_unslash( $_POST['context'] ) ) : 'proceed';
+
         if ( isset( $_POST[ 'is_tracking' ] ) && $_POST[ 'is_tracking' ] === 'true' ) {
-            update_option('better_payment_settings_opt_in', 'yes');
+            /**
+             * `better_payment_settings_opt_in` is NOT the tracking gate — that is
+             * `wpins_allow_tracking`, written by wpins_process() below. This option
+             * is wizard UI state: it is localized as `is_tracking` (see
+             * setup_wizard_scripts()) and makes QuickSetupWizard open on the
+             * Settings step with back-navigation to Start disabled.
+             *
+             * So the Skip path deliberately does not write it. Skip must leave the
+             * wizard behaving exactly as it does today — Start screen shown, Back
+             * still available — while still turning tracking on.
+             *
+             * @since 2.3.2
+             */
+            if ( 'skip' !== $context ) {
+                update_option('better_payment_settings_opt_in', 'yes');
+            }
+
             self::wpins_process();
             wp_send_json_success( __( 'Tracking data saved successfully.', 'better-payment' ) );
         } else {
@@ -466,10 +484,25 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
 
     /**
      * WPIns process
-     * 
+     *
+     * The single tracking-activation routine. Every path that turns usage
+     * tracking on goes through here — the wizard's "Proceed To Next Step" and
+     * "Skip It" buttons, and the automatic opt-in for fresh installs in
+     * Traits\Helper::maybe_auto_enable_usage_tracking().
+     *
+     * @param bool $force_send Send the payload immediately. True for the wizard
+     *                         buttons, which run inside an AJAX request. Pass
+     *                         FALSE from anything that runs during a page render:
+     *                         send_data() posts with `blocking => true` and a 30s
+     *                         timeout, so a forced send there would stall the
+     *                         response. Consent alone is enough — the caller's
+     *                         Plugin_Usage_Tracker::init() schedules the daily
+     *                         event and the first run sends.
+     *
+     * @return void
      * @since 0.0.1
      */
-    public static function wpins_process(){
+    public static function wpins_process( $force_send = true ){
         $plugin_name = basename( BETTER_PAYMENT_FILE, '.php' );
 
         if ( class_exists( '\Better_Payment\Lite\Classes\Plugin_Usage_Tracker' ) ){
@@ -479,7 +512,10 @@ c2.2,0,4.2-1.1,5.4-2.8L49.1,9.5C50.5,7.5,50.2,4.8,48.5,3.1z" />
                 'item_id'      => '64e1f724b5e14edb343e'
             ] );
             $tracker->set_is_tracking_allowed( true );
-            $tracker->do_tracking( true );
+
+            if ( $force_send ) {
+                $tracker->do_tracking( true );
+            }
         }
     }
 
