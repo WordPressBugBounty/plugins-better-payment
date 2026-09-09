@@ -285,7 +285,9 @@ class CampaignAPI extends WP_REST_Controller {
     }
 
     public function get_templates(): WP_REST_Response {
-        return new WP_REST_Response( array_values( TemplateManager::get_all() ), 200 );
+        // The builder's template list — picker-facing, so it must not serve the
+        // retired designs get_all() still holds for the renderer.
+        return new WP_REST_Response( array_values( TemplateManager::get_for_picker() ), 200 );
     }
 
     public function preview_campaign( WP_REST_Request $request ): WP_REST_Response {
@@ -322,7 +324,21 @@ class CampaignAPI extends WP_REST_Controller {
     }
 
     public function preview_template( WP_REST_Request $request ): WP_REST_Response {
-        $key  = sanitize_key( $request['key'] );
+        $key = sanitize_key( $request['key'] );
+
+        // ?document=1 → a standalone HTML document for the picker's Preview
+        // lightbox iframe (stylesheets, theme class and colours included), rather
+        // than the bare fragment the original callers expect. It returns '' for a
+        // template with no layout of its own — a locked Pro card — and the client
+        // falls back to that template's screenshot.
+        if ( $request->get_param( 'document' ) ) {
+            $document = RendererService::build_template_preview_document( $key );
+            if ( ! $document ) {
+                return new WP_REST_Response( [ 'message' => 'Template not previewable' ], 404 );
+            }
+            return new WP_REST_Response( [ 'html' => $document ], 200 );
+        }
+
         $html = RendererService::render_template_preview( $key );
         if ( ! $html ) {
             return new WP_REST_Response( [ 'message' => 'Template not found' ], 404 );

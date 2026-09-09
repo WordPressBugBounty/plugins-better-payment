@@ -423,32 +423,32 @@ class ProElementPreview {
         return [
             [
                 'name'   => __( 'Jordan A.', 'better-payment' ),
-                'amount' => '$250.00',
+                'amount' => '$250',
                 'when'   => __( '2 hours ago', 'better-payment' ),
             ],
             [
                 'name'   => __( 'Priya S.', 'better-payment' ),
-                'amount' => '$100.00',
+                'amount' => '$100',
                 'when'   => __( '5 hours ago', 'better-payment' ),
             ],
             [
                 'name'   => __( 'Marco B.', 'better-payment' ),
-                'amount' => '$75.00',
+                'amount' => '$75',
                 'when'   => __( 'Yesterday', 'better-payment' ),
             ],
             [
                 'name'   => __( 'Anonymous', 'better-payment' ),
-                'amount' => '$50.00',
+                'amount' => '$50',
                 'when'   => __( 'Yesterday', 'better-payment' ),
             ],
             [
                 'name'   => __( 'Lena K.', 'better-payment' ),
-                'amount' => '$40.00',
+                'amount' => '$40',
                 'when'   => __( '2 days ago', 'better-payment' ),
             ],
             [
                 'name'   => __( 'Sam O.', 'better-payment' ),
-                'amount' => '$25.00',
+                'amount' => '$25',
                 'when'   => __( '3 days ago', 'better-payment' ),
             ],
         ];

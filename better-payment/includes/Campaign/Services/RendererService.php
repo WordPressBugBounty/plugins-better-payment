@@ -6,6 +6,8 @@ use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Campaign\MetaBox;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
+use Better_Payment\Lite\Campaign\Templates\ProTemplatePreviews;
+use Better_Payment\Lite\Campaign\Support\Money;
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
 use Better_Payment\Lite\Campaign\Elements\ProElementPreview;
 
@@ -319,7 +321,7 @@ class RendererService {
                     $goal_fmt         = number_format( (int) ceil( $goal ) );
                 } else {
                     $display_progress = $progress; // 1 decimal float from CampaignStats
-                    $goal_fmt         = number_format( $goal, 2 );
+                    $goal_fmt         = Money::format( $goal );
                 }
 
                 ?>
@@ -375,7 +377,7 @@ class RendererService {
                     <div class="bp-campaign-summary">
                         <?php if ( $show_raised ) : ?>
                             <div class="bp-summary-item">
-                                <strong><?php echo esc_html( $sm_currency_sym . number_format( (float) $stats['total_raised'], 2 ) ); ?></strong>
+                                <strong><?php echo esc_html( Money::with_symbol( $sm_currency_sym, $stats['total_raised'] ) ); ?></strong>
                                 <span><?php esc_html_e( 'Raised', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
@@ -461,7 +463,7 @@ class RendererService {
                                 printf(
                                     /* translators: %s: formatted minimum amount with currency symbol */
                                     esc_html__( 'The minimum donation for this campaign is %s.', 'better-payment' ),
-                                    esc_html( $currency_symbol . number_format( $min_amount, 2 ) )
+                                    esc_html( Money::with_symbol( $currency_symbol, $min_amount ) )
                                 );
                                 ?>
                             </p>
@@ -566,7 +568,7 @@ class RendererService {
                                 hidden
                             />
                             <label for="<?php echo esc_attr( $uid ); ?>" class="bp-amount-label">
-                                <?php echo esc_html( $currency_symbol . $amt ); ?>
+                                <?php echo esc_html( Money::with_symbol( $currency_symbol, $amt ) ); ?>
                             </label>
                         <?php endforeach; ?>
                     </div>
@@ -1143,25 +1145,8 @@ class RendererService {
             'post_name'    => $key,
         ] );
 
-        $meta = [
-            'bpc_goal_amount'         => 10000,
-            'bpc_color_primary'       => $template['preview_color'] ?? '#6b63f6',
-            'bpc_color_background'    => '',
-            'bpc_suggested_amounts'   => [],
-            'bpc_allow_custom_amount' => true,
-            'bpc_minimum_amount'      => '',
-            'bpc_form_page_id'        => 0,
-            'bpc_status'              => 'active',
-            'bpc_template_key'        => $key,
-            'bpc_css_class'           => '',
-        ];
-
-        $stats = [
-            'total_raised'   => 3750,
-            'progress'       => 37.5,
-            'donor_count'    => 42,
-            'days_remaining' => 18,
-        ];
+        $meta  = self::template_preview_meta( $key, $template );
+        $stats = self::template_preview_stats();
 
         $theme_class = isset( $template['theme_class'] ) ? ' ' . sanitize_html_class( $template['theme_class'] ) : '';
 
@@ -1191,21 +1176,126 @@ class RendererService {
     }
 
     /**
+     * Demo meta for a template preview — no campaign exists behind it.
+     *
+     * Shared by the fragment renderer (render_template_preview) and the full
+     * document one (build_template_preview_document) so the two can never show a
+     * template with different figures or a different accent colour.
+     *
+     * @param string $key      Template key.
+     * @param array  $template Template definition from TemplateManager.
+     * @return array
+     */
+    private static function template_preview_meta( string $key, array $template ): array {
+        return [
+            'title'                   => $template['default_title'] ?? $template['label'] ?? 'Campaign Preview',
+            'bpc_goal_amount'         => 10000,
+            'bpc_color_primary'       => $template['preview_color'] ?? '#6b63f6',
+            'bpc_color_background'    => '',
+            'bpc_suggested_amounts'   => [],
+            'bpc_allow_custom_amount' => true,
+            'bpc_minimum_amount'      => '',
+            'bpc_form_page_id'        => 0,
+            'bpc_status'              => 'active',
+            'bpc_template_key'        => $key,
+            'bpc_css_class'           => '',
+        ];
+    }
+
+    /**
+     * Demo stats for a template preview.
+     *
+     * A template has no transactions, so the real figures are all zero — which
+     * renders an empty progress bar and "$0.00 raised" on every card, i.e. the
+     * one state that shows least about the design. These are obviously-illustrative
+     * round numbers, never presented as a real campaign's record.
+     *
+     * @return array
+     */
+    private static function template_preview_stats(): array {
+        return [
+            'total_raised'   => 3750,
+            'progress'       => 37.5,
+            'donor_count'    => 42,
+            'days_remaining' => 18,
+        ];
+    }
+
+    /**
+     * Build a full, standalone HTML document for one template — the picker's
+     * "Preview" lightbox.
+     *
+     * This is the whole design, top to bottom, rendered by the same code the
+     * frontend uses; the lightbox scrolls it. A static screenshot cannot do that
+     * (it is a fixed crop of the top of the page) and drifts from the layout the
+     * moment a template is redesigned.
+     *
+     * A locked Pro card (ProTemplateCatalog) carries `columns => []` on purpose —
+     * the registry never hands a Pro layout to the client, and that is the gate.
+     * Its preview comes from `ProTemplatePreviews`, a generated mirror read ONLY
+     * here: the document that goes back is rendered HTML, which cannot be applied.
+     * Falling through to `default_layout()` instead would advertise Pro's design
+     * as a generic one-column campaign.
+     *
+     * Returns '' — and the client falls back to the screenshot — only when there
+     * is no layout from either source.
+     *
+     * @param string $key Template key from TemplateManager.
+     * @return string Full HTML document, or '' when the key is unknown or has no layout.
+     */
+    public static function build_template_preview_document( string $key ): string {
+        $templates = TemplateManager::get_all();
+        if ( ! isset( $templates[ $key ] ) ) {
+            return '';
+        }
+
+        $template = $templates[ $key ];
+        $columns  = $template['columns'] ?? [];
+        $layout   = $template['layout'] ?? '1-column';
+
+        if ( empty( $columns ) ) {
+            $mirror = ProTemplatePreviews::layout( $key );
+            if ( empty( $mirror['columns'] ) ) {
+                return '';
+            }
+
+            $columns = $mirror['columns'];
+            $layout  = $mirror['layout'] ?? $layout;
+        }
+
+        return self::build_preview_document(
+            [
+                'layout'  => $layout,
+                'columns' => $columns,
+            ],
+            self::template_preview_meta( $key, $template ),
+            0,
+            self::template_preview_stats()
+        );
+    }
+
+    /**
      * Build a full HTML preview document for the builder's live-preview iframe.
      *
      * Each element is wrapped in a <div data-bp-element-id> so the JS overlay
      * can measure positions and wire up hover/drag interactions. Works for both
      * new unsaved campaigns (campaign_id = 0) and existing ones.
      *
-     * @param array $layout_data  Builder layout: { layout, columns }.
-     * @param array $meta_input   Campaign meta from the builder store (includes 'title').
-     * @param int   $campaign_id  0 for new campaigns; real ID to pull live stats.
+     * @param array $layout_data     Builder layout: { layout, columns }.
+     * @param array $meta_input      Campaign meta from the builder store (includes 'title').
+     * @param int   $campaign_id     0 for new campaigns; real ID to pull live stats.
+     * @param array $stats_override  Demo figures merged over the computed stats, for
+     *                               previews that have no campaign behind them at all
+     *                               (the template picker). Applied LAST, after the
+     *                               goal/end-date recomputations below, so it wins —
+     *                               that is the whole point of an override.
      * @return string Full HTML document string.
      */
     public static function build_preview_document(
         array $layout_data,
         array $meta_input,
-        int $campaign_id = 0
+        int $campaign_id = 0,
+        array $stats_override = []
     ): string {
         // ── Post + stats ──────────────────────────────────────────────────────
         $post  = null;
@@ -1251,6 +1341,10 @@ class RendererService {
         $preview_goal = (float) ( $meta_input['bpc_goal_amount'] ?? 0 );
         if ( $preview_goal > 0 ) {
             $stats['progress'] = min( 100.0, round( ( $stats['total_raised'] / $preview_goal ) * 100, 1 ) );
+        }
+
+        if ( ! empty( $stats_override ) ) {
+            $stats = array_merge( $stats, $stats_override );
         }
 
         // ── Meta ─────────────────────────────────────────────────────────────

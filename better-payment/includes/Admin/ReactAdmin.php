@@ -295,7 +295,9 @@ class ReactAdmin extends Controller
             'currencies' => $this->get_currency_list(),
             'userRoles' => $this->get_user_roles_list(),
             'currencySymbol' => $this->get_currency_symbol( $settings['better_payment_settings_general_general_currency'] ),
-            'campaignTemplates' => array_values( TemplateManager::get_all() ),
+            // Picker-facing, so retired designs stay out of it. The renderer
+            // still needs get_all(); see TemplateManager::get_for_picker().
+            'campaignTemplates' => array_values( TemplateManager::get_for_picker() ),
             'adminBaseUrl' => admin_url(),
         ];
     }

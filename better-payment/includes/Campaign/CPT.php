@@ -249,7 +249,9 @@ class CPT extends Controller {
         );
 
         wp_localize_script( 'bp-campaign-list', 'betterPaymentCampaignData', [
-            'templates'  => array_values( TemplateManager::get_all() ),
+            // Picker-facing — retired designs are filtered out here, never in
+            // get_all(), which the renderer reads on every campaign pageview.
+            'templates'  => array_values( TemplateManager::get_for_picker() ),
             'categories' => CategoryRegistry::for_client(),
             'restUrl'    => rest_url( 'better-payment/v1/' ),
             'nonce'      => wp_create_nonce( 'wp_rest' ),
@@ -369,7 +371,9 @@ class CPT extends Controller {
 
         $data = [
             'elements'       => array_values( ElementRegistry::get_all() ),
-            'templates'      => array_values( TemplateManager::get_all() ),
+            // Picker-facing — retired designs are filtered out here, never in
+            // get_all(), which the renderer reads on every campaign pageview.
+            'templates'      => array_values( TemplateManager::get_for_picker() ),
             // The category taxonomy, shared by the template picker's sidebar and
             // the AI wizard's "What are you raising funds for?" tiles. Both used
             // to hardcode their own list and drifted apart; this is the one list.

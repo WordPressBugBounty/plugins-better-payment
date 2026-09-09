@@ -101,15 +101,15 @@ msgstr ""
 msgid "Analytics"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:351
+#: ../includes/Admin/ReactAdmin.php:353
 msgid "Thank you for using <a href=\"https://betterpayment.co/\" target=\"_blank\">Better Payment</a>"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:368
+#: ../includes/Admin/ReactAdmin.php:370
 msgid "<span class=\"bp-footer-version-divider\">Free Version <span class=\"bp-footer-version\">%s</span></span> <span>Pro Version <span class=\"bp-footer-version\">%s</span></span>"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:375
+#: ../includes/Admin/ReactAdmin.php:377
 msgid "<span class=\"bp-free-version\"><span>Free Version</span> <span class=\"bp-footer-version\">%s</span> </span>"
 msgstr ""
 
@@ -373,7 +373,7 @@ msgstr ""
 msgid "New Campaign"
 msgstr ""
 
-#: ../includes/API/CampaignAPI.php:350
+#: ../includes/API/CampaignAPI.php:366
 msgid "Campaign not found"
 msgstr ""
 
@@ -509,15 +509,15 @@ msgstr ""
 msgid "Please select a campaign."
 msgstr ""
 
-#: ../includes/Campaign/CampaignListColumns.php:21
+#: ../includes/Campaign/CampaignListColumns.php:23
 msgid "Campaign Stats"
 msgstr ""
 
-#: ../includes/Campaign/CampaignListColumns.php:22
+#: ../includes/Campaign/CampaignListColumns.php:24
 msgid "Builder"
 msgstr ""
 
-#: ../includes/Campaign/CampaignListColumns.php:58
+#: ../includes/Campaign/CampaignListColumns.php:60
 msgid "Open Builder"
 msgstr ""
 
@@ -2323,7 +2323,7 @@ msgstr ""
 msgid "Donations"
 msgstr ""
 
-#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2482, ../includes/Campaign/Services/RendererService.php:379, ../includes/Campaign/Services/RendererService.php:391
+#: ../includes/Admin/Elementor/Fundraising_Campaign_Widget.php:2482, ../includes/Campaign/Services/RendererService.php:381, ../includes/Campaign/Services/RendererService.php:393
 msgid "Raised"
 msgstr ""
 
@@ -2379,7 +2379,7 @@ msgstr ""
 msgid "Layout"
 msgstr ""
 
-#: ../includes/Admin/Elementor/User_Dashboard.php:122, ../includes/Admin/Elementor/User_Dashboard.php:433, ../includes/Campaign/Templates/TemplateManager.php:170, ../includes/Campaign/Templates/TemplateManager.php:263, ../includes/Campaign/Templates/TemplateManager.php:326, ../includes/Campaign/Templates/TemplateManager.php:408, ../includes/Campaign/Templates/TemplateManager.php:833, ../includes/Campaign/Templates/TemplateManager.php:932
+#: ../includes/Admin/Elementor/User_Dashboard.php:122, ../includes/Admin/Elementor/User_Dashboard.php:433, ../includes/Campaign/Templates/TemplateManager.php:194, ../includes/Campaign/Templates/TemplateManager.php:306, ../includes/Campaign/Templates/TemplateManager.php:370, ../includes/Campaign/Templates/TemplateManager.php:453, ../includes/Campaign/Templates/TemplateManager.php:882, ../includes/Campaign/Templates/TemplateManager.php:982, ../includes/Campaign/Templates/TemplateManager.php:1155, ../includes/Campaign/Templates/TemplateManager.php:1356, ../includes/Campaign/Templates/TemplateManager.php:1566
 msgid "Sidebar"
 msgstr ""
 
@@ -3512,7 +3512,7 @@ msgstr ""
 msgid "Button Label"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:590, ../includes/Campaign/Services/RendererService.php:416, ../includes/Admin/views/partials/campaign-vars.php:69
+#: ../includes/Campaign/Elements/CampaignElements.php:590, ../includes/Campaign/Services/RendererService.php:418, ../includes/Admin/views/partials/campaign-vars.php:69
 msgid "Donate Now"
 msgstr ""
 
@@ -3536,7 +3536,7 @@ msgstr ""
 msgid "Open Links In New Tab"
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:643, ../includes/Campaign/Services/RendererService.php:492
+#: ../includes/Campaign/Elements/CampaignElements.php:643, ../includes/Campaign/Services/RendererService.php:494
 msgid "Organizer"
 msgstr ""
 
@@ -3564,7 +3564,7 @@ msgstr ""
 msgid "Width of the organizer block as a percentage."
 msgstr ""
 
-#: ../includes/Campaign/Elements/CampaignElements.php:694, ../includes/Campaign/Services/RendererService.php:528
+#: ../includes/Campaign/Elements/CampaignElements.php:694, ../includes/Campaign/Services/RendererService.php:530
 msgid "Donate Amount"
 msgstr ""
 
@@ -3981,53 +3981,53 @@ msgstr ""
 msgid "Start Time (seconds)"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:299
+#: ../includes/Campaign/Services/RendererService.php:301
 msgid "Donated:"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:300
+#: ../includes/Campaign/Services/RendererService.php:302
 msgid "Goal:"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:385
+#: ../includes/Campaign/Services/RendererService.php:387
 msgid "Donors"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:397
+#: ../includes/Campaign/Services/RendererService.php:399
 msgid "Days Left"
 msgstr ""
 
 #. translators: %s: formatted minimum amount with currency symbol
-#: ../includes/Campaign/Services/RendererService.php:463
+#: ../includes/Campaign/Services/RendererService.php:465
 msgid "The minimum donation for this campaign is %s."
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:475
+#: ../includes/Campaign/Services/RendererService.php:477
 msgid "Payment page not configured"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:581
+#: ../includes/Campaign/Services/RendererService.php:583
 msgid "Enter custom amount"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:590
+#: ../includes/Campaign/Services/RendererService.php:592
 msgid "Share Now"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:637
+#: ../includes/Campaign/Services/RendererService.php:639
 msgid "Follow Now"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:1467
+#: ../includes/Campaign/Services/RendererService.php:1561
 msgid "Pro Element"
 msgstr ""
 
-#: ../includes/Campaign/Services/RendererService.php:1473
+#: ../includes/Campaign/Services/RendererService.php:1567
 msgid "PRO"
 msgstr ""
 
 #. translators: %s: element name, e.g. "Donors Wall".
-#: ../includes/Campaign/Services/RendererService.php:1480
+#: ../includes/Campaign/Services/RendererService.php:1574
 msgid "%s is a Better Payment Pro element. Activate Pro to display it on your campaign."
 msgstr ""
 
@@ -4051,120 +4051,200 @@ msgstr ""
 msgid "Youth / Education"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:141
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:107
+msgid "Food Drive Campaign"
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:108
+msgid "Community food appeal with a live donation ticker, video and FAQ beside a sticky giving panel."
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:117
+msgid "Climate Action Campaign"
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:118
+msgid "Long-form single-column landing page — hero, proof, and the ask repeated where readers reach it."
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:127
+msgid "Clean Water Campaign"
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:128
+msgid "Full-width hero, then story and donation side by side — with video, FAQ and a live donor wall."
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:137
+msgid "Wildlife Conservation Campaign"
+msgstr ""
+
+#: ../includes/Campaign/Templates/ProTemplateCatalog.php:138
+msgid "Habitat restoration page built around a public supporters wall, with video and FAQ."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:165
 msgid "1 Column"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:142
+#: ../includes/Campaign/Templates/TemplateManager.php:166
 msgid "Single column, vertical stack."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:147, ../includes/Campaign/Templates/TemplateManager.php:164, ../includes/Campaign/Templates/TemplateManager.php:221, ../includes/Campaign/Templates/TemplateManager.php:282, ../includes/Campaign/Templates/TemplateManager.php:380, ../includes/Campaign/Templates/TemplateManager.php:490, ../includes/Campaign/Templates/TemplateManager.php:562, ../includes/Campaign/Templates/TemplateManager.php:672, ../includes/Campaign/Templates/TemplateManager.php:791, ../includes/Campaign/Templates/TemplateManager.php:891
+#: ../includes/Campaign/Templates/TemplateManager.php:171, ../includes/Campaign/Templates/TemplateManager.php:188, ../includes/Campaign/Templates/TemplateManager.php:264, ../includes/Campaign/Templates/TemplateManager.php:326, ../includes/Campaign/Templates/TemplateManager.php:425, ../includes/Campaign/Templates/TemplateManager.php:536, ../includes/Campaign/Templates/TemplateManager.php:609, ../includes/Campaign/Templates/TemplateManager.php:720, ../includes/Campaign/Templates/TemplateManager.php:840, ../includes/Campaign/Templates/TemplateManager.php:941, ../includes/Campaign/Templates/TemplateManager.php:1122, ../includes/Campaign/Templates/TemplateManager.php:1326, ../includes/Campaign/Templates/TemplateManager.php:1529
 msgid "Main Content"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:158
+#: ../includes/Campaign/Templates/TemplateManager.php:182
 msgid "2 Column"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:159
+#: ../includes/Campaign/Templates/TemplateManager.php:183
 msgid "Main content area with sidebar."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:181
+#: ../includes/Campaign/Templates/TemplateManager.php:205
 msgid "Custom"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:182
+#: ../includes/Campaign/Templates/TemplateManager.php:206
 msgid "A full-width row, then two equal columns."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:190
+#: ../includes/Campaign/Templates/TemplateManager.php:214
 msgid "Top (Full Width)"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:196
+#: ../includes/Campaign/Templates/TemplateManager.php:220
 msgid "Bottom Left"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:202
+#: ../includes/Campaign/Templates/TemplateManager.php:226
 msgid "Bottom Right"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:214, ../includes/Campaign/Templates/TemplateManager.php:215
+#: ../includes/Campaign/Templates/TemplateManager.php:257, ../includes/Campaign/Templates/TemplateManager.php:258, ../includes/Campaign/Templates/TemplateManager.php:1113, ../includes/Campaign/Templates/TemplateManager.php:1114
 msgid "Refugee Relief Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:216
+#: ../includes/Campaign/Templates/TemplateManager.php:259
 msgid "Support refugee communities with immediate aid and long-term recovery."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:275, ../includes/Campaign/Templates/TemplateManager.php:276
+#: ../includes/Campaign/Templates/TemplateManager.php:319, ../includes/Campaign/Templates/TemplateManager.php:320, ../includes/Campaign/Templates/TemplateManager.php:1317, ../includes/Campaign/Templates/TemplateManager.php:1318
 msgid "Medical Emergency Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:277
+#: ../includes/Campaign/Templates/TemplateManager.php:321
 msgid "Bring hope during medical emergencies through compassionate giving."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:371, ../includes/Campaign/Templates/TemplateManager.php:372
+#: ../includes/Campaign/Templates/TemplateManager.php:416, ../includes/Campaign/Templates/TemplateManager.php:417, ../includes/Campaign/Templates/TemplateManager.php:1384, ../includes/Campaign/Templates/TemplateManager.php:1385
 msgid "Student Success Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:373
+#: ../includes/Campaign/Templates/TemplateManager.php:418
 msgid "Empower the next generation through education."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:481, ../includes/Campaign/Templates/TemplateManager.php:482
+#: ../includes/Campaign/Templates/TemplateManager.php:527, ../includes/Campaign/Templates/TemplateManager.php:528, ../includes/Campaign/Templates/TemplateManager.php:1464, ../includes/Campaign/Templates/TemplateManager.php:1465
 msgid "Elite Golf Club Membership"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:483
+#: ../includes/Campaign/Templates/TemplateManager.php:529
 msgid "Join an exclusive golfing experience built for champions."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:513
+#: ../includes/Campaign/Templates/TemplateManager.php:559, ../includes/Campaign/Templates/TemplateManager.php:1230, ../includes/Campaign/Templates/TemplateManager.php:1435, ../includes/Campaign/Templates/TemplateManager.php:1641
 msgid "Donate"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:553, ../includes/Campaign/Templates/TemplateManager.php:554
+#: ../includes/Campaign/Templates/TemplateManager.php:600, ../includes/Campaign/Templates/TemplateManager.php:601, ../includes/Campaign/Templates/TemplateManager.php:1181, ../includes/Campaign/Templates/TemplateManager.php:1182
 msgid "Child Healthcare Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:555
+#: ../includes/Campaign/Templates/TemplateManager.php:602
 msgid "Help children access life-saving treatments, vaccinations, surgeries, and ongoing medical care."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:590
+#: ../includes/Campaign/Templates/TemplateManager.php:637
 msgid "Donation Panel"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:663, ../includes/Campaign/Templates/TemplateManager.php:664
+#: ../includes/Campaign/Templates/TemplateManager.php:711, ../includes/Campaign/Templates/TemplateManager.php:712, ../includes/Campaign/Templates/TemplateManager.php:1588, ../includes/Campaign/Templates/TemplateManager.php:1589
 msgid "Tree Plantation Campaign"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:665
+#: ../includes/Campaign/Templates/TemplateManager.php:713
 msgid "Support environmental restoration through tree planting, conservation, and climate action initiatives."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:703
+#: ../includes/Campaign/Templates/TemplateManager.php:751
 msgid "Donation Content"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:782, ../includes/Campaign/Templates/TemplateManager.php:783
+#: ../includes/Campaign/Templates/TemplateManager.php:831, ../includes/Campaign/Templates/TemplateManager.php:832, ../includes/Campaign/Templates/TemplateManager.php:1520, ../includes/Campaign/Templates/TemplateManager.php:1521
 msgid "Animal Rescue Fund"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:784
+#: ../includes/Campaign/Templates/TemplateManager.php:833
 msgid "Help rescue abandoned, injured, and homeless animals through shelter, food, medical care, and adoption support."
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:882, ../includes/Campaign/Templates/TemplateManager.php:883
+#: ../includes/Campaign/Templates/TemplateManager.php:932, ../includes/Campaign/Templates/TemplateManager.php:933, ../includes/Campaign/Templates/TemplateManager.php:1256, ../includes/Campaign/Templates/TemplateManager.php:1257
 msgid "Emergency Disaster Relief"
 msgstr ""
 
-#: ../includes/Campaign/Templates/TemplateManager.php:884
+#: ../includes/Campaign/Templates/TemplateManager.php:934
 msgid "Help communities recover when they need it most."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1115
+msgid "Story-led appeal with a sticky donation panel — for humanitarian and emergency relief funds."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1183
+msgid "A dark, high-contrast appeal for paediatric care — headline first, then story and ask."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1190, ../includes/Campaign/Templates/TemplateManager.php:1393, ../includes/Campaign/Templates/TemplateManager.php:1597
+msgid "Hero (Full Width)"
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1205, ../includes/Campaign/Templates/TemplateManager.php:1409, ../includes/Campaign/Templates/TemplateManager.php:1613
+msgid "Story"
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1258
+msgid "Single-column emergency appeal that puts the figures and the ask above the fold."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1265
+msgid "Appeal"
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1319
+msgid "Calm, clinical two-column layout for treatment appeals and family fundraisers."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1386
+msgid "Full-width hero, then story and donation side by side — for scholarship and hardship funds."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1466
+msgid "A single-column prospectus for clubs and societies collecting subscriptions."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1473
+msgid "Membership"
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1522
+msgid "Warm, story-led page for shelters and rescue groups taking ongoing donations."
+msgstr ""
+
+#: ../includes/Campaign/Templates/TemplateManager.php:1590
+msgid "Calm, green reforestation page built around cost-per-tree giving."
 msgstr ""
 
 #: ../includes/WooCommerce/Emails/SubscriptionCancelledEmail.php:30

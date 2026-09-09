@@ -2,6 +2,8 @@
 
 namespace Better_Payment\Lite\Campaign;
 
+use Better_Payment\Lite\Campaign\Support\Money;
+
 use Better_Payment\Lite\Controller;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -40,13 +42,13 @@ class CampaignListColumns extends Controller {
             printf(
                 '<strong>%s %s</strong> raised<br><small>%d donors &nbsp;|&nbsp; %d%%</small>',
                 esc_html( $currency ),
-                esc_html( number_format( $raised, 2 ) ),
+                esc_html( Money::format( $raised ) ),
                 (int) $stats['donor_count'],
                 (int) $progress
             );
 
             if ( $goal > 0 ) {
-                printf( '<br><small>of %s %s goal</small>', esc_html( $currency ), esc_html( number_format( $goal, 2 ) ) );
+                printf( '<br><small>of %s %s goal</small>', esc_html( $currency ), esc_html( Money::format( $goal ) ) );
             }
         }
 
