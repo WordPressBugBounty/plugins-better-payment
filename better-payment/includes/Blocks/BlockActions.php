@@ -12,6 +12,7 @@
 namespace Better_Payment\Lite\Blocks;
 
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -56,6 +57,13 @@ class BlockActions {
      * @return array|false The block settings or false if not found.
      */
     private function get_block_settings( $page_id, $widget_id ) {
+        // page_id is the visitor's to choose. A form on a page they cannot see — draft,
+        // private, scheduled, password-protected — must be neither payable nor probeable,
+        // and that holds for the cached transient as much as for the post content.
+        if ( ! $this->is_payable_form_page( $page_id ) ) {
+            return false;
+        }
+
         // First, try to get from transient (fastest).
         $transient_key = 'bp_block_settings_' . $page_id . '_' . $widget_id;
         $settings      = get_transient( $transient_key );
@@ -230,39 +238,30 @@ class BlockActions {
         $is_fluentcart_layout    = $is_layout_6 && ! empty( $el_settings['better_payment_form_layout_6_ecommerce_platform'] ) && 'fluentcart' === $el_settings['better_payment_form_layout_6_ecommerce_platform'];
         $is_woo_layout           = $is_layout_6 && ( empty( $el_settings['better_payment_form_layout_6_ecommerce_platform'] ) || 'woocommerce' === $el_settings['better_payment_form_layout_6_ecommerce_platform'] );
 
-        // Currency handling.
-        if ( ! empty( $el_settings['better_payment_form_currency_use_woocommerce'] ) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-            ! empty( $el_settings['better_payment_form_currency_woocommerce'] ) ) {
-            $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
-        }
         // phpcs:disable WordPress.Security.NonceVerification.Missing
-        if ( ! empty( $_POST['campaign_currency'] ) ) {
-            $el_settings_currency = sanitize_text_field( $_POST['campaign_currency'] );
-        }
-        // phpcs:enable WordPress.Security.NonceVerification.Missing
+        // Amount, quantity, currency and campaign come from the stored settings, never
+        // from the request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
+            $el_settings,
+            wp_unslash( $_POST ),
+            array(
+                'page_id' => $page_id,
+                'gateway' => 'paypal',
+            )
+        );
 
-        $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
-
-        // phpcs:disable WordPress.Security.NonceVerification.Missing
-        $primary_payment_amount = isset( $_POST['primary_payment_amount'] ) ? floatval( $_POST['primary_payment_amount'] ) : 0;
-
-        if ( empty( $_POST['primary_payment_amount'] ) && ! empty( $_POST['primary_payment_amount_radio'] ) ) {
-            $primary_payment_amount = floatval( $_POST['primary_payment_amount_radio'] );
-        }
-
-        $primary_payment_amount_quantity = ! empty( $_POST['payment_amount_quantity'] ) ? intval( $_POST['payment_amount_quantity'] ) : '';
-        if ( $is_woo_layout ) {
-            $primary_payment_amount_quantity = 1;
-        }
-
-        $primary_payment_amount = ! empty( $primary_payment_amount_quantity ) ? $primary_payment_amount * $primary_payment_amount_quantity : $primary_payment_amount;
-
-        if ( $primary_payment_amount <= 0 ) {
-            $this->redirect_previous_page();
+        if ( is_wp_error( $guarded ) ) {
+            PaymentRequestGuard::reject_form_post( $guarded );
             return;
         }
 
-        $order_id            = 'paypal_' . uniqid();
+        $el_settings_currency        = $guarded['currency'];
+        $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
+
+        $primary_payment_amount          = $guarded['amount'];
+        $primary_payment_amount_quantity = $guarded['quantity'];
+
+        $order_id            = Handler::new_order_id( 'paypal' );
         $paypal_button_type  = ! empty( $el_settings['better_payment_paypal_button_type'] ) ? $el_settings['better_payment_paypal_button_type'] : '_xclick';
         $site_url            = get_permalink( $page_id );
         $return_url          = ! empty( $_POST['return'] ) ? wp_validate_redirect( esc_url_raw( $_POST['return'] ), $site_url ) : '';
@@ -326,7 +325,7 @@ class BlockActions {
             $request_data['invoice'] = sanitize_text_field( $better_form_fields['primary_reference_number'] );
         }
 
-        $campaign_id = ! empty( $_POST['campaign_id'] ) ? sanitize_text_field( $_POST['campaign_id'] ) : '';
+        $campaign_id = $guarded['campaign_id'];
         // phpcs:enable WordPress.Security.NonceVerification.Missing
 
         Handler::payment_create(
@@ -445,35 +444,32 @@ class BlockActions {
         }
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
-        $amount = isset( $_POST['fields']['primary_payment_amount'] ) ? floatval( $_POST['fields']['primary_payment_amount'] ) : 0;
+        // Amount, quantity, currency and campaign come from the stored settings, never
+        // from the request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
+            $el_settings,
+            isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array(),
+            array(
+                'page_id' => $page_id,
+                'gateway' => 'stripe',
+            )
+        );
 
-        if ( empty( $_POST['fields']['primary_payment_amount'] ) && ! empty( $_POST['fields']['primary_payment_amount_radio'] ) ) {
-            $amount = floatval( $_POST['fields']['primary_payment_amount_radio'] );
-        }
-
-        $amount_quantity = ! empty( $_POST['fields']['payment_amount_quantity'] ) ? intval( $_POST['fields']['payment_amount_quantity'] ) : '';
-        $amount          = ! empty( $amount_quantity ) ? $amount * $amount_quantity : $amount;
-
-        if ( $amount <= 0 ) {
-            wp_send_json_error( esc_html__( 'Invalid payment amount.', 'better-payment' ) );
+        if ( is_wp_error( $guarded ) ) {
+            wp_send_json_error( esc_html( $guarded->get_error_message() ) );
             return;
         }
+
+        $amount          = $guarded['amount'];
+        $amount_quantity = $guarded['quantity'];
 
         $header_info = array(
             'Authorization'  => 'Basic ' . base64_encode( sanitize_text_field( $better_payment_keys['secret_key'] ) . ':' ),
             'Stripe-Version' => '2019-05-16',
         );
 
-        $order_id             = 'stripe_' . uniqid();
-        $el_settings_currency = $el_settings['better_payment_form_currency'];
-
-        if ( ! empty( $el_settings['better_payment_form_currency_use_woocommerce'] ) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-            ! empty( $el_settings['better_payment_form_currency_woocommerce'] ) ) {
-            $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
-        }
-        if ( ! empty( $_POST['fields']['campaign_currency'] ) ) {
-            $el_settings_currency = sanitize_text_field( $_POST['fields']['campaign_currency'] );
-        }
+        $order_id             = Handler::new_order_id( 'stripe' );
+        $el_settings_currency = $guarded['currency'];
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
 
@@ -611,7 +607,7 @@ class BlockActions {
         }
 
         if ( ! empty( $response_ar->payment_intent ) || ( ! empty( $response_ar->mode ) && 'subscription' === $response_ar->mode ) ) {
-            $campaign_id = ! empty( $_POST['fields']['campaign_id'] ) ? sanitize_text_field( $_POST['fields']['campaign_id'] ) : '';
+            $campaign_id = $guarded['campaign_id'];
 
             Handler::payment_create(
                 array(
@@ -666,35 +662,32 @@ class BlockActions {
         }
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
-        $amount = isset( $_POST['fields']['primary_payment_amount'] ) ? floatval( $_POST['fields']['primary_payment_amount'] ) : 0;
+        // Amount, quantity, currency and campaign come from the stored settings, never
+        // from the request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
+            $el_settings,
+            isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array(),
+            array(
+                'page_id' => $page_id,
+                'gateway' => 'paystack',
+            )
+        );
 
-        if ( empty( $_POST['fields']['primary_payment_amount'] ) && ! empty( $_POST['fields']['primary_payment_amount_radio'] ) ) {
-            $amount = floatval( $_POST['fields']['primary_payment_amount_radio'] );
-        }
-
-        $amount_quantity = ! empty( $_POST['fields']['payment_amount_quantity'] ) ? intval( $_POST['fields']['payment_amount_quantity'] ) : '';
-        $amount          = ! empty( $amount_quantity ) ? $amount * $amount_quantity : $amount;
-
-        if ( $amount <= 0 ) {
-            wp_send_json_error( esc_html__( 'Invalid payment amount.', 'better-payment' ) );
+        if ( is_wp_error( $guarded ) ) {
+            wp_send_json_error( esc_html( $guarded->get_error_message() ) );
             return;
         }
+
+        $amount          = $guarded['amount'];
+        $amount_quantity = $guarded['quantity'];
 
         $header_info = array(
             'Authorization' => 'Bearer ' . sanitize_text_field( $el_settings['better_payment_paystack_secret_key'] ),
             'Cache-Control: no-cache',
         );
 
-        $order_id             = 'paystack_' . uniqid();
-        $el_settings_currency = $el_settings['better_payment_form_currency'];
-
-        if ( ! empty( $el_settings['better_payment_form_currency_use_woocommerce'] ) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-            ! empty( $el_settings['better_payment_form_currency_woocommerce'] ) ) {
-            $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
-        }
-        if ( ! empty( $_POST['fields']['campaign_currency'] ) ) {
-            $el_settings_currency = sanitize_text_field( $_POST['fields']['campaign_currency'] );
-        }
+        $order_id             = Handler::new_order_id( 'paystack' );
+        $el_settings_currency = $guarded['currency'];
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
 
@@ -792,7 +785,7 @@ class BlockActions {
             wp_send_json_error( $error_message );
         }
 
-        $campaign_id = ! empty( $_POST['fields']['campaign_id'] ) ? sanitize_text_field( $_POST['fields']['campaign_id'] ) : '';
+        $campaign_id = $guarded['campaign_id'];
 
         Handler::payment_create(
             array(
@@ -800,7 +793,8 @@ class BlockActions {
                 'order_id'         => $order_id,
                 'payment_date'     => gmdate( 'Y-m-d H:i:s' ),
                 'source'           => 'paystack',
-                'transaction_id'   => '',
+                // Paystack's reference, so verification can bind it to this order.
+                'transaction_id'   => ! empty( $response_ar->data->reference ) ? sanitize_text_field( $response_ar->data->reference ) : '',
                 'customer_info'    => maybe_serialize( $response_ar ),
                 'form_fields_info' => maybe_serialize( $better_form_fields ),
                 'status'           => 'unpaid',

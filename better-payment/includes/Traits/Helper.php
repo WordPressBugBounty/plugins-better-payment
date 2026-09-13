@@ -561,6 +561,34 @@ trait Helper
         return $currency_code; // Fallback to currency code
     }
 
+    /**
+     * Whether a visitor may pay through a form stored on this post.
+     *
+     * Every payment handler takes the form's page id from the request, and nothing stopped it
+     * pointing at a draft, private, scheduled or password-protected post — so an unpublished
+     * form could be paid, and any form's configuration probed by id. A published post
+     * qualifies; anything else only for a user allowed to read it (an editor testing a draft
+     * in preview), and never while its password has not been entered.
+     *
+     * @since 2.3.4
+     *
+     * @param int $page_id Post id.
+     * @return bool
+     */
+    public function is_payable_form_page( $page_id ) {
+        $post = get_post( absint( $page_id ) );
+
+        if ( ! $post ) {
+            return false;
+        }
+
+        if ( 'publish' !== $post->post_status && ! current_user_can( 'read_post', $post->ID ) ) {
+            return false;
+        }
+
+        return ! post_password_required( $post );
+    }
+
 	/**
      * Widget settings
      *

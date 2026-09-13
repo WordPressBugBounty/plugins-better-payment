@@ -47,9 +47,9 @@ class Actions {
 
         check_admin_referer( 'better-payment-paypal', 'security' );
 
-        if ( !empty( $_POST[ 'better_payment_page_id' ] ) ) {
-            $page_id = intval( $_POST[ 'better_payment_page_id' ], 10 );
-        } else {
+        $page_id = ! empty( $_POST[ 'better_payment_page_id' ] ) ? intval( $_POST[ 'better_payment_page_id' ], 10 ) : 0;
+
+        if ( ! $page_id ) {
             $this->redirect_previous_page();
         }
 
@@ -84,30 +84,29 @@ class Actions {
         $is_fluentcart_layout = $is_layout_6 && ! empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) && 'fluentcart' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ];
         $is_woo_layout = $is_layout_6 && ( empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) || 'woocommerce' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] );
 
-        if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-        !empty($el_settings['better_payment_form_currency_woocommerce'])){
-            $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
-        }
-        if( !empty($_POST[ 'campaign_currency' ]) ) {
-            $el_settings_currency = sanitize_text_field( $_POST[ 'campaign_currency' ] );
+        // Amount, quantity, currency and campaign come from the stored settings, never
+        // from the request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
+            $el_settings,
+            wp_unslash( $_POST ),
+            [
+                'page_id' => $page_id,
+                'gateway' => 'paypal',
+            ]
+        );
+
+        if ( is_wp_error( $guarded ) ) {
+            PaymentRequestGuard::reject_form_post( $guarded );
+            return;
         }
 
+        $el_settings_currency        = $guarded['currency'];
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
-        $primary_payment_amount = isset( $_POST[ 'primary_payment_amount' ] ) ? floatval( $_POST[ 'primary_payment_amount' ] ) : 0;
+        $primary_payment_amount          = $guarded['amount'];
+        $primary_payment_amount_quantity = $guarded['quantity'];
 
-        if( empty( $_POST['primary_payment_amount'] ) && ! empty( $_POST['primary_payment_amount_radio'] ) ){
-            $primary_payment_amount = floatval( $_POST['primary_payment_amount_radio'] );
-        }
-
-        $primary_payment_amount_quantity = ! empty( $_POST['payment_amount_quantity'] ) ? intval( $_POST[ 'payment_amount_quantity' ] ) : '';
-        if ( $is_woo_layout ) {
-            $primary_payment_amount_quantity = 1;
-        }
-
-        $primary_payment_amount = ! empty( $primary_payment_amount_quantity ) ? $primary_payment_amount * $primary_payment_amount_quantity : $primary_payment_amount;
-
-        $order_id     = 'paypal_' . uniqid();
+        $order_id     = Handler::new_order_id( 'paypal' );
         $request_data = [
             'business'      => $el_settings[ 'better_payment_paypal_business_email' ],
             'currency_code' => $el_settings_currency,
@@ -165,7 +164,7 @@ class Actions {
             $request_data[ 'invoice' ] = sanitize_text_field( $better_form_fields[ 'primary_reference_number' ] );
         }
         
-        $campaign_id = ! empty( $_POST['campaign_id'] ) ? sanitize_text_field( $_POST['campaign_id'] ) : '';
+        $campaign_id = $guarded['campaign_id'];
 
         Handler::payment_create(
             [
@@ -212,6 +211,12 @@ class Actions {
         }
 
         $el_settings = $this->better_payment_widget_settings( $page_id, $widget_id );
+
+        // Before any setting is read: an unknown, or unpublished, form has none.
+        if ( empty( $el_settings ) ) {
+            wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
+        }
+
         $is_layout_6 = ! empty( $el_settings[ 'better_payment_form_layout' ] ) && 'layout-6-pro' === $el_settings[ 'better_payment_form_layout' ];
         $is_fluentcart_layout = $is_layout_6 && ! empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) && 'fluentcart' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ];
         $is_woo_layout = $is_layout_6 && ( empty( $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] ) || 'woocommerce' === $el_settings[ 'better_payment_form_layout_6_ecommerce_platform' ] );
@@ -221,26 +226,27 @@ class Actions {
             'secret_key' => 'yes' === sanitize_text_field( $el_settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $el_settings[ 'better_payment_stripe_secret_key_live' ] ) : sanitize_text_field( $el_settings[ 'better_payment_stripe_secret_key' ] ),
         ];
 
-        if ( empty( $el_settings ) ) {
-            wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
-        }
-
         $is_payment_split_payment = ! empty( $el_settings["better_payment_form_payment_type"] ) && 'split-payment' === $el_settings["better_payment_form_payment_type"];
 
-        $amount = isset($_POST['fields']['primary_payment_amount']) ? floatval($_POST['fields']['primary_payment_amount']) : 0;
+        // Amount, quantity, currency, price ids, coupon and campaign come from the stored
+        // settings, never from the request — see PaymentRequestGuard.
+        $guard   = new PaymentRequestGuard();
+        $guarded = $guard->resolve_form_payment(
+            $el_settings,
+            isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [],
+            [
+                'page_id' => $page_id,
+                'gateway' => 'stripe',
+            ]
+        );
 
-        if ( empty( $_POST['fields']['primary_payment_amount'] ) && ! empty( $_POST['fields']['primary_payment_amount_radio'] ) ) {
-            $amount = floatval($_POST['fields']['primary_payment_amount_radio']);
+        if ( is_wp_error( $guarded ) ) {
+            wp_send_json_error( esc_html( $guarded->get_error_message() ) );
         }
 
-        $amount_quantity = ! empty( $_POST['fields']['payment_amount_quantity'] ) ? intval( $_POST['fields']['payment_amount_quantity'] ) : '';
-        $product_quantities = ! empty( $_POST['fields']['payment_amount_quantity'] ) && is_array( $_POST['fields']['payment_amount_quantity'] ) ? array_map( 'intval', $_POST['fields']['payment_amount_quantity'] ) : [];
-        
-        if ( $is_woo_layout || $is_fluentcart_layout ) {
-            $amount_quantity = 1;
-        }
-
-        $amount = ! empty( $amount_quantity ) ? $amount * $amount_quantity : $amount;
+        $amount             = $guarded['amount'];
+        $amount_quantity    = $guarded['quantity'];
+        $product_quantities = $guarded['product_quantities'];
 
         if ( empty( $better_payment_keys['public_key'] ) || empty( $better_payment_keys['secret_key'] ) ) {
             wp_send_json_error( esc_html(__( 'Stripe Key missing', 'better-payment' )) );
@@ -251,7 +257,7 @@ class Actions {
             'Stripe-Version' => '2019-05-16'
         );
 
-        $order_id = 'stripe_' . uniqid();
+        $order_id = Handler::new_order_id( 'stripe' );
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
@@ -259,13 +265,7 @@ class Actions {
         $fluentcart_product_id = !empty($el_settings["better_payment_form_fluentcart_product_id"]) ? intval($el_settings["better_payment_form_fluentcart_product_id"]) : 0;
         $fluentcart_product_ids = !empty($el_settings["better_payment_form_fluentcart_product_ids"]) ? $el_settings["better_payment_form_fluentcart_product_ids"] : [0];
 
-        if(!empty($el_settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-        !empty($el_settings['better_payment_form_currency_woocommerce'])){
-            $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
-        }
-        if( !empty($_POST['fields'][ 'campaign_currency' ]) ) {
-            $el_settings_currency = sanitize_text_field( $_POST['fields'][ 'campaign_currency' ] );
-        }
+        $el_settings_currency = $guarded['currency'];
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
@@ -304,17 +304,23 @@ class Actions {
             ]
         ];
 
-        $coupon_code = ! empty( $_POST['fields']['primary_coupon_code'] ) ? sanitize_text_field( $_POST['fields']['primary_coupon_code'] ) : '';
-        if ( !empty( $coupon_code ) ) {
-            $request['discounts'] = [
-                [
-                    'coupon' => $coupon_code
-                ]
-            ];
+        // The typed code is kept for the receipt; what Stripe applies is decided by the guard —
+        // an active promotion code, or a coupon the merchant tagged public. A bare coupon id
+        // no longer works, because every coupon in the account (internal 100%-off ones
+        // included) would be one guess away.
+        $coupon_code = $guarded['coupon_code'];
+        $discount    = $guard->resolve_stripe_discount( $coupon_code, $better_payment_keys['secret_key'] );
+
+        if ( is_wp_error( $discount ) ) {
+            wp_send_json_error( esc_html( $discount->get_error_message() ) );
         }
 
-        $is_payment_recurring = ! empty( $_POST['fields']['better_payment_recurring_mode'] ) && 'subscription' === sanitize_text_field( $_POST['fields']['better_payment_recurring_mode'] );
-        $recurring_price_id = ! empty( $_POST['fields']['better_payment_recurring_price_id'] ) ? sanitize_text_field( $_POST['fields']['better_payment_recurring_price_id'] ) : '';
+        if ( ! empty( $discount ) ) {
+            $request['discounts'] = [ $discount ];
+        }
+
+        $is_payment_recurring = $guarded['is_recurring'];
+        $recurring_price_id = $guarded['recurring_price_id'];
         $mixed_payment_selection_data = $this->get_mixed_payment_selection_data( $el_settings, $_POST['fields'] );
         
         if ( is_wp_error( $mixed_payment_selection_data ) ) {
@@ -405,7 +411,7 @@ class Actions {
         }
 
         if ( $is_payment_split_payment ) {
-            $installment_price_id = ! empty($_POST['fields']['split_payment_installment']) ? sanitize_text_field($_POST['fields']['split_payment_installment']) : '';
+            $installment_price_id = $guarded['installment_price_id'];
             $split_payment_installments_data = ! empty( $el_settings['better_payment_split_installment_price_ids'] ) ? $el_settings['better_payment_split_installment_price_ids'] : [];
 
             if ( is_array( $split_payment_installments_data ) && count( $split_payment_installments_data ) ){
@@ -451,7 +457,7 @@ class Actions {
         $response_ar = json_decode( $response[ 'body' ] );
 
         if ( ! empty( $response_ar->payment_intent ) || ( ! empty( $response_ar->mode ) && 'subscription' === $response_ar->mode ) ) {
-            $campaign_id = ! empty( $_POST['fields']['campaign_id'] ) ? sanitize_text_field( $_POST['fields']['campaign_id'] ) : '';
+            $campaign_id = $guarded['campaign_id'];
 
             Handler::payment_create(
                 [
@@ -576,6 +582,12 @@ class Actions {
             return new \WP_Error( 'mixed_interval_invalid', __( 'Invalid recurring time period selected for mixed payment.', 'better-payment' ) );
         }
 
+        // The period decides how often the amount is charged, so — like the amount — it must
+        // be one the form offers: a "$10 monthly" plan must not become "$10 yearly".
+        if ( ! in_array( "{$interval_count}|{$interval}", self::mixed_interval_options( $el_settings ), true ) ) {
+            return new \WP_Error( 'mixed_interval_invalid', __( 'Invalid recurring time period selected for mixed payment.', 'better-payment' ) );
+        }
+
         $selection_data['interval_count'] = $interval_count;
         $selection_data['interval'] = $interval;
 
@@ -623,13 +635,20 @@ class Actions {
             $interval_label = $interval_count . ' ' . $interval . 's';
         }
 
-        $common_metadata = [
-            'order_id' => sanitize_text_field( $order_id ),
-            'widget_id' => sanitize_text_field( $widget_id ),
-            'is_mixed_payment' => '1',
-            'mixed_interval' => $interval,
-            'mixed_interval_count' => strval( $interval_count ),
-        ];
+        // One Price per plan, not one per request. This runs for anonymous visitors, and a
+        // Price created on every checkout attempt piled objects into the merchant's Stripe
+        // account without limit. A plan is reused through a lookup key derived from exactly
+        // what it charges, so the Price carries no per-order data (the order id lives on the
+        // Checkout Session instead).
+        $lookup_key = self::mixed_price_lookup_key( $product_id, $currency, $unit_amount, $interval, $interval_count );
+        $existing   = $this->find_mixed_recurring_stripe_price( $header_info, $lookup_key, $product_id, $currency, $unit_amount, $interval, $interval_count );
+
+        if ( '' !== $existing ) {
+            return [
+                'price_id' => $existing,
+                'product_id' => $product_id,
+            ];
+        }
 
         $price_request = [
             'currency' => $currency,
@@ -639,8 +658,13 @@ class Actions {
                 'interval_count' => $interval_count,
             ],
             'product' => $product_id,
+            'lookup_key' => $lookup_key,
             'nickname' => sprintf( '%s - %s', $form_name, $interval_label ),
-            'metadata' => $common_metadata,
+            'metadata' => [
+                'is_mixed_payment' => '1',
+                'mixed_interval' => $interval,
+                'mixed_interval_count' => strval( $interval_count ),
+            ],
         ];
 
         $response = wp_safe_remote_post(
@@ -662,6 +686,16 @@ class Actions {
         $error_message = ! empty( $response_ar->error->message ) ? sanitize_text_field( $response_ar->error->message ) : __( 'Unable to create recurring Stripe price for mixed payment.', 'better-payment' );
 
         if ( empty( $response_ar ) || empty( $response_ar->id ) ) {
+            // A concurrent request may have claimed the lookup key a moment earlier.
+            $existing = $this->find_mixed_recurring_stripe_price( $header_info, $lookup_key, $product_id, $currency, $unit_amount, $interval, $interval_count );
+
+            if ( '' !== $existing ) {
+                return [
+                    'price_id' => $existing,
+                    'product_id' => $product_id,
+                ];
+            }
+
             return new \WP_Error( 'mixed_price_create_failed', $error_message );
         }
 
@@ -669,6 +703,99 @@ class Actions {
             'price_id' => sanitize_text_field( $response_ar->id ),
             'product_id' => $product_id,
         ];
+    }
+
+    /**
+     * The periods a mixed-payment form offers, as `{count}|{interval}` — the exact values
+     * layouts 4/5 (Pro) render into the "Recurring time period" select.
+     *
+     * @param array $el_settings Form settings.
+     * @return string[]
+     */
+    private static function mixed_interval_options( $el_settings = [] ) {
+        $items   = ! empty( $el_settings['better_payment_mixed_installment_options'] ) && is_array( $el_settings['better_payment_mixed_installment_options'] )
+            ? $el_settings['better_payment_mixed_installment_options']
+            : [];
+        $options = [];
+
+        foreach ( $items as $option ) {
+            if ( ! is_array( $option ) ) {
+                continue;
+            }
+
+            $type = ! empty( $option['better_payment_mixed_interval_type'] ) ? sanitize_key( $option['better_payment_mixed_interval_type'] ) : 'month';
+            $type = in_array( $type, [ 'day', 'week', 'month', 'year' ], true ) ? $type : 'month';
+
+            $count = ! empty( $option[ "better_payment_mixed_interval_{$type}" ] ) ? absint( $option[ "better_payment_mixed_interval_{$type}" ] ) : 0;
+
+            if ( empty( $count ) && ! empty( $option['better_payment_mixed_interval'] ) ) {
+                $count = absint( $option['better_payment_mixed_interval'] );
+            }
+
+            $options[] = ( $count ? $count : 1 ) . '|' . $type;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Stripe lookup key for a mixed recurring plan.
+     *
+     * @param string $product_id     Stripe product id.
+     * @param string $currency       Lower-case currency.
+     * @param int    $unit_amount    Minor units.
+     * @param string $interval       day|week|month|year.
+     * @param int    $interval_count Interval count.
+     * @return string
+     */
+    private static function mixed_price_lookup_key( $product_id, $currency, $unit_amount, $interval, $interval_count ) {
+        return 'bp_mixed_' . md5( implode( '|', [ $product_id, $currency, (int) $unit_amount, $interval, (int) $interval_count ] ) );
+    }
+
+    /**
+     * An active Stripe Price already created for this exact plan, or ''.
+     *
+     * The lookup key is ours, but a Price is only reused while it still charges exactly this
+     * plan — anything edited or mismatched in Stripe is ignored and a fresh one is created.
+     *
+     * @return string Price id, or '' when there is none to reuse.
+     */
+    private function find_mixed_recurring_stripe_price( $header_info, $lookup_key, $product_id, $currency, $unit_amount, $interval, $interval_count ) {
+        $response = wp_safe_remote_get(
+            'https://api.stripe.com/v1/prices?' . http_build_query(
+                [
+                    'lookup_keys' => [ $lookup_key ],
+                    'active'      => 'true',
+                    'limit'       => 1,
+                ]
+            ),
+            [
+                'headers' => $header_info,
+                'timeout' => 70,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return '';
+        }
+
+        $body  = json_decode( wp_remote_retrieve_body( $response ) );
+        $price = isset( $body->data ) && is_array( $body->data ) && ! empty( $body->data[0] ) ? $body->data[0] : null;
+
+        if ( ! is_object( $price ) || empty( $price->id ) ) {
+            return '';
+        }
+
+        $price_product = isset( $price->product ) && is_object( $price->product ) ? ( isset( $price->product->id ) ? $price->product->id : '' ) : ( isset( $price->product ) ? $price->product : '' );
+
+        $same_plan = isset( $price->unit_amount, $price->currency, $price->recurring->interval, $price->recurring->interval_count )
+            && (int) $price->unit_amount === (int) $unit_amount
+            && strtolower( (string) $price->currency ) === $currency
+            && (string) $price_product === (string) $product_id
+            && (string) $price->recurring->interval === $interval
+            && (int) $price->recurring->interval_count === (int) $interval_count;
+
+        return $same_plan ? sanitize_text_field( $price->id ) : '';
     }
 
     /**
@@ -710,25 +837,30 @@ class Actions {
             wp_send_json_error( esc_html(__( 'Paystack Key missing', 'better-payment' )) );
         }
 
-        $amount = isset($_POST[ 'fields' ][ 'primary_payment_amount' ]) ? floatval($_POST[ 'fields' ][ 'primary_payment_amount' ]) : 0;
+        // Amount, quantity, currency and campaign come from the stored settings, never
+        // from the request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
+            $el_settings,
+            isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [],
+            [
+                'page_id' => $page_id,
+                'gateway' => 'paystack',
+            ]
+        );
 
-        if ( empty( $_POST[ 'fields' ][ 'primary_payment_amount' ] ) && ! empty( $_POST[ 'fields' ][ 'primary_payment_amount_radio' ] ) ) {
-            $amount = floatval($_POST[ 'fields' ][ 'primary_payment_amount_radio' ]);
+        if ( is_wp_error( $guarded ) ) {
+            wp_send_json_error( esc_html( $guarded->get_error_message() ) );
         }
 
-        $amount_quantity = ! empty( $_POST['fields']['payment_amount_quantity'] ) ? intval( $_POST['fields']['payment_amount_quantity'] ) : '';
-        if ( $is_woo_layout ) {
-            $amount_quantity = 1;
-        }
-
-        $amount = ! empty( $amount_quantity ) ? $amount * $amount_quantity : $amount;
+        $amount          = $guarded['amount'];
+        $amount_quantity = $guarded['quantity'];
 
         $header_info = array(
             'Authorization'  => 'Bearer ' . sanitize_text_field( $el_settings[ 'better_payment_paystack_secret_key' ] ),
             "Cache-Control: no-cache",
         );
 
-        $order_id = 'paystack_' . uniqid();
+        $order_id = Handler::new_order_id( 'paystack' );
 
         $el_settings_currency = $el_settings[ 'better_payment_form_currency' ];
         $woo_product_id = !empty($el_settings["better_payment_form_woocommerce_product_id"]) ? intval($el_settings["better_payment_form_woocommerce_product_id"]) : 0;
@@ -736,13 +868,7 @@ class Actions {
         $fluentcart_product_id = !empty($el_settings["better_payment_form_fluentcart_product_id"]) ? intval($el_settings["better_payment_form_fluentcart_product_id"]) : 0;
         $fluentcart_product_ids = !empty($el_settings["better_payment_form_fluentcart_product_ids"]) ? $el_settings["better_payment_form_fluentcart_product_ids"] : [0];
 
-        if(!empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $el_settings['better_payment_form_currency_use_woocommerce'] &&
-        !empty($settings['better_payment_form_currency_woocommerce'])){
-            $el_settings_currency = $el_settings['better_payment_form_currency_woocommerce'];
-        }
-        if( !empty($_POST['fields'][ 'campaign_currency' ]) ) {
-            $el_settings_currency = sanitize_text_field( $_POST['fields'][ 'campaign_currency' ] );
-        }
+        $el_settings_currency = $guarded['currency'];
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
@@ -831,7 +957,7 @@ class Actions {
             wp_send_json_error( $error_message );
         }
 
-        $campaign_id = ! empty( $_POST['fields']['campaign_id'] ) ? sanitize_text_field( $_POST['fields']['campaign_id'] ) : '';
+        $campaign_id = $guarded['campaign_id'];
 
         Handler::payment_create(
             [
@@ -839,7 +965,8 @@ class Actions {
                 'order_id'       => $order_id,
                 'payment_date'   => date( 'Y-m-d H:i:s' ),
                 'source'         => 'paystack',
-                'transaction_id' => '',
+                // Paystack's reference, so verification can bind it to this order.
+                'transaction_id' => ! empty( $response_ar->data->reference ) ? sanitize_text_field( $response_ar->data->reference ) : '',
                 'customer_info'  => maybe_serialize( $response_ar ),
                 'form_fields_info'  => maybe_serialize( $better_form_fields ),
                 'status'         => 'unpaid',
@@ -945,6 +1072,12 @@ class Actions {
      * @since 1.0.0
      */
     public function better_payment_widget_settings( $page_id, $widget_id ) {
+        // page_id is the visitor's to choose. A form on a page they cannot see — draft,
+        // private, scheduled, password-protected — must be neither payable nor probeable.
+        if ( ! $this->is_payable_form_page( $page_id ) ) {
+            return [];
+        }
+
         $settings = $this->get_elementor_widget_settings( $page_id, $widget_id );
 
         return $settings;

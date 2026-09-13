@@ -24,6 +24,7 @@ class Select2 extends Base_Data_Control
             'better_payment_select2_localize',
 	        [
 		        'ajaxurl'     => esc_url( admin_url( 'admin-ajax.php' ) ),
+		        'nonce'       => wp_create_nonce( 'better_payment_select2' ),
 		        'search_text' => esc_html__( 'Search', 'better-payment' ),
 		        'remove'      => __( 'Remove', 'better-payment' ),
 		        'thumbnail'   => __( 'Image', 'better-payment' ),

@@ -196,7 +196,7 @@ class Gateway extends \WC_Payment_Gateway {
         }
 
         // Same id scheme as every existing Better Payment Stripe surface.
-        $bp_order_id = 'stripe_' . uniqid();
+        $bp_order_id = \Better_Payment\Lite\Classes\Handler::new_order_id( 'stripe' );
 
         $success_url = add_query_arg(
             array(

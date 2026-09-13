@@ -34,6 +34,30 @@ class Import extends Controller{
         
     }
 
+    /**
+     * Decode a CSV `form_fields_info` cell into an array.
+     *
+     * The cell comes from an uploaded file, so it is never handed to maybe_unserialize():
+     * that instantiates any class a serialized payload names, which turns an import into an
+     * object-injection sink for whatever gadget chain the site's plugins happen to provide.
+     * Objects are refused outright; only a plain array survives.
+     *
+     * @since 2.3.4
+     *
+     * @param mixed $value Cell value.
+     * @return array
+     */
+    public static function decode_form_fields_info( $value ) {
+        if ( ! is_string( $value ) || ! is_serialized( $value ) ) {
+            return [];
+        }
+
+        // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize, WordPress.PHP.NoSilencedErrors.Discouraged -- classes are disallowed; a malformed cell is expected input.
+        $decoded = @unserialize( trim( $value ), [ 'allowed_classes' => false ] );
+
+        return is_array( $decoded ) ? $decoded : [];
+    }
+
     public function import_transactions() {
         $message = __('Invalid File!', 'better-payment');
         
@@ -88,7 +112,7 @@ class Import extends Controller{
                 ];
 
                 if ( ! empty( $record['payment_type'] ) && strtolower($record['payment_type']) === 'subscription' ) {
-                    $better_form_fields_selected = isset( $record['form_fields_info'] ) ? maybe_unserialize( $record['form_fields_info'] ) : [];
+                    $better_form_fields_selected = isset( $record['form_fields_info'] ) ? self::decode_form_fields_info( $record['form_fields_info'] ) : [];
                     
                     $better_form_fields['subscription_id']          = isset( $better_form_fields_selected['subscription_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_id'] ) : '';
                     $better_form_fields['subscription_customer_id'] = isset( $better_form_fields_selected['subscription_customer_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_customer_id'] ) : '';

@@ -5,6 +5,7 @@ namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
@@ -169,19 +170,19 @@ class Paystack_Integration extends Action_Base {
             return false;
         }
 
-        $amount   = isset( $sent_data['payment_amount'] ) ? floatval($sent_data['payment_amount']) : 0;
+        // Amount and quantity come from the form's field settings, never from the
+        // request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_elementor_form_payment( (array) $el_form_form_settings, (array) $sent_data );
 
-        if ( empty( $amount ) && ! empty( $sent_data['primary_payment_amount_radio'] ) ) {
-            $amount = floatval( $sent_data['primary_payment_amount_radio'] );
+        if ( is_wp_error( $guarded ) ) {
+            $ajax_handler->add_error_message( $guarded->get_error_message() );
+            return false;
         }
 
-        $quantity = 1;
-        if ( !empty( $sent_data[ 'pay_quantity' ] ) ) {
-            $quantity = intval( $sent_data[ 'pay_quantity' ][ 'value' ] );
-            $amount   *= $quantity;
-        }
+        $quantity = $guarded['quantity'];
+        $amount   = $guarded['amount'];
 
-        $order_id = 'paystack_' . uniqid();
+        $order_id = Handler::new_order_id( 'paystack' );
 
         $redirection_url_success    = get_permalink( $page_id );
         $redirection_url_error      = get_permalink( $page_id );
@@ -255,7 +256,7 @@ class Paystack_Integration extends Action_Base {
             ];
             
             // Get campaign_id from form data if available
-            $campaign_id = ! empty( $sent_data['campaign_id'] ) ? sanitize_text_field( $sent_data['campaign_id'] ) : '';
+            $campaign_id = $guarded['campaign_id'];
 
             Handler::payment_create(
                 [
@@ -263,7 +264,8 @@ class Paystack_Integration extends Action_Base {
                     'order_id'       => $order_id,
                     'payment_date'   => date( 'Y-m-d H:i:s' ),
                     'source'         => 'paystack',
-                    'transaction_id' => '',
+                    // Paystack's reference, so verification can bind it to this order.
+                    'transaction_id' => ! empty( $response_ar->data->reference ) ? sanitize_text_field( $response_ar->data->reference ) : '',
                     'customer_info'  => maybe_serialize( $response_ar ),
                     'form_fields_info' => maybe_serialize( $better_form_fields ),
                     'obj_id'         => !empty($response_ar->id) ? sanitize_text_field($response_ar->id) : '',

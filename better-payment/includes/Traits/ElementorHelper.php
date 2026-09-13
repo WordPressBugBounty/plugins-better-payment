@@ -8,7 +8,27 @@ if (!defined('ABSPATH')) {
 
 trait ElementorHelper {
 
+    /**
+     * Gate for the Elementor editor's select2 lookups.
+     *
+     * Both endpoints are registered for every logged-in user and carried neither a nonce nor
+     * a capability check, so any subscriber — or a cross-site request riding an editor's
+     * session — could list post titles and terms, unpublished ones included. They exist only
+     * for the editor, so they require what the editor requires.
+     *
+     * @since 2.3.4
+     *
+     * @return void Ends the request when refused.
+     */
+    private function verify_select2_request() {
+        if ( ! check_ajax_referer( 'better_payment_select2', 'security', false ) || ! current_user_can( 'edit_posts' ) ) {
+            wp_send_json_error( [], 403 );
+        }
+    }
+
     public function select2_ajax_posts_filter_autocomplete() {
+        $this->verify_select2_request();
+
         $post_type = 'post';
         $source_name = 'post_type';
     
@@ -79,7 +99,8 @@ trait ElementorHelper {
 	 * @since 1.0.0
 	 */
     public function select2_ajax_get_posts_value_titles() {
-    
+        $this->verify_select2_request();
+
         if ( empty( $_POST['id'] ) ) {
             wp_send_json_error( [] );
         }

@@ -521,9 +521,9 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control( 'better_payment_form_payment_source_stripe_price_id', [
             'label'       => __( 'Default Price ID', 'better-payment' ),
             'description' => sprintf( 
-                __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p> <p>For coupons, make sure they are <a href="%2$s" target="_blank">global or product independent.</a></p>', 'better-payment' ), 
-                esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'), 
-                esc_url('//docs.stripe.com/api/coupons/')
+                __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p> <p>For coupons, create a <a href="%2$s" target="_blank">promotion code</a> and share its code, or tag a coupon with the metadata <code>better_payment_public</code> = <code>yes</code> to accept its ID. Make sure they are global or product independent.</p>', 'better-payment' ),
+                esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'),
+                esc_url('//docs.stripe.com/payments/checkout/discounts')
             ),
             'type'        => Controls_Manager::TEXT,
             'placeholder' => 'price_G0FvDp6vZvdwRZ',

@@ -1860,7 +1860,7 @@ class Subscriptions {
         }
 
         $keys        = StripeService::get_global_keys();
-        $bp_order_id = 'stripe_' . uniqid();
+        $bp_order_id = \Better_Payment\Lite\Classes\Handler::new_order_id( 'stripe' );
 
         $data = array(
             'bp_order_id'     => $bp_order_id,

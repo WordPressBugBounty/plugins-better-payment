@@ -826,12 +826,18 @@ class Plugin_Usage_Tracker
     public function deactivate_reasons_form_submit()
     {
         check_ajax_referer('wpins_deactivation_nonce', 'security');
+        // Better Payment hardening (not upstream): a nonce is not a permission, so only a user
+        // who can deactivate plugins may write these options — and what they write is stored as
+        // plain text, never as whatever structure the request carried.
+        if ( ! current_user_can( 'activate_plugins' ) ) {
+            wp_send_json_error( null, 403 );
+        }
         if (isset($_POST['values'])) {
-            $values = $_POST['values'];
+            $values = is_scalar( $_POST['values'] ) ? sanitize_text_field( wp_unslash( $_POST['values'] ) ) : '';
             update_option('wpins_deactivation_reason_' . $this->plugin_name, $values);
         }
         if (isset($_POST['details'])) {
-            $details = sanitize_text_field($_POST['details']);
+            $details = is_scalar( $_POST['details'] ) ? sanitize_text_field( wp_unslash( $_POST['details'] ) ) : '';
             update_option('wpins_deactivation_details_' . $this->plugin_name, $details);
         }
         echo 'success';

@@ -161,6 +161,29 @@ class Handler extends Controller{
     }
 
     /**
+     * A new, unguessable order id: `{gateway}_{24 hex chars}`.
+     *
+     * The order id is the only key the public return pages and the PayPal status poll look
+     * an order up by. uniqid() is the current time in microseconds, so ids created around a
+     * known moment could be enumerated to read other visitors' order status and receipts.
+     * 96 random bits cannot be. Fits the 50-char `order_id` column with room to spare.
+     *
+     * @since 2.3.4
+     *
+     * @param string $gateway 'paypal' | 'stripe' | 'paystack'.
+     * @return string
+     */
+    public static function new_order_id( $gateway ) {
+        try {
+            $random = bin2hex( random_bytes( 12 ) );
+        } catch ( \Exception $e ) {
+            $random = strtolower( wp_generate_password( 24, false ) );
+        }
+
+        return sanitize_key( $gateway ) . '_' . $random;
+    }
+
+    /**
      * Mamage response
      * 
      * @since 0.0.1
@@ -681,11 +704,19 @@ class Handler extends Controller{
         $data = $_REQUEST;
 
         if ( ! empty( $data[ 'better_payment_paystack_id' ] ) ) {
+            if ( empty( $data['reference'] ) || ! is_scalar( $data['reference'] ) ) {
+                return false;
+            }
+
             global $wpdb;
             $table   = "{$wpdb->prefix}better_payment";
             $results = $wpdb->get_row(
-                $wpdb->prepare( "SELECT id,obj_id,transaction_id,form_fields_info,referer FROM $table WHERE order_id=%s and status = 'unpaid' limit 1", sanitize_text_field( $data[ 'better_payment_paystack_id' ] ) )
+                $wpdb->prepare( "SELECT id,obj_id,transaction_id,amount,currency,form_fields_info,referer FROM $table WHERE order_id=%s and status = 'unpaid' limit 1", sanitize_text_field( $data[ 'better_payment_paystack_id' ] ) )
             );
+
+            if ( empty( $results->id ) ) {
+                return false;
+            }
             
             $header_info = array(
                 'Authorization'  => 'Bearer ' . sanitize_text_field( $settings[ 'better_payment_paystack_secret_key' ] ),
@@ -703,6 +734,13 @@ class Handler extends Controller{
             $response = json_decode(wp_remote_retrieve_body($response));
     
             if ( ! empty( $response->status ) ) {
+                $verified = isset( $response->data ) ? $response->data : null;
+
+                if ( ! self::paystack_verification_matches( $results, $verified )
+                    || self::paystack_reference_claimed_elsewhere( $verified->reference, (int) $results->id ) ) {
+                    return false;
+                }
+
                 $updated = $wpdb->update(
                     $table,
                     array(
@@ -745,6 +783,82 @@ class Handler extends Controller{
             }
         }
         return false;
+    }
+
+    /**
+     * Whether a verified Paystack transaction really pays for the pending order.
+     *
+     * The verify call looks up whatever `reference` the return URL carries, and the return
+     * URL is the visitor's to edit. Without this, a cheap paid transaction could be replayed
+     * against an expensive pending order and mark it paid. Checked, in order:
+     * - the transaction itself succeeded. Paystack's top-level `status: true` only says the
+     *   reference resolved — it is just as true for an abandoned or failed checkout, which is
+     *   how a visitor who paid nothing used to reach the success page;
+     * - the reference is the one Paystack issued for this order at initialize (rows created
+     *   before references were stored have none, and fall through to the amount check —
+     *   paystack_reference_claimed_elsewhere() keeps that fallback from being replayable);
+     * - the amount paid covers the amount the order was created for — which
+     *   PaymentRequestGuard has already held to what the form allows;
+     * - the currency is the order's.
+     *
+     * @param object $row      Pending row: transaction_id, amount, currency.
+     * @param mixed  $verified `data` object from Paystack's /transaction/verify response.
+     * @return bool
+     */
+    private static function paystack_verification_matches( $row, $verified ) {
+        if ( ! is_object( $verified ) ) {
+            return false;
+        }
+
+        if ( ! isset( $verified->status ) || 'success' !== $verified->status ) {
+            return false;
+        }
+
+        $expected_reference = isset( $row->transaction_id ) ? (string) $row->transaction_id : '';
+        $verified_reference = isset( $verified->reference ) ? (string) $verified->reference : '';
+
+        if ( '' !== $expected_reference && $verified_reference !== $expected_reference ) {
+            return false;
+        }
+
+        $paid = isset( $verified->amount ) && is_numeric( $verified->amount ) ? floatval( $verified->amount ) / 100 : 0.0;
+
+        if ( $paid + 0.005 < floatval( isset( $row->amount ) ? $row->amount : 0 ) ) {
+            return false;
+        }
+
+        $paid_currency  = isset( $verified->currency ) ? strtoupper( (string) $verified->currency ) : '';
+        $order_currency = isset( $row->currency ) ? strtoupper( (string) $row->currency ) : '';
+
+        return '' === $paid_currency || '' === $order_currency || $paid_currency === $order_currency;
+    }
+
+    /**
+     * Whether a Paystack reference already belongs to a different order.
+     *
+     * Every order created since references were stored holds its own reference from
+     * initialize, so this only ever decides the legacy fallback — an order with no stored
+     * reference. Without it, one genuine payment could be replayed to mark every such
+     * order paid. A reference no order has claimed can still settle exactly one of them.
+     *
+     * @param mixed $reference Verified reference.
+     * @param int   $row_id    The order being verified.
+     * @return bool True when the reference must not settle this order.
+     */
+    private static function paystack_reference_claimed_elsewhere( $reference, $row_id ) {
+        global $wpdb;
+
+        $reference = is_scalar( $reference ) ? sanitize_text_field( (string) $reference ) : '';
+
+        if ( '' === $reference ) {
+            return true;
+        }
+
+        $table = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
+        $other = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE transaction_id = %s AND id <> %d LIMIT 1", $reference, (int) $row_id ) );
+
+        return ! empty( $other );
     }
 
     /**

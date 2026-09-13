@@ -5,6 +5,7 @@ namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
@@ -184,20 +185,22 @@ class Paypal_Integration extends Action_Base {
             return false;
         }
 
-        $amount   = isset( $sent_data['payment_amount'] ) ? floatval($sent_data['payment_amount']) : 0;
+        // Amount and quantity come from the form's field settings, never from the
+        // request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_elementor_form_payment( (array) $el_form_form_settings, (array) $sent_data );
 
-        if ( empty( $amount ) && ! empty( $sent_data['primary_payment_amount_radio'] ) ) {
-            $amount = floatval( $sent_data['primary_payment_amount_radio'] );
+        if ( is_wp_error( $guarded ) ) {
+            $ajax_handler->add_error_message( $guarded->get_error_message() );
+            return false;
         }
 
-        $quantity = 1;
-        if ( !empty( $sent_data[ 'pay_quantity' ] ) ) {
-            $quantity = intval( $sent_data[ 'pay_quantity' ] );
-        }
+        // PayPal takes the per-unit amount and multiplies by `quantity` itself.
+        $amount   = $guarded['unit_amount'];
+        $quantity = $guarded['quantity'];
 
         $return_url = get_the_permalink() . '?better_payment_paypal_status=success&better_payment_widget_id=' . sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] );
         $cancel_url = get_the_permalink() . '?better_payment_error_status=error&better_payment_widget_id=' . sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] );
-        $order_id   = 'paypal_' . uniqid();
+        $order_id   = Handler::new_order_id( 'paypal' );
 
         $paypal_unsupported_currencies = $this->bp_unsupported_currencies( 'paypal' );
         $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paypal_currency' ) );
@@ -238,11 +241,12 @@ class Paypal_Integration extends Action_Base {
         ];
 
         // Get campaign_id from form data if available
-        $campaign_id = ! empty( $sent_data['campaign_id'] ) ? sanitize_text_field( $sent_data['campaign_id'] ) : '';
+        $campaign_id = $guarded['campaign_id'];
 
         Handler::payment_create(
             [
-                'amount'       => $amount,
+                // The whole order, so the IPN's `mc_gross >= amount` check also holds the quantity.
+                'amount'       => $guarded['amount'],
                 'order_id'     => $order_id,
                 'payment_date' => date( 'Y-m-d H:i:s' ),
                 'source'       => 'paypal',

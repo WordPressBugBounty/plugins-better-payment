@@ -5,6 +5,7 @@ namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
 use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
@@ -167,17 +168,20 @@ class Stripe_Integration extends Action_Base {
             return false;
         }
 
-        $amount   = isset( $sent_data['payment_amount'] ) ? floatval($sent_data['payment_amount']) : 0;
-        if ( empty( $amount ) && ! empty( $sent_data['primary_payment_amount_radio'] ) ) {
-            $amount = floatval( $sent_data['primary_payment_amount_radio'] );
-        }
-        $quantity = 1;
-        if ( !empty( $sent_data[ 'pay_quantity' ] ) ) {
-            $quantity = intval( $sent_data[ 'pay_quantity' ][ 'value' ] );
-            $amount   *= $quantity;
+        // Amount and quantity come from the form's field settings, never from the
+        // request — see PaymentRequestGuard.
+        $guarded = ( new PaymentRequestGuard() )->resolve_elementor_form_payment( (array) $el_form_form_settings, (array) $sent_data );
+
+        if ( is_wp_error( $guarded ) ) {
+            $ajax_handler->add_error_message( $guarded->get_error_message() );
+            return false;
         }
 
-        $order_id = 'stripe_' . uniqid();
+        $unit_amount = $guarded['unit_amount'];
+        $quantity    = $guarded['quantity'];
+        $amount      = $guarded['amount'];
+
+        $order_id = Handler::new_order_id( 'stripe' );
         $request  = [
             'success_url'                => add_query_arg( [
                 'better_payment_stripe_status' => 'success',
@@ -198,7 +202,9 @@ class Stripe_Integration extends Action_Base {
             ],
             'line_items'                 => [
                 [
-                    'amount'   => ( $amount * 100 ),
+                    // Per unit: Stripe multiplies by `quantity` itself. Sending the
+                    // quantity-multiplied total here charged quantity² units.
+                    'amount'   => (int) round( $unit_amount * 100 ),
                     'currency' => sanitize_text_field($record->get_form_settings( 'better_payment_form_stripe_currency' )),
                     'name'     => sanitize_text_field( $record->get_form_settings( 'form_name' ) ),
                     'quantity' => $quantity
@@ -265,7 +271,7 @@ class Stripe_Integration extends Action_Base {
             ];
             
             // Get campaign_id from form data if available
-            $campaign_id = ! empty( $sent_data['campaign_id'] ) ? sanitize_text_field( $sent_data['campaign_id'] ) : '';
+            $campaign_id = $guarded['campaign_id'];
 
             Handler::payment_create(
                 [

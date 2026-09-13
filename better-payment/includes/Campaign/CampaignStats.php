@@ -122,7 +122,13 @@ class CampaignStats extends Controller {
         ];
     }
 
+    /**
+     * `success` is the status Paystack verification writes. It was missing, so Paystack
+     * donations never counted toward a campaign's total or donor count — even though the
+     * transactions screen and analytics (Admin\DB) already treat it as paid. Only a
+     * transaction Paystack reported as succeeded is ever stored as `success`.
+     */
     private static function approved_statuses(): array {
-        return [ 'Completed', 'paid', 'complete', 'succeeded' ];
+        return [ 'Completed', 'paid', 'complete', 'succeeded', 'success' ];
     }
 }
