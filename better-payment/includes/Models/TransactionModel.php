@@ -21,12 +21,19 @@ class TransactionModel extends Model {
         parent::__construct();
     }
 
-    public function get_transactions($args = []) {
+    /**
+     * Transactions for the CSV export.
+     *
+     * @param array  $args    DB::get_transactions() filters.
+     * @param string $version 'v2' filters `status` by the admin list's tab buckets; 'v1' by raw status.
+     * @return array
+     */
+    public function get_transactions($args = [], $version = 'v1') {
         // Set default per_page if not provided
         if (!isset($args['per_page'])) {
             $args['per_page'] = '999999999';
         }
-        $all_transactions = DB::get_transactions($args);
+        $all_transactions = DB::get_transactions($args, 0, $version);
         return $all_transactions;
     }
 } 

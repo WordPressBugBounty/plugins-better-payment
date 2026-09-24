@@ -2,10 +2,8 @@
 
 namespace Better_Payment\Lite;
 
-use Better_Payment\Lite\Admin\Settings;
 use Better_Payment\Lite\Admin\ReactAdmin;
 use Better_Payment\Lite\Admin\Elementor\Widget;
-use Better_Payment\Lite\Admin\Menu;
 use Better_Payment\Lite\Classes\Helper;
 use Better_Payment\Lite\Classes\Export;
 use Better_Payment\Lite\Classes\Import;
@@ -45,7 +43,6 @@ class Admin extends Controller{
         $this->pro_enabled = apply_filters('better_payment/pro_enabled', false);
 
         new ReactAdmin();
-        // new Settings();
 
         // Add plugin action links - works with or without Elementor
         add_filter('plugin_action_links', array($this, 'plugin_actions_links'), 10, 2);
@@ -210,9 +207,6 @@ class Admin extends Controller{
      * @since 0.0.1
      */
     public static function dispatch_actions( ) {
-        $menuObj = new Menu();
-        $menuObj->init();
-
         $bpElementorWidgetObj = new Widget();
 
         $bpImportObj = new Import();

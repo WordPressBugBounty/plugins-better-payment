@@ -20,7 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   1. On the order-received page, trigger the EXISTING verifier
  *      (Handler::stripe_payment_success()) — the engine re-retrieves the
  *      Checkout Session server-side, flips the transaction row to paid and
- *      fires `better_payment/payment_confirmed`.
+ *      fires `better_payment/payment_confirmed`. A $0 free-trial order's
+ *      setup-mode session goes through verify_setup_return() instead.
  *   2. Consume `better_payment/payment_confirmed` and mark the linked
  *      WooCommerce order as paid. Transactions without a `wc_order_id`
  *      (i.e. every non-WooCommerce payment) are ignored with an early
@@ -35,7 +36,7 @@ class OrderHandler {
 
     /**
      * Transaction statuses the engine treats as a successful payment.
-     * Superset of Campaign\CampaignStats::approved_statuses(), plus
+     * Superset of Classes\Helper::APPROVED_DONATION_STATUSES, plus
      * Stripe's `no_payment_required` (fully discounted sessions).
      *
      * @var string[]
@@ -53,8 +54,9 @@ class OrderHandler {
         add_action( 'template_redirect', array( __CLASS__, 'maybe_verify_return' ), 5 );
 
         // The engine's completion contract — same hook Campaign\CampaignStats
-        // consumes. Fired by Handler::stripe_payment_success() after the
-        // verified status write.
+        // consumes. Fired once per transaction by the return that claimed it:
+        // Handler::confirm_stripe_session(), or confirm_setup_session() for a
+        // free trial's setup-mode session.
         add_action( 'better_payment/payment_confirmed', array( __CLASS__, 'on_payment_confirmed' ), 10, 1 );
     }
 
@@ -350,31 +352,25 @@ class OrderHandler {
      * appearing on the unfiltered list. 'paid' is the exact status a verified
      * first payment writes, so a $0 checkout counts as completed everywhere
      * without every consumer needing to learn a second spelling.
-     * ('no_payment_required' remains in PAID_STATUSES and in the taxonomy,
-     * because Handler::stripe_payment_success() still stores Stripe's raw
-     * payment_status for every other surface — an Elementor form with a 100%
-     * coupon lands there.)
+     * ('no_payment_required' remains in PAID_STATUSES and in the taxonomy for
+     * rows confirmed before 2.4.0, which stored Stripe's raw payment_status
+     * for a $0 session. Handler::confirm_stripe_session() writes 'paid' for
+     * those too now, for the same reason.)
      *
      * @param \WC_Order $order      The $0 subscription order.
      * @param string    $secret_key Stripe secret key.
      * @return void
      */
     public static function verify_setup_return( $order, $secret_key ) {
-        global $wpdb;
-
         $payment_id = (string) $order->get_meta( '_bp_payment_id' );
 
         if ( '' === $payment_id ) {
             return;
         }
 
-        $table = $wpdb->prefix . 'better_payment';
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- engine-owned table; same row protocol as Handler::stripe_payment_success().
-        $row = $wpdb->get_row(
-            $wpdb->prepare( "SELECT id, obj_id FROM {$table} WHERE order_id=%s AND status = 'unpaid' LIMIT 1", $payment_id ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        );
+        $row = Handler::get_stripe_row( 'order_id', $payment_id );
 
-        if ( empty( $row->obj_id ) || 0 !== strpos( (string) $row->obj_id, 'cs_' ) ) {
+        if ( empty( $row->id ) || Handler::STRIPE_PENDING_STATUS !== $row->status || empty( $row->obj_id ) || 0 !== strpos( (string) $row->obj_id, 'cs_' ) ) {
             self::log( 'Setup verification for order #' . $order->get_id() . ' found no pending transaction (already processed or unknown id).' );
             return;
         }
@@ -393,14 +389,57 @@ class OrderHandler {
             return;
         }
 
-        $setup_intent = ! empty( $session->setup_intent ) && is_object( $session->setup_intent ) ? $session->setup_intent : null;
-        $succeeded    = $setup_intent
-            && ( ( isset( $setup_intent->status ) && 'succeeded' === $setup_intent->status ) || ! empty( $setup_intent->payment_method ) );
+        switch ( self::confirm_setup_session( $row, $session ) ) {
+            case 'confirmed':
+                self::log( 'Setup session verified for order #' . $order->get_id() . ' — payment method saved, no payment required; transaction recorded as paid.' );
+                return;
 
-        if ( ! $succeeded ) {
-            self::log( 'Setup session for order #' . $order->get_id() . ' is not completed yet — no payment method was saved.', 'error' );
-            return;
+            case 'open':
+            case 'expired':
+                self::log( 'Setup session for order #' . $order->get_id() . ' is not completed yet — no payment method was saved.', 'error' );
+                return;
+
+            case 'mismatch':
+                self::log( 'Setup verification for order #' . $order->get_id() . ' retrieved a session that is not this transaction\'s setup session.', 'error' );
+                return;
+
+            default:
+                // A parallel return (a reload, a second tab) won the claim.
+                self::log( 'Setup verification for order #' . $order->get_id() . ' found the transaction already processed.' );
         }
+    }
+
+    /**
+     * Confirm a pending $0 free-trial row from its retrieved setup-mode
+     * session — the order-received page's claim. WooCommerce-free: it writes
+     * the row and fires the engine hook; on_payment_confirmed() does the rest.
+     *
+     * The row flips 'unpaid' → 'paid' with ONE conditional update (see
+     * verify_setup_return() for why 'paid'), storing the SetupIntent id as the
+     * transaction id and the session as the customer info. Only the request
+     * whose update matched fires `better_payment/payment_confirmed`; a return
+     * that arrives second (a reload, a second tab) fires nothing.
+     *
+     * @param object|null $row     Pending row (`id`, `obj_id`).
+     * @param mixed       $session Checkout Session retrieved with `setup_intent` expanded.
+     * @return string 'confirmed' | 'settled' (no longer pending) | 'open' (no payment method saved
+     *                yet) | 'expired' | 'mismatch' (not this row's setup session) | 'error'.
+     */
+    public static function confirm_setup_session( $row, $session ) {
+        global $wpdb;
+
+        if ( ! is_object( $row ) || empty( $row->id ) || empty( $row->obj_id ) ) {
+            return 'mismatch';
+        }
+
+        $decision = self::setup_session_decision( (string) $row->obj_id, $session );
+
+        if ( 'confirm' !== $decision ) {
+            return 'not_setup' === $decision ? 'mismatch' : $decision;
+        }
+
+        $setup_intent = $session->setup_intent;
+        $table        = $wpdb->prefix . 'better_payment';
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- single-shot flip, mirrors the engine verifier.
         $updated = $wpdb->update(
@@ -416,13 +455,59 @@ class OrderHandler {
             )
         );
 
-        if ( ! $updated ) {
-            return; // A parallel request won the flip — nothing left to do.
+        if ( 1 !== (int) $updated ) {
+            // A parallel return won the flip — nothing left to do.
+            $current = Handler::get_stripe_row( 'id', (int) $row->id );
+
+            if ( ! empty( $current->id ) && Handler::STRIPE_PENDING_STATUS !== $current->status ) {
+                self::log( 'Setup session for transaction #' . (int) $row->id . ' was already settled when the return reached it.' );
+                return 'settled';
+            }
+
+            return 'error';
         }
 
-        self::log( 'Setup session verified for order #' . $order->get_id() . ' — payment method saved, no payment required; transaction recorded as paid.' );
-
         do_action( 'better_payment/payment_confirmed', (int) $row->id );
+
+        return 'confirmed';
+    }
+
+    /**
+     * What a retrieved setup-mode Checkout Session means for its pending row. Pure.
+     *
+     * @param string $obj_id  The row's Checkout Session id.
+     * @param mixed  $session Session retrieved with `setup_intent` expanded.
+     * @return string 'confirm' | 'mismatch' (another session) | 'not_setup' (a payment session) |
+     *                'expired' | 'open' (no payment method saved yet).
+     */
+    public static function setup_session_decision( $obj_id, $session ) {
+        if ( ! is_object( $session ) || ( isset( $session->id ) && (string) $session->id !== (string) $obj_id ) ) {
+            return 'mismatch';
+        }
+
+        if ( isset( $session->mode ) && 'setup' !== $session->mode ) {
+            return 'not_setup';
+        }
+
+        if ( self::setup_intent_succeeded( $session ) ) {
+            return 'confirm';
+        }
+
+        return isset( $session->status ) && 'expired' === $session->status ? 'expired' : 'open';
+    }
+
+    /**
+     * Whether a setup session's (expanded) SetupIntent saved a payment method:
+     * `succeeded`, or a payment method attached. Pure.
+     *
+     * @param mixed $session Session retrieved with `setup_intent` expanded.
+     * @return bool
+     */
+    public static function setup_intent_succeeded( $session ) {
+        $setup_intent = is_object( $session ) && ! empty( $session->setup_intent ) && is_object( $session->setup_intent ) ? $session->setup_intent : null;
+
+        return null !== $setup_intent
+            && ( ( isset( $setup_intent->status ) && 'succeeded' === $setup_intent->status ) || ! empty( $setup_intent->payment_method ) );
     }
 
     /**

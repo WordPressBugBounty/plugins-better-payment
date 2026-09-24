@@ -77,7 +77,12 @@ class Fundraising_Campaign_Widget extends Widget_Base {
     }
 
     public function get_style_depends() {
-        return apply_filters( 'better_payment/elementor/editor/get_style_depends', [  'fundraising-campaign-style' ] );
+        // The Pro Updates tab styles: Lite's copy until Pro declares
+        // `fundraising_campaign_update_styles`. Pro adds its own copy, and needs
+        // this widget passed to tell it apart from the other widgets on the filter.
+        $depends = \Better_Payment\Lite\Classes\ProFundraisingUpdateStyles::style_depends( [ 'fundraising-campaign-style' ] );
+
+        return apply_filters( 'better_payment/elementor/editor/get_style_depends', $depends, $this );
     }
 
     public function get_script_depends() {
@@ -3697,17 +3702,11 @@ class Fundraising_Campaign_Widget extends Widget_Base {
             $wpdb->prepare( "SELECT * FROM $table WHERE campaign_id=%s", sanitize_text_field( $better_payment_campaign_id ) )
         );
 
-        $bpc_total_amount_raised = 0;
-        $bpc_total_payment_count = 0;
-
-        if ( ! empty( $bpc_raised_amount_data ) ) {
-            foreach ( $bpc_raised_amount_data as $payment_record ) {
-                if ( ! empty( $payment_record->status ) && 'paid' === $payment_record->status ) {
-                    $bpc_total_amount_raised += floatval( $payment_record->amount );
-                    $bpc_total_payment_count++;
-                }
-            }
-        }
+        // The same rows CampaignStats counts (approved statuses incl. Paystack's `success`,
+        // a confirmed legacy free checkout worth 0), not only Stripe's `paid`.
+        $bpc_totals              = \Better_Payment\Lite\Classes\Helper::campaign_totals_from_rows( $bpc_raised_amount_data );
+        $bpc_total_amount_raised = $bpc_totals['amount'];
+        $bpc_total_payment_count = $bpc_totals['count'];
 
         $bpc_goal_percentage = 0;
         if ( ! empty( $bp_goal_amount ) && $bp_goal_amount > 0 && $bpc_total_amount_raised > 0 ) {

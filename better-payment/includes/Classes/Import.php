@@ -104,26 +104,7 @@ class Import extends Controller{
             $data = array();
 
             foreach ( $records as $record ) {
-                $better_form_fields = [
-                    'primary_first_name'    => sanitize_text_field( $record['name'] ),
-                    'email'                 => sanitize_email( $record['email'] ),
-                    'source'                => sanitize_text_field( $record['source'] ),
-                    'is_imported'           => intval(1),
-                ];
-
-                if ( ! empty( $record['payment_type'] ) && strtolower($record['payment_type']) === 'subscription' ) {
-                    $better_form_fields_selected = isset( $record['form_fields_info'] ) ? self::decode_form_fields_info( $record['form_fields_info'] ) : [];
-                    
-                    $better_form_fields['subscription_id']          = isset( $better_form_fields_selected['subscription_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_id'] ) : '';
-                    $better_form_fields['subscription_customer_id'] = isset( $better_form_fields_selected['subscription_customer_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_customer_id'] ) : '';
-                    $better_form_fields['subscription_plan_id']     = isset( $better_form_fields_selected['subscription_plan_id'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_plan_id'] ) : '';
-                    $better_form_fields['subscription_interval']    = isset( $better_form_fields_selected['subscription_interval'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_interval'] ) : '';
-                    $better_form_fields['subscription_current_period_start']     = isset( $better_form_fields_selected['subscription_current_period_start'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_current_period_start'] ) : '';
-                    $better_form_fields['subscription_current_period_end']     = isset( $better_form_fields_selected['subscription_current_period_end'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_current_period_end'] ) : '';
-                    $better_form_fields['subscription_status']     = isset( $better_form_fields_selected['subscription_status'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_status'] ) : '';
-                    $better_form_fields['subscription_created_date']     = isset( $better_form_fields_selected['subscription_created_date'] ) ? sanitize_text_field( $better_form_fields_selected['subscription_created_date'] ) : '';
-                    $better_form_fields['is_payment_split_payment']     = isset( $better_form_fields_selected['is_payment_split_payment'] ) ? sanitize_text_field( $better_form_fields_selected['is_payment_split_payment'] ) : '';
-                }
+                $better_form_fields = $this->build_form_fields( $record );
 
                 $amount_currency_array = explode(' ', $record['amount']);
                 $currency = is_array($amount_currency_array) && count($amount_currency_array) > 1 ? $amount_currency_array[0] : esc_html('USD');
@@ -161,6 +142,43 @@ class Import extends Controller{
 
         wp_safe_redirect( $_SERVER['HTTP_REFERER'] );
         exit;
+    }
+
+    /**
+     * The `form_fields_info` an imported CSV row is stored with.
+     *
+     * Lite keeps the name, email and source and marks the row imported.
+     * `better_payment/import/form_fields_info` receives that, the CSV row and the
+     * row's decoded `form_fields_info` cell: Pro adds the subscription keys of a
+     * "Subscription" row there. Lite's copy of that
+     * (ProSubscriptionTransactionData::import_fields()) serves only an active Pro
+     * that does not (<= 1.4.3).
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $record CSV row keyed by header; anything else is treated as empty.
+     * @return array
+     */
+    public function build_form_fields( $record ) {
+        $record = is_array( $record ) ? $record : [];
+
+        $better_form_fields = [
+            'primary_first_name'    => sanitize_text_field( $record['name'] ?? '' ),
+            'email'                 => sanitize_email( $record['email'] ?? '' ),
+            'source'                => sanitize_text_field( $record['source'] ?? '' ),
+            'is_imported'           => intval(1),
+        ];
+
+        // Decoded without instantiating objects; see decode_form_fields_info().
+        $decoded = isset( $record['form_fields_info'] ) ? self::decode_form_fields_info( $record['form_fields_info'] ) : [];
+
+        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
+            $better_form_fields = ProSubscriptionTransactionData::import_fields( $better_form_fields, $record, $decoded );
+        }
+
+        $filtered = apply_filters( 'better_payment/import/form_fields_info', $better_form_fields, $record, $decoded );
+
+        return is_array( $filtered ) ? $filtered : $better_form_fields;
     }
 
     public function validate_csv_file( $file ){

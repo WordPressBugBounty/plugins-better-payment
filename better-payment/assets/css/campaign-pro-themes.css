@@ -1,0 +1,585 @@
+/*!*****************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[6].use[1]!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[6].use[3]!./src/css/campaign-pro-themes.scss ***!
+  \*****************************************************************************************************************************************************************************************************************************/
+.bp-campaign.bp-v2-water {
+  --bp-v2-glow: rgba(3, 105, 161, 0.11);
+  --bp-v2-accent: #0369a1;
+  --bp-v2-soft: #e0f2fe;
+  --bp-v2-track: #c3ddf2;
+  --bp-v2-page: #f8fbfe;
+  --bp-v2-surface: #ffffff;
+  --bp-v2-line: #d6e5f2;
+  --bp-v2-ink: #0b2540;
+  --bp-v2-muted: #42607d;
+  --bp-v2-shadow: 0 1px 2px rgba(11, 37, 64, 0.04),
+  	0 8px 24px -16px rgba(11, 37, 64, 0.25);
+  --bp-v2-chip-radius: 999px;
+  --bp-v2-chip-bg: var(--bp-v2-surface);
+  --bp-v2-btn-radius: 999px;
+  --bp-v2-btn-transform: none;
+  --bp-v2-btn-track: -0.01em;
+}
+
+.bp-campaign.bp-v2-fooddrive {
+  --bp-v2-glow: rgba(180, 83, 9, 0.14);
+  --bp-v2-accent: #f59e0b;
+  --bp-v2-soft: #fff7e6;
+  --bp-v2-track: #fbe3b4;
+  --bp-v2-page: #fffdf7;
+  --bp-v2-surface: #ffffff;
+  --bp-v2-line: #f2e6cf;
+  --bp-v2-ink: #3d2f14;
+  --bp-v2-muted: #6b5b3e;
+  --bp-v2-shadow: 0 1px 2px rgba(61, 47, 20, 0.03),
+  	0 10px 26px -20px rgba(61, 47, 20, 0.35);
+  --bp-v2-chip-radius: 999px;
+  --bp-v2-chip-bg: var(--bp-v2-surface);
+  --bp-v2-btn-radius: 999px;
+  --bp-v2-btn-transform: none;
+  --bp-v2-btn-track: -0.01em;
+}
+
+.bp-campaign.bp-v2-wildlife {
+  --bp-v2-glow: rgba(77, 124, 15, 0.12);
+  --bp-v2-accent: #4d7c0f;
+  --bp-v2-soft: #f2f7e8;
+  --bp-v2-track: #dfeac9;
+  --bp-v2-page: #fcfef9;
+  --bp-v2-surface: #ffffff;
+  --bp-v2-line: #e6eed9;
+  --bp-v2-ink: #26331a;
+  --bp-v2-muted: #55634a;
+  --bp-v2-shadow: 0 1px 2px rgba(38, 51, 26, 0.03),
+  	0 10px 26px -20px rgba(38, 51, 26, 0.32);
+  --bp-v2-chip-radius: 10px;
+  --bp-v2-chip-bg: var(--bp-v2-surface);
+  --bp-v2-btn-radius: 10px;
+  --bp-v2-btn-transform: none;
+  --bp-v2-btn-track: -0.01em;
+}
+
+.bp-campaign.bp-v2-climate {
+  --bp-v2-glow: rgba(29, 78, 216, 0.11);
+  --bp-v2-accent: #1d4ed8;
+  --bp-v2-soft: #e6edfd;
+  --bp-v2-track: #ccd9f8;
+  --bp-v2-page: #f9fbff;
+  --bp-v2-surface: #ffffff;
+  --bp-v2-line: #dbe3f5;
+  --bp-v2-ink: #10182f;
+  --bp-v2-muted: #47526b;
+  --bp-v2-shadow: 0 1px 2px rgba(16, 24, 47, 0.04),
+  	0 8px 24px -16px rgba(16, 24, 47, 0.25);
+  --bp-v2-chip-radius: 999px;
+  --bp-v2-chip-bg: var(--bp-v2-surface);
+  --bp-v2-btn-radius: 14px;
+  --bp-v2-btn-transform: uppercase;
+  --bp-v2-btn-track: 0.08em;
+}
+
+.bp-campaign.bp-v2-charity .bp-donors-wall-headline,
+.bp-campaign.bp-v2-charity .bp-faq-heading,
+.bp-campaign.bp-v2-medical .bp-donors-wall-headline,
+.bp-campaign.bp-v2-medical .bp-faq-heading,
+.bp-campaign.bp-v2-education .bp-donors-wall-headline,
+.bp-campaign.bp-v2-education .bp-faq-heading,
+.bp-campaign.bp-v2-golf .bp-donors-wall-headline,
+.bp-campaign.bp-v2-golf .bp-faq-heading,
+.bp-campaign.bp-v2-childcare .bp-donors-wall-headline,
+.bp-campaign.bp-v2-childcare .bp-faq-heading,
+.bp-campaign.bp-v2-forest .bp-donors-wall-headline,
+.bp-campaign.bp-v2-forest .bp-faq-heading,
+.bp-campaign.bp-v2-animal .bp-donors-wall-headline,
+.bp-campaign.bp-v2-animal .bp-faq-heading,
+.bp-campaign.bp-v2-relief .bp-donors-wall-headline,
+.bp-campaign.bp-v2-relief .bp-faq-heading,
+.bp-campaign.bp-v2-water .bp-donors-wall-headline,
+.bp-campaign.bp-v2-water .bp-faq-heading,
+.bp-campaign.bp-v2-fooddrive .bp-donors-wall-headline,
+.bp-campaign.bp-v2-fooddrive .bp-faq-heading,
+.bp-campaign.bp-v2-wildlife .bp-donors-wall-headline,
+.bp-campaign.bp-v2-wildlife .bp-faq-heading,
+.bp-campaign.bp-v2-climate .bp-donors-wall-headline,
+.bp-campaign.bp-v2-climate .bp-faq-heading {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bp-v2-muted);
+  margin: 0 0 16px;
+}
+.bp-campaign.bp-v2-charity .bp-donors-wall-summary,
+.bp-campaign.bp-v2-medical .bp-donors-wall-summary,
+.bp-campaign.bp-v2-education .bp-donors-wall-summary,
+.bp-campaign.bp-v2-golf .bp-donors-wall-summary,
+.bp-campaign.bp-v2-childcare .bp-donors-wall-summary,
+.bp-campaign.bp-v2-forest .bp-donors-wall-summary,
+.bp-campaign.bp-v2-animal .bp-donors-wall-summary,
+.bp-campaign.bp-v2-relief .bp-donors-wall-summary,
+.bp-campaign.bp-v2-water .bp-donors-wall-summary,
+.bp-campaign.bp-v2-fooddrive .bp-donors-wall-summary,
+.bp-campaign.bp-v2-wildlife .bp-donors-wall-summary,
+.bp-campaign.bp-v2-climate .bp-donors-wall-summary {
+  background: var(--bp-v2-surface);
+  border: 1px solid var(--bp-v2-line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  gap: 28px;
+  box-shadow: var(--bp-v2-shadow);
+}
+.bp-campaign.bp-v2-charity .bp-dw-stat,
+.bp-campaign.bp-v2-medical .bp-dw-stat,
+.bp-campaign.bp-v2-education .bp-dw-stat,
+.bp-campaign.bp-v2-golf .bp-dw-stat,
+.bp-campaign.bp-v2-childcare .bp-dw-stat,
+.bp-campaign.bp-v2-forest .bp-dw-stat,
+.bp-campaign.bp-v2-animal .bp-dw-stat,
+.bp-campaign.bp-v2-relief .bp-dw-stat,
+.bp-campaign.bp-v2-water .bp-dw-stat,
+.bp-campaign.bp-v2-fooddrive .bp-dw-stat,
+.bp-campaign.bp-v2-wildlife .bp-dw-stat,
+.bp-campaign.bp-v2-climate .bp-dw-stat {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.bp-campaign.bp-v2-charity .bp-dw-stat b,
+.bp-campaign.bp-v2-medical .bp-dw-stat b,
+.bp-campaign.bp-v2-education .bp-dw-stat b,
+.bp-campaign.bp-v2-golf .bp-dw-stat b,
+.bp-campaign.bp-v2-childcare .bp-dw-stat b,
+.bp-campaign.bp-v2-forest .bp-dw-stat b,
+.bp-campaign.bp-v2-animal .bp-dw-stat b,
+.bp-campaign.bp-v2-relief .bp-dw-stat b,
+.bp-campaign.bp-v2-water .bp-dw-stat b,
+.bp-campaign.bp-v2-fooddrive .bp-dw-stat b,
+.bp-campaign.bp-v2-wildlife .bp-dw-stat b,
+.bp-campaign.bp-v2-climate .bp-dw-stat b {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--bp-v2-ink);
+  font-variant-numeric: tabular-nums;
+}
+.bp-campaign.bp-v2-charity .bp-dw-stat span,
+.bp-campaign.bp-v2-medical .bp-dw-stat span,
+.bp-campaign.bp-v2-education .bp-dw-stat span,
+.bp-campaign.bp-v2-golf .bp-dw-stat span,
+.bp-campaign.bp-v2-childcare .bp-dw-stat span,
+.bp-campaign.bp-v2-forest .bp-dw-stat span,
+.bp-campaign.bp-v2-animal .bp-dw-stat span,
+.bp-campaign.bp-v2-relief .bp-dw-stat span,
+.bp-campaign.bp-v2-water .bp-dw-stat span,
+.bp-campaign.bp-v2-fooddrive .bp-dw-stat span,
+.bp-campaign.bp-v2-wildlife .bp-dw-stat span,
+.bp-campaign.bp-v2-climate .bp-dw-stat span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--bp-v2-muted);
+}
+.bp-campaign.bp-v2-charity .bp-donor-card,
+.bp-campaign.bp-v2-medical .bp-donor-card,
+.bp-campaign.bp-v2-education .bp-donor-card,
+.bp-campaign.bp-v2-golf .bp-donor-card,
+.bp-campaign.bp-v2-childcare .bp-donor-card,
+.bp-campaign.bp-v2-forest .bp-donor-card,
+.bp-campaign.bp-v2-animal .bp-donor-card,
+.bp-campaign.bp-v2-relief .bp-donor-card,
+.bp-campaign.bp-v2-water .bp-donor-card,
+.bp-campaign.bp-v2-fooddrive .bp-donor-card,
+.bp-campaign.bp-v2-wildlife .bp-donor-card,
+.bp-campaign.bp-v2-climate .bp-donor-card {
+  background: var(--bp-v2-surface);
+  border-color: var(--bp-v2-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: var(--bp-v2-shadow);
+}
+.bp-campaign.bp-v2-charity .bp-donor-name,
+.bp-campaign.bp-v2-medical .bp-donor-name,
+.bp-campaign.bp-v2-education .bp-donor-name,
+.bp-campaign.bp-v2-golf .bp-donor-name,
+.bp-campaign.bp-v2-childcare .bp-donor-name,
+.bp-campaign.bp-v2-forest .bp-donor-name,
+.bp-campaign.bp-v2-animal .bp-donor-name,
+.bp-campaign.bp-v2-relief .bp-donor-name,
+.bp-campaign.bp-v2-water .bp-donor-name,
+.bp-campaign.bp-v2-fooddrive .bp-donor-name,
+.bp-campaign.bp-v2-wildlife .bp-donor-name,
+.bp-campaign.bp-v2-climate .bp-donor-name {
+  color: var(--bp-v2-ink);
+}
+.bp-campaign.bp-v2-charity .bp-donor-date,
+.bp-campaign.bp-v2-medical .bp-donor-date,
+.bp-campaign.bp-v2-education .bp-donor-date,
+.bp-campaign.bp-v2-golf .bp-donor-date,
+.bp-campaign.bp-v2-childcare .bp-donor-date,
+.bp-campaign.bp-v2-forest .bp-donor-date,
+.bp-campaign.bp-v2-animal .bp-donor-date,
+.bp-campaign.bp-v2-relief .bp-donor-date,
+.bp-campaign.bp-v2-water .bp-donor-date,
+.bp-campaign.bp-v2-fooddrive .bp-donor-date,
+.bp-campaign.bp-v2-wildlife .bp-donor-date,
+.bp-campaign.bp-v2-climate .bp-donor-date {
+  color: var(--bp-v2-muted);
+}
+.bp-campaign.bp-v2-charity .bp-donor-avatar,
+.bp-campaign.bp-v2-medical .bp-donor-avatar,
+.bp-campaign.bp-v2-education .bp-donor-avatar,
+.bp-campaign.bp-v2-golf .bp-donor-avatar,
+.bp-campaign.bp-v2-childcare .bp-donor-avatar,
+.bp-campaign.bp-v2-forest .bp-donor-avatar,
+.bp-campaign.bp-v2-animal .bp-donor-avatar,
+.bp-campaign.bp-v2-relief .bp-donor-avatar,
+.bp-campaign.bp-v2-water .bp-donor-avatar,
+.bp-campaign.bp-v2-fooddrive .bp-donor-avatar,
+.bp-campaign.bp-v2-wildlife .bp-donor-avatar,
+.bp-campaign.bp-v2-climate .bp-donor-avatar {
+  box-shadow: 0 0 0 3px var(--bp-v2-glow);
+}
+.bp-campaign.bp-v2-charity .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-medical .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-education .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-golf .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-childcare .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-forest .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-animal .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-relief .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-water .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-fooddrive .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-wildlife .bp-donors-wall-sample-note,
+.bp-campaign.bp-v2-climate .bp-donors-wall-sample-note {
+  border-color: var(--bp-v2-line);
+  background: var(--bp-v2-soft);
+  color: var(--bp-v2-muted);
+  border-radius: 10px;
+}
+.bp-campaign.bp-v2-charity .bp-faq-list,
+.bp-campaign.bp-v2-medical .bp-faq-list,
+.bp-campaign.bp-v2-education .bp-faq-list,
+.bp-campaign.bp-v2-golf .bp-faq-list,
+.bp-campaign.bp-v2-childcare .bp-faq-list,
+.bp-campaign.bp-v2-forest .bp-faq-list,
+.bp-campaign.bp-v2-animal .bp-faq-list,
+.bp-campaign.bp-v2-relief .bp-faq-list,
+.bp-campaign.bp-v2-water .bp-faq-list,
+.bp-campaign.bp-v2-fooddrive .bp-faq-list,
+.bp-campaign.bp-v2-wildlife .bp-faq-list,
+.bp-campaign.bp-v2-climate .bp-faq-list {
+  gap: 10px;
+}
+.bp-campaign.bp-v2-charity .bp-faq-item,
+.bp-campaign.bp-v2-medical .bp-faq-item,
+.bp-campaign.bp-v2-education .bp-faq-item,
+.bp-campaign.bp-v2-golf .bp-faq-item,
+.bp-campaign.bp-v2-childcare .bp-faq-item,
+.bp-campaign.bp-v2-forest .bp-faq-item,
+.bp-campaign.bp-v2-animal .bp-faq-item,
+.bp-campaign.bp-v2-relief .bp-faq-item,
+.bp-campaign.bp-v2-water .bp-faq-item,
+.bp-campaign.bp-v2-fooddrive .bp-faq-item,
+.bp-campaign.bp-v2-wildlife .bp-faq-item,
+.bp-campaign.bp-v2-climate .bp-faq-item {
+  background: var(--bp-v2-surface);
+  border-color: var(--bp-v2-line);
+  border-radius: 14px;
+  box-shadow: var(--bp-v2-shadow);
+}
+.bp-campaign.bp-v2-charity .bp-faq-question,
+.bp-campaign.bp-v2-medical .bp-faq-question,
+.bp-campaign.bp-v2-education .bp-faq-question,
+.bp-campaign.bp-v2-golf .bp-faq-question,
+.bp-campaign.bp-v2-childcare .bp-faq-question,
+.bp-campaign.bp-v2-forest .bp-faq-question,
+.bp-campaign.bp-v2-animal .bp-faq-question,
+.bp-campaign.bp-v2-relief .bp-faq-question,
+.bp-campaign.bp-v2-water .bp-faq-question,
+.bp-campaign.bp-v2-fooddrive .bp-faq-question,
+.bp-campaign.bp-v2-wildlife .bp-faq-question,
+.bp-campaign.bp-v2-climate .bp-faq-question {
+  color: var(--bp-v2-ink);
+  font-size: 16px;
+  padding: 17px 20px;
+}
+.bp-campaign.bp-v2-charity .bp-faq-answer,
+.bp-campaign.bp-v2-medical .bp-faq-answer,
+.bp-campaign.bp-v2-education .bp-faq-answer,
+.bp-campaign.bp-v2-golf .bp-faq-answer,
+.bp-campaign.bp-v2-childcare .bp-faq-answer,
+.bp-campaign.bp-v2-forest .bp-faq-answer,
+.bp-campaign.bp-v2-animal .bp-faq-answer,
+.bp-campaign.bp-v2-relief .bp-faq-answer,
+.bp-campaign.bp-v2-water .bp-faq-answer,
+.bp-campaign.bp-v2-fooddrive .bp-faq-answer,
+.bp-campaign.bp-v2-wildlife .bp-faq-answer,
+.bp-campaign.bp-v2-climate .bp-faq-answer {
+  color: var(--bp-v2-muted);
+  padding: 0 20px 18px;
+  line-height: 1.75;
+}
+.bp-campaign.bp-v2-charity .bp-campaign-video-embed,
+.bp-campaign.bp-v2-medical .bp-campaign-video-embed,
+.bp-campaign.bp-v2-education .bp-campaign-video-embed,
+.bp-campaign.bp-v2-golf .bp-campaign-video-embed,
+.bp-campaign.bp-v2-childcare .bp-campaign-video-embed,
+.bp-campaign.bp-v2-forest .bp-campaign-video-embed,
+.bp-campaign.bp-v2-animal .bp-campaign-video-embed,
+.bp-campaign.bp-v2-relief .bp-campaign-video-embed,
+.bp-campaign.bp-v2-water .bp-campaign-video-embed,
+.bp-campaign.bp-v2-fooddrive .bp-campaign-video-embed,
+.bp-campaign.bp-v2-wildlife .bp-campaign-video-embed,
+.bp-campaign.bp-v2-climate .bp-campaign-video-embed {
+  border-radius: var(--bp-v2-radius);
+  box-shadow: var(--bp-v2-shadow);
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-campaign.bp-v2-charity .bp-donor-card,
+  .bp-campaign.bp-v2-medical .bp-donor-card,
+  .bp-campaign.bp-v2-education .bp-donor-card,
+  .bp-campaign.bp-v2-golf .bp-donor-card,
+  .bp-campaign.bp-v2-childcare .bp-donor-card,
+  .bp-campaign.bp-v2-forest .bp-donor-card,
+  .bp-campaign.bp-v2-animal .bp-donor-card,
+  .bp-campaign.bp-v2-relief .bp-donor-card,
+  .bp-campaign.bp-v2-water .bp-donor-card,
+  .bp-campaign.bp-v2-fooddrive .bp-donor-card,
+  .bp-campaign.bp-v2-wildlife .bp-donor-card,
+  .bp-campaign.bp-v2-climate .bp-donor-card {
+    transition: none;
+  }
+  .bp-campaign.bp-v2-charity .bp-donor-card:hover,
+  .bp-campaign.bp-v2-medical .bp-donor-card:hover,
+  .bp-campaign.bp-v2-education .bp-donor-card:hover,
+  .bp-campaign.bp-v2-golf .bp-donor-card:hover,
+  .bp-campaign.bp-v2-childcare .bp-donor-card:hover,
+  .bp-campaign.bp-v2-forest .bp-donor-card:hover,
+  .bp-campaign.bp-v2-animal .bp-donor-card:hover,
+  .bp-campaign.bp-v2-relief .bp-donor-card:hover,
+  .bp-campaign.bp-v2-water .bp-donor-card:hover,
+  .bp-campaign.bp-v2-fooddrive .bp-donor-card:hover,
+  .bp-campaign.bp-v2-wildlife .bp-donor-card:hover,
+  .bp-campaign.bp-v2-climate .bp-donor-card:hover {
+    transform: none;
+  }
+}
+
+.bp-campaign.bp-v2-water,
+.bp-campaign.bp-v2-fooddrive,
+.bp-campaign.bp-v2-wildlife,
+.bp-campaign.bp-v2-climate {
+  --bp-v2-radius: 22px;
+  background-image: radial-gradient(120% 62% at 50% -12%, var(--bp-v2-glow) 0%, rgba(0, 0, 0, 0) 62%), radial-gradient(90% 45% at 108% 104%, var(--bp-v2-glow) 0%, rgba(0, 0, 0, 0) 58%);
+}
+.bp-campaign.bp-v2-water .bp-donors-wall-summary,
+.bp-campaign.bp-v2-fooddrive .bp-donors-wall-summary,
+.bp-campaign.bp-v2-wildlife .bp-donors-wall-summary,
+.bp-campaign.bp-v2-climate .bp-donors-wall-summary {
+  background-image: linear-gradient(135deg, var(--bp-v2-glow) 0%, rgba(255, 255, 255, 0) 62%);
+}
+.bp-campaign.bp-v2-water .bp-faq-item[open],
+.bp-campaign.bp-v2-fooddrive .bp-faq-item[open],
+.bp-campaign.bp-v2-wildlife .bp-faq-item[open],
+.bp-campaign.bp-v2-climate .bp-faq-item[open] {
+  border-color: var(--bp-v2-accent);
+  box-shadow: inset 3px 0 0 var(--bp-v2-accent), 0 10px 26px -14px var(--bp-v2-accent);
+}
+.bp-campaign.bp-v2-water details.bp-faq-item[open] > summary.bp-faq-question,
+.bp-campaign.bp-v2-fooddrive details.bp-faq-item[open] > summary.bp-faq-question,
+.bp-campaign.bp-v2-wildlife details.bp-faq-item[open] > summary.bp-faq-question,
+.bp-campaign.bp-v2-climate details.bp-faq-item[open] > summary.bp-faq-question {
+  color: var(--bp-v2-accent);
+}
+.bp-campaign.bp-v2-water .bp-donor-card,
+.bp-campaign.bp-v2-fooddrive .bp-donor-card,
+.bp-campaign.bp-v2-wildlife .bp-donor-card,
+.bp-campaign.bp-v2-climate .bp-donor-card {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.bp-campaign.bp-v2-water .bp-donor-card:hover,
+.bp-campaign.bp-v2-fooddrive .bp-donor-card:hover,
+.bp-campaign.bp-v2-wildlife .bp-donor-card:hover,
+.bp-campaign.bp-v2-climate .bp-donor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -16px rgba(0, 0, 0, 0.45), var(--bp-v2-shadow);
+}
+
+.bp-campaign.bp-v2-water {
+  --bp-v2-radius: 20px;
+}
+.bp-campaign.bp-v2-water .bp-summary-item,
+.bp-campaign.bp-v2-water .bp-campaign-organizer,
+.bp-campaign.bp-v2-water .bp-social-sharing,
+.bp-campaign.bp-v2-water .bp-social-links {
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.92) 0%, var(--bp-v2-soft) 100%);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--bp-v2-shadow);
+}
+.bp-campaign.bp-v2-water .bp-summary-item {
+  border-radius: 18px;
+}
+.bp-campaign.bp-v2-water .bp-campaign-image {
+  border-radius: 20px;
+}
+.bp-campaign.bp-v2-water .bp-progress-bar-wrap {
+  height: 12px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 2px rgba(12, 44, 56, 0.14);
+}
+.bp-campaign.bp-v2-water .bp-donate_btn {
+  background-image: linear-gradient(135deg, var(--bp-v2-accent) 0%, #0ea5e9 100%);
+  border-color: transparent;
+}
+
+.bp-campaign.bp-v2-fooddrive {
+  --bp-v2-radius: 16px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-campaign-description-headline {
+  padding-left: 0;
+  padding-bottom: 12px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-campaign-description-headline::before {
+  top: auto;
+  bottom: 0;
+  width: 44px;
+  height: 3px;
+  border-radius: 999px;
+  background-image: none;
+  background-color: var(--bp-v2-accent);
+}
+.bp-campaign.bp-v2-fooddrive .bp-summary-item,
+.bp-campaign.bp-v2-fooddrive .bp-campaign-organizer,
+.bp-campaign.bp-v2-fooddrive .bp-social-sharing,
+.bp-campaign.bp-v2-fooddrive .bp-social-links {
+  background: var(--bp-v2-soft);
+  border: 0;
+  box-shadow: none;
+  border-radius: 16px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-summary-item {
+  padding: 20px 18px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-summary-item strong {
+  font-size: 26px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-campaign-image {
+  border-radius: 16px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-progress-bar-wrap {
+  height: 10px;
+  border-radius: 999px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-progress-bar {
+  border-radius: 999px;
+}
+.bp-campaign.bp-v2-fooddrive .bp-amount-label {
+  border-width: 1px;
+  font-weight: 600;
+}
+.bp-campaign.bp-v2-fooddrive .bp-donate_btn {
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.bp-campaign.bp-v2-fooddrive .bp-donate_btn,
+.bp-campaign.bp-v2-fooddrive .bp-donate_btn:hover,
+.bp-campaign.bp-v2-fooddrive .bp-donate_btn:focus {
+  color: #3d2f14;
+}
+.bp-campaign.bp-v2-fooddrive input.bp-option-amount:checked + .bp-amount-label {
+  color: #3d2f14;
+}
+
+.bp-campaign.bp-v2-wildlife {
+  --bp-v2-radius: 14px;
+}
+.bp-campaign.bp-v2-wildlife .bp-campaign-description-headline {
+  padding-left: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--bp-v2-line);
+}
+.bp-campaign.bp-v2-wildlife .bp-campaign-description-headline::before {
+  content: none;
+}
+.bp-campaign.bp-v2-wildlife .bp-summary-item {
+  background: var(--bp-v2-surface);
+  border: 1px solid var(--bp-v2-line);
+  border-left: 3px solid var(--bp-v2-accent);
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 16px 18px;
+}
+.bp-campaign.bp-v2-wildlife .bp-campaign-organizer,
+.bp-campaign.bp-v2-wildlife .bp-social-sharing,
+.bp-campaign.bp-v2-wildlife .bp-social-links {
+  border-radius: 14px;
+  box-shadow: none;
+}
+.bp-campaign.bp-v2-wildlife .bp-campaign-image {
+  border-radius: 14px;
+}
+.bp-campaign.bp-v2-wildlife .bp-progress-bar-wrap {
+  height: 10px;
+  border-radius: 999px;
+}
+.bp-campaign.bp-v2-wildlife .bp-progress-bar {
+  border-radius: 999px;
+}
+.bp-campaign.bp-v2-wildlife .bp-amount-label {
+  border-width: 1px;
+}
+.bp-campaign.bp-v2-wildlife .bp-donate_btn {
+  font-weight: 700;
+}
+
+.bp-campaign.bp-v2-climate {
+  --bp-v2-tile-gap: 1px;
+  --bp-v2-radius: 6px;
+  --bp-v2-chip-radius: 4px;
+  --bp-v2-btn-radius: 4px;
+}
+.bp-campaign.bp-v2-climate .bp-campaign-description-headline {
+  padding-left: 0;
+  padding-top: 14px;
+  border-top: 3px solid var(--bp-v2-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.bp-campaign.bp-v2-climate .bp-campaign-description-headline::before {
+  content: none;
+}
+.bp-campaign.bp-v2-climate .bp-campaign-summary {
+  gap: var(--bp-v2-tile-gap);
+  background: var(--bp-v2-line);
+  border: 1px solid var(--bp-v2-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bp-campaign.bp-v2-climate .bp-summary-item {
+  background: var(--bp-v2-surface);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px 20px;
+}
+.bp-campaign.bp-v2-climate .bp-summary-item strong {
+  font-size: 30px;
+}
+.bp-campaign.bp-v2-climate .bp-progress-bar-wrap {
+  height: 8px;
+  border-radius: 0;
+}
+.bp-campaign.bp-v2-climate .bp-progress-bar {
+  border-radius: 0;
+}
+.bp-campaign.bp-v2-climate .bp-campaign-organizer,
+.bp-campaign.bp-v2-climate .bp-social-sharing,
+.bp-campaign.bp-v2-climate .bp-social-links {
+  border-radius: 6px;
+  box-shadow: none;
+}
+.bp-campaign.bp-v2-climate .bp-amount-label {
+  border-width: 1px;
+}

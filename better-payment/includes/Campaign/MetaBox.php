@@ -194,10 +194,10 @@ class MetaBox extends Controller {
     /**
      * Refuse changes to Pro-element settings from a site without Pro.
      *
-     * The builder renders a Pro element's controls disabled, but a disabled input
-     * is a courtesy, not a control — nothing stops a crafted `POST` to the REST
-     * route or the classic editor from carrying arbitrary `donors_wall` settings.
-     * This is the actual enforcement; the greyed-out inputs are the UI for it.
+     * The builder shows a locked Pro element's upgrade banner instead of its
+     * controls, but that is a courtesy, not a control — nothing stops a crafted
+     * `POST` to the REST route or the classic editor (or an AI turn) from carrying
+     * arbitrary `donors_wall` settings. This is the actual enforcement.
      *
      * **Existing values are preserved, never stripped.** The tempting fix is to
      * delete Pro elements (or blank their settings) on save, but a user whose
@@ -207,12 +207,37 @@ class MetaBox extends Controller {
      *   - element exists already → its stored settings are restored verbatim, so
      *     the campaign is byte-identical on the Pro elements and reactivating Pro
      *     brings everything back exactly as it was;
-     *   - element is new → its settings are reset to the schema defaults, so a
+     *   - element is new → its settings are reset to the registered defaults, so a
      *     free user can't hand-craft values for an element they can't configure.
+     *     A free install registers only a lock stub
+     *     ({@see \Better_Payment\Lite\Campaign\Elements\ProElementStubs}), whose
+     *     defaults are empty, so a new Pro element saves with `[]` settings.
+     *
+     * **"Exists already" is decided in two passes, and the second one is the one
+     * that protects the user.** An element id is not a stable identity: an AI
+     * whole-page edit (`set_layout`), an undo to a snapshot from before a save, or
+     * any client that re-mints ids hands back the SAME FAQ under a NEW id. Matching
+     * by id alone made that FAQ "new", saved it as `[]`, and destroyed the
+     * configuration this guard exists to keep — permanently, since reactivating Pro
+     * has nothing left to restore. So:
+     *
+     *   1. an incoming Pro element whose id AND type match a stored one takes that
+     *      element's settings;
+     *   2. every other incoming Pro element takes the settings of the next stored
+     *      element of the SAME type that step 1 did not claim, in document order;
+     *   3. only when no unclaimed stored element of that type remains is it new.
+     *
+     * Settings never cross types, and each stored element is claimed at most once,
+     * so an extra Pro element beyond what was stored still gets the defaults. The
+     * values restored always come from storage, never from the request.
      *
      * Structure (order, position, insertion, deletion) is deliberately NOT
-     * guarded — moving or removing a leftover Pro element is legitimate and the
-     * builder offers a Remove button for exactly that.
+     * guarded — moving or removing a leftover Pro element is legitimate, and the
+     * canvas element toolbar's delete action is there for exactly that.
+     *
+     * Structure (order, position, insertion, deletion) is deliberately NOT
+     * guarded — moving or removing a leftover Pro element is legitimate, and the
+     * canvas element toolbar's delete action is there for exactly that.
      *
      * No-ops entirely when Pro is active. Entitlement is read live from
      * `better_payment/pro_enabled` on every save, so a previously-saved campaign
@@ -252,10 +277,13 @@ class MetaBox extends Controller {
             return $layout_json;
         }
 
-        $stored = json_decode( (string) get_post_meta( $post_id, '_bpc_fields_layout', true ), true );
-        $known  = self::index_element_settings( is_array( $stored ) ? $stored : [] );
+        $stored   = json_decode( (string) get_post_meta( $post_id, '_bpc_fields_layout', true ), true );
+        $pool     = self::collect_locked_elements( is_array( $stored ) ? $stored : [], $locked );
+        $claims   = self::collect_locked_elements( $incoming, $locked );
+        $resolved = self::resolve_locked_settings( $claims, $pool, $locked );
 
-        $guarded = self::restore_locked_settings( $incoming, $locked, $known );
+        $ordinal = 0;
+        $guarded = self::restore_locked_settings( $incoming, $locked, $resolved, $ordinal );
 
         $encoded = wp_json_encode( $guarded );
 
@@ -263,25 +291,32 @@ class MetaBox extends Controller {
     }
 
     /**
-     * Flatten a layout into `element id => settings` for every element it holds.
+     * Every locked (Pro) element in a layout, in document order.
      *
      * Walks recursively rather than assuming `columns[].elements[]` so the legacy
-     * flat-array layout format is covered too.
+     * flat-array layout format is covered too. It stops at a locked element, and
+     * {@see self::restore_locked_settings()} walks identically, so the Nth entry
+     * here is the Nth element that walk rewrites.
      *
-     * @param array $node
-     * @param array $acc
-     * @return array<string, array>
+     * @param array                $node
+     * @param array<string, array> $locked Type => default settings.
+     * @param array                $acc
+     * @return array<int, array{id: string, type: string, settings: array}>
      */
-    private static function index_element_settings( array $node, array $acc = [] ): array {
-        if ( isset( $node['id'], $node['type'] ) && is_scalar( $node['id'] ) ) {
-            $acc[ (string) $node['id'] ] = isset( $node['settings'] ) && is_array( $node['settings'] )
-                ? $node['settings']
-                : [];
+    private static function collect_locked_elements( array $node, array $locked, array $acc = [] ): array {
+        if ( isset( $node['type'] ) && is_string( $node['type'] ) && isset( $locked[ $node['type'] ] ) ) {
+            $acc[] = [
+                'id'       => isset( $node['id'] ) && is_scalar( $node['id'] ) ? (string) $node['id'] : '',
+                'type'     => $node['type'],
+                'settings' => isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [],
+            ];
+
+            return $acc;
         }
 
         foreach ( $node as $child ) {
             if ( is_array( $child ) ) {
-                $acc = self::index_element_settings( $child, $acc );
+                $acc = self::collect_locked_elements( $child, $locked, $acc );
             }
         }
 
@@ -289,28 +324,78 @@ class MetaBox extends Controller {
     }
 
     /**
-     * Replace the settings of every locked element with the stored ones (or the
-     * schema defaults when the element is new). Mirrors the walk above.
+     * Decide the settings each incoming locked element is saved with.
+     *
+     * Pass 1 claims stored elements by id AND type. Pass 2 gives each still
+     * unresolved incoming element the next unclaimed stored element of the same
+     * type, in document order — the same element under a re-minted id (an AI
+     * `set_layout`, an undo, any client that regenerates ids). Whatever is left
+     * over is genuinely new and gets the registered defaults. A stored element is
+     * claimed at most once and never by another type.
+     *
+     * @param array<int, array{id: string, type: string, settings: array}> $incoming Locked elements being saved.
+     * @param array<int, array{id: string, type: string, settings: array}> $stored   Locked elements already stored.
+     * @param array<string, array>                                         $locked   Type => default settings.
+     * @return array<int, array> Incoming ordinal => settings to save.
+     */
+    private static function resolve_locked_settings( array $incoming, array $stored, array $locked ): array {
+        $resolved = [];
+        $claimed  = [];
+
+        foreach ( $incoming as $i => $element ) {
+            if ( '' === $element['id'] ) {
+                continue;
+            }
+            foreach ( $stored as $j => $candidate ) {
+                if ( ! isset( $claimed[ $j ] ) && $candidate['id'] === $element['id'] && $candidate['type'] === $element['type'] ) {
+                    $resolved[ $i ] = $candidate['settings'];
+                    $claimed[ $j ]  = true;
+                    break;
+                }
+            }
+        }
+
+        foreach ( $incoming as $i => $element ) {
+            if ( array_key_exists( $i, $resolved ) ) {
+                continue;
+            }
+
+            $resolved[ $i ] = $locked[ $element['type'] ];
+
+            foreach ( $stored as $j => $candidate ) {
+                if ( ! isset( $claimed[ $j ] ) && $candidate['type'] === $element['type'] ) {
+                    $resolved[ $i ] = $candidate['settings'];
+                    $claimed[ $j ]  = true;
+                    break;
+                }
+            }
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Replace the settings of every locked element with the ones resolved for it.
+     * Walks exactly like {@see self::collect_locked_elements()}; `$ordinal` counts
+     * the locked elements seen so far.
      *
      * @param array                $node
-     * @param array<string, array> $locked Type => default settings.
-     * @param array<string, array> $known  Element id => stored settings.
+     * @param array<string, array> $locked   Type => default settings.
+     * @param array<int, array>    $resolved Ordinal => settings.
+     * @param int                  $ordinal  Running locked-element counter.
      * @return array
      */
-    private static function restore_locked_settings( array $node, array $locked, array $known ): array {
+    private static function restore_locked_settings( array $node, array $locked, array $resolved, int &$ordinal ): array {
         if ( isset( $node['type'] ) && is_string( $node['type'] ) && isset( $locked[ $node['type'] ] ) ) {
-            $id = isset( $node['id'] ) && is_scalar( $node['id'] ) ? (string) $node['id'] : '';
-
-            $node['settings'] = ( '' !== $id && isset( $known[ $id ] ) )
-                ? $known[ $id ]
-                : $locked[ $node['type'] ];
+            $node['settings'] = $resolved[ $ordinal ] ?? $locked[ $node['type'] ];
+            ++$ordinal;
 
             return $node;
         }
 
         foreach ( $node as $key => $child ) {
             if ( is_array( $child ) ) {
-                $node[ $key ] = self::restore_locked_settings( $child, $locked, $known );
+                $node[ $key ] = self::restore_locked_settings( $child, $locked, $resolved, $ordinal );
             }
         }
 

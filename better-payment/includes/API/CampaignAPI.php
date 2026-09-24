@@ -328,9 +328,10 @@ class CampaignAPI extends WP_REST_Controller {
 
         // ?document=1 → a standalone HTML document for the picker's Preview
         // lightbox iframe (stylesheets, theme class and colours included), rather
-        // than the bare fragment the original callers expect. It returns '' for a
-        // template with no layout of its own — a locked Pro card — and the client
-        // falls back to that template's screenshot.
+        // than the bare fragment the original callers expect. A template with no
+        // layout of its own — a locked Pro card on a free install — has nothing to
+        // render, so this 404s and the lightbox shows the card's screenshot (the
+        // builder does not request a locked card's document in the first place).
         if ( $request->get_param( 'document' ) ) {
             $document = RendererService::build_template_preview_document( $key );
             if ( ! $document ) {

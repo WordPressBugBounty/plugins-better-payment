@@ -50,6 +50,9 @@ if ( have_posts() ) :
         );
     }
 
+    // Theme CSS that loads on top of campaign-display (Pro's template themes).
+    \Better_Payment\Lite\Campaign\CampaignStyles::enqueue_theme_styles( 'frontend' );
+
     // Enqueue frontend JS (amount selector → donate button URL).
     wp_enqueue_script( 'fundraising-campaign-script' );
     wp_enqueue_style( 'fundraising-campaign-style' );

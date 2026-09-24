@@ -159,6 +159,35 @@ class Subscriptions {
     const RENEWAL_PARENT_META = '_bp_subscription_parent';
 
     /**
+     * Renewal-order meta: 'yes' once this renewal payment has advanced the
+     * parent's schedule. settle_renewal() advances the schedule by a full
+     * cycle, so it must run exactly once per renewal order — the payment can
+     * reach it from the gateway return AND from the order-status bridge
+     * (maybe_complete_from_status()), and a second pass would hand the
+     * customer a free billing period.
+     */
+    const RENEWAL_SETTLED_META = '_bp_subscription_renewal_settled';
+
+    /**
+     * Parent-order meta: the subscription's agreed line prices, snapshotted
+     * at activation (see renewal_line_snapshot()). Renewals are billed from
+     * it, so editing the product's price never silently re-prices a running
+     * subscription — the same principle the schedule snapshot already
+     * follows. Absent on subscriptions that were already running when this
+     * shipped, which keep renewing at the product's current price exactly as
+     * before.
+     */
+    const PRICE_SNAPSHOT_META = '_bp_subscription_price_snapshot';
+
+    /**
+     * User meta: the role this module granted the customer for the
+     * subscription lifecycle. The role sync removes only what it granted, so
+     * a customer's own roles (a membership plugin's role, `customer`, a
+     * custom staff role) survive both activation and cancellation.
+     */
+    const GRANTED_ROLE_META = '_bp_subscription_granted_role';
+
+    /**
      * Parent-order meta: 'no' when the customer switched automatic renewal
      * off from their My Account page ('' / 'yes' = renew automatically).
      * Only meaningful while automatic renewal is enabled site-wide.
@@ -243,6 +272,14 @@ class Subscriptions {
         // module's payment-complete hook.
         add_action( 'better_payment/woocommerce/payment_complete', array( __CLASS__, 'on_order_paid' ), 10, 2 );
 
+        // Orders that become paid without passing through the gateway return
+        // — an admin marking a subscription order complete, an offline
+        // payment on an invoiced renewal — reach the same completion
+        // contract here. Both handlers below it are idempotent, so an order
+        // that already went through the return path changes nothing.
+        add_action( 'woocommerce_order_status_processing', array( __CLASS__, 'maybe_complete_from_status' ), 20 );
+        add_action( 'woocommerce_order_status_completed', array( __CLASS__, 'maybe_complete_from_status' ), 20 );
+
         // Renewal scheduler.
         add_action( self::CRON_HOOK, array( __CLASS__, 'process_due_subscriptions' ) );
 
@@ -274,6 +311,11 @@ class Subscriptions {
         // filter) and the order-pay page (invoiced renewals + pending
         // subscription orders).
         add_filter( 'woocommerce_available_payment_gateways', array( __CLASS__, 'restrict_available_gateways' ) );
+
+        // …and when that restriction leaves nothing available (the gateway is
+        // switched off or Stripe is not configured), say so instead of
+        // letting WooCommerce blame the customer's country.
+        add_filter( 'woocommerce_no_available_payment_methods_message', array( __CLASS__, 'no_payment_methods_message' ) );
 
         // Customer Auto-Renew Control setting: customer-facing automatic-renewal
         // on/off. Rendered only from My Account > Subscriptions, exactly like
@@ -400,10 +442,40 @@ class Subscriptions {
                 line-height: 1.5;
                 padding-top: 10px;
             }
+
+            .woocommerce_options_panel .bp-subscription-options .bp-subscription-gateway-warning {
+                padding: 0 12px 0 12px;
+            }
+
+            .woocommerce_options_panel .bp-subscription-options .bp-subscription-gateway-warning__text {
+                display: block;
+                border-left: 4px solid #b32d2e;
+                background: #fcf0f1;
+                padding: 8px 12px;
+                line-height: 1.5;
+            }
         </style>
         <?php
 
-        echo '<div class="options_group bp-subscription-options">';
+        // Hidden for the product types a subscription cannot be sold on (see
+        // type_supports_subscription()). Unknown types from other plugins are
+        // left visible — the box still works there.
+        echo '<div class="options_group bp-subscription-options hide_if_variable hide_if_grouped hide_if_external">';
+
+        $gateway_state = self::gateway_state();
+
+        // A full-width notice rather than a labelled field, so it opts out of
+        // the panel's 150px label column (see the style block above).
+        if ( 'ready' !== $gateway_state ) {
+            printf(
+                '<p class="form-field bp-subscription-gateway-warning"><span class="bp-subscription-gateway-warning__text">%s</span></p>',
+                esc_html(
+                    'disabled' === $gateway_state
+                        ? __( 'Better Payment (Stripe) is switched off in WooCommerce → Settings → Payments. A subscription product can only be paid with it, so customers will see no payment method at checkout until it is enabled.', 'better-payment' )
+                        : __( 'Better Payment has no Stripe keys yet. A subscription product can only be paid with the Better Payment (Stripe) gateway, so customers will see no payment method at checkout until Stripe is configured.', 'better-payment' )
+                )
+            );
+        }
 
         woocommerce_wp_checkbox(
             array(
@@ -577,13 +649,50 @@ class Subscriptions {
      * ------------------------------------------------------------------- */
 
     /**
+     * Product types this module cannot sell as a subscription. Pure.
+     *
+     * A variable product's meta lives on the PARENT, while the cart, the
+     * order line and the renewal all carry the VARIATION — and a variation
+     * does not inherit its parent's custom meta. So a variable product with
+     * the box ticked advertised "/ month" on the shop and in the cart, was
+     * locked to this gateway at checkout, and then activated no
+     * subscription at all: the customer was billed once for something sold
+     * as recurring. Grouped and external products have no line of their own
+     * to bill either. Rejecting them here keeps every surface telling the
+     * same story; a product type from another plugin is left alone (it may
+     * well work), so nothing that worked before stops working.
+     *
+     * @param mixed $type Product type slug.
+     * @return bool
+     */
+    public static function type_supports_subscription( $type ) {
+        /**
+         * Filters the product types a Better Payment subscription cannot use.
+         *
+         * @since 2.4.0
+         *
+         * @param string[] $unsupported Unsupported product type slugs.
+         */
+        $unsupported = apply_filters(
+            'better_payment/woocommerce/unsupported_subscription_product_types',
+            array( 'variable', 'grouped', 'external' )
+        );
+
+        return ! in_array( (string) $type, (array) $unsupported, true );
+    }
+
+    /**
      * Whether a product is a Better Payment subscription product.
      *
      * @param mixed $product Product (or anything else — safely rejected).
      * @return bool
      */
     public static function product_is_subscription( $product ) {
-        return $product instanceof \WC_Product && 'yes' === $product->get_meta( self::PRODUCT_ENABLED_META );
+        if ( ! $product instanceof \WC_Product || 'yes' !== $product->get_meta( self::PRODUCT_ENABLED_META ) ) {
+            return false;
+        }
+
+        return self::type_supports_subscription( $product->get_type() );
     }
 
     /**
@@ -817,6 +926,17 @@ class Subscriptions {
 
         $eligible = $product_id > 0 && ! self::customer_has_subscription_for_product( $user_id, $product_id );
 
+        // A guest has no account to check, so the trial used to be given to
+        // every guest checkout — including the same person buying the same
+        // product for the fifth time. The billing e-mail is the only identity
+        // a guest has, and by the time WooCommerce recalculates the totals
+        // for the checkout form it knows it, so use it. Still "benefit of the
+        // doubt" while the e-mail is unknown (the shop page, the cart page):
+        // nothing is charged there, and the checkout recalculation decides.
+        if ( $eligible && $user_id < 1 ) {
+            $eligible = ! self::customer_has_subscription_for_email( self::current_billing_email(), $product_id );
+        }
+
         /**
          * Filters whether the current customer is eligible for a
          * subscription product's free trial.
@@ -828,6 +948,92 @@ class Subscriptions {
          * @param int  $user_id    Current user id (0 = guest).
          */
         return (bool) apply_filters( 'better_payment/woocommerce/trial_eligible', $eligible, $product_id, $user_id );
+    }
+
+    /**
+     * The billing e-mail WooCommerce currently holds for the shopper, or ''
+     * when it has none (a logged-out visitor who has not reached the
+     * checkout form yet).
+     *
+     * @return string
+     */
+    public static function current_billing_email() {
+        if ( ! function_exists( 'WC' ) || null === WC()->customer ) {
+            return '';
+        }
+
+        $email = (string) WC()->customer->get_billing_email();
+
+        return is_email( $email ) ? $email : '';
+    }
+
+    /**
+     * Whether a billing e-mail has already been used for a Better Payment
+     * subscription containing the product — the guest counterpart of
+     * customer_has_subscription_for_product(). Any status counts: a
+     * cancelled trial still used the trial up.
+     *
+     * @param mixed $email      Billing e-mail ('' and non-strings never match).
+     * @param mixed $product_id Product (or variation) id.
+     * @return bool
+     */
+    public static function customer_has_subscription_for_email( $email, $product_id ) {
+        static $cache = array();
+
+        $email      = is_string( $email ) ? trim( $email ) : '';
+        $product_id = (int) $product_id;
+
+        if ( '' === $email || $product_id < 1 || ! function_exists( 'wc_get_orders' ) ) {
+            return false;
+        }
+
+        $key = strtolower( $email ) . ':' . $product_id;
+
+        if ( isset( $cache[ $key ] ) ) {
+            return $cache[ $key ];
+        }
+
+        $orders = wc_get_orders(
+            array(
+                'billing_email' => $email,
+                'limit'         => 100,
+                'type'          => 'shop_order',
+                'return'        => 'objects',
+                'meta_query'    => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded (limit 100), per-request cached, trial products only.
+                    array(
+                        'key'     => self::STATUS_META,
+                        'compare' => 'EXISTS',
+                    ),
+                ),
+            )
+        );
+
+        $cache[ $key ] = self::orders_contain_product( $orders, $product_id );
+
+        return $cache[ $key ];
+    }
+
+    /**
+     * Whether any of the orders carries the product as a subscription line.
+     *
+     * @param mixed $orders     Orders to scan.
+     * @param int   $product_id Product (or variation) id.
+     * @return bool
+     */
+    private static function orders_contain_product( $orders, $product_id ) {
+        if ( ! is_array( $orders ) ) {
+            return false;
+        }
+
+        foreach ( $orders as $order ) {
+            foreach ( self::order_subscription_items( $order ) as $item ) {
+                if ( (int) $item->get_product_id() === $product_id || (int) $item->get_variation_id() === $product_id ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -872,22 +1078,9 @@ class Subscriptions {
             )
         );
 
-        $found = false;
+        $cache[ $key ] = self::orders_contain_product( $orders, $product_id );
 
-        if ( is_array( $orders ) ) {
-            foreach ( $orders as $order ) {
-                foreach ( self::order_subscription_items( $order ) as $item ) {
-                    if ( (int) $item->get_product_id() === $product_id || (int) $item->get_variation_id() === $product_id ) {
-                        $found = true;
-                        break 2;
-                    }
-                }
-            }
-        }
-
-        $cache[ $key ] = $found;
-
-        return $found;
+        return $cache[ $key ];
     }
 
     /**
@@ -1099,6 +1292,72 @@ class Subscriptions {
     }
 
     /**
+     * Pure: what state the Better Payment gateway is in for a subscription
+     * sale — 'ready', 'disabled' (the WooCommerce gateway is switched off)
+     * or 'unconfigured' (switched on, but Better Payment has no Stripe keys).
+     *
+     * Both failing states mean the same thing at checkout: the subscription
+     * restriction removes every other gateway and leaves nothing behind, so
+     * the product cannot be bought at all. That is the safe outcome (no
+     * other gateway can store the card renewals are charged with) but it was
+     * also a silent one — WooCommerce just says no payment methods are
+     * available. This is what the product screen and the checkout notice
+     * explain instead.
+     *
+     * @param mixed $settings          The gateway's WooCommerce settings option.
+     * @param bool  $stripe_configured Whether Better Payment has Stripe keys.
+     * @return string 'ready' | 'disabled' | 'unconfigured'
+     */
+    public static function gateway_ready_state( $settings, $stripe_configured ) {
+        $enabled = is_array( $settings ) && isset( $settings['enabled'] ) ? (string) $settings['enabled'] : 'no';
+
+        if ( 'yes' !== $enabled ) {
+            return 'disabled';
+        }
+
+        return $stripe_configured ? 'ready' : 'unconfigured';
+    }
+
+    /**
+     * The live gateway state (see gateway_ready_state()).
+     *
+     * @return string 'ready' | 'disabled' | 'unconfigured'
+     */
+    public static function gateway_state() {
+        return self::gateway_ready_state(
+            get_option( 'woocommerce_' . self::gateway_id() . '_settings' ),
+            StripeService::is_configured()
+        );
+    }
+
+    /**
+     * Pure: the checkout message for a subscription purchase that has no
+     * payment method left, or the untouched default for every other cart.
+     *
+     * @param string $message WooCommerce's own message.
+     * @param bool   $restricted Whether this purchase requires the BP gateway.
+     * @param string $state      Gateway state (see gateway_ready_state()).
+     * @return string
+     */
+    public static function no_payment_methods_text( $message, $restricted, $state ) {
+        if ( ! $restricted || 'ready' === $state ) {
+            return $message;
+        }
+
+        return __( 'This subscription can only be paid through Better Payment (Stripe), and that payment method is not available yet. Please contact the store owner.', 'better-payment' );
+    }
+
+    /**
+     * Filter callback for `woocommerce_no_available_payment_methods_message`.
+     *
+     * @param string $message WooCommerce's own message.
+     * @return string
+     */
+    public static function no_payment_methods_message( $message ) {
+        return self::no_payment_methods_text( (string) $message, self::checkout_requires_bp_gateway(), self::gateway_state() );
+    }
+
+    /**
      * Pure: reduce an available-gateways list to the Better Payment gateway
      * alone when the purchase requires it.
      *
@@ -1231,6 +1490,100 @@ class Subscriptions {
      */
     public static function needs_payment_override( $total, $payable_status, $contains_subscription ) {
         return $contains_subscription && $payable_status && (float) $total < 0.01;
+    }
+
+    /**
+     * The agreed per-cycle line prices for a subscription's items, taken at
+     * activation.
+     *
+     * The **undiscounted** line subtotal is what is stored, deliberately:
+     *
+     *  - Renewals used to be built from the product's CURRENT price, so
+     *    editing the product silently re-priced every running subscription —
+     *    the one thing the schedule snapshot beside it exists to prevent.
+     *  - A checkout coupon is not carried forward. It discounted the first
+     *    payment; perpetuating it would hand out a permanent price cut the
+     *    shop owner never agreed to, and there is no UI here to say
+     *    otherwise. (Same default WooCommerce applies to a non-recurring
+     *    coupon.)
+     *  - A trial line checked out at $0. The trial is free, the subscription
+     *    is not, so the product's price is snapshotted instead of the zero.
+     *
+     * @param mixed $items         Subscription order items.
+     * @param bool  $trial_applied Whether the trial zeroed the lines at checkout.
+     * @return array[] Each entry: `product_id`, `quantity`, `subtotal`, `total`.
+     */
+    public static function renewal_line_snapshot( $items, $trial_applied ) {
+        $lines = array();
+
+        if ( ! is_array( $items ) ) {
+            return $lines;
+        }
+
+        foreach ( $items as $item ) {
+            if ( ! $item instanceof \WC_Order_Item_Product ) {
+                continue;
+            }
+
+            $product    = $item->get_product();
+            $product_id = $product ? (int) $product->get_id() : (int) $item->get_product_id();
+            $quantity   = max( 1, (int) $item->get_quantity() );
+
+            if ( $product_id < 1 ) {
+                continue;
+            }
+
+            $subtotal = ( $trial_applied && $product )
+                ? (float) $product->get_price() * $quantity
+                : (float) $item->get_subtotal();
+
+            $lines[] = array(
+                'product_id' => $product_id,
+                'quantity'   => $quantity,
+                'subtotal'   => $subtotal,
+                'total'      => $subtotal,
+            );
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Pure: the snapshotted amounts for one renewal line, or null when the
+     * subscription has no snapshot for it — every subscription that was
+     * already running when this shipped, which keeps renewing at the
+     * product's current price exactly as it always did.
+     *
+     * @param mixed $snapshot   Stored snapshot.
+     * @param int   $product_id Product (or variation) id of the line.
+     * @param int   $occurrence Which line of that product (0-based), for a
+     *                          subscription holding the same product twice.
+     * @return array|null `subtotal` and `total`.
+     */
+    public static function renewal_line_amounts( $snapshot, $product_id, $occurrence = 0 ) {
+        if ( ! is_array( $snapshot ) ) {
+            return null;
+        }
+
+        $product_id = (int) $product_id;
+        $seen       = 0;
+
+        foreach ( $snapshot as $line ) {
+            if ( ! is_array( $line ) || ! isset( $line['product_id'] ) || (int) $line['product_id'] !== $product_id ) {
+                continue;
+            }
+
+            if ( $seen === (int) $occurrence ) {
+                return array(
+                    'subtotal' => isset( $line['subtotal'] ) ? (float) $line['subtotal'] : 0.0,
+                    'total'    => isset( $line['total'] ) ? (float) $line['total'] : 0.0,
+                );
+            }
+
+            $seen++;
+        }
+
+        return null;
     }
 
     /**
@@ -1457,6 +1810,91 @@ class Subscriptions {
      * ------------------------------------------------------------------- */
 
     /**
+     * An order reached a paid status without the gateway return telling us.
+     *
+     * The completion contract used to be reachable only from the Stripe
+     * return (and from the cron charge), so a subscription order an admin
+     * marked complete by hand — or an invoiced renewal settled offline and
+     * ticked off in wp-admin — activated nothing and advanced nothing, while
+     * the cron went on charging the card for a period the customer had
+     * already paid. Both handlers on the contract are idempotent (the
+     * subscription's status meta; the renewal's settled meta), so an order
+     * that DID come through the return path changes nothing here.
+     *
+     * @param mixed $order_id The order that changed status.
+     * @return void
+     */
+    public static function maybe_complete_from_status( $order_id ) {
+        if ( ! function_exists( 'wc_get_order' ) ) {
+            return;
+        }
+
+        $order = wc_get_order( $order_id );
+
+        if ( ! $order instanceof \WC_Order || $order->needs_payment() ) {
+            return;
+        }
+
+        $is_renewal = (int) $order->get_meta( self::RENEWAL_PARENT_META ) > 0;
+
+        // Already activated: nothing to do, and worth answering from meta
+        // before touching the line items — this hook fires for every order on
+        // the site, including one an admin re-completes.
+        if ( ! $is_renewal && '' !== (string) $order->get_meta( self::STATUS_META ) ) {
+            return;
+        }
+
+        if ( ! $is_renewal && ! self::order_contains_subscription( $order ) ) {
+            return; // Ordinary purchase — the overwhelming majority.
+        }
+
+        /**
+         * Fires for a Better Payment subscription order that became paid
+         * outside the gateway return. Same contract, same consumers.
+         *
+         * @since 2.4.0
+         *
+         * @param \WC_Order   $order The paid order.
+         * @param object|null $row   The order's Better Payment transaction row, when it has one.
+         */
+        do_action( 'better_payment/woocommerce/payment_complete', $order, self::transaction_row( $order ) );
+    }
+
+    /**
+     * The Better Payment transaction row an order was paid with, or null.
+     *
+     * The status bridge above must pass it, and this is not a nicety: the
+     * engine's own consumer marks the order paid with `payment_complete()`
+     * and fires the module's hook *after* that, so the status transition —
+     * and therefore the bridge — runs FIRST. Passing null there would
+     * activate the subscription with no row, `harvest_payment_method()`
+     * would find no Checkout Session to read, and every subscription bought
+     * through the normal checkout would end up with no reusable payment
+     * method: correct-looking, and silently invoiced by hand forever after.
+     * The row is already written and confirmed by then, so reading it back is
+     * the whole fix. An order with no row (a $0 trial under a manual renewal
+     * policy, an offline payment) legitimately returns null.
+     *
+     * @param mixed $order The order.
+     * @return object|null
+     */
+    public static function transaction_row( $order ) {
+        if ( ! $order instanceof \WC_Order ) {
+            return null;
+        }
+
+        $row_id = (int) $order->get_meta( '_bp_transaction_id' );
+
+        if ( $row_id < 1 ) {
+            return null;
+        }
+
+        $row = DB::get_transaction( $row_id );
+
+        return empty( $row->id ) ? null : $row;
+    }
+
+    /**
      * Consume the module's payment-complete hook. A first payment on a
      * subscription cart activates the subscription; a paid renewal order
      * (cron-charged or manually paid) advances the parent's schedule.
@@ -1536,6 +1974,10 @@ class Subscriptions {
         $order->update_meta_data( self::NEXT_PAYMENT_META, (string) $next );
         $order->update_meta_data( self::USER_CANCEL_META, $user_cancel );
         $order->update_meta_data( self::RENEWAL_COUNT_META, '0' );
+        // What the customer agreed to pay per cycle. A trial line checked out
+        // at $0, so the snapshot takes the product's price in that case —
+        // the trial is free, the subscription is not.
+        $order->update_meta_data( self::PRICE_SNAPSHOT_META, self::renewal_line_snapshot( $items, $trial_applied ) );
 
         if ( $trial_applied ) {
             $order->update_meta_data( self::TRIAL_APPLIED_META, 'yes' );
@@ -1678,11 +2120,26 @@ class Subscriptions {
      * it to active. This is also the past_due recovery path: manually paying
      * the invoiced renewal order lands here through the same hook.
      *
-     * @param \WC_Order $renewal_order The paid renewal order.
-     * @param int       $parent_id     Parent (subscription) order id.
+     * @param mixed $renewal_order The paid renewal order (anything else is rejected).
+     * @param mixed $parent_id     Parent (subscription) order id.
      * @return void
      */
     public static function settle_renewal( $renewal_order, $parent_id ) {
+        if ( ! $renewal_order instanceof \WC_Order ) {
+            return;
+        }
+
+        // Settling advances the schedule a whole cycle, so it happens once
+        // per renewal order. The same payment can arrive twice — the gateway
+        // return and the order-status bridge both lead here — and the second
+        // pass would give the customer a free billing period.
+        if ( 'yes' === (string) $renewal_order->get_meta( self::RENEWAL_SETTLED_META ) ) {
+            return;
+        }
+
+        $renewal_order->update_meta_data( self::RENEWAL_SETTLED_META, 'yes' );
+        $renewal_order->save();
+
         $parent = function_exists( 'wc_get_order' ) ? wc_get_order( $parent_id ) : false;
 
         if ( ! $parent ) {
@@ -1753,11 +2210,34 @@ class Subscriptions {
             return;
         }
 
+        /**
+         * Filters how many due subscriptions one cron run charges. Each one
+         * is a Stripe round-trip, so the batch is bounded; a shop with more
+         * due subscriptions than this catches up over the following runs.
+         *
+         * @since 2.4.0
+         *
+         * @param int $limit Subscriptions per run.
+         */
+        $limit = (int) apply_filters( 'better_payment/woocommerce/renewal_batch_size', 20 );
+
+        /**
+         * Filters the parent-order statuses a due subscription is renewed
+         * from. A subscription order parked in any other status (on-hold,
+         * refunded, a custom status) is skipped in silence, which is why
+         * this is filterable rather than fixed.
+         *
+         * @since 2.4.0
+         *
+         * @param string[] $statuses Order statuses.
+         */
+        $statuses = (array) apply_filters( 'better_payment/woocommerce/renewal_parent_statuses', array( 'wc-processing', 'wc-completed' ) );
+
         $orders = wc_get_orders(
             array(
-                'limit'      => 20,
+                'limit'      => max( 1, $limit ),
                 'type'       => 'shop_order',
-                'status'     => array( 'wc-processing', 'wc-completed' ),
+                'status'     => $statuses,
                 'return'     => 'objects',
                 'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded (limit 20), hourly cron.
                     array(
@@ -1827,7 +2307,20 @@ class Subscriptions {
             return;
         }
 
-        $renewal = self::create_renewal_order( $parent );
+        // An invoice may already be outstanding — the renewal was invoiced
+        // while renewals were manual (site policy, the customer's own
+        // opt-out, or no stored card) and automatic charging has since come
+        // back. Charge THAT order instead of creating a second one: the
+        // customer holds a pay link for it, and two live orders for one
+        // billing period is how a subscription gets paid twice.
+        $renewal = self::pending_renewal_order( $parent );
+
+        if ( $renewal instanceof \WC_Order ) {
+            $renewal->add_order_note( __( 'Better Payment: automatic renewal resumed — this invoiced renewal is being charged instead of a new order being created.', 'better-payment' ) );
+            $renewal->save();
+        } else {
+            $renewal = self::create_renewal_order( $parent );
+        }
 
         if ( ! $renewal instanceof \WC_Order ) {
             OrderHandler::log( 'Could not create a renewal order for subscription order #' . $parent->get_id() . '.', 'error' );
@@ -1886,6 +2379,19 @@ class Subscriptions {
                     __( 'the charge did not succeed (status: %s)', 'better-payment' ),
                     ! empty( $intent->status ) ? sanitize_text_field( $intent->status ) : 'unknown'
                 );
+
+            // A mis-configured Stripe account is not a failed payment. When
+            // the keys are swapped (test ↔ live, or a new account), every
+            // stored customer and payment method belongs to the other
+            // account, so EVERY subscription would fail at once — each one
+            // set past_due and each customer emailed an invoice for a card
+            // that was working yesterday. Hold the subscription instead: no
+            // status change, no customer email, an order note and a log line
+            // for the shop owner, and the next cron run retries.
+            if ( is_wp_error( $intent ) && self::renewal_failure_is_configuration( $intent->get_error_data() ) ) {
+                self::hold_for_configuration( $parent, $renewal, $reason );
+                return;
+            }
 
             self::mark_past_due( $parent, $renewal, $reason );
 
@@ -1962,7 +2468,9 @@ class Subscriptions {
             return null;
         }
 
-        $added = 0;
+        $added     = 0;
+        $snapshot  = $parent->get_meta( self::PRICE_SNAPSHOT_META );
+        $seen      = array();
 
         foreach ( $items as $item ) {
             $product = $item->get_product();
@@ -1971,7 +2479,25 @@ class Subscriptions {
                 continue;
             }
 
-            $renewal->add_product( $product, $item->get_quantity() );
+            $product_id = (int) $product->get_id();
+            $occurrence = isset( $seen[ $product_id ] ) ? $seen[ $product_id ] : 0;
+
+            $seen[ $product_id ] = $occurrence + 1;
+
+            // The agreed price, when the subscription has one. Without a
+            // snapshot — a subscription already running when this shipped —
+            // add_product() prices the line from the product, which is the
+            // behavior those subscriptions have always had.
+            $amounts = self::renewal_line_amounts( $snapshot, $product_id, $occurrence );
+
+            $renewal->add_product(
+                $product,
+                $item->get_quantity(),
+                null === $amounts ? array() : array(
+                    'subtotal' => $amounts['subtotal'],
+                    'total'    => $amounts['total'],
+                )
+            );
             $added++;
         }
 
@@ -2014,6 +2540,127 @@ class Subscriptions {
     }
 
     /**
+     * Pure: whether a failed renewal charge is the SITE's fault rather than
+     * the customer's — the Stripe keys were changed, the account no longer
+     * holds this customer, the request was rejected outright.
+     *
+     * Stripe's own taxonomy does the sorting: `card_error` is the customer
+     * (declined, expired, insufficient funds), and everything else is the
+     * integration — `authentication_error` (bad key), `invalid_request_error`
+     * with `resource_missing` (the customer/payment method belongs to
+     * another account), `api_error`, `rate_limit_error`.
+     *
+     * @param mixed $data WP_Error data from StripeService (`type`, `code`, …).
+     * @return bool
+     */
+    public static function renewal_failure_is_configuration( $data ) {
+        if ( ! is_array( $data ) ) {
+            return false;
+        }
+
+        $type = isset( $data['type'] ) ? (string) $data['type'] : '';
+        $code = isset( $data['code'] ) ? (string) $data['code'] : '';
+
+        if ( 'card_error' === $type ) {
+            return false;
+        }
+
+        if ( in_array( $type, array( 'authentication_error', 'api_error', 'rate_limit_error', 'idempotency_error' ), true ) ) {
+            return true;
+        }
+
+        return 'invalid_request_error' === $type
+            && in_array( $code, array( 'resource_missing', 'account_invalid', 'api_key_expired' ), true );
+    }
+
+    /**
+     * A renewal failed for a reason the customer cannot fix. Hold the
+     * subscription exactly where it is — active, due, retried on the next
+     * cron run — and tell the shop owner. Nothing is emailed to the
+     * customer, and the status is deliberately NOT past_due: a key swap
+     * would otherwise flip every subscription on the site at once.
+     *
+     * @param \WC_Order      $parent  Parent (subscription) order.
+     * @param \WC_Order|null $renewal The pending renewal order.
+     * @param string         $reason  Failure reason for the order note/log.
+     * @return void
+     */
+    public static function hold_for_configuration( $parent, $renewal, $reason ) {
+        $parent->add_order_note(
+            sprintf(
+                /* translators: %s: failure reason */
+                __( 'Better Payment: the renewal could not be charged because of a Stripe configuration problem — %s. The subscription is unchanged and the renewal will be retried; the customer has not been contacted.', 'better-payment' ),
+                $reason
+            )
+        );
+
+        if ( $renewal instanceof \WC_Order ) {
+            self::remember_pending_renewal( $parent, $renewal );
+        }
+
+        $parent->save();
+
+        OrderHandler::log( 'Subscription order #' . $parent->get_id() . ' renewal held — Stripe configuration problem: ' . $reason, 'error' );
+
+        /**
+         * Fires when a renewal is held because Stripe is mis-configured.
+         *
+         * @since 2.4.0
+         *
+         * @param \WC_Order      $parent  The parent (subscription) order.
+         * @param \WC_Order|null $renewal The pending renewal order.
+         * @param string         $reason  Failure reason.
+         */
+        do_action( 'better_payment/woocommerce/subscription_renewal_held', $parent, $renewal, $reason );
+    }
+
+    /**
+     * Remember the renewal order that is awaiting payment, so the next cron
+     * run charges (or re-invoices) THAT order instead of stacking a second
+     * one beside it. Sets the meta on the parent without saving — callers
+     * save as part of their own update.
+     *
+     * @param mixed $parent  Parent (subscription) order.
+     * @param mixed $renewal Pending renewal order.
+     * @return void
+     */
+    public static function remember_pending_renewal( $parent, $renewal ) {
+        if ( ! $parent instanceof \WC_Order || ! $renewal instanceof \WC_Order ) {
+            return;
+        }
+
+        $parent->update_meta_data( self::PENDING_RENEWAL_META, (string) $renewal->get_id() );
+    }
+
+    /**
+     * Cancel the subscription's outstanding renewal invoice, if it has one
+     * and it is still unpaid, and forget it. The parent's own meta change is
+     * left for the caller to save (both callers are mid-update).
+     *
+     * An unpaid renewal order keeps a working pay link in the customer's
+     * inbox, so it has to be closed whenever the schedule it belongs to
+     * stops applying — a cancellation, or a reactivation that rewrote the
+     * due date. A renewal that was already PAID is never touched.
+     *
+     * @param mixed  $parent Parent (subscription) order.
+     * @param string $note   Order note for the cancelled renewal.
+     * @return void
+     */
+    public static function close_pending_renewal( $parent, $note ) {
+        if ( ! $parent instanceof \WC_Order ) {
+            return;
+        }
+
+        $pending = self::pending_renewal_order( $parent );
+
+        if ( $pending instanceof \WC_Order ) {
+            $pending->update_status( 'cancelled', (string) $note );
+        }
+
+        $parent->delete_meta_data( self::PENDING_RENEWAL_META );
+    }
+
+    /**
      * A renewal could not be charged: stop auto-charging (past_due) and, when
      * a pending renewal order exists, email it to the customer to pay
      * manually. Paying it reactivates the subscription (settle_renewal()).
@@ -2025,6 +2672,13 @@ class Subscriptions {
      */
     public static function mark_past_due( $parent, $renewal, $reason ) {
         $parent->update_meta_data( self::STATUS_META, 'past_due' );
+
+        // The invoice the customer is about to be emailed is the outstanding
+        // one: a later policy change must charge it, not open a second.
+        if ( $renewal instanceof \WC_Order ) {
+            self::remember_pending_renewal( $parent, $renewal );
+        }
+
         $parent->add_order_note(
             sprintf(
                 /* translators: %s: failure reason */
@@ -2422,6 +3076,13 @@ class Subscriptions {
 
         $order->update_meta_data( self::STATUS_META, 'cancelled' );
         $order->add_order_note( '' !== $note ? $note : __( 'Better Payment: subscription cancelled — no further automatic renewals will be charged.', 'better-payment' ) );
+
+        // An invoiced renewal is an open bill with a working pay link. Left
+        // alone it outlives the subscription: the customer pays for a period
+        // they cancelled, and settle_renewal() refuses to advance a
+        // cancelled schedule — so the money buys nothing.
+        self::close_pending_renewal( $order, __( 'Better Payment: cancelled with the subscription — this renewal is no longer due.', 'better-payment' ) );
+
         $order->save();
 
         OrderHandler::log( 'Subscription cancelled on order #' . $order->get_id() . '.' );
@@ -2471,6 +3132,11 @@ class Subscriptions {
         // its own actor, never inherit this one's.
         $order->delete_meta_data( self::CANCELLED_BY_TYPE_META );
         $order->delete_meta_data( self::CANCELLED_BY_META );
+
+        // Reactivation just wrote a new due date, so an invoice raised
+        // against the old one is stale. Leaving it payable means the next
+        // renewal charge and that invoice can both be paid for one period.
+        self::close_pending_renewal( $order, __( 'Better Payment: cancelled — the subscription was reactivated on a new schedule, so this renewal is no longer due.', 'better-payment' ) );
         $order->add_order_note(
             '' !== $note ? $note : sprintf(
                 /* translators: %s: next renewal date */
@@ -2579,22 +3245,51 @@ class Subscriptions {
 
         $user = get_user_by( 'id', $user_id );
 
-        if ( ! $user || in_array( $role, (array) $user->roles, true ) || self::user_role_is_protected( $user->roles ) ) {
+        if ( ! $user || self::user_role_is_protected( $user->roles ) ) {
             return;
         }
 
-        $user->set_role( $role );
+        $granted = (string) get_user_meta( $user_id, self::GRANTED_ROLE_META, true );
+
+        if ( in_array( $role, (array) $user->roles, true ) ) {
+            // Already there. Record it as ours only if we put it there — a
+            // role the customer already had is not this module's to remove.
+            if ( $granted === $role ) {
+                return;
+            }
+
+            if ( '' === $granted ) {
+                return;
+            }
+        }
+
+        // ADD the subscription role and REMOVE only the one this module
+        // granted last time. set_role() — what this used to call — replaces
+        // every role the user has, so activating a subscription wiped a
+        // membership plugin's role, a custom staff role, or plain `customer`,
+        // and cancelling it "restored" whatever the settings happened to say
+        // rather than what the customer actually had. Nothing outside this
+        // module's own grant is touched now.
+        if ( '' !== $granted && $granted !== $role && in_array( $granted, (array) $user->roles, true ) ) {
+            $user->remove_role( $granted );
+        }
+
+        if ( ! in_array( $role, (array) $user->roles, true ) ) {
+            $user->add_role( $role );
+        }
+
+        update_user_meta( $user_id, self::GRANTED_ROLE_META, $role );
 
         $note_template = $active
             /* translators: %s: role slug */
-            ? __( 'Better Payment: customer role set to "%s" — subscription active.', 'better-payment' )
+            ? __( 'Better Payment: the customer was given the "%s" role — subscription active. Their other roles are unchanged.', 'better-payment' )
             /* translators: %s: role slug */
-            : __( 'Better Payment: customer role set to "%s" — subscription ended.', 'better-payment' );
+            : __( 'Better Payment: the customer was given the "%s" role — subscription ended. Their other roles are unchanged.', 'better-payment' );
 
         $order->add_order_note( sprintf( $note_template, $role ) );
         $order->save();
 
-        OrderHandler::log( 'Customer #' . $user_id . ' role set to ' . $role . ' for subscription order #' . $order->get_id() . '.' );
+        OrderHandler::log( 'Customer #' . $user_id . ' given the ' . $role . ' role for subscription order #' . $order->get_id() . '.' );
     }
 
     /**

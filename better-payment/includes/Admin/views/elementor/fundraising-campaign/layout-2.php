@@ -117,7 +117,6 @@
                         </button>
                     <?php endif; ?>
                     <?php if( ( ! $this->pro_enabled && $is_edit_mode ) ): ?>
-                        <button class="bp-tab_button bp-text_xl bp-hanken_font " data-tab="comment">Comment</button>
                         <button class="bp-tab_button bp-text_xl bp-hanken_font " data-tab="update">Update</button>
                     <?php endif; ?>
                     <?php
@@ -140,16 +139,6 @@
                             <?php endif; ?>
                         </div>
                     </div>
-                    <?php
-                        do_action('better_payment/widget/fundraising-campaign/comment_tab_content', $settings);
-                    ?>
-                    <?php if( $is_edit_mode && ! $this->pro_enabled ): ?>
-                        <div class="bp-tab_pane" id="comment">
-                            <a href="https://betterpayment.io/pricing" target="_blank" class="bp-upgrade_pro">
-                                <img class="bp-pro-banner" src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/campaign/layout-1/comingsoon.webp' ); ?>" alt="coming-soon">
-                            </a>
-                        </div>
-                    <?php endif; ?>
                     <?php
                         do_action('better_payment/widget/fundraising-campaign/update_tab_content', $settings);
                     ?>

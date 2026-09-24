@@ -1,23 +1,6 @@
 /*!***************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[6].use[1]!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[6].use[3]!./src/css/admin.scss ***!
   \***************************************************************************************************************************************************************************************************************/
-.swal2-popup {
-  width: 50em;
-  font-size: 0.8em;
-}
-
-.swal2-title {
-  font-size: 2.25em;
-}
-
-.swal2-content {
-  font-size: 1.75em;
-}
-
-.swal2-styled.swal2-confirm, .swal2-styled.swal2-cancel {
-  font-size: 1.5em;
-}
-
 /* Notice : Starts */
 .better-payment.notice.notice-info {
   border-left-color: #6e58f7;
@@ -215,7 +198,7 @@ span.coupon-code {
   min-width: 18px;
   height: 18px;
   border-radius: 9px;
-  background-color: #D63638;
+  background-color: #d63638;
   color: #fff;
   font-size: 11px;
   line-height: 1.6;
@@ -262,8 +245,8 @@ span.coupon-code {
 #wpnotice-better-payment-holiday_notice .wpnotice-content-wrapper .bp-notice-action-button > a.button-primary,
 #wpnotice-better-payment-holiday_notice .wpnotice-content-wrapper .bp-notice-action-button > a.button-primary:focus,
 #wpnotice-better-payment-holiday_notice .wpnotice-content-wrapper .bp-notice-action-button > a.button-primary:hover {
-  background-color: #5626E7;
-  border-color: #5626E7;
+  background-color: #5626e7;
+  border-color: #5626e7;
 }
 
 #wpnotice-better-payment-holiday_notice .wpnotice-content-wrapper .bp-notice-action-button {
@@ -273,7 +256,7 @@ span.coupon-code {
 }
 
 #wpnotice-better-payment-holiday_notice .wpnotice-content-wrapper .bp-notice-action-button .bp-notice-action-dismiss {
-  color: #5626E7;
+  color: #5626e7;
   font-size: 14px;
 }
 
@@ -307,209 +290,17 @@ span.coupon-code {
   }
 }
 /* Notice : Ends */
-/* Dashboard Settings Page : Starts */
-.better-payment .bp-tabs .tab__content {
-  display: block !important;
-}
-
-/* Dashboard Settings Page : Ends */
-/* Transaction Page : Starts */
-.better-payment .fix-style.button.bp-select-custom-button {
-  background: #fff;
-  border: 1px solid #CFD7E7 !important;
-  color: #9095A2;
-  font-weight: normal !important;
-  width: 100%;
-}
-
-.better-payment .fix-style.button.bp-select-custom-button:hover {
-  border: 1px solid #735EF8 !important;
-  color: #735EF8;
-}
-
-.better-payment .fix-style.button.bp-select-custom-button:hover svg path {
-  fill: #735EF8;
-}
-
-.better-payment .fix-style.button.bp-select-custom-button::before,
-.better-payment .fix-style.button.bp-select-custom-button::after {
-  background: unset;
-}
-
-.better-payment .bp-select-custom-button-wrap .checkbox input {
-  border: 1px solid #C0C3D3;
-  border-radius: 3px;
-  min-width: 15px;
-  height: 15px;
-}
-
-.better-payment .bp-select-custom-button-wrap {
-  position: relative;
-}
-
-.better-payment .bp-select-custom-button-dropdown .checkbox input:checked::before {
-  height: 20px;
-  width: 20px;
-}
-
-.better-payment .bp-select-custom-button-dropdown {
-  position: absolute;
-  right: 0;
-  /* left: -30%; */
-  left: 0;
-}
-
-.better-payment .email-recipient-field {
-  margin-bottom: 10px;
-}
-
-.better-payment .email-recipient-field-note {
-  color: #666;
-}
-
-.better-payment .single-transaction-view.bp-left-arrow-lite:before {
-  color: #597dfc;
-}
-
-.better-payment .page__title span a:hover .single-transaction-view.bp-left-arrow-lite:before {
-  color: #fff;
-}
-
-.better-payment .page__title span a.single-transaction-view-back-btn:before {
-  background: rgba(89, 125, 252, 0.1);
-}
-
-.better-payment .page__title span a.single-transaction-view-back-btn {
-  border: none;
-  background: rgba(89, 125, 252, 0.1);
-  border-radius: 5px;
-}
-
-.better-payment .better-payment-transaction-export {
-  padding: 20px 30px;
-  border: 0;
-  margin-left: 10px;
-}
-
-.better-payment .better-payment-transaction-reset {
-  margin-left: 20px;
-  padding: 20px 30px;
-  border: none;
-}
-.better-payment .better-payment-transaction-import-button.button {
-  margin-left: 10px;
-  padding: 0 20px;
-  height: 40px;
-}
-.better-payment .better-payment-transaction-import-wrap .file-cta,
-.better-payment .better-payment-transaction-import-wrap .file-name {
-  height: 3em;
-  display: flex;
-}
-.better-payment .transaction-table-wrapper .col__name p {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.better-payment .transaction-table-wrapper .imported-icon {
-  font-size: 15px;
-}
-.better-payment .transaction-table-wrapper .col__source img {
-  max-width: 100px;
-}
-.better-payment .font-bold {
-  font-weight: bold;
-}
-
-/* Transaction Page : Ends */
-/* Transaction Details Page : Starts */
-.better-payment .transaction__info__wrap .source img {
-  max-width: 100px;
-}
-
-.better-payment .payment__info .paid_via_selected img {
-  max-width: 100px;
-}
-
-/* Transaction Details Page : Ends */
 @media only screen and (max-width: 767px) {
   .notice-better-payment-halloween_notice,
   .notice-better-payment-black_friday_notice {
     display: none !important;
   }
 }
-/* YouTube Video Modal : Starts */
-.better-payment .bp-youtube-video-modal .modal-content {
-  max-width: 90vw;
-  max-height: 90vh;
-}
-@media screen and (min-width: 769px) {
-  .better-payment .bp-youtube-video-modal .modal-content {
-    max-width: 800px;
-    max-height: 600px;
-  }
-}
-@media screen and (min-width: 1024px) {
-  .better-payment .bp-youtube-video-modal .modal-content {
-    max-width: 1000px;
-    max-height: 700px;
-  }
-}
-.better-payment .bp-youtube-video-modal .box {
-  padding: 0;
-  position: relative;
-  background: #000;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.better-payment .bp-youtube-video-modal .modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 50;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-}
-.better-payment .bp-youtube-video-modal .modal-close:hover {
-  background: rgba(0, 0, 0, 0.9);
-}
-.better-payment .bp-youtube-video-modal .modal-close::before, .better-payment .bp-youtube-video-modal .modal-close::after {
-  background-color: #fff;
-}
-.better-payment .bp-youtube-video-modal .video-container {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-}
-.better-payment .bp-youtube-video-modal .video-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* Enhance play icon hover effect */
-.better-payment .play-icon-wrap {
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.better-payment .play-icon-wrap:hover {
-  transform: translate(-50%, -35%) scale(1.1);
-}
-.better-payment .play-icon-wrap:hover .play-icon {
-  box-shadow: 0px 15px 20px 0px rgba(108, 59, 255, 0.3019607843);
-}
-
 /*
 * Summer Offer Notice css
 */
 #wpnotice-better-payment-bp_summer_notice {
-  border-left-color: #5252DC;
+  border-left-color: #5252dc;
   padding: 10px 40px 14px 20px;
   background-color: #fff;
 }
@@ -517,7 +308,7 @@ span.coupon-code {
 #wpnotice-better-payment-bp_summer_notice .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary,
 #wpnotice-better-payment-bp_summer_notice .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary:focus,
 #wpnotice-better-payment-bp_summer_notice .wpnotice-content-wrapper .wpsp-notice-action-button > a.button-primary:hover {
-  background-color: #5252DC;
+  background-color: #5252dc;
   color: #fff;
   border: none;
   border-radius: 6px;

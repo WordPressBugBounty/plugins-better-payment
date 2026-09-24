@@ -108,16 +108,6 @@
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
-                        <?php 
-                            do_action('better_payment/widget/fundraising-campaign/comment_tab_content', $settings);
-                        ?>
-                        <?php if( $is_edit_mode && ! $this->pro_enabled ): ?>
-                            <div class="bp-tab_pane" id="comment">
-                                <a href="https://betterpayment.io/pricing" target="_blank" class="bp-upgrade_pro">
-                                    <img class="bp-pro-banner" src="<?php echo esc_url( BETTER_PAYMENT_ASSETS . '/img/campaign/layout-1/comingsoon.webp' ); ?>" alt="coming-soon">
-                                </a>
-                            </div>
-                        <?php endif; ?>
                     </div>
                     <?php 
                         do_action('better_payment/widget/fundraising-campaign/update_tab_content', $settings);

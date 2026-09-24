@@ -2,42 +2,45 @@
 
 namespace Better_Payment\Lite\Campaign\Elements;
 
+use Better_Payment\Lite\Classes\ProCompatibility;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 /**
- * Control schemas for the three Pro-only campaign elements — Donors Wall, FAQ
- * and Video.
+ * Transitional copy for Better Payment Pro <= 1.4.3; delete when
+ * ProCompatibility::MIN_PRO_VERSION >= 1.4.4.
+ * Pro copy: better-payment-pro/includes/Campaign/ProElementSchemas.php.
+ * Slug: campaign_pro_element_schemas.
  *
- * These live in Lite, not Pro, on purpose. Lite has to render the *complete*
- * control set for a Pro element (disabled, with a locked banner) so a free user
- * can see exactly what Pro buys them. That needs the schema, and a schema is
- * pure declarative data — labels, control types, option lists. It carries no
- * business logic, no data access and no markup, so nothing sensitive crosses the
- * boundary by living here.
+ * Control schemas and default settings for the three Pro-only campaign elements
+ * — Donors Wall, FAQ and Video. Pro 1.4.3 and earlier register renderers only and
+ * rely on Lite for these, so Lite still serves them to an active Pro that does not
+ * declare {@see self::FEATURE}, through {@see self::apply_lite_copy()}. A free
+ * install never receives them: it gets {@see ProElementStubs}, and a current Pro
+ * registers its own copy.
  *
- * Keeping it here also means there is exactly ONE copy. When Pro owned these and
- * overwrote Lite's stubs, Lite could only show an empty panel; giving Lite its
- * own copy instead would have created two 350-line arrays that drift the first
- * time someone adds a control to Pro and forgets Lite — at which point the free
- * preview quietly misrepresents the product.
+ * Deleting this file at step 3 also means deleting the `add_filter()` line in
+ * {@see CampaignElements::register_pro_elements()} and the three contract symbols
+ * below from tests/Unit/ProCouplingContractTest.php (Pro 1.4.4 no longer calls them).
  *
- * What stays in Pro: every renderer, the donor queries, oEmbed/HTTP, the view
- * templates. See `Better_Payment\Pro\Campaign\BuilderElements`.
- *
- * The `pro => true` flag is attached by {@see CampaignElements::register_pro_elements()},
- * not here, and is kept on the schema whether or not Pro is active — the live
- * `better_payment/pro_enabled` filter is what decides locking, never a stored value.
+ * The public constants and {@see self::default_video_url()} are part of the Pro
+ * coupling contract: Pro 1.4.3's `BuilderElements` aliases them.
  */
 class ProElementSchemas {
+
+    /**
+     * Feature slug Pro declares on `better_payment/pro_provides` once it ships
+     * these schemas itself.
+     */
+    const FEATURE = 'campaign_pro_element_schemas';
 
     /**
      * The video a newly added Video element starts with, so a freshly dropped
      * element isn't a blank box.
      *
-     * Lives here rather than in Pro because it is part of `defaultSettings`,
-     * which is part of the schema. Pro keeps a back-compat alias.
+     * Pro 1.4.3's `BuilderElements::DEFAULT_VIDEO_URL` aliases this constant.
      */
     const DEFAULT_VIDEO_URL = 'https://www.youtube.com/watch?v=jeXG-4SOlZE';
 
@@ -53,6 +56,25 @@ class ProElementSchemas {
      */
     public static function default_video_url(): string {
         return (string) apply_filters( 'better_payment/campaign/default_video_url', self::DEFAULT_VIDEO_URL );
+    }
+
+    /**
+     * Callback for `better_payment/campaign_elements` (priority 5): replace the lock
+     * stubs with the full definitions, for an older active Pro only.
+     *
+     * @param mixed $elements Registered elements, keyed by type.
+     * @return mixed
+     */
+    public static function apply_lite_copy( $elements ) {
+        if ( ! is_array( $elements ) || ! ProCompatibility::lite_copy_applies( self::FEATURE ) ) {
+            return $elements;
+        }
+
+        foreach ( self::get_all() as $type => $schema ) {
+            $elements[ $type ] = array_merge( $schema, [ 'type' => $type, 'pro' => true ] );
+        }
+
+        return $elements;
     }
 
     /**

@@ -104,6 +104,9 @@ class CampaignBlock extends Controller {
             wp_enqueue_script( 'fundraising-campaign-script' );
         }
 
+        // WordPress enqueues the block's own `style` handle; theme CSS goes on top.
+        CampaignStyles::enqueue_theme_styles( 'frontend' );
+
         return RendererService::render_campaign( $campaign_id );
     }
 }

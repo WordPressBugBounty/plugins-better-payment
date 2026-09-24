@@ -2,6 +2,7 @@
 
 namespace Better_Payment\Lite\Campaign;
 
+use Better_Payment\Lite\Classes\Helper;
 use Better_Payment\Lite\Controller;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,6 +17,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (one card per approved row). Counting distinct emails made the summary read
  * "3 Donors" above a 5-card list; a repeat donor (or a row with an empty email,
  * which `COUNT(DISTINCT email)` drops entirely) is one transaction here.
+ *
+ * Which rows count, and what they add, is Helper::approved_donation_sql() and
+ * Helper::COUNTABLE_AMOUNT_SQL — the one definition every aggregation shares.
+ *
+ * A confirmed donation that charged nothing — a 100%-off promotion code, a subscription trial —
+ * is a donor too: Handler::confirm_stripe_session() stores it `paid` with its real amount, 0, so
+ * it adds one to `donor_count` and nothing to `total_raised`. Nothing here filters on the amount.
+ * Rows confirmed before 2.4.0 stored such a session as `no_payment_required` at the form's
+ * amount: one that was confirmed counts as a donor and adds 0 (its stored amount was never
+ * charged); one that never was (Stripe reports the same status for a free checkout at creation)
+ * is not counted at all. See Helper::LEGACY_CONFIRMATION_MARKER.
  */
 class CampaignStats extends Controller {
 
@@ -98,18 +110,20 @@ class CampaignStats extends Controller {
     private static function query_stats( int $campaign_id ): array {
         global $wpdb;
 
-        $payment_table     = $wpdb->prefix . 'better_payment';
-        $approved_statuses = "'" . implode( "','", array_map( 'esc_sql', self::approved_statuses() ) ) . "'";
+        $payment_table = $wpdb->prefix . 'better_payment';
+        $approved      = Helper::approved_donation_sql();
+        $amount        = Helper::COUNTABLE_AMOUNT_SQL;
 
+        // Both fragments are Helper constants (no request data, no `%`).
         $row = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT
-                    COALESCE(SUM(amount), 0)   AS total_raised,
+                    COALESCE(SUM({$amount}), 0) AS total_raised,
                     COUNT(*)                    AS donor_count,
                     MAX(payment_date)           AS last_donation_date
                 FROM `{$payment_table}`
                 WHERE campaign_id = %s
-                   AND status IN ({$approved_statuses})",
+                   AND {$approved}",
                 (string) $campaign_id
             ),
             ARRAY_A
@@ -120,15 +134,5 @@ class CampaignStats extends Controller {
             'donor_count'        => (int)   ( $row['donor_count'] ?? 0 ),
             'last_donation_date' => $row['last_donation_date'] ?? null,
         ];
-    }
-
-    /**
-     * `success` is the status Paystack verification writes. It was missing, so Paystack
-     * donations never counted toward a campaign's total or donor count — even though the
-     * transactions screen and analytics (Admin\DB) already treat it as paid. Only a
-     * transaction Paystack reported as succeeded is ever stored as `success`.
-     */
-    private static function approved_statuses(): array {
-        return [ 'Completed', 'paid', 'complete', 'succeeded', 'success' ];
     }
 }

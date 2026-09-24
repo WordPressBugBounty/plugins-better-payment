@@ -78,7 +78,9 @@ class Export extends Controller{
             }
             
             $filter_args['per_page'] = '999999999';
-            $all_transactions = $transaction_model->get_transactions($filter_args);
+            // The admin list's v2 tab buckets, so an export of a tab holds exactly the rows that tab
+            // lists. The v1 path matched `completed` against the raw status `completed` only.
+            $all_transactions = $transaction_model->get_transactions($filter_args, 'v2');
             $filename = 'better-payment-transactions-filtered-' . date('Y-m-d') . '.csv';
         } else {
             $all_transactions = $transaction_model->get_transactions();
@@ -89,7 +91,6 @@ class Export extends Controller{
     }
 
     public function transactions_array_to_csv_download($array, $filename = "export.csv", $delimiter=";") {
-        $bp_helper_obj = new ClassesHelper();
         $wp_date_format = get_option('date_format');
         $wp_time_format = get_option('time_format');
 
@@ -108,15 +109,19 @@ class Export extends Controller{
             unset($line['referer']);
 
 
-            $line['status'] = esc_html(ucfirst($bp_helper_obj->get_type_by_transaction_status($line['status'], 'v2')));
+            // From the stored row (form_fields_info still serialized): an unconfirmed pre-2.4.0 free
+            // checkout exports as Incomplete (Helper::transaction_status_type()).
+            $line['status'] = esc_html( ClassesHelper::transaction_status_label( $line ) );
             $line['source'] = esc_html( ucfirst( $line['source'] ) );
             $line['payment_date'] = wp_date($wp_date_format.' '.$wp_time_format, strtotime($line['payment_date']));;
 
+            // 'One Time' unless Pro labels the row (better_payment/transaction/payment_type).
+            $line['payment_type'] = ClassesHelper::payment_type_label( maybe_unserialize( $line['form_fields_info'] ) );
+
             $line['form_fields_info'] = $this->form_fields_info_formatted($line['form_fields_info']);
-            
+
             $line['form_fields_info_name'] = isset($line['form_fields_info']['customer_name']) ? $line['form_fields_info']['customer_name'] : '';
             $line['form_fields_info_email'] = isset($line['form_fields_info']['customer_email']) ? $line['form_fields_info']['customer_email'] : '';
-            $line['payment_type'] = ! empty( $line['form_fields_info']['subscription_id'] ) ? 'Subscription' : 'One Time'; 
             
             unset($line['form_fields_info']['customer_name']);
             unset($line['form_fields_info']['customer_email']);
@@ -171,19 +176,19 @@ class Export extends Controller{
         );
     }
 
+    /**
+     * The fields a transaction contributes to the CSV: customer name and email, plus
+     * whatever `better_payment/export/form_fields_info` adds.
+     *
+     * Pro adds the subscription keys its recurring and split checkouts store. Lite's
+     * copy of that (ProSubscriptionTransactionData::export_fields()) serves only an
+     * active Pro that does not (<= 1.4.3); a free install exports name and email.
+     *
+     * @param mixed $form_fields_info Serialized or unserialized form_fields_info.
+     * @return array
+     */
     public function form_fields_info_formatted($form_fields_info){
         $bp_form_fields_info = maybe_unserialize($form_fields_info);
-
-        $bp_transaction_subscription_id             = isset($bp_form_fields_info['subscription_id']) ? sanitize_text_field($bp_form_fields_info['subscription_id']) : '';
-        $bp_transaction_subscription_customer_id    = isset($bp_form_fields_info['subscription_customer_id']) ? sanitize_text_field($bp_form_fields_info['subscription_customer_id']) : '';
-        $bp_transaction_subscription_plan_id        = isset($bp_form_fields_info['subscription_plan_id']) ? sanitize_text_field($bp_form_fields_info['subscription_plan_id']) : '';
-        
-        $subscription_interval      = ! empty($bp_form_fields_info['subscription_interval']) ? sanitize_text_field( $bp_form_fields_info['subscription_interval'] ) : '';
-        $subscription_current_period_start  = ! empty($bp_form_fields_info['subscription_current_period_start']) ? sanitize_text_field( $bp_form_fields_info['subscription_current_period_start'] ) : '';
-        $subscription_current_period_end    = ! empty($bp_form_fields_info['subscription_current_period_end']) ? sanitize_text_field( $bp_form_fields_info['subscription_current_period_end'] ) : '';
-        $subscription_status        = ! empty($bp_form_fields_info['subscription_status']) ? sanitize_text_field( $bp_form_fields_info['subscription_status'] ) : '';
-        $subscription_created_date  = ! empty($bp_form_fields_info['subscription_created_date']) ? sanitize_text_field( $bp_form_fields_info['subscription_created_date'] ) : '';
-        $is_payment_split_payment   = ! empty($bp_form_fields_info['is_payment_split_payment']) ? intval( $bp_form_fields_info['is_payment_split_payment'] ) : 0;
 
         $bp_transaction_customer_name = isset($bp_form_fields_info['primary_first_name']) ? sanitize_text_field($bp_form_fields_info['primary_first_name']) : '';
         $bp_transaction_customer_name .= ' ';
@@ -202,19 +207,20 @@ class Export extends Controller{
             $bp_transaction_customer_email = isset($bp_form_fields_info['email']) ? sanitize_text_field($bp_form_fields_info['email']) : '';
         }
 
-        return [
+        $formatted = [
             'customer_name'             => $bp_transaction_customer_name,
             'customer_email'            => $bp_transaction_customer_email,
-            'subscription_id'           => $bp_transaction_subscription_id,
-            'subscription_customer_id'  => $bp_transaction_subscription_customer_id,
-            'subscription_plan_id'      => $bp_transaction_subscription_plan_id,
-            'subscription_interval'     => $subscription_interval,
-            'subscription_current_period_start'      => $subscription_current_period_start,
-            'subscription_current_period_end'        => $subscription_current_period_end,
-            'subscription_status'       => $subscription_status,
-            'subscription_created_date' => $subscription_created_date,
-            'is_payment_split_payment'  => $is_payment_split_payment,
         ];
+
+        $raw_fields = is_array( $bp_form_fields_info ) ? $bp_form_fields_info : [];
+
+        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
+            $formatted = ProSubscriptionTransactionData::export_fields( $formatted, $raw_fields );
+        }
+
+        $filtered = apply_filters( 'better_payment/export/form_fields_info', $formatted, $raw_fields );
+
+        return is_array( $filtered ) ? $filtered : $formatted;
     }
     
 }

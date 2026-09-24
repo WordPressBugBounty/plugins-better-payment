@@ -5,6 +5,9 @@ namespace Better_Payment\Lite\Admin\Elementor;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\Helper as ClassesHelper;
+use Better_Payment\Lite\Classes\ProCompatibility;
+use Better_Payment\Lite\Classes\ProPaymentFormControls;
+use Better_Payment\Lite\Classes\ProPaymentFormLayouts;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 use \Elementor\Controls_Manager as Controls_Manager;
 use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
@@ -114,391 +117,10 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        $this->add_control(
-            'better_payment_form_payment_type',
-            [
-                'label'      => esc_html__( 'Payment Type', 'better-payment' ),
-                'description' => esc_html__( 'Recurring and Split Payment is available for Stripe only at the moment!', 'better-payment' ),
-                'type'       => Controls_Manager::SELECT,
-                'default'    => 'one-time',
-                'options'    => [
-                    'one-time' => 'One Time',
-                    'recurring' => 'Recurring',
-                    'mixed'     => 'One Time + Recurring (Both)',
-                    'split-payment' => 'Split Payment',
-                ],
-                'condition'   => [
-                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_form_recurring_price_id',
-            [
-                'label'       => esc_html__( 'Default Price ID', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'description' => sprintf( 
-                    __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p>', 'better-payment' ), 
-                    esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'), 
-                ),
-                'placeholder' => 'price_G0FvDp6vZvdwRZ',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition'   => [
-                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
-                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                ],
-                'separator' => 'before',
-            ]
-        );
-
-        $repeater_split_payment = new Repeater();
-
-        $repeater_split_payment->add_control(
-            'better_payment_split_installment_name',
-            [
-                'label' => esc_html__( 'Installment Name', 'better-payment' ),
-                'type'  => Controls_Manager::TEXT,
-                'placeholder' => 'Installment Name',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-        
-        $repeater_split_payment->add_control(
-            'better_payment_split_installment_price_id',
-            [
-                'label' => esc_html__( 'Price ID', 'better-payment' ),
-                'type'  => Controls_Manager::TEXT,
-                'placeholder' => 'price_G0FvDp6vZvdwRZ',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-
-        $repeater_split_payment->add_control(
-            'better_payment_split_installment_iteration',
-            [
-                'label' => esc_html__( 'Iterations', 'better-payment' ),
-                'type'  => Controls_Manager::NUMBER,
-                'min'   => 1,
-                'max'   => 36,
-            ]
-        );
-        
-        $this->add_control(
-            'better_payment_split_installment_price_ids_note',
-            [
-                'type'        => Controls_Manager::RAW_HTML,
-                'raw' => sprintf( 
-                    __( '<p>Now add more prices to the product from Stripe dashboard and <a href="%1$s" target="_blank">get the price id for each installment.</a></p>', 'better-payment' ), 
-                    esc_url('//betterpayment.co/docs/configure-split-payment-into-subscriptions/'), 
-                ),
-                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition'   => [
-                    'better_payment_form_payment_type' => 'split-payment',
-                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_split_installment_price_ids',
-            [
-                'label'       => esc_html__( 'Installments', 'better-payment' ),
-                'type'        => Controls_Manager::REPEATER,
-                'separator'   => 'after',
-                'default'     => [
-                    [
-                        'better_payment_split_installment_name' => '3 Months',
-                        'better_payment_split_installment_price_id' => '',
-                        'better_payment_split_installment_iteration' => 3,
-                    ],
-                    [
-                        'better_payment_split_installment_name' => '6 Months',
-                        'better_payment_split_installment_price_id' => '',
-                        'better_payment_split_installment_iteration' => 6,
-                    ],
-                    [
-                        'better_payment_split_installment_name' => '9 Months',
-                        'better_payment_split_installment_price_id' => '',
-                        'better_payment_split_installment_iteration' => 9,
-                    ],
-                    [
-                        'better_payment_split_installment_name' => '12 Months',
-                        'better_payment_split_installment_price_id' => '',
-                        'better_payment_split_installment_iteration' => 12,
-                    ],
-                ],
-                'fields'      => $repeater_split_payment->get_controls(),
-                'title_field' => '<i class="{{ better_payment_split_installment_name }}" aria-hidden="true"></i> {{{ better_payment_split_installment_name }}}',
-                'condition'   => [
-                    'better_payment_form_payment_type' => 'split-payment',
-                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                ],
-            ]
-        );
-
-        $repeater_recurring_payment = new Repeater();
- 
-        $repeater_recurring_payment->add_control(
-            'better_payment_recurring_name',
-            [
-                'label' => esc_html__( 'Interval Name', 'better-payment' ),
-                'type'  => Controls_Manager::TEXT,
-                'placeholder' => 'Interval Name',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-         
-        $repeater_recurring_payment->add_control(
-            'better_payment_recurring_price_id',
-            [
-                'label' => esc_html__( 'Price ID', 'better-payment' ),
-                'type'  => Controls_Manager::TEXT,
-                'placeholder' => 'price_G0FvDp6vZvdwRZ',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_recurring_price_ids',
-            [
-                'label'       => esc_html__( 'Intervals', 'better-payment' ),
-                'type'        => Controls_Manager::REPEATER,
-                'separator'   => 'after',
-                'default'     => [
-                    [
-                        'better_payment_recurring_name' => 'Monthly',
-                        'better_payment_recurring_price_id' => '',
-                    ],
-                    [
-                        'better_payment_recurring_name' => 'Yearly',
-                        'better_payment_recurring_price_id' => '',
-                    ],
-                ],
-                'fields'      => $repeater_recurring_payment->get_controls(),
-                'title_field' => '<i class="{{ better_payment_recurring_name }}" aria-hidden="true"></i> {{{ better_payment_recurring_name }}}',
-                'condition'   => [
-                    'better_payment_form_payment_type' => 'recurring',
-                    'better_payment_form_layout' => 'layout-5-pro',
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_one_time_recurring_product_id',
-            [
-                'label' => esc_html__( 'Product ID', 'better-payment' ),
-                'type'  => Controls_Manager::TEXT,
-                'placeholder' => 'prod_G0FvDp6vZvdwRZ',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition'  => [
-                    'better_payment_form_payment_type' => 'mixed',
-                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro'],
-                ]
-            ]
-        );
-        
-        $repeater_mixed_payment = new Repeater();
-
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_interval_type',
-            [
-                'label'   => esc_html__( 'Interval Type', 'better-payment' ),
-                'type'    => Controls_Manager::SELECT,
-                'default' => 'day',
-                'options' => [
-                    'day'   => 'Day',
-                    'week'  => 'Week',
-                    'month' => 'Month',
-                    'year'  => 'Year',
-                ],
-            ]
-        );
-        
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_name',
-            [
-                'label' => esc_html__( 'Interval Name', 'better-payment' ),
-                'type'  => Controls_Manager::TEXT,
-                'placeholder' => 'Interval Name',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
-
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_interval_day',
-            [
-                'label' => esc_html__( 'Interval', 'better-payment' ),
-                'type'  => Controls_Manager::NUMBER,
-                'min'   => 1,
-                'max'   => 1095,
-                'condition'   => [
-                    'better_payment_mixed_interval_type' => ['day'],
-                ],
-            ]
-        );
-
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_interval_month',
-            [
-                'label' => esc_html__( 'Interval', 'better-payment' ),
-                'type'  => Controls_Manager::NUMBER,
-                'min'   => 1,
-                'max'   => 36,
-                'condition'   => [
-                    'better_payment_mixed_interval_type' => ['month'],
-                ],
-            ]
-        );
-
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_interval_week',
-            [
-                'label' => esc_html__( 'Interval', 'better-payment' ),
-                'type'  => Controls_Manager::NUMBER,
-                'min'   => 1,
-                'max'   => 156,
-                'condition'   => [
-                    'better_payment_mixed_interval_type' => ['week'],
-                ],
-            ]
-        );
-
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_interval_year',
-            [
-                'label' => esc_html__( 'Interval', 'better-payment' ),
-                'type'  => Controls_Manager::NUMBER,
-                'min'   => 1,
-                'max'   => 3,
-                'condition'   => [
-                    'better_payment_mixed_interval_type' => ['year'],
-                ],
-            ]
-        );
-
-        $repeater_mixed_payment->add_control(
-            'better_payment_mixed_installment_options_note1',
-            [
-                'type'        => Controls_Manager::RAW_HTML,
-                'raw' => sprintf( 
-                    __( '<p>Maximum interval: 3 years or equivalent.</p>', 'better-payment' ),  
-                ),
-                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_mixed_installment_options',
-            [
-                'label'       => esc_html__( 'Mixed Intervals', 'better-payment' ),
-                'type'        => Controls_Manager::REPEATER,
-                'separator'   => 'after',
-                'default'     => [
-                    [
-                        'better_payment_mixed_name' => 'Monthly',
-                        'better_payment_mixed_interval_month' => 1,
-                        'better_payment_mixed_interval_type' => 'month',
-                    ],
-                    [
-                        'better_payment_mixed_name' => 'Daily',
-                        'better_payment_mixed_interval_day' => 1,
-                        'better_payment_mixed_interval_type' => 'day',
-                    ],
-                    [
-                        'better_payment_mixed_name' => 'Weekly',
-                        'better_payment_mixed_interval_week' => 1,
-                        'better_payment_mixed_interval_type' => 'week',
-                    ],
-                    [
-                        'better_payment_mixed_name' => 'Yearly',
-                        'better_payment_mixed_interval_year' => 1,
-                        'better_payment_mixed_interval_type' => 'year',
-                    ],
-                    [
-                        'better_payment_mixed_name' => 'Every 3 Months',
-                        'better_payment_mixed_interval_month' => 3,
-                        'better_payment_mixed_interval_type' => 'month',
-                    ],
-                    [
-                        'better_payment_mixed_name' => 'Every 6 Months',
-                        'better_payment_mixed_interval_month' => 6,
-                        'better_payment_mixed_interval_type' => 'month',
-                    ],
-                ],
-                'fields'      => $repeater_mixed_payment->get_controls(),
-                'title_field' => '<i class="{{ better_payment_mixed_name }}" aria-hidden="true"></i> {{{ better_payment_mixed_name }}}',
-                'condition'   => [
-                    'better_payment_form_payment_type' => 'mixed',
-                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro'],
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_form_recurring_webhook_stripe_secret',
-            [
-                'label'       => esc_html__( 'Webhook Secret', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'description' => sprintf( 
-                    __( '<p>Create a webhook endpoint from Stripe dashboard and <a href="%1$s" target="_blank">get the webhook secret.</a></p>', 'better-payment' ), 
-                    esc_url('//betterpayment.co/docs/add-webhook-endpoint-recurring-better-payment/'), 
-                ),
-                'placeholder' => 'whsec_...',
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition'   => [
-                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
-                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_form_recurring_webhook_stripe',
-            [
-                'type'        => Controls_Manager::RAW_HTML,
-                'raw' => sprintf( 
-                    __( '<p><a href="%1$s" target="_blank">Your webhook endpoint url »</a><br>%2$s</p>', 'better-payment' ), 
-                    esc_url('//wpdeveloper.com/docs-category/better-payment/'), 
-                    esc_url_raw( get_permalink( get_the_ID() ) . '?webhook-stripe=1' ) 
-                ),
-                'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition'   => [
-                    'better_payment_form_payment_type' => [ 'recurring', 'split-payment' ],
-                    'better_payment_form_layout!' => ['layout-1', 'layout-2', 'layout-3', 'layout-6-pro'],
-                ],
-            ]
-        );
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            ProPaymentFormControls::payment_controls( $this );
+        }
+        do_action( 'better_payment/elementor/editor/pro_layout_payment_controls', $this );
 
         $this->add_control(
             'better_payment_form_payment_source',
@@ -541,6 +163,7 @@ class Better_Payment_Widget extends Widget_Base {
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=woocommerce&tab=search&type=term') ),
             'content_classes' => 'better-payment-warning',
+            // Layout 6 (Pro) has its own notice, registered with its product controls.
             'conditions' => [
                 'relation' => 'and',
                 'terms' => [
@@ -555,35 +178,13 @@ class Better_Payment_Widget extends Widget_Base {
                         'value' => 'layout-5-pro',
                     ],
                     [
-                        'relation' => 'or',
-                        'terms' => [
-                            [
-                                'name' => 'better_payment_form_payment_source',
-                                'value' => 'woocommerce' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
-                            ],
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_layout',
-                                        'value' => 'layout-6-pro' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
-                                    ],
-                                    [
-                                        'relation' => 'or',
-                                        'terms' => [
-                                            [
-                                                'name' => 'better_payment_form_layout_6_ecommerce_platform',
-                                                'value' => '',
-                                            ],
-                                            [
-                                                'name' => 'better_payment_form_layout_6_ecommerce_platform',
-                                                'value' => 'woocommerce',
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
+                        'name' => 'better_payment_form_layout',
+                        'operator' => '!=',
+                        'value' => 'layout-6-pro',
+                    ],
+                    [
+                        'name' => 'better_payment_form_payment_source',
+                        'value' => 'woocommerce' . ( ! class_exists('woocommerce') ? '' : 'exist' ),
                     ],
                 ],
             ],
@@ -619,98 +220,37 @@ class Better_Payment_Widget extends Widget_Base {
             ],
         ] );
 
-        $this->add_control(
-            'better_payment_form_layout_6_ecommerce_platform',
-            [
-                'label'      => esc_html__( 'eCommerce Platform', 'better-payment' ),
-                'type'       => Controls_Manager::SELECT,
-                'default'    => 'woocommerce',
-                'options'    => [
-                    'woocommerce' => 'WooCommerce',
-                    'fluentcart' => 'FluentCart',
-                ],
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-6-pro'],
-                ],
-            ]
-        );
-
-        $this->add_control('better_payment_form_woocommerce_product_ids', [
-            'label' => esc_html__('Select Products', 'better-payment'),
-            'type'        => 'better-payment-select2',
-            'label_block' => true,
-            'multiple' => true,
-            'source_name' => 'post_type',
-            'source_type' => 'product',
-            'placeholder' => __( ' ', 'better-payment' ),
-            'condition' => [
-                'better_payment_form_layout' => ['layout-6-pro'],
-                'better_payment_form_layout_6_ecommerce_platform' => 'woocommerce',
-            ],
-        ]);
-
-        $this->add_control('better_payment_form_fluentcart_product_ids', [
-            'label' => esc_html__('Select Products', 'better-payment'),
-            'type'        => 'better-payment-select2',
-            'label_block' => true,
-            'multiple' => true,
-            'source_name' => 'post_type',
-            'source_type' => 'fluent-products',
-            'placeholder' => __( ' ', 'better-payment' ),
-            'condition' => [
-                'better_payment_form_layout' => ['layout-6-pro'],
-                'better_payment_form_layout_6_ecommerce_platform' => 'fluentcart',
-            ],
-        ]);
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            ProPaymentFormControls::product_controls( $this );
+        }
+        do_action( 'better_payment/elementor/editor/pro_layout_product_controls', $this );
 
         $this->add_control( 'better_payment_form_payment_source_fluentcart_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>FluentCart</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>FluentCart</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=fluentcart&tab=search&type=term') ),
             'content_classes' => 'better-payment-warning',
+            // Layout 6 (Pro) has its own notice, registered with its product controls.
             'conditions' => [
                 'relation' => 'and',
                 'terms' => [
                     [
-                        'relation' => 'or',
-                        'terms' => [
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_layout',
-                                        'operator' => '!=',
-                                        'value' => 'layout-4-pro',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_layout',
-                                        'operator' => '!=',
-                                        'value' => 'layout-5-pro',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_layout',
-                                        'operator' => '!=',
-                                        'value' => 'layout-6-pro',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_payment_source',
-                                        'value' => 'fluentcart' . ( ! function_exists('fluentCart') ? '' : 'exist' ),
-                                    ],
-                                ],
-                            ],
-                            [
-                                'relation' => 'and',
-                                'terms' => [
-                                    [
-                                        'name' => 'better_payment_form_layout',
-                                        'value' => 'layout-6-pro',
-                                    ],
-                                    [
-                                        'name' => 'better_payment_form_layout_6_ecommerce_platform',
-                                        'value' => 'fluentcart' . ( ! function_exists('fluentCart') ? '' : 'exist' ),
-                                    ],
-                                ],
-                            ],
-                        ],
+                        'name' => 'better_payment_form_layout',
+                        'operator' => '!=',
+                        'value' => 'layout-4-pro',
+                    ],
+                    [
+                        'name' => 'better_payment_form_layout',
+                        'operator' => '!=',
+                        'value' => 'layout-5-pro',
+                    ],
+                    [
+                        'name' => 'better_payment_form_layout',
+                        'operator' => '!=',
+                        'value' => 'layout-6-pro',
+                    ],
+                    [
+                        'name' => 'better_payment_form_payment_source',
+                        'value' => 'fluentcart' . ( ! function_exists('fluentCart') ? '' : 'exist' ),
                     ],
                 ],
             ],
@@ -743,9 +283,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'return_value' => 'yes',
                 'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paypal']), //yes or no
                 'separator'    => 'before',
-                'condition' => [
-                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
-                ],
+                'condition' => $this->pro_layout_control_condition( 'better_payment_form_paypal_enable' ),
             ]
         );
 
@@ -845,9 +383,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'label_off'    => __( 'No', 'better-payment' ),
                 'return_value' => 'yes',
                 'default'      => ! empty( $this->better_payment_global_settings['better_payment_settings_general_general_paystack'] ) ? esc_html($this->better_payment_global_settings['better_payment_settings_general_general_paystack']) : 'no', //yes or no
-                'condition' => [
-                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
-                ],
+                'condition' => $this->pro_layout_control_condition( 'better_payment_form_paystack_enable' ),
             ]
         );
 
@@ -1488,86 +1024,11 @@ class Better_Payment_Widget extends Widget_Base {
             'better_payment_field_name_required' => 'yes',
         ];
         
-        $form_fields_first_name_layout_4_5_6 = [
-            'better_payment_field_name_heading' => esc_html__( 'First name', 'better-payment' ),
-            'better_payment_field_name_placeholder' => esc_html__( 'First name', 'better-payment' ),
-            'better_payment_field_type' => 'text',
-            'better_payment_primary_field_type' => 'primary_first_name',
-            'better_payment_field_name_show' => 'yes',
-            'better_payment_field_name_required' => 'no',
-            'better_payment_field_name_display_inline' => 'inline-block',
-            'better_payment_field_name_display_inline_width' => [
-                'size' => '48',
-                'unit' => '%',
-            ],
-        ];
-
-        $form_fields_last_name_layout_4_5_6 = [
-            'better_payment_field_name_heading' => esc_html__( 'Last name', 'better-payment' ),
-            'better_payment_field_name_placeholder' => esc_html__( 'Last name', 'better-payment' ),
-            'better_payment_field_type' => 'text',
-            'better_payment_primary_field_type' => 'primary_last_name',
-            'better_payment_field_name_show' => 'yes',
-            'better_payment_field_name_required' => 'no',
-            'better_payment_field_name_display_inline' => 'inline-block',
-            'better_payment_field_name_display_inline_width' => [
-                'size' => '48',
-                'unit' => '%',
-            ],
-        ];
-
-        $form_field_email_layout_4_5_6 = [
-            'better_payment_field_name_heading' => esc_html__( 'Email', 'better-payment' ),
-            'better_payment_field_name_placeholder' => esc_html__( 'Enter your email', 'better-payment' ),
-            'better_payment_field_type' => 'email',
-            'better_payment_primary_field_type' => 'primary_email',
-            'better_payment_field_name_show' => 'yes',
-            'better_payment_field_name_required' => 'yes',
-        ];
-
-        $form_field_payment_amount_layout_4_5_6 = [
-            'better_payment_field_name_heading' => esc_html__( 'Amount', 'better-payment' ),
-            'better_payment_field_name_placeholder' => esc_html__( 'Other amount', 'better-payment' ),
-            'better_payment_field_type' => 'number',
-            'better_payment_primary_field_type' => 'primary_payment_amount',
-            'better_payment_field_name_show' => 'yes',
-            'better_payment_field_name_required' => 'yes',
-        ];
-
-        $form_field_payment_amount_layout_4_5_6_desc = [
-            'better_payment_field_name_heading' => esc_html__( 'Amount to pay', 'better-payment' ),
-            'better_payment_field_name_placeholder' => esc_html__( 'Other amount', 'better-payment' ),
-            'better_payment_field_type' => 'number',
-            'better_payment_primary_field_type' => 'primary_payment_amount',
-            'better_payment_field_name_show' => 'yes',
-            'better_payment_field_name_required' => 'yes',
-        ];
-
         $form_fields_defaults = [
             $form_fields_first_name,
             $form_fields_last_name,
             $form_field_email,
             $form_field_payment_amount,
-        ];
-
-        $form_fields_defaults_layout_4_5_6 = [
-            $form_fields_first_name_layout_4_5_6,
-            $form_fields_last_name_layout_4_5_6,
-            $form_field_email_layout_4_5_6,
-            $form_field_payment_amount_layout_4_5_6,
-        ];
-
-        $form_fields_defaults_layout_4_5_6_desc = [
-            $form_field_payment_amount_layout_4_5_6_desc,
-            $form_fields_first_name_layout_4_5_6,
-            $form_fields_last_name_layout_4_5_6,
-            $form_field_email_layout_4_5_6,
-        ];
-
-        $form_fields_defaults_layout_4_5_6_woo = [
-            $form_fields_first_name_layout_4_5_6,
-            $form_fields_last_name_layout_4_5_6,
-            $form_field_email_layout_4_5_6,
         ];
 
         $this->add_control(
@@ -1584,47 +1045,10 @@ class Better_Payment_Widget extends Widget_Base {
 			]
 		);
         
-        $this->add_control(
-			'better_payment_form_fields_layout_4_5_6',
-			[
-				'label' => esc_html__( 'Form Fields', 'better-payment' ),
-				'type' => \Elementor\Controls_Manager::REPEATER,
-				'fields' => $form_fields_repeater->get_controls(),
-				'default' => $form_fields_defaults_layout_4_5_6,
-				'title_field' => '{{{ better_payment_field_name_heading }}}',
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-4-pro'],
-                ],
-			]
-		);
-        
-        $this->add_control(
-			'better_payment_form_fields_layout_4_5_6_desc',
-			[
-				'label' => esc_html__( 'Form Fields', 'better-payment' ),
-				'type' => \Elementor\Controls_Manager::REPEATER,
-				'fields' => $form_fields_repeater->get_controls(),
-				'default' => $form_fields_defaults_layout_4_5_6_desc,
-				'title_field' => '{{{ better_payment_field_name_heading }}}',
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-5-pro'],
-                ],
-			]
-		);
-        
-        $this->add_control(
-			'better_payment_form_fields_layout_4_5_6_woo',
-			[
-				'label' => esc_html__( 'Form Fields', 'better-payment' ),
-				'type' => \Elementor\Controls_Manager::REPEATER,
-				'fields' => $form_fields_repeater->get_controls(),
-				'default' => $form_fields_defaults_layout_4_5_6_woo,
-				'title_field' => '{{{ better_payment_field_name_heading }}}',
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-6-pro'],
-                ],
-			]
-		);
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            ProPaymentFormControls::form_fields_controls( $this, $form_fields_repeater );
+        }
+        do_action( 'better_payment/elementor/editor/pro_layout_form_fields_controls', $this, $form_fields_repeater );
 
         $repeater = new Repeater();
 
@@ -1654,21 +1078,10 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        $this->add_control(
-            'better_payment_show_amount_list_layout_4_5_6',
-            [
-                'label'        => __( 'Show Amount List', 'better-payment' ),
-                'type'         => Controls_Manager::SWITCHER,
-                'label_on'     => __( 'Yes', 'better-payment' ),
-                'label_off'    => __( 'No', 'better-payment' ),
-                'return_value' => 'yes',
-                'default'      => 'yes',
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
-                ],
-            ]
-        );
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            ProPaymentFormControls::amount_list_toggle_control( $this );
+        }
+        do_action( 'better_payment/elementor/editor/pro_layout_amount_list_toggle_control', $this );
 
         $this->add_control(
             'better_payment_amount',
@@ -1691,46 +1104,18 @@ class Better_Payment_Widget extends Widget_Base {
                 ],
                 'fields'      => $repeater->get_controls(),
                 'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{{ better_payment_amount_val }}}',
-                'condition'   => [
+                'condition'   => $this->pro_layout_control_condition( 'better_payment_amount', [
                     'better_payment_show_amount_list' => 'yes',
                     'better_payment_form_payment_source!' => ['woocommerce', 'fluentcart'],
-                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                ],
+                ] ),
             ]
         );
 
-        $this->add_control(
-            'better_payment_amount_layout_4_5_6',
-            [
-                'label'       => esc_html__( 'Amount List', 'better-payment' ),
-                'type'        => Controls_Manager::REPEATER,
-                'default'     => [
-                    [
-                        'better_payment_amount_val' => 10
-                    ],
-                    [
-                        'better_payment_amount_val' => 30
-                    ],
-                    [
-                        'better_payment_amount_val' => 50
-                    ],
-                    [
-                        'better_payment_amount_val' => 100
-                    ],
-                    [
-                        'better_payment_amount_val' => 500
-                    ],
-                ],
-                'fields'      => $repeater->get_controls(),
-                'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{{ better_payment_amount_val }}}',
-                'condition'   => [
-                    'better_payment_show_amount_list_layout_4_5_6' => 'yes',
-                    'better_payment_form_payment_type!' => [ 'recurring', 'split-payment' ],
-                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                ],
-            ]
-        );
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            ProPaymentFormControls::amount_list_control( $this, $repeater );
+        }
+        do_action( 'better_payment/elementor/editor/pro_layout_amount_list_control', $this, $repeater );
 
         do_action('better_payment/elementor/editor/layouts_form_settings_amount_list_section', $this);
 
@@ -1812,35 +1197,10 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        $this->add_control(
-            'better_payment_form_form_title_text',
-            [
-                'label'       => esc_html__( 'Form Title', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
-                ],
-            ]
-        );
-
-        $this->add_control(
-            'better_payment_form_form_sub_title_text',
-            [
-                'label'       => esc_html__( 'Form Sub-Title', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-                'condition' => [
-                    'better_payment_form_layout' => ['layout-5-pro'],
-                ],
-            ]
-        );
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            ProPaymentFormControls::form_title_controls( $this );
+        }
+        do_action( 'better_payment/elementor/editor/pro_layout_form_title_controls', $this );
 
         $this->add_control(
             'better_payment_form_form_buttons_paypal_button_text',
@@ -4291,11 +3651,6 @@ class Better_Payment_Widget extends Widget_Base {
 
         wp_enqueue_script( 'better-payment' );
 
-        if( $this->pro_enabled ){
-            wp_enqueue_script( 'better-payment-pro-common-script' );
-            wp_enqueue_style( 'better-payment-pro-common-style' );
-        }
-
         $action       = esc_url( admin_url( 'admin-post.php' ) );
         $setting_meta = wp_json_encode( [
             'page_id'   => get_the_ID(),
@@ -4321,14 +3676,9 @@ class Better_Payment_Widget extends Widget_Base {
         $better_payment_form_layout = in_array($better_payment_form_layout, array_keys( $this->better_payment_free_layouts() ) ) ? $better_payment_form_layout : 'layout-1';
 
         $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $better_payment_form_layout . '.php';
-        $is_pro_layout = false !== strpos( $better_payment_form_layout, '-pro' );
-        
-        if ( $this->pro_enabled && $is_pro_layout ){
-            $template_file = BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $better_payment_form_layout . '.php';
-        }
 
-        if ( ( ! $this->pro_enabled ) && $is_pro_layout ){
-            $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/partials/layout-pro-banners.php';
+        if ( false !== strpos( $better_payment_form_layout, '-pro' ) ) {
+            $template_file = $this->pro_layout_template_file( $better_payment_form_layout, $settings );
         }
 
         $better_payment_form_content = '';
@@ -4348,31 +3698,33 @@ class Better_Payment_Widget extends Widget_Base {
     /**
      * Render amount element
      *
+     * `'version' => 'v2'` is the amount list of Pro layouts 4 and 5, and only Pro's
+     * templates ask for it. Better Payment Pro prints it itself once it declares
+     * `elementor_pro_layout_rendering`; Lite's copy (Classes\ProPaymentFormLayouts)
+     * serves Pro 1.4.3 and older, and nothing is printed otherwise. The method stays
+     * public with this signature because Pro 1.4.3 calls it
+     * (tests/Unit/ProCouplingContractTest.php).
+     *
      * @since 0.0.1
      */
     public function render_amount_element( $settings, $args = [] ) {
-        $defauls = [
-            'version' => 'v1',
-            'items' => $settings['better_payment_amount'],
-        ];
-
         if ( ! empty( $args['version'] ) ) {
-            $defauls['version'] = 'v2';
-            $defauls['items'] = $settings['better_payment_amount_layout_4_5_6'];
+            if ( ProPaymentFormLayouts::lite_copy_applies() ) {
+                ProPaymentFormLayouts::render_amount_element( $this, $settings );
+            }
+
+            return;
         }
 
         $layout_form_currency_symbol    = $this->get_currency_symbol( esc_html($settings[ 'better_payment_form_currency' ]) );
         $currency_alignment             = ! empty ( $settings['better_payment_form_currency_alignment'] ) ? $settings['better_payment_form_currency_alignment'] : 'left';
         $layout_form_currency_left      = 'left'    === $currency_alignment ? $layout_form_currency_symbol : '';
         $layout_form_currency_right     = 'right'   === $currency_alignment ? $layout_form_currency_symbol : '' ;
-        
-        $id = esc_attr( $this->get_id() );
         ?>
         <!-- <div class="pt-5"> -->
         <?php
-        foreach ( $defauls['items'] as $item ) {
+        foreach ( $settings['better_payment_amount'] as $item ) {
             $uid = uniqid();
-            if ( 'v1' === $defauls['version'] ) :
             ?>
                 <div class="bp-form__group pt-5">
                     <input type="radio" value="<?php echo floatval( $item[ 'better_payment_amount_val' ] ); ?>"
@@ -4382,17 +3734,6 @@ class Better_Payment_Widget extends Widget_Base {
                 </div>
             
             <?php
-            elseif ( 'v2' === $defauls['version'] ) :
-            ?>
-                <label class="payment-amount">
-                    <input type="radio" value="<?php echo floatval( $item[ 'better_payment_amount_val' ] ); ?>"
-                        id="bp_payment_amount-<?php echo esc_attr($uid); ?>" class="bp-form__control bp-form_pay-radio "
-                        name="primary_payment_amount_radio">
-                    <span class="text"><?php printf( "%s%s%s", esc_html( $layout_form_currency_left ), floatval( $item[ 'better_payment_amount_val' ] ), esc_html( $layout_form_currency_right ) ); ?></span>
-                </label>
-
-            <?php
-            endif;
         }
         ?>
         <!-- </div> -->
@@ -4412,17 +3753,12 @@ class Better_Payment_Widget extends Widget_Base {
                 $items = ! empty( $settings['better_payment_form_fields'] ) ? $settings['better_payment_form_fields'] : [];
                 break;
 
-            case 'layout-4-pro':
-                $items = ! empty( $settings['better_payment_form_fields_layout_4_5_6'] ) ? $settings['better_payment_form_fields_layout_4_5_6'] : [];
-                break;
-            case 'layout-5-pro':
-                $items = ! empty( $settings['better_payment_form_fields_layout_4_5_6_desc'] ) ? $settings['better_payment_form_fields_layout_4_5_6_desc'] : [];
-                break;
-            case 'layout-6-pro':
-                $items = ! empty( $settings['better_payment_form_fields_layout_4_5_6_woo'] ) ? $settings['better_payment_form_fields_layout_4_5_6_woo'] : [];
-                break;
-
             default:
+                // Pro layouts 4, 5 and 6. Better Payment Pro reads its own repeater once it
+                // declares `elementor_pro_layout_rendering`; Lite's copy serves older Pro.
+                if ( ProPaymentFormLayouts::lite_copy_applies() ) {
+                    $items = ProPaymentFormLayouts::default_text_items( $settings );
+                }
                 break;
         }
 
@@ -4487,5 +3823,73 @@ class Better_Payment_Widget extends Widget_Base {
             ];
         }
         return $conditions;
+    }
+
+    /**
+     * Whether Lite registers its copy of the controls only Pro layouts (4, 5, 6) use.
+     *
+     * Only for an active Pro that does not declare `elementor_payment_form_pro_controls`
+     * (1.4.3 and older); the copy is Classes\ProPaymentFormControls. A current Pro
+     * registers its own copy of each group on the `better_payment/elementor/editor/pro_layout_*`
+     * action fired right after each call, so the panel position is unchanged. A free
+     * install registers none of them: a Pro layout shows only its upgrade banner there,
+     * and Elementor keeps the saved value of a control that is not registered, so a site
+     * that loses Pro keeps its configuration. Control ids must never change: saved
+     * Elementor data, PaymentRequestGuard and the payment handlers read them.
+     *
+     * @return bool
+     */
+    protected function lite_registers_pro_layout_controls() {
+        return ProCompatibility::lite_copy_applies( ProPaymentFormControls::FEATURE );
+    }
+
+    /**
+     * A free control's condition, plus what Pro's payment types add to it.
+     *
+     * PayPal, Paystack and the amount list hide for a recurring or split payment. That
+     * condition names `better_payment_form_payment_type`, a Pro-layout control, and
+     * Elementor hides — and nulls when rendering — a control whose condition names a
+     * control that is not registered. So a free install gets the bare condition, Better
+     * Payment Pro adds the payment type on
+     * `better_payment/elementor/editor/pro_layout_control_condition`, and Lite adds it
+     * itself only while it registers the Pro-layout controls for an older Pro.
+     *
+     * @param string $control_id The control id.
+     * @param array  $condition  The control's own condition.
+     * @return array
+     */
+    protected function pro_layout_control_condition( $control_id, array $condition = [] ) {
+        if ( $this->lite_registers_pro_layout_controls() ) {
+            $condition = ProPaymentFormControls::control_condition( $condition, $control_id );
+        }
+
+        $filtered = apply_filters( 'better_payment/elementor/editor/pro_layout_control_condition', $condition, $control_id, $this );
+
+        return is_array( $filtered ) ? $filtered : $condition;
+    }
+
+    /**
+     * The template that renders a Pro layout (`layout-4-pro`, `layout-5-pro`, `layout-6-pro`).
+     *
+     * Without Pro it is the upgrade banner. With Pro it is whatever
+     * `better_payment/elementor/widget/layout_template` returns: Better Payment Pro
+     * supplies its template there once it declares `elementor_pro_layout_rendering`, and
+     * for an older Pro the filter starts at Pro's own template
+     * (Classes\ProPaymentFormLayouts). An active Pro never gets the banner; with no
+     * template nothing renders.
+     *
+     * @param string $layout   Whitelisted `-pro` layout key.
+     * @param array  $settings Widget settings.
+     * @return string Template path, or '' for none.
+     */
+    protected function pro_layout_template_file( $layout, $settings ) {
+        if ( ! $this->pro_enabled ) {
+            return BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/partials/layout-pro-banners.php';
+        }
+
+        $template = ProPaymentFormLayouts::lite_copy_applies() ? ProPaymentFormLayouts::template_file( $layout ) : '';
+        $template = apply_filters( 'better_payment/elementor/widget/layout_template', $template, $layout, $settings, $this );
+
+        return is_string( $template ) ? $template : '';
     }
 }

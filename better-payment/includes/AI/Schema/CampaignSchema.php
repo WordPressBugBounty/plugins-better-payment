@@ -33,6 +33,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 class CampaignSchema {
 
     /**
+     * Feature slug Pro declares on `better_payment/pro_provides` once it ships the
+     * Pro-widget guidance itself: the generation instruction, the "Pro widgets"
+     * prompt section on a Pro install, the three widgets' content guides and the
+     * video URL guard. See Classes\ProCompatibility.
+     */
+    const PRO_GUIDANCE_FEATURE = 'ai_pro_widget_guidance';
+
+    /**
+     * Whether Lite still supplies its own copy of the Pro-widget guidance.
+     *
+     * True only for an active Pro that does not declare
+     * {@see self::PRO_GUIDANCE_FEATURE} (Better Payment Pro <= 1.4.3). A free install
+     * never runs the Pro-install guidance, the Pro content guides, the Pro setting-key
+     * aliases or the video URL guard: its Pro elements are lock stubs with no
+     * settings to write, and its locked-widget disclosure
+     * ({@see \Better_Payment\Lite\AI\Prompt\PromptBuilder}'s locked section,
+     * {@see \Better_Payment\Lite\AI\Services\AIService::pro_locked_notice()}) is
+     * not gated on this.
+     */
+    public static function lite_supplies_pro_guidance(): bool {
+        return \Better_Payment\Lite\Classes\ProCompatibility::lite_copy_applies( self::PRO_GUIDANCE_FEATURE );
+    }
+
+    /**
      * Layout presets the builder understands.
      *
      * @return array<int, string>
@@ -81,8 +105,9 @@ class CampaignSchema {
     /**
      * Whether an element type is flagged Pro in the registry.
      *
-     * The `pro` flag is present whether or not Pro is installed — Lite owns all
-     * three schemas — so this asks "is this a Pro widget", not "is it locked".
+     * The `pro` flag is present whether or not Pro is installed — on Lite's lock
+     * stubs and on Pro's full definitions alike — so this asks "is this a Pro
+     * widget", not "is it locked".
      */
     public static function is_pro_element_type( string $type ): bool {
         $schema = ElementRegistry::get( $type );
@@ -288,7 +313,7 @@ class CampaignSchema {
      * @return array<string, array<string, string>>
      */
     private static function setting_key_aliases(): array {
-        return apply_filters( 'better_payment/ai/setting_key_aliases', [
+        $aliases = [
             'campaign_title'       => [ 'text' => 'title', 'heading' => 'title', 'label' => 'title', 'headline' => 'title', 'name' => 'title' ],
             'campaign_description' => [ 'text' => 'content', 'body' => 'content', 'paragraph' => 'content', 'description' => 'content', 'story' => 'content', 'heading' => 'headline', 'title' => 'headline' ],
             'donation_form'        => [ 'text' => 'button_label', 'label' => 'button_label', 'cta' => 'button_label', 'button_text' => 'button_label', 'title' => 'button_label' ],
@@ -299,12 +324,36 @@ class CampaignSchema {
             'organizer'            => [ 'text' => 'description', 'bio' => 'description', 'name' => 'role_title', 'title' => 'role_title' ],
             'social_sharing'       => [ 'title' => 'headline', 'text' => 'headline' ],
             'social_links'         => [ 'title' => 'headline', 'text' => 'headline' ],
-            'donors_wall'          => [ 'title' => 'headline', 'text' => 'headline', 'heading' => 'headline', 'limit' => 'number_to_show', 'count' => 'number_to_show' ],
+        ];
+
+        // Pro supplies its widgets' aliases through the filter below once it declares
+        // `ai_pro_widget_guidance`; this copy serves older Pro releases only.
+        if ( self::lite_supplies_pro_guidance() ) {
+            $aliases += self::lite_pro_setting_key_aliases();
+        }
+
+        return apply_filters( 'better_payment/ai/setting_key_aliases', $aliases );
+    }
+
+    /**
+     * Transitional copy for Better Payment Pro <= 1.4.3; delete when
+     * ProCompatibility::MIN_PRO_VERSION >= 1.4.4.
+     * Pro copy: better-payment-pro/includes/AI/ProWidgetGuidance.php (setting_key_aliases()).
+     * Slug: ai_pro_widget_guidance.
+     *
+     * Setting-key aliases for the three Pro widgets. Only reached through
+     * {@see self::setting_key_aliases()} while {@see self::lite_supplies_pro_guidance()}.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public static function lite_pro_setting_key_aliases(): array {
+        return [
+            'donors_wall' => [ 'title' => 'headline', 'text' => 'headline', 'heading' => 'headline', 'limit' => 'number_to_show', 'count' => 'number_to_show' ],
             // `faq` names its heading `heading`, not `headline` — the one element
             // that breaks the pattern, so the reverse alias matters here.
-            'faq'                  => [ 'title' => 'heading', 'text' => 'heading', 'headline' => 'heading', 'questions' => 'items', 'faqs' => 'items', 'list' => 'items' ],
-            'video'                => [ 'src' => 'url', 'link' => 'url', 'video_url' => 'url', 'embed_url' => 'url' ],
-        ] );
+            'faq'         => [ 'title' => 'heading', 'text' => 'heading', 'headline' => 'heading', 'questions' => 'items', 'faqs' => 'items', 'list' => 'items' ],
+            'video'       => [ 'src' => 'url', 'link' => 'url', 'video_url' => 'url', 'embed_url' => 'url' ],
+        ];
     }
 
     /**

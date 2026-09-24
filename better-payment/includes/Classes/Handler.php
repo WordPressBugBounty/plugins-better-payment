@@ -23,6 +23,16 @@ class Handler extends Controller{
     use TraitsHelper;
 
     /**
+     * Status a Stripe Checkout Session order waits in until it is confirmed.
+     */
+    const STRIPE_PENDING_STATUS = 'unpaid';
+
+    /**
+     * Status a confirmed Checkout Session order is stored with. See confirm_stripe_session().
+     */
+    const STRIPE_CONFIRMED_STATUS = 'paid';
+
+    /**
      * PayPal button
      * 
      * @since 0.0.1
@@ -146,18 +156,46 @@ class Handler extends Controller{
 
     /**
      * Payment create in db
-     * 
+     *
      * @since 0.0.1
      */
     public static function payment_create( $data ) {
         global $wpdb;
         $table = "{$wpdb->prefix}better_payment";
-        $wpdb->insert( $table, $data );
+        $wpdb->insert( $table, self::normalize_pending_stripe_status( $data ) );
         if ( $wpdb->insert_id ) {
             return $wpdb->insert_id;
         } else {
             return false;
         }
+    }
+
+    /**
+     * A Stripe Checkout Session order is always created pending.
+     *
+     * Every Stripe surface stores the session's `payment_status` at creation. For a session with
+     * nothing to charge right now — a subscription trial, a 100%-off promotion code, setup mode —
+     * Stripe already reports `no_payment_required` before anyone has completed the checkout. Stored
+     * as is, the order could never be confirmed (confirmation claims it from `unpaid`), so the trial
+     * or free donation never reached the thank-you page, its receipts or the campaign's donors.
+     * Only a Checkout Session row (`obj_id` `cs_…`) is touched: a renewal PaymentIntent row is
+     * written after its charge and keeps its status.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $data Row data for payment_create().
+     * @return mixed
+     */
+    public static function normalize_pending_stripe_status( $data ) {
+        if ( ! is_array( $data ) || ! isset( $data['status'], $data['obj_id'] ) || ! is_string( $data['obj_id'] ) ) {
+            return $data;
+        }
+
+        if ( 'no_payment_required' === $data['status'] && 0 === strpos( $data['obj_id'], 'cs_' ) ) {
+            $data['status'] = self::STRIPE_PENDING_STATUS;
+        }
+
+        return $data;
     }
 
     /**
@@ -207,21 +245,7 @@ class Handler extends Controller{
                 $order_id = sanitize_text_field( $_REQUEST['better_payment_paypal_id'] );
             }
             
-            // Fetch transaction data from database
-            $transaction_data = self::get_failed_transaction_data( $order_id );
-            
-            self::failed_message_template( $settings, $transaction_data );
-            $redirection_url_error = ! empty( $settings['better_payment_form_error_page_url']['url'] ) ? esc_url( $settings['better_payment_form_error_page_url']['url'] ) : '';
-            
-            if( $redirection_url_error ){
-                ?>
-                <script>
-                    setTimeout(function(){
-                        window.location.replace("<?php echo esc_url( $redirection_url_error ); ?>");
-                    }, 2000);
-                </script>
-                <?php
-            }
+            self::render_failed_response( $settings, $order_id );
 
             return $status;
         }
@@ -234,7 +258,25 @@ class Handler extends Controller{
             $status = self::paystack_payment_success( $settings );
         }
 
-        if ( ! empty( $status['pending'] ) ) {
+        if ( is_wp_error( $status ) ) {
+            // A verification that confirmed no payment never renders the success page or
+            // redirects to the success URL (a WP_Error is truthy, and used to do both).
+            if ( 'bp_stripe_payment_processing' === $status->get_error_code() ) {
+                self::stripe_processing_message_template();
+
+                // The return URL keeps its query args, so reloading it verifies the order again.
+                return $status;
+            }
+
+            if ( 'bp_stripe_payment_incomplete' === $status->get_error_code() ) {
+                $stripe_order_id = ! empty( $_REQUEST['better_payment_stripe_id'] ) && is_scalar( $_REQUEST['better_payment_stripe_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['better_payment_stripe_id'] ) ) : '';
+
+                self::render_failed_response( $settings, $stripe_order_id );
+
+                // Like a cancelled checkout: the form renders again under the notice.
+                $status = false;
+            }
+        } elseif ( ! empty( $status['pending'] ) ) {
             // Use home_url() instead of HTTP_HOST to avoid open-redirect via forged Host headers.
             $return_url = home_url( $_SERVER['REQUEST_URI'] );
             // PayPal uses rm=2 (POST redirect), so item_number arrives in $_POST and is absent from the URL.
@@ -386,8 +428,9 @@ class Handler extends Controller{
      * PayPal IPN listener.
      *
      * PayPal POSTs the raw IPN body here server-to-server. We echo it back with
-     * cmd=_notify-validate; only a VERIFIED response from PayPal's servers triggers
-     * the DB write. The browser return URL (paypal_payment_success) never writes.
+     * cmd=_notify-validate; only a VERIFIED response from PayPal's servers reaches
+     * apply_paypal_ipn(), the only writer. The browser return URL
+     * (paypal_payment_success) never writes.
      *
      * @since 2.1.3
      */
@@ -423,11 +466,33 @@ class Handler extends Controller{
             exit;
         }
 
+        self::apply_paypal_ipn( $data );
+
+        status_header( 200 );
+        exit;
+    }
+
+    /**
+     * Apply a PayPal IPN to the order it names.
+     *
+     * Call ONLY with a notification handle_paypal_ipn() posted back and PayPal answered VERIFIED —
+     * nothing here authenticates the data. Changes nothing unless the notification is a
+     * `Completed` payment for a pending order (`status IS NULL`) paid to the merchant's address,
+     * for at least the order's amount, in its currency, under a transaction id no order holds.
+     * Then the row is claimed with one update (`WHERE id = … AND status IS NULL`): PayPal redelivers
+     * a notification it saw no 200 for and can deliver one twice at once, and only the delivery that
+     * wins the claim sends the receipts.
+     *
+     * @since 2.4.0
+     *
+     * @param array $data The notification's fields.
+     * @return string 'confirmed' | 'ignored' | 'unmatched' | 'refused' | 'duplicate'
+     */
+    public static function apply_paypal_ipn( array $data ) {
         $data = array_map( 'sanitize_text_field', $data );
 
         if ( empty( $data['payment_status'] ) || empty( $data['item_number'] ) || $data['payment_status'] !== 'Completed' ) {
-            status_header( 200 );
-            exit;
+            return 'ignored';
         }
 
         global $wpdb;
@@ -440,8 +505,7 @@ class Handler extends Controller{
         );
 
         if ( empty( $results->id ) ) {
-            status_header( 200 );
-            exit;
+            return 'unmatched';
         }
 
         // Validate receiver_email matches the merchant's configured PayPal email.
@@ -450,22 +514,19 @@ class Handler extends Controller{
         $receiver       = ! empty( $data['receiver_email'] ) ? strtolower( $data['receiver_email'] ) : ( ! empty( $data['business'] ) ? strtolower( $data['business'] ) : '' );
 
         if ( $expected_email && $receiver && $expected_email !== $receiver ) {
-            status_header( 200 );
-            exit;
+            return 'refused';
         }
 
         // Validate the paid amount is not less than the expected order amount.
         $paid_amount = ! empty( $data['mc_gross'] ) ? floatval( $data['mc_gross'] ) : 0;
         if ( $paid_amount < floatval( $results->amount ) ) {
-            status_header( 200 );
-            exit;
+            return 'refused';
         }
 
         // Validate currency matches.
         $paid_currency = ! empty( $data['mc_currency'] ) ? strtoupper( $data['mc_currency'] ) : '';
         if ( $paid_currency && $results->currency && strtoupper( $results->currency ) !== $paid_currency ) {
-            status_header( 200 );
-            exit;
+            return 'refused';
         }
 
         $txn_id = ! empty( $data['txn_id'] ) ? $data['txn_id'] : '';
@@ -479,14 +540,13 @@ class Handler extends Controller{
                 )
             );
             if ( $existing ) {
-                status_header( 200 );
-                exit;
+                return 'duplicate';
             }
         }
 
         $payer_email = ! empty( $data['payer_email'] ) ? sanitize_email( $data['payer_email'] ) : '';
 
-        $updated = $wpdb->update(
+        $claimed = $wpdb->update(
             $table,
             [
                 'transaction_id' => $txn_id,
@@ -494,36 +554,41 @@ class Handler extends Controller{
                 'email'          => $payer_email,
                 'customer_info'  => maybe_serialize( $data ),
             ],
-            [ 'ID' => $results->id ]
+            [
+                'id'     => (int) $results->id,
+                'status' => null,
+            ]
         );
 
-        if ( false !== $updated ) {
-            $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form' ? 1 : 0;
-
-            // Rebuild the e-mail settings persisted at payment-create time. IPN runs
-            // server-to-server with no live widget context, so without this the body
-            // would collapse to the bare transaction id (every section flag defaults
-            // to 0). Legacy / pending rows created before this fix fall back to [].
-            $email_settings = ! empty( $form_info['email_settings'] ) && is_array( $form_info['email_settings'] )
-                ? $form_info['email_settings']
-                : [];
-
-            // Mirror the Stripe / Paystack gate: honour the form's "Send Email" toggle,
-            // and always e-mail for Elementor Pro Form submissions.
-            if (
-                ( isset( $email_settings['better_payment_form_email_enable'] ) && 'yes' === $email_settings['better_payment_form_email_enable'] )
-                || $is_elementor_form
-            ) {
-                self::better_email_notification( $txn_id, $payer_email, $email_settings, 'PayPal', $results->form_fields_info, $is_elementor_form );
-            }
+        if ( 1 !== (int) $claimed ) {
+            // A concurrent delivery of this notification confirmed the order first.
+            return 'duplicate';
         }
 
-        status_header( 200 );
-        exit;
+        $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form' ? 1 : 0;
+
+        // Rebuild the e-mail settings persisted at payment-create time. IPN runs
+        // server-to-server with no live widget context, so without this the body
+        // would collapse to the bare transaction id (every section flag defaults
+        // to 0). Legacy / pending rows created before this fix fall back to [].
+        $email_settings = ! empty( $form_info['email_settings'] ) && is_array( $form_info['email_settings'] )
+            ? $form_info['email_settings']
+            : [];
+
+        // Mirror the Stripe / Paystack gate: honour the form's "Send Email" toggle,
+        // and always e-mail for Elementor Pro Form submissions.
+        if (
+            ( isset( $email_settings['better_payment_form_email_enable'] ) && 'yes' === $email_settings['better_payment_form_email_enable'] )
+            || $is_elementor_form
+        ) {
+            self::better_email_notification( $txn_id, $payer_email, $email_settings, 'PayPal', $results->form_fields_info, $is_elementor_form );
+        }
+
+        return 'confirmed';
     }
 
     /**
-     * Stripe payment success
+     * Stripe payment success — the return page.
      *
      * Reads the transaction id from the request, EXCEPT when the caller
      * supplies `better_payment_stripe_id` in $settings. A caller that has
@@ -533,7 +598,15 @@ class Handler extends Controller{
      * this lookup, because PHP's default request_order=GP lets a POST body
      * overwrite the query string and the two would then see different ids.
      *
+     * A pending order is verified against Stripe and confirmed through
+     * confirm_stripe_session(). An order an earlier return (a reload, a second
+     * tab) already confirmed renders the success page again without asking
+     * Stripe or re-running anything. See stripe_settled_return().
+     *
      * @since 0.0.1
+     *
+     * @param array $settings Form settings; `better_payment_stripe_secret_key` is required to verify.
+     * @return array|false|\WP_Error Success data, false for no order to show, or why nothing was confirmed.
      */
     public static function stripe_payment_success( $settings = [] ) {
 
@@ -543,246 +616,652 @@ class Handler extends Controller{
             $data[ 'better_payment_stripe_id' ] = $settings[ 'better_payment_stripe_id' ];
         }
 
-        if ( !empty( $data[ 'better_payment_stripe_id' ] ) ) {
-            global $wpdb;
-            $table   = "{$wpdb->prefix}better_payment";
-            $results = $wpdb->get_row(
-                $wpdb->prepare( "SELECT id, obj_id, amount, transaction_id, currency, form_fields_info, referer FROM $table WHERE order_id=%s and status = 'unpaid' limit 1", sanitize_text_field( $data[ 'better_payment_stripe_id' ] ) )
-            );
-            
-            if ( !empty( $results->obj_id ) && !empty( $settings[ 'better_payment_stripe_secret_key' ] ) ) {
-                $header = array(
+        if ( empty( $data['better_payment_stripe_id'] ) || ! is_scalar( $data['better_payment_stripe_id'] ) ) {
+            return false;
+        }
+
+        $order_id = sanitize_text_field( (string) $data['better_payment_stripe_id'] );
+        $row      = self::get_stripe_row( 'order_id', $order_id );
+
+        if ( empty( $row->id ) ) {
+            return false;
+        }
+
+        if ( self::STRIPE_PENDING_STATUS !== $row->status ) {
+            return self::stripe_settled_return( $row, $order_id );
+        }
+
+        if ( empty( $row->obj_id ) || empty( $settings[ 'better_payment_stripe_secret_key' ] ) ) {
+            return false;
+        }
+
+        // Subscription and split-payment orders are Pro's: Pro (or, for an older Pro, Lite's
+        // transitional copy) adds the subscription expansion and the recurring / split flags.
+        $verification = self::stripe_verification_for( $row );
+
+        $response = wp_safe_remote_post(
+            'https://api.stripe.com/v1/checkout/sessions/' . rawurlencode( (string) $row->obj_id ),
+            array(
+                'method'  => 'GET',
+                'headers' => array(
                     'Authorization'  => 'Basic ' . base64_encode( sanitize_text_field( $settings[ 'better_payment_stripe_secret_key' ] ) . ':' ),
                     'Stripe-Version' => '2019-05-16',
-                );
+                ),
+                'timeout' => 70,
+                'body'    => array(
+                    'expand' => $verification['expand'],
+                ),
+            )
+        );
 
-                $request = [
-                    'expand' => [
-                        'subscription.latest_invoice.payment_intent',
-                        'payment_intent'
-                    ]
-                ];
-                $form_fields_info = maybe_unserialize($results->form_fields_info);
-                $is_payment_recurring = ! empty( $form_fields_info['mode'] ) && 'subscription' === $form_fields_info['mode'];
-                $is_payment_split_payment = ( $is_payment_recurring ) && ( ! empty( $form_fields_info['is_payment_split_payment'] ) && 1 === intval( $form_fields_info['is_payment_split_payment'] ) );
-                
-                $action_data = [
-                    'form_fields_info' => $form_fields_info,
-                    'is_payment_recurring' => $is_payment_recurring,
-                    'is_payment_split_payment' => $is_payment_split_payment,
-                    'checkout_session_id' => $results->obj_id,
-                ];
+        if ( is_wp_error( $response ) || empty( $response[ 'body' ] ) ) {
+            return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
+        }
 
-                $response = wp_safe_remote_post(
-                    'https://api.stripe.com/v1/checkout/sessions/' . $results->obj_id,
-                    array(
-                        'method'  => 'GET',
-                        'headers' => $header,
-                        'timeout' => 70,
-                        'body'    => $request
-                    )
-                );
+        $session = json_decode( $response[ 'body' ] );
 
-                if ( is_wp_error( $response ) || empty( $response[ 'body' ] ) ) {
-                    return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
-                }
+        if ( ! is_object( $session ) || isset( $session->error ) ) {
+            return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
+        }
 
-                $response = json_decode( $response[ 'body' ] );
-                $transaction_id = ! empty( $results->transaction_id ) ? sanitize_text_field( $results->transaction_id ) : '';
-                
-                if ( $is_payment_recurring && ! empty( $response->subscription->id ) ) {
-                    $transaction_id = sanitize_text_field( $response->subscription->id );
-                    $subscription_obj = $response->subscription;
-                    $form_fields_info['subscription_id'] = sanitize_text_field( $transaction_id );
-                    $form_fields_info['subscription_customer_id'] = ! empty( $response->customer ) ? sanitize_text_field( $response->customer ) : '';
-                    $form_fields_info['subscription_plan_id'] = ! empty( $subscription_obj->items->data[0]->plan->id ) ? sanitize_text_field( $subscription_obj->items->data[0]->plan->id ) : '';
-                    $form_fields_info['subscription_interval'] = ! empty( $subscription_obj->items->data[0]->plan->interval_count ) ? intval( $subscription_obj->items->data[0]->plan->interval_count ) : '';
-                    $form_fields_info['subscription_interval'] .= ! empty( $subscription_obj->items->data[0]->plan->interval ) ? ' ' . sanitize_text_field( $subscription_obj->items->data[0]->plan->interval ) : $form_fields_info['subscription_interval'];
-                    $form_fields_info['subscription_current_period_start'] = ! empty( $subscription_obj->current_period_start ) ? intval( $subscription_obj->current_period_start ) : 0;
-                    $form_fields_info['subscription_current_period_end'] = ! empty( $subscription_obj->current_period_end ) ? intval( $subscription_obj->current_period_end ) : 0;
-                    $form_fields_info['subscription_status'] = sanitize_text_field( $response->status );
-                    $form_fields_info['subscription_created_date'] = sanitize_text_field( $subscription_obj->created );
-                }
+        return self::confirm_stripe_session( $row, $session, $settings, $verification );
+    }
 
-                if ( isset( $response->error->message ) ) {
-                    return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
-                }
+    /**
+     * Confirm a pending Stripe order from its verified Checkout Session.
+     *
+     * The one place a Stripe payment is confirmed: the return page. In order:
+     *
+     * 1. The session must be this row's (when it carries an id), must not be a setup-mode session
+     *    (the WooCommerce free-trial checkout, which OrderHandler confirms by its SetupIntent), and
+     *    must be paid (stripe_session_is_paid()). Nothing below runs for a session that is not: an
+     *    abandoned checkout, or a completed one whose delayed payment has not cleared (a later
+     *    return confirms it once it has).
+     * 2. Pro's verified-session step, the customer e-mail and the charged amount are computed. The
+     *    amount is `amount_total / 100` whenever Stripe reports one — 0 for a 100%-off promotion
+     *    code or a trial — and the form's amount is kept as `original_amount` when they differ.
+     *    Pro's step must stay free of side effects: a request that loses the claim has asked it too.
+     * 3. The row is claimed with ONE update, `WHERE id = … AND status = 'unpaid'`, which writes the
+     *    confirmed status, amount, e-mail, session and Pro's details together. However many returns
+     *    race for a session (a reload, a second tab), exactly one update matches.
+     * 4. Only that winner fires `better_payment/stripe_payment/success` and
+     *    `better_payment/payment_confirmed` and sends the receipts. A caller that lost the claim to a
+     *    confirmation gets the same success data back, so the visitor still sees the thank-you page.
+     *
+     * The confirmed status is always `paid`, including for a session Stripe reports as
+     * `no_payment_required`: campaign totals and donor counts, Pro's Donors Wall and the WooCommerce
+     * bridge count `paid`, and a $0 donation is still a donation. Stripe's own value stays in
+     * `customer_info`.
+     *
+     * @since 2.4.0
+     *
+     * @param object|null $row         Pending row from get_stripe_row() (null is refused).
+     * @param mixed       $session     Decoded Checkout Session, with $verification['expand'] expanded where Pro needs it (anything but an object is refused).
+     * @param array|null $settings     Form settings for the receipts; null or [] for none.
+     * @param array|null $verification stripe_verification_for( $row ); computed when null.
+     * @return array|\WP_Error Success data for the thank-you page, or why nothing was confirmed.
+     */
+    public static function confirm_stripe_session( $row, $session, $settings = null, $verification = null ) {
+        global $wpdb;
 
-                $customer_email = $is_payment_recurring && ( ! empty( $response->customer_email ) ) ? sanitize_email( $response->customer_email ) : '';
-                $customer_email_optional = '';
-                if (
-                    isset( $response->payment_intent ) &&
-                    isset( $response->payment_intent->charges ) &&
-                    isset( $response->payment_intent->charges->data ) &&
-                    ! empty( $response->payment_intent->charges->data )
-                ) {
-                    $charge = current( $response->payment_intent->charges->data );
-            
-                    if (
-                        isset( $charge->billing_details ) &&
-                        isset( $charge->billing_details->email ) &&
-                        ! empty( $charge->billing_details->email )
-                    ) {
-                        $customer_email_optional = sanitize_email( $charge->billing_details->email );
-                    }
-                }
+        $table    = "{$wpdb->prefix}better_payment";
+        $settings = is_array( $settings ) ? $settings : [];
 
-                $form_fields_info['is_coupon_applied'] = 0;
-                $exact_paid_amount = ! empty( $response->amount_total ) ? floatval( $response->amount_total ) : $results->amount * 100;
-                $exact_paid_amount = $exact_paid_amount / 100;
-                $form_fields_info['exact_paid_amount'] = $exact_paid_amount;
-                if( (int)$exact_paid_amount != (int)$results->amount ) {
-                    $form_fields_info['paid_amount_diff'] = $results->amount - $exact_paid_amount;
-                    $form_fields_info['is_coupon_applied'] = 1;
-                }
-                
-                $updated = $wpdb->update(
-                    $table,
-                    array(
-                        'amount'        => $exact_paid_amount,
-                        'status'        => sanitize_text_field( $response->payment_status ),
-                        'email'         => $is_payment_recurring ? $customer_email : $customer_email_optional,
-                        'customer_info' => maybe_serialize( $response ),
-                        'form_fields_info' => maybe_serialize( $form_fields_info ),
-                        'transaction_id' => $transaction_id,
-                    ),
-                    array( 'ID' => $results->id )
-                );
+        if ( ! is_object( $row ) || empty( $row->id ) || ! is_object( $session ) ) {
+            return new \WP_Error( 'bp_stripe_confirm_invalid', __( 'There is no Stripe payment to confirm.', 'better-payment' ) );
+        }
 
-                do_action('better_payment/stripe_payment/success', $action_data);
-                do_action( 'better_payment/payment_confirmed', (int) $results->id );
+        if ( isset( $session->id ) && ( empty( $row->obj_id ) || (string) $session->id !== (string) $row->obj_id ) ) {
+            return new \WP_Error( 'bp_stripe_session_mismatch', __( 'Stripe did not confirm a payment for this checkout.', 'better-payment' ) );
+        }
 
-                $frontend_data = [
-                    'amount' => $exact_paid_amount,
-                    'email' => $is_payment_recurring ? $customer_email : $customer_email_optional,
-                    'transaction_id' => $transaction_id,
-                    'currency' => ! empty( $results->currency ) ? $results->currency : __( 'USD', 'better-payment' ),
-                    'method' => 'stripe',
-                    'is_payment_recurring' => $is_payment_recurring,
-                    'is_payment_split_payment' => $is_payment_split_payment,
-                    'is_payment_mixed' => ! empty( $form_fields_info['is_payment_mixed'] ) ? intval( $form_fields_info['is_payment_mixed'] ) : 0,
-                    'mixed_payment_selected_type' => ! empty( $form_fields_info['mixed_payment_selected_type'] ) ? sanitize_text_field( $form_fields_info['mixed_payment_selected_type'] ) : '',
-                ];
+        if ( isset( $session->mode ) && 'setup' === $session->mode ) {
+            return new \WP_Error( 'bp_stripe_setup_session', __( 'This checkout saves a payment method and is confirmed by its order.', 'better-payment' ) );
+        }
 
-                if ( $is_payment_split_payment ) {
-                    $total_amount = ! empty( $form_fields_info['split_payment_total_amount'] ) 
-                        ? sanitize_text_field( $form_fields_info['split_payment_total_amount'] ) 
-                        : 0;
-                    $total_installment = ! empty( $form_fields_info['split_payment_installment_iteration'] ) 
-                        ? sanitize_text_field( $form_fields_info['split_payment_installment_iteration'] ) 
-                        : 1;
+        $stored_fields    = isset( $row->form_fields_info ) ? maybe_unserialize( $row->form_fields_info ) : [];
+        $form_fields_info = is_array( $stored_fields ) ? $stored_fields : [];
 
-                    // $frontend_data['amount'] = floatval( $total_amount / $total_installment );
-                    $frontend_data['total_amount'] = $total_amount;
-                }
+        if ( ! is_array( $verification ) || ! isset( $verification['expand'] ) ) {
+            $verification = self::stripe_verification_for( $row );
+        }
 
-                if ( false !== $updated ) {
-                    //Send email notification
-                    $better_customer_email = $is_payment_recurring ? $customer_email : $customer_email_optional;
-                    
-                    if ( 
-                        (isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' ) 
-                        || ( $results->referer === 'elementor-form' )
-                        ) {
-                        $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
-                        self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Stripe', $results->form_fields_info, $is_elementor_form);                    
-                    }
+        // Stripe returns the session whether or not anyone paid for it. Nothing below —
+        // Pro's verified-session step, the row update, the confirmation hooks, the e-mails,
+        // the success page — may run for a session that is not complete and paid. The row
+        // stays 'unpaid', so a later return can still confirm it.
+        if ( ! self::stripe_session_is_paid( $session ) ) {
+            return self::stripe_unpaid_session_error( $session );
+        }
 
-                    return $frontend_data;
-                }
+        $action_data = [
+            'form_fields_info' => $form_fields_info,
+            'is_payment_recurring' => $verification['is_payment_recurring'],
+            'is_payment_split_payment' => $verification['is_payment_split_payment'],
+            'checkout_session_id' => $row->obj_id,
+        ];
+
+        // A subscription's id, customer e-mail and details, and the thank-you page's
+        // recurring / split flags, are Pro's to add.
+        $verified = PaymentEntitlement::stripe_verified_session(
+            [
+                'form_fields_info' => $form_fields_info,
+                'transaction_id'   => ! empty( $row->transaction_id ) ? sanitize_text_field( $row->transaction_id ) : '',
+                'email'            => self::stripe_session_customer_email( $session ),
+                'frontend_data'    => [],
+            ],
+            $session,
+            $verification
+        );
+
+        $confirmed_fields = is_array( $verified['form_fields_info'] ) ? $verified['form_fields_info'] : $form_fields_info;
+        $transaction_id   = $verified['transaction_id'];
+        $customer_email   = $verified['email'];
+        $amounts          = self::stripe_paid_amounts( $session, isset( $row->amount ) ? $row->amount : 0, $confirmed_fields );
+        $paid_amount      = $amounts['amount'];
+        $confirmed_fields = $amounts['form_fields_info'];
+
+        $claimed = $wpdb->update(
+            $table,
+            array(
+                'amount'           => $paid_amount,
+                'status'           => self::STRIPE_CONFIRMED_STATUS,
+                'email'            => $customer_email,
+                'customer_info'    => maybe_serialize( $session ),
+                'form_fields_info' => maybe_serialize( $confirmed_fields ),
+                'transaction_id'   => $transaction_id,
+            ),
+            array(
+                'id'     => (int) $row->id,
+                'status' => self::STRIPE_PENDING_STATUS,
+            )
+        );
+
+        if ( 1 !== (int) $claimed ) {
+            // Another return (a reload, a second tab) got here first (or the write failed).
+            // Whatever it recorded is the outcome; nothing is fired or sent twice.
+            $current = self::get_stripe_row( 'id', (int) $row->id );
+
+            if ( ! empty( $current->id ) && self::STRIPE_CONFIRMED_STATUS === $current->status ) {
+                return self::stripe_frontend_data( $current, $verified['frontend_data'] );
+            }
+
+            return new \WP_Error( 'bp_stripe_confirm_failed', __( 'The payment could not be recorded. Please reload this page.', 'better-payment' ) );
+        }
+
+        do_action('better_payment/stripe_payment/success', $action_data);
+        do_action( 'better_payment/payment_confirmed', (int) $row->id );
+
+        $frontend_data = [
+            'amount' => $paid_amount,
+            'email' => $customer_email,
+            'transaction_id' => $transaction_id,
+            'currency' => ! empty( $row->currency ) ? $row->currency : __( 'USD', 'better-payment' ),
+            'method' => 'stripe',
+        ] + $verified['frontend_data'];
+
+        //Send email notification
+        if (
+            ( isset( $settings[ 'better_payment_form_email_enable' ] ) && 'yes' === $settings[ 'better_payment_form_email_enable' ] )
+            || ( isset( $row->referer ) && 'elementor-form' === $row->referer )
+        ) {
+            $is_elementor_form = isset( $row->referer ) && 'elementor-form' === $row->referer ? 1 : 0;
+
+            self::better_email_notification( $transaction_id, $customer_email, $settings, 'Stripe', $row->form_fields_info, $is_elementor_form );
+        }
+
+        return $frontend_data;
+    }
+
+    /**
+     * A Stripe transaction row, looked up by `id`, `order_id` or `obj_id` (the Checkout Session id).
+     *
+     * @since 2.4.0
+     *
+     * @param string     $field 'id' | 'order_id' | 'obj_id'.
+     * @param mixed      $value Value to match; anything but a non-empty scalar matches nothing.
+     * @return object|null
+     */
+    public static function get_stripe_row( $field, $value ) {
+        global $wpdb;
+
+        if ( ! in_array( $field, [ 'id', 'order_id', 'obj_id' ], true ) || ! is_scalar( $value ) || '' === (string) $value ) {
+            return null;
+        }
+
+        $table  = "{$wpdb->prefix}better_payment";
+        $format = 'id' === $field ? '%d' : '%s';
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table from $wpdb->prefix, column and format from the whitelist above.
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT id, order_id, obj_id, amount, transaction_id, currency, email, status, source, referer, form_fields_info, payment_date FROM $table WHERE $field = $format LIMIT 1", $value ) );
+
+        return is_object( $row ) ? $row : null;
+    }
+
+    /**
+     * How a row's Checkout Session is retrieved and whether it is a subscription — Pro's answer.
+     *
+     * @since 2.4.0
+     *
+     * @param object|null $row Transaction row; null reads as a row with no stored fields.
+     * @return array `expand`, `is_payment_recurring`, `is_payment_split_payment`.
+     */
+    public static function stripe_verification_for( $row ) {
+        $form_fields_info = is_object( $row ) && isset( $row->form_fields_info ) ? maybe_unserialize( $row->form_fields_info ) : [];
+
+        return PaymentEntitlement::stripe_verification_args(
+            [
+                'expand'                   => [ 'payment_intent' ],
+                'is_payment_recurring'     => false,
+                'is_payment_split_payment' => false,
+            ],
+            is_array( $form_fields_info ) ? $form_fields_info : []
+        );
+    }
+
+    /**
+     * What a verified Checkout Session charged, and what the transaction's fields record about it.
+     *
+     * The charged amount is `amount_total / 100` whenever Stripe reports a numeric total — 0
+     * included: a 100%-off promotion code or a trial charges nothing, and a row claiming otherwise
+     * would add money nobody paid to a campaign's total. It used to fall back to the form's amount
+     * whenever the total was 0. Only a session with no total at all keeps the row's amount.
+     *
+     * `exact_paid_amount` is always recorded. When the charge differs from the amount the order was
+     * created for, that amount is kept as `original_amount`; `is_coupon_applied` and
+     * `paid_amount_diff` (read by the transaction details and the receipt) are set only when a
+     * discount explains the difference — a trial is not a coupon.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $session          Decoded Checkout Session.
+     * @param mixed $row_amount       The row's amount (what the order was created for).
+     * @param array $form_fields_info The fields to record into.
+     * @return array `amount` (float) and `form_fields_info`.
+     */
+    public static function stripe_paid_amounts( $session, $row_amount, array $form_fields_info ) {
+        $original = is_numeric( $row_amount ) ? (float) $row_amount : 0.0;
+        $total    = is_object( $session ) && isset( $session->amount_total ) && is_numeric( $session->amount_total ) ? (float) $session->amount_total : null;
+        $paid     = null === $total ? $original : $total / 100;
+
+        $form_fields_info['is_coupon_applied'] = 0;
+        $form_fields_info['exact_paid_amount'] = $paid;
+        unset( $form_fields_info['original_amount'], $form_fields_info['paid_amount_diff'] );
+
+        if ( (int) round( $paid * 100 ) !== (int) round( $original * 100 ) ) {
+            $form_fields_info['original_amount'] = $original;
+
+            $discounted = ( is_object( $session ) && isset( $session->total_details->amount_discount ) && is_numeric( $session->total_details->amount_discount ) && (float) $session->total_details->amount_discount > 0 )
+                || ( isset( $form_fields_info['stripe_coupon_code'] ) && is_scalar( $form_fields_info['stripe_coupon_code'] ) && '' !== trim( (string) $form_fields_info['stripe_coupon_code'] ) );
+
+            if ( $discounted ) {
+                $form_fields_info['paid_amount_diff']  = $original - $paid;
+                $form_fields_info['is_coupon_applied'] = 1;
             }
         }
-        return false;
+
+        return [
+            'amount'           => $paid,
+            'form_fields_info' => $form_fields_info,
+        ];
     }
-    
+
+    /**
+     * The customer's e-mail on a Checkout Session: the charge's billing e-mail when the PaymentIntent
+     * is expanded, else the session's `customer_details` / `customer_email`.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $session Decoded Checkout Session.
+     * @return string
+     */
+    public static function stripe_session_customer_email( $session ) {
+        if ( ! is_object( $session ) ) {
+            return '';
+        }
+
+        if ( isset( $session->payment_intent->charges->data ) && is_array( $session->payment_intent->charges->data ) && ! empty( $session->payment_intent->charges->data ) ) {
+            $charge = current( $session->payment_intent->charges->data );
+
+            if ( isset( $charge->billing_details->email ) && is_string( $charge->billing_details->email ) && '' !== $charge->billing_details->email ) {
+                return sanitize_email( $charge->billing_details->email );
+            }
+        }
+
+        if ( isset( $session->customer_details->email ) && is_string( $session->customer_details->email ) && '' !== $session->customer_details->email ) {
+            return sanitize_email( $session->customer_details->email );
+        }
+
+        if ( isset( $session->customer_email ) && is_string( $session->customer_email ) ) {
+            return sanitize_email( $session->customer_email );
+        }
+
+        return '';
+    }
+
+    /**
+     * Whether an order id is one Handler::new_order_id() minted for Stripe.
+     *
+     * A return for an order that is already confirmed shows its receipt from the row, by id alone.
+     * Orders from before 2.3.4 carry a time-based id that could be enumerated, so only an
+     * unguessable one gets that page.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $order_id Order id.
+     * @return bool
+     */
+    public static function stripe_order_id_is_unguessable( $order_id ) {
+        return is_string( $order_id ) && 1 === preg_match( '/^stripe_[0-9a-f]{24}$/', $order_id );
+    }
+
+    /**
+     * The return page for an order that is no longer pending.
+     *
+     * - Confirmed (`paid`): the success data, rebuilt from the row — no Stripe call, no hook, no
+     *   e-mail — with Pro's thank-you page flags. Only for an unguessable order id.
+     * - Anything else (refunded, an older release's statuses): nothing, as before.
+     *
+     * @param object $row      The row.
+     * @param string $order_id The order id the return names.
+     * @return array|false
+     */
+    private static function stripe_settled_return( $row, $order_id ) {
+        if ( self::STRIPE_CONFIRMED_STATUS !== $row->status || ! self::stripe_order_id_is_unguessable( $order_id ) ) {
+            return false;
+        }
+
+        $form_fields_info = isset( $row->form_fields_info ) ? maybe_unserialize( $row->form_fields_info ) : [];
+
+        // Only the thank-you page flags are used, and Pro derives them from the stored fields.
+        $details = PaymentEntitlement::stripe_verified_session(
+            [
+                'form_fields_info' => is_array( $form_fields_info ) ? $form_fields_info : [],
+                'transaction_id'   => (string) $row->transaction_id,
+                'email'            => (string) $row->email,
+                'frontend_data'    => [],
+            ],
+            new \stdClass(),
+            self::stripe_verification_for( $row )
+        );
+
+        return self::stripe_frontend_data( $row, $details['frontend_data'] );
+    }
+
+    /**
+     * Success data for a confirmed Stripe row.
+     *
+     * @param object $row   Confirmed row.
+     * @param array  $extra Pro's thank-you page flags.
+     * @return array
+     */
+    private static function stripe_frontend_data( $row, array $extra = [] ) {
+        return [
+            'amount'         => (float) $row->amount,
+            'email'          => sanitize_email( (string) $row->email ),
+            'transaction_id' => sanitize_text_field( (string) $row->transaction_id ),
+            'currency'       => ! empty( $row->currency ) ? sanitize_text_field( $row->currency ) : __( 'USD', 'better-payment' ),
+            'method'         => 'stripe',
+        ] + $extra;
+    }
+
+    /**
+     * Whether a retrieved Stripe Checkout Session has really been paid for.
+     *
+     * Retrieving a session proves only that it exists. A visitor can come back to the return
+     * URL from a checkout they abandoned (`status` is `open`, or `expired`), and a completed
+     * checkout paid with a delayed method (bank debits, vouchers) is `complete` with
+     * `payment_status: unpaid` until the money arrives — sometimes days later, sometimes never.
+     * Both used to confirm the order: the row, `better_payment/payment_confirmed`, Pro's
+     * payment types, the receipts and the success page.
+     *
+     * Paid means `payment_status` is `paid` (the funds are there), or `no_payment_required`
+     * (a 100%-off promotion code, a subscription trial) on a `complete` session: Stripe also
+     * reports `no_payment_required` for such a session before it is completed. A present
+     * `status` other than `complete` is never paid. A missing `status` is tolerated only for
+     * `paid` — requests pin `Stripe-Version: 2019-05-16`, and `paid` is only ever reported for
+     * a completed checkout — so a response without the field cannot stall every payment.
+     * Anything else missing or unrecognised is unpaid.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $session Decoded Checkout Session.
+     * @return bool
+     */
+    public static function stripe_session_is_paid( $session ) {
+        if ( ! is_object( $session ) ) {
+            return false;
+        }
+
+        $status         = isset( $session->status ) && is_string( $session->status ) ? $session->status : '';
+        $payment_status = isset( $session->payment_status ) && is_string( $session->payment_status ) ? $session->payment_status : '';
+
+        if ( 'paid' === $payment_status ) {
+            return '' === $status || 'complete' === $status;
+        }
+
+        return 'no_payment_required' === $payment_status && 'complete' === $status;
+    }
+
+    /**
+     * Why a Stripe return did not confirm its order.
+     *
+     * `bp_stripe_payment_processing`: the checkout was completed but Stripe has not been paid
+     * yet (a delayed payment method). `bp_stripe_payment_incomplete`: anything else — the
+     * checkout was never completed. The message is shown in WooCommerce order notes.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $session Decoded Checkout Session.
+     * @return \WP_Error
+     */
+    public static function stripe_unpaid_session_error( $session ) {
+        $status         = is_object( $session ) && isset( $session->status ) && is_string( $session->status ) ? $session->status : '';
+        $payment_status = is_object( $session ) && isset( $session->payment_status ) && is_string( $session->payment_status ) ? $session->payment_status : '';
+        $data           = [
+            'status'         => sanitize_text_field( $status ),
+            'payment_status' => sanitize_text_field( $payment_status ),
+        ];
+
+        if ( 'complete' === $status && 'unpaid' === $payment_status ) {
+            return new \WP_Error( 'bp_stripe_payment_processing', __( 'Stripe has not confirmed this payment yet. It is confirmed once the payment clears.', 'better-payment' ), $data );
+        }
+
+        return new \WP_Error( 'bp_stripe_payment_incomplete', __( 'Stripe did not confirm a payment for this checkout.', 'better-payment' ), $data );
+    }
+
+    /**
+     * The return page for a completed Stripe checkout whose payment has not cleared yet.
+     *
+     * Deliberately neither the success page (nothing has been paid) nor the failure page (the
+     * payment may still succeed).
+     *
+     * @since 2.4.0
+     *
+     * @return void
+     */
+    private static function stripe_processing_message_template() {
+        ?>
+        <section class="bp-thank_page">
+            <div class="bp-thank_page-wrapper bp-stripe-processing">
+                <div class="bp-thank_page-text">
+                    <h2 class="bp-font_ibm bp-page_header"><?php esc_html_e( 'Your payment is processing', 'better-payment' ); ?></h2>
+                    <p class="bp-font_ibm bp-payment_info"><?php esc_html_e( 'Stripe has not confirmed your payment yet. Some payment methods take a few days to clear. You do not need to pay again; reload this page later to see your confirmation.', 'better-payment' ); ?></p>
+                </div>
+            </div>
+        </section>
+        <?php
+    }
+
+    /**
+     * The failed-payment page, with the optional redirect to the form's error page.
+     *
+     * @param array  $settings Form settings.
+     * @param string $order_id The order the return is for.
+     * @return void
+     */
+    private static function render_failed_response( $settings, $order_id ) {
+        self::failed_message_template( $settings, self::get_failed_transaction_data( $order_id ) );
+
+        $redirection_url_error = ! empty( $settings['better_payment_form_error_page_url']['url'] ) ? esc_url( $settings['better_payment_form_error_page_url']['url'] ) : '';
+
+        if ( $redirection_url_error ) {
+            ?>
+            <script>
+                setTimeout(function(){
+                    window.location.replace("<?php echo esc_url( $redirection_url_error ); ?>");
+                }, 2000);
+            </script>
+            <?php
+        }
+    }
+
     /**
      * Paystack payment success
-     * 
+     *
+     * Verifies a pending order against Paystack, then claims it with one update
+     * (`WHERE id = … AND status = 'unpaid'`). Only the request that wins the claim fires
+     * `better_payment/payment_confirmed`, sends the receipts and fires
+     * `better_payment/payment/success`, so a reload, a double-click or two tabs returning at once
+     * confirm the order exactly once. A request that loses the claim to a confirmation, and a later
+     * return for an order that is already confirmed, render the success page from the row — only
+     * when the return's `reference` is the one that order holds.
+     *
      * @since 0.0.1
      */
     public static function paystack_payment_success( $settings = [] ) {
         $data = $_REQUEST;
 
-        if ( ! empty( $data[ 'better_payment_paystack_id' ] ) ) {
-            if ( empty( $data['reference'] ) || ! is_scalar( $data['reference'] ) ) {
-                return false;
-            }
-
-            global $wpdb;
-            $table   = "{$wpdb->prefix}better_payment";
-            $results = $wpdb->get_row(
-                $wpdb->prepare( "SELECT id,obj_id,transaction_id,amount,currency,form_fields_info,referer FROM $table WHERE order_id=%s and status = 'unpaid' limit 1", sanitize_text_field( $data[ 'better_payment_paystack_id' ] ) )
-            );
-
-            if ( empty( $results->id ) ) {
-                return false;
-            }
-            
-            $header_info = array(
-                'Authorization'  => 'Bearer ' . sanitize_text_field( $settings[ 'better_payment_paystack_secret_key' ] ),
-                "Cache-Control: no-cache",
-            );
-            
-            $response = wp_safe_remote_get(
-                'https://api.paystack.co/transaction/verify/'. sanitize_text_field( $data[ 'reference' ] ),
-                array(
-                    'headers' => $header_info,
-                    'timeout' => 70,
-                )
-            );
-
-            $response = json_decode(wp_remote_retrieve_body($response));
-    
-            if ( ! empty( $response->status ) ) {
-                $verified = isset( $response->data ) ? $response->data : null;
-
-                if ( ! self::paystack_verification_matches( $results, $verified )
-                    || self::paystack_reference_claimed_elsewhere( $verified->reference, (int) $results->id ) ) {
-                    return false;
-                }
-
-                $updated = $wpdb->update(
-                    $table,
-                    array(
-                        'status'        => ! empty( $response->data->status ) ? sanitize_text_field( $response->data->status ) : '',
-                        'amount'        => ! empty( $response->data->amount ) ? floatval( ( $response->data->amount ) / 100 ) : 0,
-                        'obj_id'        => ! empty( $response->data->id ) ? sanitize_text_field( $response->data->id ) : '',
-                        'transaction_id' => ! empty( $response->data->reference ) ? sanitize_text_field( $response->data->reference ) : '',
-                        'customer_info' => ! empty( $response->data->customer ) ? maybe_serialize( $response->data->customer ) : '',
-                        'email'         => ! empty( $response->data->customer->email ) ? sanitize_email( $response->data->customer->email ) : '',
-                    ),
-                    array( 'ID' => $results->id )
-                );
-                do_action( 'better_payment/payment_confirmed', (int) $results->id );
-            }
-
-            $better_customer_email = ! empty( $response->data->customer->email ) ? maybe_serialize( $response->data->customer->email ) : '';
-            $transaction_id = ! empty( $response->data->reference ) ? sanitize_text_field( $response->data->reference ) : '';
-
-            $frontend_data = [
-                'amount' => ! empty( $response->data->amount ) ? floatval( ( $response->data->amount ) / 100 ) : 0,
-                'email' => ! empty( $better_customer_email ) ? $better_customer_email : '',
-                'transaction_id' => $transaction_id,
-                'currency' => ! empty( $response->data->currency ) ? sanitize_text_field( $response->data->currency ) : __( 'USD', 'better-payment' ),
-                'method' => 'paystack',
-            ];
-
-            if ( ! empty( $updated ) && $better_customer_email ) {
-                //Send email notification
-                if (
-                    (isset($settings[ 'better_payment_form_email_enable' ]) && $settings[ 'better_payment_form_email_enable' ] == 'yes' )
-                    || ( $results->referer === 'elementor-form' )
-                    ) {
-                    $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
-                    self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form);
-                }
-
-                do_action( 'better_payment/payment/success', sanitize_text_field( $data['better_payment_paystack_id'] ?? '' ), (int) $results->id, 'paystack' );
-
-                return $frontend_data;
-            }
+        if ( empty( $data[ 'better_payment_paystack_id' ] ) || ! is_scalar( $data[ 'better_payment_paystack_id' ] ) ) {
+            return false;
         }
-        return false;
+
+        if ( empty( $data['reference'] ) || ! is_scalar( $data['reference'] ) ) {
+            return false;
+        }
+
+        global $wpdb;
+        $table     = "{$wpdb->prefix}better_payment";
+        $order_id  = sanitize_text_field( (string) $data[ 'better_payment_paystack_id' ] );
+        $reference = sanitize_text_field( (string) $data['reference'] );
+        $results   = $wpdb->get_row(
+            $wpdb->prepare( "SELECT id,obj_id,transaction_id,amount,currency,email,status,form_fields_info,referer FROM $table WHERE order_id=%s limit 1", $order_id )
+        );
+
+        if ( empty( $results->id ) ) {
+            return false;
+        }
+
+        if ( 'unpaid' !== $results->status ) {
+            return self::paystack_settled_return( $results, $reference );
+        }
+
+        $header_info = array(
+            'Authorization'  => 'Bearer ' . sanitize_text_field( isset( $settings[ 'better_payment_paystack_secret_key' ] ) ? $settings[ 'better_payment_paystack_secret_key' ] : '' ),
+            "Cache-Control: no-cache",
+        );
+
+        $response = wp_safe_remote_get(
+            'https://api.paystack.co/transaction/verify/'. $reference,
+            array(
+                'headers' => $header_info,
+                'timeout' => 70,
+            )
+        );
+
+        $response = json_decode(wp_remote_retrieve_body($response));
+
+        if ( empty( $response->status ) ) {
+            return false;
+        }
+
+        $verified = isset( $response->data ) ? $response->data : null;
+
+        if ( ! self::paystack_verification_matches( $results, $verified )
+            || self::paystack_reference_claimed_elsewhere( $verified->reference, (int) $results->id ) ) {
+            return false;
+        }
+
+        $claimed = $wpdb->update(
+            $table,
+            array(
+                'status'        => ! empty( $response->data->status ) ? sanitize_text_field( $response->data->status ) : '',
+                'amount'        => ! empty( $response->data->amount ) ? floatval( ( $response->data->amount ) / 100 ) : 0,
+                'obj_id'        => ! empty( $response->data->id ) ? sanitize_text_field( $response->data->id ) : '',
+                'transaction_id' => ! empty( $response->data->reference ) ? sanitize_text_field( $response->data->reference ) : '',
+                'customer_info' => ! empty( $response->data->customer ) ? maybe_serialize( $response->data->customer ) : '',
+                'email'         => ! empty( $response->data->customer->email ) ? sanitize_email( $response->data->customer->email ) : '',
+            ),
+            array(
+                'id'     => (int) $results->id,
+                'status' => 'unpaid',
+            )
+        );
+
+        if ( 1 !== (int) $claimed ) {
+            // Another return confirmed this order first (or the write failed): nothing is fired or sent twice.
+            $current = $wpdb->get_row(
+                $wpdb->prepare( "SELECT id,transaction_id,amount,currency,email,status FROM $table WHERE id=%d limit 1", (int) $results->id )
+            );
+
+            return ! empty( $current->id ) ? self::paystack_settled_return( $current, $reference ) : false;
+        }
+
+        do_action( 'better_payment/payment_confirmed', (int) $results->id );
+
+        $better_customer_email = ! empty( $response->data->customer->email ) ? maybe_serialize( $response->data->customer->email ) : '';
+        $transaction_id = ! empty( $response->data->reference ) ? sanitize_text_field( $response->data->reference ) : '';
+
+        $frontend_data = [
+            'amount' => ! empty( $response->data->amount ) ? floatval( ( $response->data->amount ) / 100 ) : 0,
+            'email' => ! empty( $better_customer_email ) ? $better_customer_email : '',
+            'transaction_id' => $transaction_id,
+            'currency' => ! empty( $response->data->currency ) ? sanitize_text_field( $response->data->currency ) : __( 'USD', 'better-payment' ),
+            'method' => 'paystack',
+        ];
+
+        //Send email notification
+        if (
+            $better_customer_email
+            && (
+                ( isset( $settings[ 'better_payment_form_email_enable' ] ) && $settings[ 'better_payment_form_email_enable' ] == 'yes' )
+                || ( $results->referer === 'elementor-form' )
+            )
+        ) {
+            $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
+            self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form);
+        }
+
+        do_action( 'better_payment/payment/success', $order_id, (int) $results->id, 'paystack' );
+
+        return $frontend_data;
+    }
+
+    /**
+     * The return page for a Paystack order that is no longer pending.
+     *
+     * A confirmed order (`success`) shows its success page again, from the row, when the return
+     * carries the reference the order holds — the order id alone is not enough to see a receipt.
+     * Anything else shows nothing, as before.
+     *
+     * @param object $row       The row.
+     * @param string $reference The return's `reference`.
+     * @return array|false
+     */
+    private static function paystack_settled_return( $row, $reference ) {
+        $stored = isset( $row->transaction_id ) ? (string) $row->transaction_id : '';
+
+        if ( ! isset( $row->status ) || 'success' !== $row->status || '' === $stored || ! hash_equals( $stored, (string) $reference ) ) {
+            return false;
+        }
+
+        return [
+            'amount'         => (float) $row->amount,
+            'email'          => sanitize_email( (string) $row->email ),
+            'transaction_id' => sanitize_text_field( $stored ),
+            'currency'       => ! empty( $row->currency ) ? sanitize_text_field( $row->currency ) : __( 'USD', 'better-payment' ),
+            'method'         => 'paystack',
+        ];
     }
 
     /**
@@ -928,41 +1407,15 @@ class Handler extends Controller{
             ? esc_html( $settings['better_payment_form_success_message_currency_text'] ) 
             : esc_html__( 'Currency', 'better-payment' );
         $better_payment_form_success_message_pay_method_text = !empty( $settings['better_payment_form_success_message_pay_method_text'] ) ? esc_html( $settings['better_payment_form_success_message_pay_method_text'] ) : esc_html__( 'Payment Method', 'better-payment' );
-        $better_payment_form_success_message_pay_type_text = !empty( $settings['better_payment_form_success_message_pay_type_text'] ) 
-            ? esc_html( $settings['better_payment_form_success_message_pay_type_text'] ) 
-            : esc_html__( 'Payment Type', 'better-payment' );
-        $better_payment_form_payment_type = !empty( $settings['better_payment_form_payment_type'] ) 
-            ? esc_html( $settings['better_payment_form_payment_type'] ) 
-            : '';
-        if ( ! empty( $better_payment_form_payment_type ) ) {
-            if (  'one-time' === $better_payment_form_payment_type ) {
-                $better_payment_form_payment_type_value = esc_html__( 'One Time Payment', 'better-payment' );
-            } elseif (  'recurring' === $better_payment_form_payment_type ) {
-                $better_payment_form_payment_type_value = esc_html__( 'Recurring Payment', 'better-payment' );
-            } elseif ( 'mixed' === $better_payment_form_payment_type ) {
-                $mixed_payment_selected_type = ! empty( $tr_id['mixed_payment_selected_type'] ) ? sanitize_text_field( $tr_id['mixed_payment_selected_type'] ) : '';
-                $is_mixed_recurring = 'recurring' === $mixed_payment_selected_type;
-
-                if ( empty( $mixed_payment_selected_type ) ) {
-                    $is_mixed_recurring = ! empty( $tr_id['is_payment_recurring'] ) && empty( $tr_id['is_payment_split_payment'] );
-                }
-
-                $better_payment_form_payment_type_value = $is_mixed_recurring
-                    ? esc_html__( 'Recurring Payment', 'better-payment' )
-                    : esc_html__( 'One Time Payment', 'better-payment' );
-            } else {
-                $better_payment_form_payment_type_value = esc_html__( 'Split Payment', 'better-payment' );
-            }
-        }
+        // Rows only Pro's payment types add: Payment Type, and a split payment's "Paid Amount … out of …".
+        $pro_rows_after_payment_method   = PaymentEntitlement::success_rows( 'after_payment_method', $settings, $tr_id, [ 'currency_symbol' => $bp__currency_symbol ] );
+        $pro_rows_after_merchant_details = PaymentEntitlement::success_rows( 'after_merchant_details', $settings, $tr_id, [ 'currency_symbol' => $bp__currency_symbol ] );
         $better_payment_form_success_message_merchant_details_text = !empty( $settings['better_payment_form_success_message_merchant_details_text'] ) 
             ? esc_html( $settings['better_payment_form_success_message_merchant_details_text'] ) 
             : esc_html__( 'Merchant Details', 'better-payment' );
         $better_payment_form_success_message_merchant_details_value = isset( $settings['better_payment_form_payment_source'] ) && $settings['better_payment_form_payment_source'] === 'manual' && ! empty( $settings['better_payment_form_title'] ) 
             ? esc_html($settings['better_payment_form_title']) 
             : esc_html( get_bloginfo( 'name' ) );
-        $better_payment_form_success_message_paid_amount_text = !empty( $settings['better_payment_form_success_message_paid_amount_text'] ) 
-            ? esc_html( $settings['better_payment_form_success_message_paid_amount_text'] ) 
-            : esc_html__( 'Paid Amount', 'better-payment' );
         $better_payment_form_success_message_purchase_details_text = !empty( $settings['better_payment_form_success_message_purchase_details_text'] ) 
             ? esc_html( $settings['better_payment_form_success_message_purchase_details_text'] ) 
             : esc_html__( 'Purchase Details', 'better-payment' );
@@ -1075,16 +1528,14 @@ class Handler extends Controller{
                                 <?php endif; ?>
                             </div>
                         </li>
-                        <?php if( !empty( $better_payment_form_payment_type ) ): ?>
+                        <?php foreach ( $pro_rows_after_payment_method as $pro_row ) : ?>
                             <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                                 <span class="bp-info_content">
-                                    <?php
-                                        echo wp_kses_post( $better_payment_form_success_message_pay_type_text );
-                                    ?>
+                                    <?php echo wp_kses_post( $pro_row['label'] ); ?>
                                 </span>
-                                <span class="bp-info_content  bp-bold"><?php echo wp_kses_post( $better_payment_form_payment_type_value ); ?></span>
+                                <span class="bp-info_content  bp-bold"><?php echo wp_kses_post( $pro_row['value'] ); ?></span>
                             </li>
-                        <?php endif; ?>
+                        <?php endforeach; ?>
                         <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                             <span class="bp-info_content">
                                 <?php
@@ -1095,18 +1546,14 @@ class Handler extends Controller{
                                 <?php echo wp_kses_post( $better_payment_form_success_message_merchant_details_value );  ?>
                             </span>
                         </li>
-                        <?php if( isset( $tr_id['is_payment_split_payment'] ) && $tr_id['is_payment_split_payment'] ): ?>
+                        <?php foreach ( $pro_rows_after_merchant_details as $pro_row ) : ?>
                             <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                                 <span class="bp-info_content">
-                                    <?php
-                                        echo wp_kses_post( $better_payment_form_success_message_paid_amount_text );
-                                    ?>
+                                    <?php echo wp_kses_post( $pro_row['label'] ); ?>
                                 </span>
-                                <span class="bp-info_content  bp-bold">
-                                    <?php echo $bp__currency_symbol . esc_html($tr_id['amount']); ?> out of <?php echo $bp__currency_symbol . esc_html($tr_id['total_amount']); ?>
-                                </span>
+                                <span class="bp-info_content  bp-bold"><?php echo wp_kses_post( $pro_row['value'] ); ?></span>
                             </li>
-                        <?php endif; ?>
+                        <?php endforeach; ?>
                         <?php
                         $has_woo_products = !empty($settings['better_payment_form_woocommerce_product_id']) || !empty($settings['better_payment_form_woocommerce_product_ids']);
                         $has_fluentcart_products = !empty($settings['better_payment_form_fluentcart_product_id']) || !empty($settings['better_payment_form_fluentcart_product_ids']);
@@ -1703,41 +2150,28 @@ class Handler extends Controller{
            $payment_date = wp_date(get_option('date_format').' '.get_option('time_format'), strtotime($transaction_obj->payment_date));
         }
 
-        $is_empty_email_body = empty($email_body);
-
-        $email_body = do_shortcode( $email_body );
-        $bp_form_fields_html_content = $email_body;
-        
-        $bp_all_fields_shortcode = 'bp-all-fields';
         $referer_content_page_link = '#';
-		
-        $field_text = __('Field', 'better-payment');
-        $value_text = __('Entry', 'better-payment');
 
         $form_fields_info_arr = maybe_unserialize($form_fields_info);
+        $form_fields_info_arr = is_array( $form_fields_info_arr ) ? $form_fields_info_arr : [];
 
         $email_logo_url = ! empty( $args['email_logo_url'] ) ? $args['email_logo_url'] : '';
         $email_content_greeting = ! empty( $args['email_content_greeting'] ) ? 1 : 0;
         $email_form_name = ! empty( $args['email_form_name'] ) ? $args['email_form_name'] : 'N/A';
 
-        $bp_form_fields_html_header = '<table style="margin-bottom: 20px; font-size: 14px; border-collapse: collapse; width: 100%;">';
+        $form_field_rows = [];
 
-        $bp_form_fields_html_footer = "</table>";
-
-        $content = ''. $line_break;
-        
         foreach ( $form_fields_info_arr as $key => $field ) {
-            if ( $key === 'is_payment_split_payment' ) {
-                $is_payment_split_payment = 1;
-            }
-            //Hide few fields
+            //Hide few fields: storage keys, not fields the visitor filled in (the From section hides the same ones)
             if(
                 $key === 'referer_page_id' || $key === 'referer_widget_id' || $key === 'source' || $key === 'el_form_fields'
-                || $key === 'is_woo_layout'
-                || $key === 'is_payment_split_payment'
-                || $key === 'split_payment_total_amount'
-                || $key === 'split_payment_total_amount_price_id'
-                || $key === 'split_payment_installment_price_id'
+                || $key === 'amount_quantity'
+                || $key === 'woo_product_id'
+                || $key === 'woo_product_ids'
+                || $key === 'fluentcart_product_id'
+                || $key === 'fluentcart_product_ids'
+                || $key === 'detailed_product_info'
+                || $key === 'email_settings'
             ) {
                 if($key === 'referer_page_id'){
                     $referer_content_page_link = !empty($field) ? get_permalink( $field ) : $referer_content_page_link;
@@ -1746,37 +2180,39 @@ class Handler extends Controller{
                 continue;
             }
 
+            $label_key = $key;
+
             if($key === 'primary_first_name'){
-                $key = 'first_name';
+                $label_key = 'first_name';
                 $customer_first_name = $field;
             }
             if($key === 'primary_last_name'){
-                $key = 'last_name';
+                $label_key = 'last_name';
                 $customer_last_name = $field;
             }
 
             if($key === 'primary_email'){
-                $key = 'email';
+                $label_key = 'email';
             }
 
             if($key === 'primary_payment_amount'){
-                $key = 'payment_amount';
+                $label_key = 'payment_amount';
             }
-            
-            $key_formatted = self::better_title_case($key);
+
+            $key_formatted = self::better_title_case($label_key);
             if($key_formatted === 'Amount'){
                 $key_formatted = __('Paid', 'better-payment');
-
-                if ( ! empty( $is_payment_split_payment ) ) {
-                    $key_formatted = __('Product Price: ', 'better-payment');
-                }
             }
 
-            $content .= "<tr>
-                            <td style='padding: 7px; border: 1px solid #666;'> <strong>$key_formatted</strong> </td>
-                            <td style='padding: 7px; border: 1px solid #666;'> $field </td>
-                        </tr>";
+            $form_field_rows[] = [
+                'key'   => $key,
+                'label' => $key_formatted,
+                'value' => $field,
+            ];
         }
+
+        // A Pro payment's own fields (split payments, layout 6) are hidden or relabelled by Pro.
+        $all_fields_rows = PaymentEntitlement::email_rows( $form_field_rows, 'all_fields', $form_fields_info_arr );
 
         if($customer_first_name) {
             $customer_name = $customer_first_name . ' ';
@@ -1880,23 +2316,15 @@ class Handler extends Controller{
             'email_content_to_section_show' => intval( $args['email_content_to_section_show'] ),
             'email_content_transaction_summary_show' => intval( $args['email_content_transaction_summary_show'] ),
             'email_content_footer_text_show' => intval( $args['email_content_footer_text_show'] ),
-            'email_content_customer' => wp_kses_post( $args['email_content_customer'] ),
-            'email_content_admin' => wp_kses_post( $args['email_content_admin'] ),
+            // The form's messages, with `[bp-all-fields]` replaced where the author placed it.
+            'email_content_customer' => self::render_email_message( $args['email_content_customer'] ?? '', $all_fields_rows, 'plain' === ( $args['email_content_type_customer'] ?? 'html' ) ),
+            'email_content_admin' => self::render_email_message( $args['email_content_admin'] ?? '', $all_fields_rows, 'plain' === ( $args['email_content_type'] ?? 'html' ) ),
             'is_elementor_form' => intval( $args['is_elementor_form'] ),
             'email_content_type' => $args['email_content_type'] ?? 'html',
             'email_content_type_customer' => $args['email_content_type_customer'] ?? 'html',
         ];
 
-        $bp_form_fields_html_body = $content;
-        $bp_form_fields_html_content = $bp_form_fields_html_header . $bp_form_fields_html_body . $bp_form_fields_html_footer ;
-
-        //Replace shortcode with form fields info
-        $email_body = str_replace( "[$bp_all_fields_shortcode]", $bp_form_fields_html_content, $email_body );
-
-        // Email V2
-        // General content
-        $form_name = 
-
+        // Email V2: the template is the whole body.
         ob_start();
 
         include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/template-email-notification.php";
@@ -1906,6 +2334,74 @@ class Handler extends Controller{
 
 		return $email_body;
 	}
+
+    /**
+     * A form's e-mail message, with `[bp-all-fields]` replaced by the submitted fields.
+     *
+     * The template prints the message; the fields used to be built into a body the template's
+     * output then overwrote, so the token reached every e-mail as literal text. The message is
+     * the form's own setting and is kses-filtered as it always was. The fields are the
+     * visitor's, so they are escaped here and inserted after the filter — never passed through
+     * it or do_shortcode(), where a submitted value could add markup or run a shortcode.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed   $message  The form's message setting.
+     * @param array[] $rows     `label` and `value` of each field to list, in order.
+     * @param bool    $is_plain Whether the e-mail is sent as plain text.
+     * @return string
+     */
+    public static function render_email_message( $message, array $rows, $is_plain = false ) {
+        $message = wp_kses_post( is_scalar( $message ) ? (string) $message : '' );
+
+        if ( false === strpos( $message, '[bp-all-fields]' ) ) {
+            return $message;
+        }
+
+        return str_replace( '[bp-all-fields]', self::email_all_fields_markup( $rows, $is_plain ), $message );
+    }
+
+    /**
+     * The `[bp-all-fields]` block: a two-column table, or `Label: value` lines in a plain-text e-mail.
+     *
+     * @param array[] $rows     `label` and `value` of each field.
+     * @param bool    $is_plain Plain text instead of HTML.
+     * @return string
+     */
+    private static function email_all_fields_markup( array $rows, $is_plain ) {
+        $lines = [];
+        $cells = '';
+
+        foreach ( $rows as $row ) {
+            if ( ! isset( $row['label'] ) || ! is_scalar( $row['label'] ) || ! array_key_exists( 'value', $row ) ) {
+                continue;
+            }
+
+            // A nested value (stored settings, a product list) is not something a visitor typed.
+            if ( ! is_scalar( $row['value'] ) && null !== $row['value'] ) {
+                continue;
+            }
+
+            $label = (string) $row['label'];
+            $value = (string) $row['value'];
+
+            if ( $is_plain ) {
+                $lines[] = rtrim( wp_strip_all_tags( $label ), ': ' ) . ': ' . wp_strip_all_tags( $value );
+                continue;
+            }
+
+            $cells .= '<tr>'
+                . '<td style="padding: 7px; border: 1px solid #666;"><strong>' . esc_html( $label ) . '</strong></td>'
+                . '<td style="padding: 7px; border: 1px solid #666;">' . esc_html( $value ) . '</td>'
+                . '</tr>';
+        }
+
+        if ( $is_plain ) {
+            return implode( "\n", $lines );
+        }
+
+        return '<table class="bp-all-fields" style="margin-bottom: 20px; font-size: 14px; border-collapse: collapse; width: 100%;">' . $cells . '</table>';
+    }
 
     /**
      * String helper method

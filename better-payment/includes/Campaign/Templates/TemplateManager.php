@@ -1722,6 +1722,44 @@ class TemplateManager {
         );
     }
 
+    /**
+     * Every template key that carries a `theme_class`, as `key => class`.
+     *
+     * Built from {@see self::get_all()}, not {@see self::get_for_picker()}: a
+     * campaign built from a retired design still renders under its theme class,
+     * and the builder has to describe that campaign's theme as accurately as the
+     * frontend renders it. Pro's templates arrive through
+     * `better_payment/campaign_templates` like any other, so they are included
+     * whenever Pro is active and absent when it is not — the same live
+     * entitlement every other campaign surface reads.
+     *
+     * Localized to the builder as `betterPaymentCampaignData.templateThemes`,
+     * where `utils/themeBackground.js` resolves the theme's own page colour out
+     * of the loaded campaign CSS. The Advanced tab's Background swatch used to
+     * claim `#ffffff` for every campaign, whatever the theme actually paints, and
+     * its Reset button then wrote that white in as a real override.
+     *
+     * @since 2.4.0
+     *
+     * @return array<string, string>
+     */
+    public static function theme_classes(): array {
+        $classes = array();
+
+        foreach ( self::get_all() as $key => $template ) {
+            if ( empty( $template['theme_class'] ) || ! is_string( $template['theme_class'] ) ) {
+                continue;
+            }
+
+            // Sanitized exactly as the renderer sanitizes it before printing it
+            // on the wrapper, so the class the builder probes is the class the
+            // campaign gets.
+            $classes[ (string) $key ] = sanitize_html_class( $template['theme_class'] );
+        }
+
+        return $classes;
+    }
+
     /* --------------------------------------------------------------------- */
     /* Design tokens                                                          */
     /* --------------------------------------------------------------------- */

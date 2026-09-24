@@ -12,6 +12,7 @@
 namespace Better_Payment\Lite\Blocks;
 
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PaymentEntitlement;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
@@ -234,9 +235,6 @@ class BlockActions {
         $woo_product_ids         = ! empty( $el_settings['better_payment_form_woocommerce_product_ids'] ) ? $el_settings['better_payment_form_woocommerce_product_ids'] : array( 0 );
         $fluentcart_product_id   = ! empty( $el_settings['better_payment_form_fluentcart_product_id'] ) ? intval( $el_settings['better_payment_form_fluentcart_product_id'] ) : 0;
         $fluentcart_product_ids  = ! empty( $el_settings['better_payment_form_fluentcart_product_ids'] ) ? $el_settings['better_payment_form_fluentcart_product_ids'] : array( 0 );
-        $is_layout_6             = ! empty( $el_settings['better_payment_form_layout'] ) && 'layout-6-pro' === $el_settings['better_payment_form_layout'];
-        $is_fluentcart_layout    = $is_layout_6 && ! empty( $el_settings['better_payment_form_layout_6_ecommerce_platform'] ) && 'fluentcart' === $el_settings['better_payment_form_layout_6_ecommerce_platform'];
-        $is_woo_layout           = $is_layout_6 && ( empty( $el_settings['better_payment_form_layout_6_ecommerce_platform'] ) || 'woocommerce' === $el_settings['better_payment_form_layout_6_ecommerce_platform'] );
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
         // Amount, quantity, currency and campaign come from the stored settings, never
@@ -299,13 +297,14 @@ class BlockActions {
             'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source'               => 'paypal',
             'amount_quantity'      => ! empty( $primary_payment_amount_quantity ) ? intval( $primary_payment_amount_quantity ) : '',
-            'is_woo_layout'        => $is_woo_layout,
-            'is_fluentcart_layout' => $is_fluentcart_layout,
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
             'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
             // Persisted so the async PayPal IPN can rebuild the e-mail body + on/off toggle.
             'email_settings'        => Handler::extract_email_settings( $el_settings ),
         );
+
+        // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
+        $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST ) );
 
@@ -880,29 +879,10 @@ class BlockActions {
 
         $post_fields = $post_data_form_fields;
 
-        $layout = ! empty( $el_settings['better_payment_form_layout'] ) ? sanitize_text_field( $el_settings['better_payment_form_layout'] ) : 'layout-1';
+        // The fields repeater a Pro form renders is Pro's to name — see PaymentEntitlement.
+        $form_fields = PaymentEntitlement::form_fields( $el_settings );
 
-        // Handle different layouts.
-        switch ( $layout ) {
-            case 'layout-4-pro':
-                $el_settings['better_payment_form_fields'] = isset( $el_settings['better_payment_form_fields_layout_4_5_6'] ) ? $el_settings['better_payment_form_fields_layout_4_5_6'] : array();
-                break;
-
-            case 'layout-5-pro':
-                $el_settings['better_payment_form_fields'] = isset( $el_settings['better_payment_form_fields_layout_4_5_6_desc'] ) ? $el_settings['better_payment_form_fields_layout_4_5_6_desc'] : array();
-                break;
-
-            case 'layout-6-pro':
-                $el_settings['better_payment_form_fields'] = isset( $el_settings['better_payment_form_fields_layout_4_5_6_woo'] ) ? $el_settings['better_payment_form_fields_layout_4_5_6_woo'] : array();
-                break;
-
-            default:
-                break;
-        }
-
-        $form_fields = isset( $el_settings['better_payment_form_fields'] ) ? $el_settings['better_payment_form_fields'] : array();
-
-        if ( ! empty( $form_fields ) && is_array( $form_fields ) ) {
+        if ( ! empty( $form_fields ) ) {
             foreach ( $form_fields as $form_field ) {
                 $field_type = ! empty( $form_field['better_payment_primary_field_type'] ) ? sanitize_text_field( $form_field['better_payment_primary_field_type'] ) : '';
                 $field_name = ! empty( $form_field['better_payment_field_name_heading'] ) ? sanitize_text_field( $form_field['better_payment_field_name_heading'] ) : '';

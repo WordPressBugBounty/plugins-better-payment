@@ -161,12 +161,24 @@ class PromptBuilder {
             return '';
         }
 
-        return 'Better Payment Pro is active on this site, so these widgets are fully available'
-            . ' and fully supported — treat them exactly like the free ones: '
-            . implode( ', ', $types ) . '.'
-            . "\nUse one when it genuinely does a job no free widget does, not to fill space."
-            . ' Their settings and content rules are listed with every other element above,'
-            . ' and they must be followed just as strictly.';
+        // Pro supplies this section itself once it declares `ai_pro_widget_guidance`;
+        // this copy serves older Pro releases. The free-install copy above stays in
+        // Lite — it has to work without Pro.
+        $section = CampaignSchema::lite_supplies_pro_guidance()
+            ? 'Better Payment Pro is active on this site, so these widgets are fully available'
+                . ' and fully supported — treat them exactly like the free ones: '
+                . implode( ', ', $types ) . '.'
+                . "\nUse one when it genuinely does a job no free widget does, not to fill space."
+                . ' Their settings and content rules are listed with every other element above,'
+                . ' and they must be followed just as strictly.'
+            : '';
+
+        /**
+         * Filter the "Pro widgets" system-prompt section on a Pro install. Receives
+         * the section text ('' when Pro supplies it), the mode ('generate' or 'edit')
+         * and the Pro element types this install is offered.
+         */
+        return (string) apply_filters( 'better_payment/ai/pro_widgets_prompt', $section, $mode, $types );
     }
 
     /**

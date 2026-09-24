@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * ## Why this lives in Lite
  *
- * It is the same split {@see \Better_Payment\Lite\Campaign\Elements\ProElementSchemas}
+ * It is the same split {@see \Better_Payment\Lite\Campaign\Elements\ProElementStubs}
  * makes for the three Pro elements: **Lite owns the description of the product,
  * Pro owns the product.** A free install has no copy of Pro on disk, so without a
  * catalogue here the Pro templates are simply absent from the picker and a free
@@ -55,26 +55,29 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Unlike the rest of a locked card, `theme_class` is not advertising — it is
  * what a campaign resolves on every page view. A customer who built with Pro and
  * then let the licence lapse still has `_bpc_template_key` pointing at one of
- * these, and the CSS behind `bp-v2-*` lives in Lite either way. Omitting the
- * class here would strip the design off their live page the moment Pro switched
- * off, which is a far worse downgrade than losing the Pro elements (those
- * degrade to nothing by design). The layouts still ship only with Pro; this
- * hands back styling for a page they already built.
+ * these. The design behind `bp-v2-water` and the other three ships with Pro and
+ * does not load without it, but Lite's campaign-display stylesheet keeps the four
+ * classes in its shared v2 selector list, backed by zero-specificity `:where()`
+ * fallback tokens. Carrying the class keeps that page a plain, readable v2 design
+ * instead of dropping it out of the v2 system altogether, and reactivating Pro
+ * restores the full design with no data change. It is a class name, not CSS.
  *
- * ## Thumbnails
+ * ## Thumbnails — the only preview a locked card has
  *
  * Lite ships its own copies under `assets/img/campaign/templates/preview/pro/`.
  * Pointing at Pro's asset URL would 404 on the only install that needs these
  * cards — the one without Pro — and a template whose thumbnail fails to load
- * falls back to a flat `preview_color` block, which sells nothing. Keep the two
- * sets of files in sync when Pro's artwork changes.
+ * falls back to a flat `preview_color` block, which sells nothing. The Preview
+ * lightbox shows the same screenshot: Lite carries no copy of Pro's layouts, so
+ * a locked card is never rendered live. Keep the two sets of files in sync when
+ * Pro's artwork changes.
  *
  * @since 2.3.2
  */
 class ProTemplateCatalog {
 
     /**
-     * Path below Lite's assets/ where the mirrored Pro thumbnails live.
+     * Path below Lite's assets/ where Lite's copies of the Pro card thumbnails live.
      */
     const PREVIEW_DIR = 'assets/img/campaign/templates/preview/pro';
 

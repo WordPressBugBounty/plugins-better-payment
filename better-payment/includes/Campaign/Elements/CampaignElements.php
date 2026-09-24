@@ -935,27 +935,27 @@ class CampaignElements {
     }
 
     /**
-     * Register the three Pro-only elements (Donors Wall, FAQ, Video) with their
-     * FULL control schemas, flagged `pro => true`.
+     * Register the three Pro-only elements (Donors Wall, FAQ, Video) as lock stubs.
      *
-     * These used to be label-and-icon stubs with an empty `settingsSchema`, which
-     * left a free user staring at a bare "upgrade" panel — no way to see what the
-     * element actually does or what it can be configured to do. Lite now ships the
-     * complete schema (see {@see ProElementSchemas}) so the builder can render
-     * every control, disabled, behind a locked banner.
+     * Pro owns their control schemas and default settings. Lite registers only
+     * {@see ProElementStubs} — label, icon, the `pro` flag and an upgrade feature
+     * list — so a free user can drop, select, move and delete the element, see its
+     * mock preview, and read what Pro adds. Better Payment Pro 1.4.4+ replaces the
+     * entries with its full definitions on `better_payment/campaign_elements`
+     * (default priority) and attaches the renderers on
+     * `better_payment/campaign/render_element_{type}`.
      *
-     * The `pro` flag stays on the schema whether or not Pro is installed. Nothing
-     * reads it as an entitlement — locking is decided everywhere by the live
-     * `better_payment/pro_enabled` filter, evaluated per request, so a campaign
-     * saved while Pro was active gets no special treatment once Pro is gone.
-     *
-     * Pro no longer overrides these entries. It only attaches renderers on
-     * `better_payment/campaign/render_element_{type}`; that filter having a
-     * listener IS the unlock.
+     * The `pro` flag stays on every definition whether or not Pro is installed.
+     * Nothing reads it as an entitlement — locking is decided by the live
+     * `better_payment/pro_enabled` filter, per request.
      */
     private static function register_pro_elements(): void {
-        foreach ( ProElementSchemas::get_all() as $type => $schema ) {
-            ElementRegistry::register( $type, array_merge( $schema, [ 'pro' => true ] ) );
+        foreach ( ProElementStubs::get_all() as $type => $stub ) {
+            ElementRegistry::register( $type, $stub );
         }
+
+        // Transitional: full schemas for Better Payment Pro <= 1.4.3 (ProElementSchemas).
+        // Delete this line with that class.
+        add_filter( 'better_payment/campaign_elements', [ ProElementSchemas::class, 'apply_lite_copy' ], 5 );
     }
 }

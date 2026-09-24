@@ -34,7 +34,7 @@
 }
 
 .better-payment .bp-radio-box input[type=radio]:checked {
-  border: 2px solid #006AFF;
+  border: 2px solid #006aff;
 }
 
 .better-payment .bp-radio-box input[type=radio] {
@@ -43,7 +43,7 @@
   outline: 0;
   border-radius: 50%;
   position: relative;
-  border: 2px solid #CBC9DA;
+  border: 2px solid #cbc9da;
   background: #fff;
   margin-bottom: -3px;
   margin-right: 10px;
@@ -59,7 +59,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #006AFF;
+  background: #006aff;
 }
 
 .better-payment .form-content-section-fields .payment-method-checkbox input[type=radio]:after {
@@ -1133,7 +1133,7 @@
 .better-payment .payment-form-layout-1 .dynamic-amount-section,
 .better-payment .payment-form-layout-2 .dynamic-amount-section {
   position: relative;
-  background-color: #006AFF;
+  background-color: #006aff;
   background-image: url("../img/bg-blue-2.svg");
   background-repeat: no-repeat;
   background-position: center;
@@ -1143,15 +1143,15 @@
 }
 
 .better-payment .payment-form-layout-2 .dynamic-amount-section-subtitle {
-  color: #98B9F2;
+  color: #98b9f2;
 }
 
 .better-payment .payment-form-layout-3 .dynamic-amount-section-amount {
-  color: #0042BD;
+  color: #0042bd;
 }
 
 .better-payment .payment-form-layout.payment-form-layout-3 .button {
-  background-color: #0042BD !important;
+  background-color: #0042bd !important;
 }
 
 .better-payment .payment-form-layout-3 .dynamic-amount-section-title {
@@ -1163,11 +1163,11 @@
 }
 
 .better-payment .payment-form-layout-3 .dynamic-amount-section-icon {
-  color: #C6CDE4;
+  color: #c6cde4;
 }
 
 .better-payment .payment-form-layout-3 .payment-method-checkbox {
-  border-bottom: 1px solid #E9ECFF;
+  border-bottom: 1px solid #e9ecff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1192,7 +1192,7 @@
 .better-payment .payment-form-layout-3 .payment-method-checkbox.active,
 .better-payment .payment-form-layout-1 .payment-method-checkbox.single-item.active,
 .better-payment .payment-form-layout-2 .payment-method-checkbox.single-item.active {
-  border-bottom: 1px solid #0042BD;
+  border-bottom: 1px solid #0042bd;
 }
 
 .better-payment .payment-form-layout-1 .form-content-section,
@@ -1207,16 +1207,16 @@
 }
 
 .better-payment .payment-form-layout-2 .dynamic-amount-section {
-  background-color: #006AFF;
-  background-image: linear-gradient(180deg, #006AFF 0%, #004CBF 100%);
+  background-color: #006aff;
+  background-image: linear-gradient(180deg, #006aff 0%, #004cbf 100%);
 }
 
 .better-payment .payment-form-layout-3 .dynamic-amount-section {
-  background: #FBFCFF;
+  background: #fbfcff;
 }
 
 .better-payment .payment-form-layout .button {
-  background-color: #006AFF !important;
+  background-color: #006aff !important;
   color: #fff !important;
 }
 
@@ -1957,17 +1957,20 @@
   border-color: transparent;
   color: #0a0a0a;
 }
-.better-payment .file.is-white.is-hovered .file-cta, .better-payment .file.is-white:hover .file-cta {
+.better-payment .file.is-white.is-hovered .file-cta,
+.better-payment .file.is-white:hover .file-cta {
   background-color: #f9f9f9;
   border-color: transparent;
   color: #0a0a0a;
 }
-.better-payment .file.is-white.is-focused .file-cta, .better-payment .file.is-white:focus .file-cta {
+.better-payment .file.is-white.is-focused .file-cta,
+.better-payment .file.is-white:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(255, 255, 255, 0.25);
   color: #0a0a0a;
 }
-.better-payment .file.is-white.is-active .file-cta, .better-payment .file.is-white:active .file-cta {
+.better-payment .file.is-white.is-active .file-cta,
+.better-payment .file.is-white:active .file-cta {
   background-color: #f2f2f2;
   border-color: transparent;
   color: #0a0a0a;
@@ -1977,17 +1980,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-black.is-hovered .file-cta, .better-payment .file.is-black:hover .file-cta {
+.better-payment .file.is-black.is-hovered .file-cta,
+.better-payment .file.is-black:hover .file-cta {
   background-color: #040404;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-black.is-focused .file-cta, .better-payment .file.is-black:focus .file-cta {
+.better-payment .file.is-black.is-focused .file-cta,
+.better-payment .file.is-black:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(10, 10, 10, 0.25);
   color: #fff;
 }
-.better-payment .file.is-black.is-active .file-cta, .better-payment .file.is-black:active .file-cta {
+.better-payment .file.is-black.is-active .file-cta,
+.better-payment .file.is-black:active .file-cta {
   background-color: #000;
   border-color: transparent;
   color: #fff;
@@ -1997,17 +2003,20 @@
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-light.is-hovered .file-cta, .better-payment .file.is-light:hover .file-cta {
+.better-payment .file.is-light.is-hovered .file-cta,
+.better-payment .file.is-light:hover .file-cta {
   background-color: #eee;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-light.is-focused .file-cta, .better-payment .file.is-light:focus .file-cta {
+.better-payment .file.is-light.is-focused .file-cta,
+.better-payment .file.is-light:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(245, 245, 245, 0.25);
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-light.is-active .file-cta, .better-payment .file.is-light:active .file-cta {
+.better-payment .file.is-light.is-active .file-cta,
+.better-payment .file.is-light:active .file-cta {
   background-color: #e8e8e8;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
@@ -2017,17 +2026,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-dark.is-hovered .file-cta, .better-payment .file.is-dark:hover .file-cta {
+.better-payment .file.is-dark.is-hovered .file-cta,
+.better-payment .file.is-dark:hover .file-cta {
   background-color: #2f2f2f;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-dark.is-focused .file-cta, .better-payment .file.is-dark:focus .file-cta {
+.better-payment .file.is-dark.is-focused .file-cta,
+.better-payment .file.is-dark:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(54, 54, 54, 0.25);
   color: #fff;
 }
-.better-payment .file.is-dark.is-active .file-cta, .better-payment .file.is-dark:active .file-cta {
+.better-payment .file.is-dark.is-active .file-cta,
+.better-payment .file.is-dark:active .file-cta {
   background-color: #292929;
   border-color: transparent;
   color: #fff;
@@ -2037,17 +2049,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-primary.is-hovered .file-cta, .better-payment .file.is-primary:hover .file-cta {
+.better-payment .file.is-primary.is-hovered .file-cta,
+.better-payment .file.is-primary:hover .file-cta {
   background-color: #00c4a7;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-primary.is-focused .file-cta, .better-payment .file.is-primary:focus .file-cta {
+.better-payment .file.is-primary.is-focused .file-cta,
+.better-payment .file.is-primary:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(0, 209, 178, 0.25);
   color: #fff;
 }
-.better-payment .file.is-primary.is-active .file-cta, .better-payment .file.is-primary:active .file-cta {
+.better-payment .file.is-primary.is-active .file-cta,
+.better-payment .file.is-primary:active .file-cta {
   background-color: #00b89c;
   border-color: transparent;
   color: #fff;
@@ -2057,17 +2072,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-link.is-hovered .file-cta, .better-payment .file.is-link:hover .file-cta {
+.better-payment .file.is-link.is-hovered .file-cta,
+.better-payment .file.is-link:hover .file-cta {
   background-color: #3e56c4;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-link.is-focused .file-cta, .better-payment .file.is-link:focus .file-cta {
+.better-payment .file.is-link.is-focused .file-cta,
+.better-payment .file.is-link:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(72, 95, 199, 0.25);
   color: #fff;
 }
-.better-payment .file.is-link.is-active .file-cta, .better-payment .file.is-link:active .file-cta {
+.better-payment .file.is-link.is-active .file-cta,
+.better-payment .file.is-link:active .file-cta {
   background-color: #3a51bb;
   border-color: transparent;
   color: #fff;
@@ -2077,17 +2095,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-info.is-hovered .file-cta, .better-payment .file.is-info:hover .file-cta {
+.better-payment .file.is-info.is-hovered .file-cta,
+.better-payment .file.is-info:hover .file-cta {
   background-color: #3488ce;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-info.is-focused .file-cta, .better-payment .file.is-info:focus .file-cta {
+.better-payment .file.is-info.is-focused .file-cta,
+.better-payment .file.is-info:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(62, 142, 208, 0.25);
   color: #fff;
 }
-.better-payment .file.is-info.is-active .file-cta, .better-payment .file.is-info:active .file-cta {
+.better-payment .file.is-info.is-active .file-cta,
+.better-payment .file.is-info:active .file-cta {
   background-color: #3082c5;
   border-color: transparent;
   color: #fff;
@@ -2097,17 +2118,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-success.is-hovered .file-cta, .better-payment .file.is-success:hover .file-cta {
+.better-payment .file.is-success.is-hovered .file-cta,
+.better-payment .file.is-success:hover .file-cta {
   background-color: #3ec487;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-success.is-focused .file-cta, .better-payment .file.is-success:focus .file-cta {
+.better-payment .file.is-success.is-focused .file-cta,
+.better-payment .file.is-success:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(72, 199, 142, 0.25);
   color: #fff;
 }
-.better-payment .file.is-success.is-active .file-cta, .better-payment .file.is-success:active .file-cta {
+.better-payment .file.is-success.is-active .file-cta,
+.better-payment .file.is-success:active .file-cta {
   background-color: #3abb81;
   border-color: transparent;
   color: #fff;
@@ -2117,17 +2141,20 @@
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-warning.is-hovered .file-cta, .better-payment .file.is-warning:hover .file-cta {
+.better-payment .file.is-warning.is-hovered .file-cta,
+.better-payment .file.is-warning:hover .file-cta {
   background-color: #ffdc7d;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-warning.is-focused .file-cta, .better-payment .file.is-warning:focus .file-cta {
+.better-payment .file.is-warning.is-focused .file-cta,
+.better-payment .file.is-warning:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(255, 224, 138, 0.25);
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-warning.is-active .file-cta, .better-payment .file.is-warning:active .file-cta {
+.better-payment .file.is-warning.is-active .file-cta,
+.better-payment .file.is-warning:active .file-cta {
   background-color: #ffd970;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
@@ -2137,17 +2164,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-danger.is-hovered .file-cta, .better-payment .file.is-danger:hover .file-cta {
+.better-payment .file.is-danger.is-hovered .file-cta,
+.better-payment .file.is-danger:hover .file-cta {
   background-color: #f03a5f;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-danger.is-focused .file-cta, .better-payment .file.is-danger:focus .file-cta {
+.better-payment .file.is-danger.is-focused .file-cta,
+.better-payment .file.is-danger:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(241, 70, 104, 0.25);
   color: #fff;
 }
-.better-payment .file.is-danger.is-active .file-cta, .better-payment .file.is-danger:active .file-cta {
+.better-payment .file.is-danger.is-active .file-cta,
+.better-payment .file.is-danger:active .file-cta {
   background-color: #ef2e55;
   border-color: transparent;
   color: #fff;
@@ -2157,17 +2187,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-expo.is-hovered .file-cta, .better-payment .file.is-expo:hover .file-cta {
+.better-payment .file.is-expo.is-hovered .file-cta,
+.better-payment .file.is-expo:hover .file-cta {
   background-color: #ffcf4a;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-expo.is-focused .file-cta, .better-payment .file.is-expo:focus .file-cta {
+.better-payment .file.is-expo.is-focused .file-cta,
+.better-payment .file.is-expo:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(255, 210, 87, 0.25);
   color: #fff;
 }
-.better-payment .file.is-expo.is-active .file-cta, .better-payment .file.is-expo:active .file-cta {
+.better-payment .file.is-expo.is-active .file-cta,
+.better-payment .file.is-expo:active .file-cta {
   background-color: #ffcb3e;
   border-color: transparent;
   color: #fff;
@@ -2177,17 +2210,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-love.is-hovered .file-cta, .better-payment .file.is-love:hover .file-cta {
+.better-payment .file.is-love.is-hovered .file-cta,
+.better-payment .file.is-love:hover .file-cta {
   background-color: #f03a5f;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-love.is-focused .file-cta, .better-payment .file.is-love:focus .file-cta {
+.better-payment .file.is-love.is-focused .file-cta,
+.better-payment .file.is-love:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(241, 70, 104, 0.25);
   color: #fff;
 }
-.better-payment .file.is-love.is-active .file-cta, .better-payment .file.is-love:active .file-cta {
+.better-payment .file.is-love.is-active .file-cta,
+.better-payment .file.is-love:active .file-cta {
   background-color: #ef2e55;
   border-color: transparent;
   color: #fff;
@@ -2197,17 +2233,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-patreon.is-hovered .file-cta, .better-payment .file.is-patreon:hover .file-cta {
+.better-payment .file.is-patreon.is-hovered .file-cta,
+.better-payment .file.is-patreon:hover .file-cta {
   background-color: #f95d48;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-patreon.is-focused .file-cta, .better-payment .file.is-patreon:focus .file-cta {
+.better-payment .file.is-patreon.is-focused .file-cta,
+.better-payment .file.is-patreon:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(249, 104, 84, 0.25);
   color: #fff;
 }
-.better-payment .file.is-patreon.is-active .file-cta, .better-payment .file.is-patreon:active .file-cta {
+.better-payment .file.is-patreon.is-active .file-cta,
+.better-payment .file.is-patreon:active .file-cta {
   background-color: #f8523b;
   border-color: transparent;
   color: #fff;
@@ -2217,17 +2256,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-rss.is-hovered .file-cta, .better-payment .file.is-rss:hover .file-cta {
+.better-payment .file.is-rss.is-hovered .file-cta,
+.better-payment .file.is-rss:hover .file-cta {
   background-color: #f15d16;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-rss.is-focused .file-cta, .better-payment .file.is-rss:focus .file-cta {
+.better-payment .file.is-rss.is-focused .file-cta,
+.better-payment .file.is-rss:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(242, 101, 34, 0.25);
   color: #fff;
 }
-.better-payment .file.is-rss.is-active .file-cta, .better-payment .file.is-rss:active .file-cta {
+.better-payment .file.is-rss.is-active .file-cta,
+.better-payment .file.is-rss:active .file-cta {
   background-color: #ed560e;
   border-color: transparent;
   color: #fff;
@@ -2237,17 +2279,20 @@
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-bleeding.is-hovered .file-cta, .better-payment .file.is-bleeding:hover .file-cta {
+.better-payment .file.is-bleeding.is-hovered .file-cta,
+.better-payment .file.is-bleeding:hover .file-cta {
   background-color: #a3f370;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-bleeding.is-focused .file-cta, .better-payment .file.is-bleeding:focus .file-cta {
+.better-payment .file.is-bleeding.is-focused .file-cta,
+.better-payment .file.is-bleeding:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(171, 244, 124, 0.25);
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-bleeding.is-active .file-cta, .better-payment .file.is-bleeding:active .file-cta {
+.better-payment .file.is-bleeding.is-active .file-cta,
+.better-payment .file.is-bleeding:active .file-cta {
   background-color: #9cf264;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
@@ -2257,17 +2302,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-sass.is-hovered .file-cta, .better-payment .file.is-sass:hover .file-cta {
+.better-payment .file.is-sass.is-hovered .file-cta,
+.better-payment .file.is-sass:hover .file-cta {
   background-color: #b53d7a;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-sass.is-focused .file-cta, .better-payment .file.is-sass:focus .file-cta {
+.better-payment .file.is-sass.is-focused .file-cta,
+.better-payment .file.is-sass:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(191, 64, 128, 0.25);
   color: #fff;
 }
-.better-payment .file.is-sass.is-active .file-cta, .better-payment .file.is-sass:active .file-cta {
+.better-payment .file.is-sass.is-active .file-cta,
+.better-payment .file.is-sass:active .file-cta {
   background-color: #ac3a73;
   border-color: transparent;
   color: #fff;
@@ -2277,17 +2325,20 @@
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-amazon.is-hovered .file-cta, .better-payment .file.is-amazon:hover .file-cta {
+.better-payment .file.is-amazon.is-hovered .file-cta,
+.better-payment .file.is-amazon:hover .file-cta {
   background-color: #ffd556;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-amazon.is-focused .file-cta, .better-payment .file.is-amazon:focus .file-cta {
+.better-payment .file.is-amazon.is-focused .file-cta,
+.better-payment .file.is-amazon:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(255, 216, 99, 0.25);
   color: rgba(0, 0, 0, 0.7);
 }
-.better-payment .file.is-amazon.is-active .file-cta, .better-payment .file.is-amazon:active .file-cta {
+.better-payment .file.is-amazon.is-active .file-cta,
+.better-payment .file.is-amazon:active .file-cta {
   background-color: #ffd24a;
   border-color: transparent;
   color: rgba(0, 0, 0, 0.7);
@@ -2297,17 +2348,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-sponsor.is-hovered .file-cta, .better-payment .file.is-sponsor:hover .file-cta {
+.better-payment .file.is-sponsor.is-hovered .file-cta,
+.better-payment .file.is-sponsor:hover .file-cta {
   background-color: #e93fa5;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-sponsor.is-focused .file-cta, .better-payment .file.is-sponsor:focus .file-cta {
+.better-payment .file.is-sponsor.is-focused .file-cta,
+.better-payment .file.is-sponsor:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(234, 74, 170, 0.25);
   color: #fff;
 }
-.better-payment .file.is-sponsor.is-active .file-cta, .better-payment .file.is-sponsor:active .file-cta {
+.better-payment .file.is-sponsor.is-active .file-cta,
+.better-payment .file.is-sponsor:active .file-cta {
   background-color: #e7339f;
   border-color: transparent;
   color: #fff;
@@ -2317,17 +2371,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-twitter.is-hovered .file-cta, .better-payment .file.is-twitter:hover .file-cta {
+.better-payment .file.is-twitter.is-hovered .file-cta,
+.better-payment .file.is-twitter:hover .file-cta {
   background-color: #49a6ed;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-twitter.is-focused .file-cta, .better-payment .file.is-twitter:focus .file-cta {
+.better-payment .file.is-twitter.is-focused .file-cta,
+.better-payment .file.is-twitter:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(85, 172, 238, 0.25);
   color: #fff;
 }
-.better-payment .file.is-twitter.is-active .file-cta, .better-payment .file.is-twitter:active .file-cta {
+.better-payment .file.is-twitter.is-active .file-cta,
+.better-payment .file.is-twitter:active .file-cta {
   background-color: #3ea1ec;
   border-color: transparent;
   color: #fff;
@@ -2337,17 +2394,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-videos.is-hovered .file-cta, .better-payment .file.is-videos:hover .file-cta {
+.better-payment .file.is-videos.is-hovered .file-cta,
+.better-payment .file.is-videos:hover .file-cta {
   background-color: #3ec487;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-videos.is-focused .file-cta, .better-payment .file.is-videos:focus .file-cta {
+.better-payment .file.is-videos.is-focused .file-cta,
+.better-payment .file.is-videos:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(72, 199, 142, 0.25);
   color: #fff;
 }
-.better-payment .file.is-videos.is-active .file-cta, .better-payment .file.is-videos:active .file-cta {
+.better-payment .file.is-videos.is-active .file-cta,
+.better-payment .file.is-videos:active .file-cta {
   background-color: #3abb81;
   border-color: transparent;
   color: #fff;
@@ -2357,17 +2417,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-extensions.is-hovered .file-cta, .better-payment .file.is-extensions:hover .file-cta {
+.better-payment .file.is-extensions.is-hovered .file-cta,
+.better-payment .file.is-extensions:hover .file-cta {
   background-color: #3488ce;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-extensions.is-focused .file-cta, .better-payment .file.is-extensions:focus .file-cta {
+.better-payment .file.is-extensions.is-focused .file-cta,
+.better-payment .file.is-extensions:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(62, 142, 208, 0.25);
   color: #fff;
 }
-.better-payment .file.is-extensions.is-active .file-cta, .better-payment .file.is-extensions:active .file-cta {
+.better-payment .file.is-extensions.is-active .file-cta,
+.better-payment .file.is-extensions:active .file-cta {
   background-color: #3082c5;
   border-color: transparent;
   color: #fff;
@@ -2377,17 +2440,20 @@
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-bootstrap.is-hovered .file-cta, .better-payment .file.is-bootstrap:hover .file-cta {
+.better-payment .file.is-bootstrap.is-hovered .file-cta,
+.better-payment .file.is-bootstrap:hover .file-cta {
   background-color: #694f91;
   border-color: transparent;
   color: #fff;
 }
-.better-payment .file.is-bootstrap.is-focused .file-cta, .better-payment .file.is-bootstrap:focus .file-cta {
+.better-payment .file.is-bootstrap.is-focused .file-cta,
+.better-payment .file.is-bootstrap:focus .file-cta {
   border-color: transparent;
   box-shadow: 0 0 0.5em rgba(111, 84, 153, 0.25);
   color: #fff;
 }
-.better-payment .file.is-bootstrap.is-active .file-cta, .better-payment .file.is-bootstrap:active .file-cta {
+.better-payment .file.is-bootstrap.is-active .file-cta,
+.better-payment .file.is-bootstrap:active .file-cta {
   background-color: #634b89;
   border-color: transparent;
   color: #fff;
@@ -2510,7 +2576,8 @@
   top: 0;
   width: 100%;
 }
-.better-payment .file-cta, .better-payment .file-name {
+.better-payment .file-cta,
+.better-payment .file-name {
   border-color: #dbdbdb;
   border-radius: 0.375em;
   font-size: 1em;
@@ -2865,7 +2932,7 @@
   line-height: 1.2em;
   font-weight: 700;
   font-family: "IBM Plex Sans", sans-serif;
-  color: #2B2748;
+  color: #2b2748;
 }
 .better-payment .bp-dashboard-header h2 {
   font-weight: 400;
@@ -2873,12 +2940,12 @@
 .better-payment button {
   font-size: 14px;
   line-height: 1.1em;
-  color: #6859FA;
+  color: #6859fa;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 8px 16px;
-  background: #F0EEFE;
+  background: #f0eefe;
   border-radius: 20px;
   border: none;
   transition: all 0.25s ease-in-out;
@@ -2889,27 +2956,27 @@
   font-weight: 500;
   padding: 12px 18px;
   border-radius: 8px;
-  color: #6859FA;
+  color: #6859fa;
 }
 .better-payment button.complete {
-  color: #FFFFFF;
-  background: #0ECA86;
+  color: #ffffff;
+  background: #0eca86;
 }
 .better-payment button.incomplete {
-  color: #FFFFFF;
-  background: #FFDA15;
+  color: #ffffff;
+  background: #ffda15;
 }
 .better-payment button.active {
-  color: #00C679;
+  color: #00c679;
   background: rgba(0, 198, 123, 0.1019607843);
   border-radius: 20px;
 }
 .better-payment button.inactive {
-  color: #EDAA00;
+  color: #edaa00;
   background: rgba(255, 209, 0, 0.1019607843);
 }
 .better-payment button.cancel {
-  color: #FF0000;
+  color: #ff0000;
   background: rgba(255, 0, 0, 0.1490196078);
 }
 .better-payment .bp--sidebar-wrapper {
@@ -2938,7 +3005,7 @@
   font-size: 20px;
   font-weight: 500;
   line-height: 1.1em;
-  color: #48506D;
+  color: #48506d;
 }
 .better-payment .bp--sidebar-nav-list {
   display: flex;
@@ -2963,7 +3030,7 @@
   stroke: #000000;
 }
 .better-payment .bp--sidebar-nav .bp--nav-text {
-  color: #48506D;
+  color: #48506d;
   font-size: 16px;
   font-weight: 500;
   transition: ease-in-out 0.25s;
@@ -2972,10 +3039,10 @@
   color: #000000;
 }
 .better-payment .bp--sidebar-nav:hover .bp--nav-text {
-  color: #2B2748;
+  color: #2b2748;
 }
 .better-payment .bp--sidebar-nav.active {
-  color: #2B2748;
+  color: #2b2748;
 }
 .better-payment .bp--db-main-wrapper {
   padding-right: 24px;
@@ -3010,12 +3077,12 @@
   font-size: 16px;
   line-height: 1.2em;
   font-weight: 500;
-  color: #2A3256;
+  color: #2a3256;
 }
 .better-payment .bp--table-body {
   padding: 10px 24px;
   min-width: 1442px;
-  background: #FFFFFF;
+  background: #ffffff;
   border-left: 1px solid #f1f1f1;
   border-right: 1px solid #f1f1f1;
 }
@@ -3027,27 +3094,27 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 1.2em;
-  color: #2A3256;
+  color: #2a3256;
 }
 .better-payment .bp--table-body .td p {
   font-size: 14px;
-  color: #48506D;
+  color: #48506d;
   display: inline-flex;
 }
 .better-payment .bp--table-body .td span {
   font-size: 13px;
-  color: #797E90;
+  color: #797e90;
 }
 .better-payment .bp--table-body .price {
   font-size: 18px;
   line-height: 1em;
   font-weight: 500;
-  color: #2B2748;
+  color: #2b2748;
   padding-right: 4px;
 }
 .better-payment .td.details i {
   font-size: 16px;
-  color: #48506D;
+  color: #48506d;
 }
 .better-payment .td.details .product--img {
   max-width: 24px;
@@ -3241,18 +3308,6 @@
 .better-payment .w-195 {
   flex-basis: 195px;
 }
-.better-payment .w-325 {
-  flex-basis: 325px;
-}
-.better-payment .w-214 {
-  flex-basis: 214px;
-}
-.better-payment .w-130 {
-  flex-basis: 130px;
-}
-.better-payment .w-140 {
-  flex-basis: 140px;
-}
 .better-payment .bp-amount_wrapper {
   margin-bottom: 24px;
 }
@@ -3267,13 +3322,13 @@
 }
 .better-payment .bp-dashboard_wrapper {
   width: 100%;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
 }
 .better-payment .bp-dashboard_wrapper .bp-dashboard_title {
   font-size: 32px;
   font-weight: 600;
   text-align: left;
-  color: #2A3256;
+  color: #2a3256;
   margin-bottom: 36px;
 }
 .better-payment .bp-amount {
@@ -3281,7 +3336,7 @@
   height: auto;
   padding: 0px;
   border-radius: 12px;
-  border: 1px solid #EAECF0;
+  border: 1px solid #eaecf0;
   overflow: hidden;
 }
 .better-payment .bp-amount h4 {
@@ -3294,12 +3349,12 @@
   font-size: 30px;
   font-weight: 600;
   text-align: left;
-  color: #2A3256;
+  color: #2a3256;
   padding: 16px;
 }
 .better-payment .bp-transaction {
   padding: 10px 16px;
-  background-color: #FAFAFC;
+  background-color: #fafafc;
   width: 100%;
   font-size: 13px;
   font-weight: 400;
@@ -3318,37 +3373,20 @@
 }
 .better-payment .bp-transaction_number {
   font-weight: 500;
-  color: #6E58F7;
-}
-.better-payment .bp-chart_header .name h3 {
-  color: #2A3256;
-  font-size: 20px;
-  font-weight: 600;
+  color: #6e58f7;
 }
 .better-payment .bp-analytics_chart-wrapper {
   margin-bottom: 24px;
 }
-.better-payment .bp-analytics_box {
-  background-color: #ffffff;
-  border: 1px solid #EAECF0;
-  border-radius: 16px;
-  padding: 20px 24px;
-}
-.better-payment .bp-chart_header {
-  border-bottom: 1px solid #EAECF0;
-  padding-top: 8px;
-  padding-bottom: 16px;
-  margin-bottom: 24px;
-}
 .better-payment .bp-form_control {
-  border: 1px solid #D9E1F4;
+  border: 1px solid #d9e1f4;
   border-radius: 8px;
   padding: 11px 16px;
 }
 .better-payment .bp-form_control option {
   font-size: 14px;
   font-weight: 500;
-  color: #48506D;
+  color: #48506d;
 }
 .better-payment .filter-btn {
   padding: 8px 16px 8px 16px;
@@ -3356,13 +3394,13 @@
 }
 .better-payment .bp-recent_box {
   background-color: #ffffff;
-  border: 1px solid #EAECF0;
+  border: 1px solid #eaecf0;
   border-radius: 16px;
   padding: 0 16px;
 }
 .better-payment .bp-recent_header {
   padding: 16px 0;
-  border-bottom: 1px solid #EAECF0;
+  border-bottom: 1px solid #eaecf0;
   margin-bottom: 16px;
 }
 .better-payment .bp-recent_header span {
@@ -3371,19 +3409,19 @@
 .better-payment .bp-view_all-btn {
   font-size: 14px;
   font-weight: 500;
-  color: #48506D;
-  border: 1px solid #D9E1F4;
+  color: #48506d;
+  border: 1px solid #d9e1f4;
   border-radius: 4px;
   padding: 6px 16px;
   text-decoration: none;
 }
 .better-payment .bp-recent_header-title {
-  color: #2A3256;
+  color: #2a3256;
   font-size: 16px;
   font-weight: 600;
 }
 .better-payment .bp-th {
-  background-color: #FAFAFC;
+  background-color: #fafafc;
   border-radius: 4px;
   padding: 9px 12px 9px 12px;
   margin-bottom: 4px;
@@ -3408,237 +3446,13 @@
 .better-payment .td-product_name {
   font-size: 12px;
   font-weight: 500;
-  color: #2A3256;
+  color: #2a3256;
   margin-bottom: 4px;
 }
 .better-payment .td-details {
   font-size: 10px;
   font-weight: 400;
   color: #667085;
-}
-.better-payment .bp-subscription_box {
-  background-color: #ffffff;
-  border: 1px solid #EAECF0;
-  border-radius: 16px;
-  padding: 0 16px;
-}
-.better-payment .bp-subscription_box-th {
-  border-bottom: 1px solid #EAECF0;
-  padding: 16px 0;
-  margin-bottom: 20px;
-}
-.better-payment .bp-subscription_th {
-  padding: 12px;
-  background: #FAFAFC;
-  margin-bottom: 6px;
-}
-.better-payment .bp-subscription_title {
-  color: #2A3256;
-  font-size: 16px;
-  font-weight: 600;
-}
-.better-payment .bp-subscription_th h4 {
-  color: #667085;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: left;
-}
-.better-payment .bp-subscription_td {
-  padding: 15px 0px 15px 12px;
-}
-.better-payment .bp-subscription_td .bp-plan_info h4 {
-  color: #2A3256;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 14px;
-  margin-bottom: 5px;
-}
-.better-payment .bp-subscription_td .bp-plan_info p {
-  color: #48506D;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 10px;
-}
-.better-payment .bp-subscription_td .starter-plan,
-.better-payment .bp-subscription_td .due-plan {
-  color: #797E90;
-  font-size: 14px;
-  font-weight: 400;
-}
-.better-payment .bp-subscription_td button {
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 500;
-  padding: 5px 11px;
-  border: 1px solid #9DD0FF;
-  background: rgba(0, 133, 255, 0.1019607843);
-  color: #0085FF;
-}
-.better-payment .bp-subscription_td .active {
-  color: #00C679;
-  background: rgba(0, 198, 123, 0.1019607843);
-  border: 1px solid #A2ECCF;
-}
-.better-payment .bp-subscription_td .inactive {
-  border: 1px solid #FFEB91;
-  color: #EDAA00;
-  background-color: rgba(255, 209, 0, 0.1019607843);
-}
-.better-payment .bp-subscription_product-price {
-  display: flex;
-  align-items: end;
-  gap: 2px;
-}
-.better-payment .bp-subscription_product-td {
-  border-bottom: 1px solid rgba(110, 88, 247, 0.1);
-}
-.better-payment .bp-subscription_product-td:last-child {
-  border: none;
-}
-.better-payment .bp-subscription_product-price span:first-child {
-  color: #2B2748;
-  font-size: 18px;
-  font-weight: 500;
-}
-.better-payment .bp-subscription_product-price span:last-child {
-  color: #797E90;
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 10.2px;
-  font-weight: 400;
-}
-.better-payment .bp-subscripthon_doughnut-box {
-  margin-bottom: 48px;
-  justify-content: center;
-}
-.better-payment .bp-total_title {
-  color: #667085;
-  font-size: 16px;
-  font-weight: 500;
-  position: absolute;
-}
-.better-payment .bp-total_count {
-  font-size: 56px;
-  font-weight: 600;
-  text-align: center;
-  position: absolute;
-}
-.better-payment .better-payment-user-dashboard-container .dashboard-tab-wrapper .bp-total_count {
-  margin-bottom: 35px;
-}
-.better-payment .bp-multi-graph {
-  width: 400px;
-  height: 200px;
-  position: relative;
-  color: #fff;
-  font-size: 22px;
-  font-weight: 600;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-.better-payment .bp-multi-graph:before {
-  content: "";
-  width: 400px;
-  height: 200px;
-  border: 30px solid rgba(0, 0, 0, 0.15);
-  border-bottom: none;
-  position: absolute;
-  box-sizing: border-box;
-  transform-origin: 50% 0%;
-  border-radius: 300px 300px 0 0;
-  left: 0;
-  top: 0;
-}
-.better-payment .bp-graph {
-  width: 400px;
-  height: 200px;
-  border: 30px solid var(--fill);
-  border-top: none;
-  position: absolute;
-  transform-origin: 50% 0%;
-  border-radius: 0 0 300px 300px;
-  left: 0;
-  top: 100%;
-  z-index: 5;
-  animation: 1s fillGraphAnimation ease-in;
-  transform: rotate(calc(1deg * var(--percentage) * 1.8));
-  box-sizing: border-box;
-  cursor: pointer;
-}
-.better-payment .bp-graph:after {
-  content: attr(data-name) " " counter(varible) "%";
-  counter-reset: varible var(--percentage);
-  background: var(--fill);
-  box-sizing: border-box;
-  border-radius: 2px;
-  color: #fff;
-  font-weight: 200;
-  font-size: 12px;
-  height: 20px;
-  padding: 3px 5px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  transform: rotate(calc(-1deg * var(--percentage) * 1.8)) translate(-30px, 0);
-  transition: 0.2s ease-in;
-  transform-origin: 0 50%;
-  opacity: 0;
-}
-@keyframes fillGraphAnimation {
-  0% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(180deg);
-  }
-}
-.better-payment .bp-doughnut_info {
-  position: absolute;
-  width: 132px;
-  height: auto;
-  background-color: rgba(0, 0, 0, 0.8509803922);
-  border-radius: 2px;
-  padding: 12px;
-  left: 0;
-  top: 0;
-  z-index: 99;
-  opacity: 0;
-  cursor: pointer;
-  transition: all 0.5s;
-}
-.better-payment .bp-multi-graph:hover .bp-doughnut_info {
-  opacity: 1;
-}
-.better-payment .bp-doughnut_info .bp-doughnut_date {
-  font-size: 9.28px;
-  font-weight: 500;
-  color: #fff;
-  margin-bottom: 7px;
-}
-.better-payment .bp-doughnut_info .bp-dougnut_color-info {
-  color: #fff;
-  font-size: 7.95px;
-  font-weight: 500;
-}
-.better-payment .bp-doughnut_info .bp-dougnut_color-info div {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 1px;
-  background-color: #fff;
-  padding: 2px;
-  margin: 5px 5px 5px 0;
-}
-.better-payment .bp-doughnut_info div .color-B {
-  background-color: #8673FF;
-}
-.better-payment .bp-doughnut_info div .color-Y {
-  background-color: #FFCF66;
-}
-.better-payment .bp-doughnut_info div .color-R {
-  background-color: #FF5060;
 }
 .better-payment .p-0 {
   padding: 0 !important;
@@ -3655,14 +3469,6 @@
 .better-payment .w-auto {
   min-width: auto !important;
   width: auto !important;
-}
-.better-payment .border-bottom_active {
-  border-left: none !important;
-  border-right: none !important;
-  border-top: none !important;
-}
-.better-payment .min-w_600 {
-  min-width: 580px !important;
 }
 .better-payment .line-height-0 {
   line-height: 0;
@@ -3681,15 +3487,9 @@
   .better-payment .bp-subscription_wrapper .bp-col_7 {
     width: 100%;
   }
-  .better-payment .bp-subscription_box {
-    margin-bottom: 24px;
-  }
   .better-payment .bp-analytics_chart-wrapper .bp-col_10,
   .better-payment .bp-analytics_chart-wrapper .bp-col_4 {
     width: 100%;
-  }
-  .better-payment .bp-analytics_box {
-    margin-bottom: 24px;
   }
 }
 @media only screen and (max-width: 1024px) {
@@ -3701,9 +3501,6 @@
   }
   .better-payment .bp-amount {
     margin-bottom: 24px;
-  }
-  .better-payment .bp-chart_header .name h3 {
-    font-size: 16px;
   }
   .better-payment .bp-th,
   .better-payment .bp-td {
@@ -3719,27 +3516,6 @@
   }
   .better-payment .bp-amount_wrapper .bp-col_4 {
     width: 100% !important;
-  }
-  .better-payment .bp-multi-graph {
-    width: 200px !important;
-    height: 100px !important;
-  }
-  .better-payment .bp-multi-graph:before {
-    width: 200px !important;
-    height: 100px !important;
-  }
-  .better-payment .bp-graph {
-    width: 200px !important;
-    height: 100px !important;
-  }
-  .better-payment .better-payment-user-dashboard-container .dashboard-tab-wrapper .bp-total_count {
-    margin-bottom: 20px;
-  }
-  .better-payment .bp-total_count {
-    font-size: 28px !important;
-  }
-  .better-payment .bp-total_title {
-    font-size: 10px !important;
   }
 }
 @media only screen and (max-width: 1024px) {
@@ -3902,8 +3678,8 @@ div.bp-thank_page-custom-logo_wrapper-error svg {
   border-radius: 16px;
 }
 div.bp-thank_page-custom-logo_wrapper-error svg path {
-  stroke: #F44336;
-  fill: #F44336;
+  stroke: #f44336;
+  fill: #f44336;
 }
 
 .bp-thank_page div.bp-thank_page-custom-logo_wrapper-success svg {
@@ -3914,8 +3690,8 @@ div.bp-thank_page-custom-logo_wrapper-error svg path {
   border-radius: 16px;
 }
 .bp-thank_page div.bp-thank_page-custom-logo_wrapper-success svg path {
-  stroke: #6B59EE;
-  fill: #6B59EE;
+  stroke: #6b59ee;
+  fill: #6b59ee;
 }
 
 .bp-thank_page-logo {
@@ -3938,7 +3714,7 @@ div.bp-thank_page-custom-logo_wrapper-success.pf-block {
 div.bp-thank_page-custom-logo_wrapper-success.pf-block span,
 div.bp-thank_page-custom-logo_wrapper-success.pf-block i {
   font-size: 42px;
-  color: #6B59EE;
+  color: #6b59ee;
   height: auto;
   width: auto;
 }
@@ -3957,7 +3733,7 @@ div.bp-thank_page-custom-logo_wrapper-error.pf-block {
 div.bp-thank_page-custom-logo_wrapper-error.pf-block span,
 div.bp-thank_page-custom-logo_wrapper-error.pf-block i {
   font-size: 42px;
-  color: #F44336;
+  color: #f44336;
   height: auto;
   width: auto;
 }

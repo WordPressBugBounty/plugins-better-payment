@@ -331,6 +331,11 @@ class CPT extends Controller {
             );
         }
 
+        // Template theme CSS for the preview modal: fires
+        // `better_payment/campaign/enqueue_styles` ('builder'), where Pro loads its
+        // themes. A free install loads no Pro design here. See CampaignStyles.
+        CampaignStyles::enqueue_theme_styles( 'builder' );
+
         wp_enqueue_media();
 
         // Zero out all WP admin chrome spacing so the builder fills edge-to-edge.
@@ -374,6 +379,12 @@ class CPT extends Controller {
             // Picker-facing — retired designs are filtered out here, never in
             // get_all(), which the renderer reads on every campaign pageview.
             'templates'      => array_values( TemplateManager::get_for_picker() ),
+            // `template key => theme_class`, over the WHOLE registry rather than
+            // the picker: a campaign on a retired design still renders under its
+            // theme class, and the Advanced tab's Background control reads this
+            // to resolve what that theme actually paints (utils/themeBackground.js).
+            // Keyed, not a list — the builder looks a single key up.
+            'templateThemes' => TemplateManager::theme_classes(),
             // The category taxonomy, shared by the template picker's sidebar and
             // the AI wizard's "What are you raising funds for?" tiles. Both used
             // to hardcode their own list and drifted apart; this is the one list.

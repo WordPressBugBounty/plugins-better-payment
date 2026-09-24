@@ -36,6 +36,15 @@ class OperationValidator {
     const SCOPED_OPERATIONS = [ 'update_block', 'replace_image' ];
 
     /**
+     * Longest element id a `set_layout` may carry through. Builder ids are 15
+     * characters; the builder's REPLACE_LAYOUT applies the same cap before it
+     * keeps an echoed id.
+     *
+     * @var int
+     */
+    const MAX_ID_LENGTH = 64;
+
+    /**
      * Validate a batch of operations, returning only the sanitised, valid ones.
      *
      * @param mixed $operations Raw operations from the model.
@@ -121,7 +130,7 @@ class OperationValidator {
 
         switch ( $name ) {
             case 'set_layout':
-                return self::validate_set_layout( $operation );
+                return self::validate_set_layout( $operation, $id_type_map );
             case 'insert_block':
                 return self::validate_insert_block( $operation );
             case 'update_block':
@@ -147,7 +156,12 @@ class OperationValidator {
 
     // ------------------------------------------------------------------ per-op
 
-    private static function validate_set_layout( array $op ) {
+    /**
+     * @param array                 $op          Raw operation.
+     * @param array<string, string> $id_type_map element_id => type of the current campaign.
+     * @return array|null
+     */
+    private static function validate_set_layout( array $op, array $id_type_map = [] ) {
         $layout  = $op['layout'] ?? '';
         // Some models JSON-encode the nested columns array; accept that too.
         $columns = self::maybe_decode_json( $op['columns'] ?? [] );
@@ -159,6 +173,8 @@ class OperationValidator {
             return null;
         }
 
+        // Element ids already used in this layout — shared across columns.
+        $seen_ids   = [];
         $clean_cols = [];
         foreach ( $columns as $column ) {
             if ( ! is_array( $column ) ) {
@@ -168,7 +184,7 @@ class OperationValidator {
                 'id'       => self::sanitize_id( $column['id'] ?? '' ),
                 'label'    => sanitize_text_field( $column['label'] ?? '' ),
                 'width'    => self::sanitize_width( $column['width'] ?? '100%' ),
-                'elements' => self::sanitize_elements( $column['elements'] ?? [] ),
+                'elements' => self::sanitize_elements( $column['elements'] ?? [], $seen_ids, $id_type_map ),
             ];
         }
 
@@ -189,9 +205,10 @@ class OperationValidator {
      *
      * A free user who explicitly asks the AI for FAQ, Video or Donors Wall gets
      * that exact widget, not a free substitute: it lands on the canvas as the
-     * locked preview a palette drop already produces, its settings are reset to the
-     * schema defaults on save by
-     * {@see \Better_Payment\Lite\Campaign\MetaBox::enforce_pro_entitlement()}, and
+     * locked preview a palette drop already produces. A free install registers only
+     * a lock stub for it, with no settings keys, so every setting the model wrote is
+     * dropped here; {@see \Better_Payment\Lite\Campaign\MetaBox::enforce_pro_entitlement()}
+     * saves a new one with the stub's empty defaults, and
      * the builder renders it through {@see \Better_Payment\Lite\Campaign\Elements\ProElementPreview}.
      * On the live page it renders nothing — the accepted, existing free-plugin
      * behaviour for an unlicensed Pro widget. The assistant tells the user it is
@@ -395,22 +412,26 @@ class OperationValidator {
      * Sanitise a full list of raw elements (used by set_layout).
      *
      * Note what this deliberately does NOT do: it does not drop Pro elements on a
-     * non-Pro install, even though {@see self::validate_insert_block()} refuses to
-     * create one. `set_layout` is a whole-page replacement, and an edit turn as
+     * non-Pro install. `set_layout` is a whole-page replacement, and an edit turn as
      * ordinary as "shorten the title" comes back with the entire page echoed in
      * it. On a lapsed licence, filtering here would turn that turn into a silent
      * deletion of every Pro element the user had built while subscribed — the same
      * destruction {@see \Better_Payment\Lite\Campaign\MetaBox::enforce_pro_entitlement()}
      * exists to prevent by restoring settings rather than removing elements.
      *
-     * Entitlement is enforced where it is safe to enforce it: we do not offer Pro
-     * types in the prompt, we refuse to insert new ones, and MetaBox neuters their
-     * settings on save. A Pro element that survives here renders as nothing on the
+     * Entitlement decides what is offered and disclosed, never what is recognised:
+     * Pro types are not offered in a free install's prompt, a Pro widget the user
+     * explicitly asks for is inserted locked ({@see self::validate_insert_block()})
+     * with a disclosure AIService appends, and MetaBox resets a new one's settings
+     * on save. A Pro element that survives here renders as nothing on the
      * frontend, which is recoverable; deleting the user's work is not.
      *
+     * @param mixed                 $elements    Raw elements (array or JSON string).
+     * @param array<string, bool>   $seen_ids    Element ids already kept in this layout; updated.
+     * @param array<string, string> $id_type_map element_id => type of the current campaign.
      * @return array<int, array>
      */
-    private static function sanitize_elements( $elements ): array {
+    private static function sanitize_elements( $elements, array &$seen_ids = [], array $id_type_map = [] ): array {
         $elements = self::maybe_decode_json( $elements );
         if ( ! is_array( $elements ) ) {
             return [];
@@ -431,10 +452,24 @@ class OperationValidator {
                 'type'     => $type,
                 'settings' => self::sanitize_settings( $type, $element['settings'] ?? [] ),
             ];
-            // Preserve an incoming id only if it looks builder-generated; otherwise
-            // the client mints a fresh one on apply.
-            if ( ! empty( $element['id'] ) && is_string( $element['id'] ) ) {
-                $entry['id'] = self::sanitize_id( $element['id'] );
+            // An echoed id keeps the element the SAME element: the builder keeps it
+            // on apply (REPLACE_LAYOUT), and MetaBox::enforce_pro_entitlement()
+            // matches a locked Pro element to its stored settings by it. The id is
+            // dropped — so the client mints a fresh one — when it is empty once
+            // sanitised, too long, already used earlier in this layout (ids are
+            // unique across columns), or names an element of ANOTHER type in the
+            // current campaign (a reused id, not an echo).
+            if ( isset( $element['id'] ) && is_string( $element['id'] ) ) {
+                $id = self::sanitize_id( $element['id'] );
+                if (
+                    '' !== $id
+                    && strlen( $id ) <= self::MAX_ID_LENGTH
+                    && ! isset( $seen_ids[ $id ] )
+                    && ( ! isset( $id_type_map[ $id ] ) || $id_type_map[ $id ] === $type )
+                ) {
+                    $entry['id']     = $id;
+                    $seen_ids[ $id ] = true;
+                }
             }
             $clean[] = $entry;
         }

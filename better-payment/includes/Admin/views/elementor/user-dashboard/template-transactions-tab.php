@@ -131,7 +131,8 @@ $bp_current_page = 1;
                         $bp_transaction_customer_email = isset($bp_form_fields_info['email']) ? sanitize_text_field($bp_form_fields_info['email']) : '';
                     }
 
-                    $is_subscription = ! empty( $bp_form_fields_info['subscription_id'] ) ? 'Subscription' : 'One Time';
+                    // 'One Time' unless Pro labels the row (better_payment/transaction/payment_type), as the REST pages do.
+                    $is_subscription = \Better_Payment\Lite\Classes\Helper::payment_type_label( $bp_form_fields_info );
                     ?>
                     <div class="better-payment-user-dashboard-table-body bp--table-body bp-min_width-1300 flex items-center justify-between gap-1">
                         <?php
@@ -184,12 +185,9 @@ $bp_current_page = 1;
                         <?php if ( $bp_settings['transaction_table_status_show'] ) : ?>
                         <div class="td details flex justify-center gap-3">
                             <?php
-                            $bp_transaction_status_for_color = $bp_transaction->status ? sanitize_text_field($bp_transaction->status) : '';
-                            $bp_helper_obj = new Helper();
-                            $bp_transaction_status_color = $bp_helper_obj->get_color_by_transaction_status($bp_transaction_status_for_color, 'v2');
-                            $td_status_btn_text_v2 = $bp_helper_obj->get_type_by_transaction_status($bp_transaction_status_for_color, 'v2');
-
-                            $bp_transaction_status = $bp_transaction->status ? sanitize_text_field($bp_transaction->status) : esc_html__('N/A', 'better-payment');
+                            // An unconfirmed pre-2.4.0 free checkout reads Incomplete, as the REST pages label it.
+                            $bp_transaction_status_color = Helper::transaction_status_color( $bp_transaction );
+                            $td_status_btn_text_v2 = Helper::transaction_status_type( $bp_transaction, 'v2' );
                             ?>
                             <p class="" data-id="<?php echo esc_attr($bp_transaction->id) ?>"> <span style="color:#fff; padding:7px 15px; border-radius: 20px;background: <?php echo esc_attr($bp_transaction_status_color); ?>"><?php echo esc_html(ucfirst($td_status_btn_text_v2)); ?></span> </p>
                         </div>

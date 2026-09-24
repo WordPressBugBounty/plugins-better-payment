@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\Admin;
 
 use Better_Payment\Lite\Classes\Helper;
+use Better_Payment\Lite\Classes\ProSubscriptionTransactionData;
 
 /**
  * Exit if accessed directly
@@ -19,6 +20,14 @@ if (!defined('ABSPATH')) {
  * @since 0.0.1
  */
 class DB {
+
+    /**
+     * Helper's counting rule (an unconfirmed pre-2.4.0 `no_payment_required` row is not counted; a
+     * confirmed one adds 0), aliased so the two deprecated queries below spell it `self::…` exactly
+     * as Pro's AnalyticsModel copies do (AnalyticsModelParityTest compares the bodies).
+     */
+    private const COUNTED_ROW_SQL      = Helper::COUNTED_ROW_SQL;
+    private const COUNTABLE_AMOUNT_SQL = Helper::COUNTABLE_AMOUNT_SQL;
 
     public static function get_table_name() {
         global $wpdb;
@@ -151,7 +160,7 @@ class DB {
     /**
      * Get all transactions from better payment table.
      *
-     * @param string $args
+     * @param array|string $args Filters, as wp_parse_args() reads them (every caller passes an array).
      * @return array
      * @since 0.0.1
      */
@@ -214,8 +223,19 @@ class DB {
 
         if( !empty($transaction_type) ){
             $statuses_by_types = $better_payment_helper_obj->transaction_statuses_with_type_v2();
-            $statuses_by_transaction_type = isset($statuses_by_types[$transaction_type]['statuses']) ? $statuses_by_types[$transaction_type]['statuses'] : $defaults['status'];
-            $status = '';
+            $transaction_type  = is_string( $transaction_type ) ? $transaction_type : 'all';
+
+            if ( 'null' === $transaction_type ) {
+                // The count twin of `status=null` below.
+                $status           = 'null';
+                $transaction_type = '';
+            } else {
+                // An unknown type is every row, as an unknown `status` is. It used to fall back to the
+                // string 'all' and fatal in array_map() below.
+                $transaction_type             = isset( $statuses_by_types[ $transaction_type ] ) ? $transaction_type : 'all';
+                $statuses_by_transaction_type = $statuses_by_types[ $transaction_type ]['statuses'];
+                $status                       = '';
+            }
         }
         
         $whereQuery = ''; 
@@ -251,11 +271,28 @@ class DB {
                     $statuses = array_map(function($status) {
                         return "'" . esc_sql($status) . "'";
                     }, $statuses_by_type);
-            
+
                     $statuses = implode(',', $statuses);
-                    
-                    $nullDataQuery = $fetchNull ? " OR status IS NULL " : '';
-                    $whereQuery .= " AND ( status IN ( $statuses ) " . esc_sql($nullDataQuery) . " ) "; 
+
+                    $bucket = $transaction_type ? $transaction_type : $status;
+
+                    // NULL is the incomplete bucket's own status (PayPal's pending sentinel): `IN ()`
+                    // cannot match it, so the Incomplete tab always ORs it in and lists the rows its
+                    // total and stat card count.
+                    $nullDataQuery = ( $fetchNull || 'incomplete' === $bucket ) ? " OR status IS NULL " : '';
+
+                    // The counting rule, for the tabs: an unconfirmed pre-2.4.0 `no_payment_required`
+                    // row is in no count, so it is listed under Incomplete, never Completed, as
+                    // Helper::transaction_status_type() labels it. A confirmed one stays Completed;
+                    // `refunded` is unchanged. Helper constants only (no request data, no `%`).
+                    $unconfirmed_sql = 'incomplete' === $bucket ? ' OR ' . Helper::UNCONFIRMED_LEGACY_SQL . ' ' : '';
+                    $counted_sql     = 'completed' === $bucket ? ' AND ' . Helper::COUNTED_ROW_SQL . ' ' : '';
+
+                    // `all` is every row, as the All tab's list is: its `IN ()` list would leave NULL and
+                    // unlisted statuses out of the total.
+                    if ( 'all' !== $bucket ) {
+                        $whereQuery .= " AND ( status IN ( $statuses ) " . esc_sql($nullDataQuery) . $unconfirmed_sql . " ) " . $counted_sql;
+                    }
                 }
             }
         }
@@ -336,36 +373,7 @@ class DB {
     /**
      * Get transactions analytics
      *
-     * @return int
-     * @since 0.0.1
-     */
-    public static function get_transactions_analytics($filtered_transactions = array())
-    {
-        global $wpdb;
-        $transaction_analytics = [];
-
-        $table = self::get_table_name();
-        $better_payment_db_obj = new DB();
-
-        $total_transactions = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'count', 1, $filtered_transactions );
-
-        $completed_statuses = $better_payment_db_obj->allowed_statuses('completed', 'v2');
-        $completed_transactions = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'count', 0, $filtered_transactions );
-
-        $incomplete_statuses = $better_payment_db_obj->allowed_statuses('incomplete', 'v2');
-        $incomplete_transactions = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'count', 1, $filtered_transactions );
-        
-        $transaction_analytics['total_transactions']        = $total_transactions;
-        $transaction_analytics['completed_transactions']    = $completed_transactions;
-        $transaction_analytics['incomplete_transactions']   = $incomplete_transactions;
-        
-        return $transaction_analytics;
-    }
-
-    /**
-     * Get transactions analytics
-     *
-     * @return int
+     * @return array<string, mixed>
      * @since 0.0.1
      */
     public static function get_transactions_analytics_dashboard($filtered_transactions = array())
@@ -443,32 +451,12 @@ class DB {
     }
     
     /**
-     * Get transaction details from better payment table.
-     *
-     * @param string $args
-     * @return object 
-     * @since 0.0.1
-     */
-    public static function get_transactions_by_email($email)
-    {
-        global $wpdb;
-
-        $table = self::get_table_name();
-        $email = sanitize_text_field($email);
-        
-        $item = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table WHERE email = %s order by payment_date DESC",
-                $email
-            )
-        );
-
-        return $item;
-    }
-
-    /**
      * Get analytics counts and amounts for a specific user via a single SQL aggregate query.
      * Returns the same shape as get_transactions_analytics_dashboard() without loading all rows.
+     *
+     * An unconfirmed pre-2.4.0 `no_payment_required` row is left out of every figure; a confirmed
+     * one counts as completed and adds 0 to the amounts (Helper::COUNTED_ROW_SQL /
+     * Helper::COUNTABLE_AMOUNT_SQL).
      *
      * @param string $email
      * @return array
@@ -479,23 +467,28 @@ class DB {
         $email    = sanitize_text_field( $email );
         $ffi_like = '%' . $wpdb->esc_like( '"' . $email . '"' ) . '%';
 
+        // Helper constants only: no request data, and no `%` for prepare() to misread.
+        $countable_amount = 'CAST(' . Helper::COUNTABLE_AMOUNT_SQL . ' AS DECIMAL(10,2))';
+        $completed        = "status IN ('paid','Completed','completed','success','" . Helper::LEGACY_FREE_CHECKOUT_STATUS . "')";
+        $counted_row      = Helper::COUNTED_ROW_SQL;
+
         $row = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT
                     COUNT(*) AS total_count,
-                    SUM(CAST(amount AS DECIMAL(10,2))) AS total_amount,
-                    SUM(CASE WHEN status IN ('paid','Completed','completed','success')
+                    SUM({$countable_amount}) AS total_amount,
+                    SUM(CASE WHEN {$completed}
                         THEN 1 ELSE 0 END) AS completed_count,
-                    SUM(CASE WHEN status IN ('paid','Completed','completed','success')
-                        THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS completed_amount,
-                    SUM(CASE WHEN status IN ('pending','Pending','unpaid','incomplete','Incomplete') OR status IS NULL
+                    SUM(CASE WHEN {$completed}
+                        THEN {$countable_amount} ELSE 0 END) AS completed_amount,
+                    SUM(CASE WHEN status IN ('pending','Pending','unpaid','incomplete','Incomplete','failed') OR status IS NULL
                         THEN 1 ELSE 0 END) AS incomplete_count,
-                    SUM(CASE WHEN status IN ('pending','Pending','unpaid','incomplete','Incomplete') OR status IS NULL
+                    SUM(CASE WHEN status IN ('pending','Pending','unpaid','incomplete','Incomplete','failed') OR status IS NULL
                         THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS incomplete_amount,
                     SUM(CASE WHEN status = 'refunded' THEN 1 ELSE 0 END) AS refunded_count,
                     SUM(CASE WHEN status = 'refunded'
                         THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS refunded_amount
-                FROM $table WHERE ( email = %s OR form_fields_info LIKE %s )",
+                FROM $table WHERE ( email = %s OR form_fields_info LIKE %s ) AND {$counted_row}",
                 $email,
                 $ffi_like
             )
@@ -542,9 +535,17 @@ class DB {
         $per_page = max( 1, intval( $args['per_page'] ) );
         $offset   = ( $page - 1 ) * $per_page;
 
-        $type_where = '';
-        if ( 'subscriptions' === $args['type'] ) {
-            $type_where = " AND form_fields_info LIKE '%\"subscription_id\"%'";
+        $type_where = self::user_transactions_type_where( (string) $args['type'] );
+        if ( null === $type_where ) {
+            // Nothing defines this row type (e.g. 'subscriptions' without Pro): answer
+            // with no rows, never with every row the user owns.
+            return [
+                'transactions' => [],
+                'total'        => 0,
+                'pages'        => 1,
+                'page'         => $page,
+                'per_page'     => $per_page,
+            ];
         }
 
         // Match rows where the email column is set directly OR where the email
@@ -581,6 +582,38 @@ class DB {
             'page'         => $page,
             'per_page'     => $per_page,
         ];
+    }
+
+    /**
+     * The SQL condition narrowing get_user_transactions_paginated() to a row type.
+     *
+     * 'transactions' (or no type) is every row the user owns. Every other type is
+     * defined by `better_payment/db/user_transactions_type_where` ($where, $type),
+     * which starts from null: Pro supplies the 'subscriptions' condition for its
+     * recurring and split payments. Lite's copy of it
+     * (ProSubscriptionTransactionData::subscriptions_type_where()) serves only an
+     * active Pro that does not (<= 1.4.3). A type nobody defines returns null, and
+     * the caller answers with no rows.
+     *
+     * @since 2.4.0
+     *
+     * @param string $type Requested row type.
+     * @return string|null SQL fragment starting with " AND", '' for all rows, null for none.
+     */
+    private static function user_transactions_type_where( string $type ) {
+        if ( '' === $type || 'transactions' === $type ) {
+            return '';
+        }
+
+        $where = null;
+
+        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
+            $where = ProSubscriptionTransactionData::subscriptions_type_where( $where, $type );
+        }
+
+        $where = apply_filters( 'better_payment/db/user_transactions_type_where', $where, $type );
+
+        return is_string( $where ) ? $where : null;
     }
 
     /**
@@ -630,6 +663,12 @@ class DB {
     /**
      * Get transactions amount
      *
+     * Lite never calls this; Better Payment Pro <= 1.4.3's AnalyticsModel does, and
+     * tests/Unit/ProCouplingContractTest.php pins it. Pro 1.4.4 carries its own copy.
+     *
+     * @deprecated 2.4.0 Kept only for Better Payment Pro <= 1.4.3; delete when MIN_PRO_VERSION >= 1.4.4.
+     *             Pro copy: better-payment-pro/includes/Models/AnalyticsModel.php::get_transactions_by_statuses().
+     *
      * @return array
      * @since 0.0.1
      */
@@ -656,15 +695,15 @@ class DB {
 
         if(!empty($payment_date_from) && !empty($payment_date_to)){
             $amount = $wpdb->get_results(
-                "SELECT amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
+                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
             );
         } else if(!empty($payment_date_from) && empty($payment_date_to)){
             $amount = $wpdb->get_results(
-                "SELECT amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date >= '" . esc_sql($payment_date_from) . "'"
+                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date >= '" . esc_sql($payment_date_from) . "'"
             );
         } else {
             $amount = $wpdb->get_results(
-                "SELECT amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " )" 
+                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL
             );
         }
 
@@ -674,13 +713,15 @@ class DB {
     /**
      * Get transactions amount
      *
-     * @return array
+     * Lite's caller, get_transactions_analytics_dashboard(), always passes
+     * $filtered_transactions and is answered from that array. Without it the answer
+     * comes from SQL, which only Better Payment Pro <= 1.4.3's AnalyticsModel asks
+     * for — see transactions_amount_by_statuses_query().
+     *
+     * @return mixed
      * @since 0.0.1
      */
     public function get_transactions_amount_by_statuses($statuses = array(), $payment_date_from = '', $payment_date_to = '', $count_or_amount = 'amount', $fetchNull=0, $filtered_transactions = array() ) {
-        global $wpdb;
-
-        $table = DB::get_table_name();
         $allowed_statuses = $this->allowed_statuses('all', 'v2');
         
         $nullDataQuery = $fetchNull ? " OR status IS NULL " : '';
@@ -704,11 +745,17 @@ class DB {
             $filtered_transactions_amount = 0;
             
             foreach($filtered_transactions as $filtered_transaction) {
+                // Helper's counting rule, as the SQL copies below apply it: an unconfirmed pre-2.4.0
+                // free checkout is no transaction to count, and a confirmed one adds 0.
+                if ( Helper::is_unconfirmed_legacy_free_checkout( $filtered_transaction ) ) {
+                    continue;
+                }
+
                 if( in_array($filtered_transaction->status, $statuses_original) ) {
                     $filtered_transactions_by_statuses[] = $filtered_transaction->id;
-                    $filtered_transactions_amount += ! empty( $filtered_transaction->amount ) ? floatval( $filtered_transaction->amount ) : 0;
+                    $filtered_transactions_amount += Helper::countable_amount( $filtered_transaction );
                 }
-            } 
+            }
 
             if($count_or_amount == 'count'){
                 $filtered_transactions_by_statuses_count = count($filtered_transactions_by_statuses);
@@ -720,9 +767,32 @@ class DB {
             }
         }
 
+        return $this->transactions_amount_by_statuses_query( $statuses, $nullDataQuery, $payment_date_from, $payment_date_to, $count_or_amount );
+    }
+
+    /**
+     * The SQL count or sum behind get_transactions_amount_by_statuses() when no
+     * filtered transactions are passed.
+     *
+     * @deprecated 2.4.0 Kept only for Better Payment Pro <= 1.4.3; delete when MIN_PRO_VERSION >= 1.4.4.
+     *             Pro copy: better-payment-pro/includes/Models/AnalyticsModel.php::transactions_amount_by_statuses_query(),
+     *             kept identical by Pro's AnalyticsModelParityTest.
+     *
+     * @param string $statuses          Quoted, comma-separated statuses for IN().
+     * @param string $nullDataQuery     " OR status IS NULL " or ''.
+     * @param string $payment_date_from Lower payment_date bound.
+     * @param string $payment_date_to   Upper payment_date bound.
+     * @param string $count_or_amount   'count' or 'amount'.
+     * @return mixed
+     */
+    private function transactions_amount_by_statuses_query( $statuses, $nullDataQuery, $payment_date_from, $payment_date_to, $count_or_amount ) {
+        global $wpdb;
+
+        $table = DB::get_table_name();
+
         if($count_or_amount == 'count') {
             $count = (int) $wpdb->get_var(
-                "SELECT count(id) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " )"
+                "SELECT count(id) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL
             );
 
             return $count;
@@ -730,42 +800,16 @@ class DB {
 
         if(!empty($payment_date_from) && !empty($payment_date_to)){
             $amount = $wpdb->get_var(
-                "SELECT sum(amount) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
+                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
             );
         }else {
             $amount = $wpdb->get_var(
                 // #TODO Amount based on filtered transactions
-                "SELECT sum(amount) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ")"
+                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL
             );
         }
 
         return $amount;
-    }
-
-    public static function search_transactions($items, $search_text, $offset, $per_page){
-        $filtered_items = array();
-        $search_text = str_replace('%', '', $search_text);
-        
-        if(count($items) > 0){
-            $filtered_items = array_filter($items, function($item) use ($search_text){
-                $form_fields_info = maybe_unserialize($item->form_fields_info);
-                
-                if(
-                    isset($form_fields_info['first_name']) && stripos($form_fields_info['first_name'], $search_text) !== false
-                    || isset($form_fields_info['last_name']) && stripos($form_fields_info['last_name'], $search_text) !== false
-                    || isset($form_fields_info['primary_first_name']) && stripos($form_fields_info['primary_first_name'], $search_text) !== false
-                    || isset($form_fields_info['primary_last_name']) && stripos($form_fields_info['primary_last_name'], $search_text) !== false
-                    || isset($form_fields_info['email']) && stripos($form_fields_info['email'], $search_text) !== false
-                    || isset($form_fields_info['primary_email']) && stripos($form_fields_info['primary_email'], $search_text) !== false
-                ){
-                    return true;
-                }
-
-            });
-
-        }
-
-        return $filtered_items;
     }
 
     public static function mark_as_completed($id)

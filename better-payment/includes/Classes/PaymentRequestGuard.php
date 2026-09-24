@@ -33,6 +33,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (`Classes\Actions`), the block handlers (`Blocks\BlockActions`) and the Elementor Pro
  * form actions. `tests/Unit/Classes/PaymentRequestGuardWiringTest.php` fails if one stops.
  *
+ * Better Payment Pro's payment forms — Payment Form layouts 4/5/6 and the recurring,
+ * split-payment and mixed payment types — are not resolved by the rules in this class.
+ * PaymentEntitlement refuses them outright without Pro and otherwise asks Pro (or, for
+ * an older Pro, Lite's transitional copy of Pro's code) to resolve them. Those resolvers use
+ * the public checks below (resolve_amount(), coupon_code(), stripe_price(),
+ * product_price(), …), so a Pro form is held to exactly the same amount, price and coupon
+ * rules as a free one.
+ *
  * @since 2.3.4
  */
 class PaymentRequestGuard {
@@ -68,7 +76,14 @@ class PaymentRequestGuard {
     }
 
     /**
-     * Resolve a widget or block submission (Pro layouts 4/5/6 included).
+     * Resolve a widget or block submission.
+     *
+     * A Pro payment form (a Pro layout, PaymentEntitlement::is_pro_form()) is refused on a free
+     * install before anything else is looked up, and otherwise resolved through
+     * PaymentEntitlement::resolve_form_payment() — which fails closed when nothing resolves it.
+     * A request posting a field only a Pro form renders is refused on a free install too, and
+     * on every install when its form is not a Pro layout. A free layout is a one-time payment,
+     * whatever payment type its saved settings still hold.
      *
      * @param array $settings Stored widget/block settings — never request data.
      * @param array $fields   Submitted fields: the AJAX `fields` array, or `$_POST` for PayPal. Unslashed.
@@ -78,21 +93,33 @@ class PaymentRequestGuard {
      *     @type float      $amount               Total to charge (unit amount × quantity).
      *     @type float      $unit_amount          Validated amount per unit.
      *     @type int|string $quantity             Submitted quantity, or '' when none was sent.
-     *     @type int[]      $product_quantities   Layout 6 per-product quantities, keyed like the product id setting.
+     *     @type int[]      $product_quantities   Per-product quantities of a product-list form, keyed like its product id setting.
      *     @type string     $currency             Currency to charge in.
      *     @type string     $campaign_id          Verified campaign id, or '' (never an unverified request value).
      *     @type string     $coupon_code          Coupon, only when the form has a visible coupon field.
-     *     @type bool       $is_recurring         Whether this is a Stripe subscription checkout.
-     *     @type string     $recurring_price_id   Allowed recurring price id.
-     *     @type string     $installment_price_id Allowed split-payment installment price id.
+     *     @type bool       $is_recurring         Whether this is a Stripe subscription checkout (Pro forms only).
+     *     @type string     $recurring_price_id   Allowed recurring price id (Pro forms only).
+     *     @type string     $installment_price_id Allowed split-payment installment price id (Pro forms only).
      * }
      */
     public function resolve_form_payment( array $settings, array $fields, array $context ) {
-        $page_id      = isset( $context['page_id'] ) ? absint( $context['page_id'] ) : 0;
-        $gateway      = isset( $context['gateway'] ) ? sanitize_key( $context['gateway'] ) : '';
-        $layout       = self::setting( $settings, 'better_payment_form_layout', 'layout-1' );
-        $payment_type = self::setting( $settings, 'better_payment_form_payment_type', 'one-time' );
-        $campaign     = $this->resolve_campaign( self::field( $fields, 'campaign_id' ), $page_id );
+        $page_id     = isset( $context['page_id'] ) ? absint( $context['page_id'] ) : 0;
+        $gateway     = isset( $context['gateway'] ) ? sanitize_key( $context['gateway'] ) : '';
+        $is_pro_form     = PaymentEntitlement::is_pro_form( $settings );
+        $posts_pro_field = PaymentEntitlement::posts_pro_fields( $fields );
+
+        // Before anything else is read: a free install runs none of a Pro payment.
+        if ( ( $is_pro_form || $posts_pro_field ) && ! ProCompatibility::pro_enabled() ) {
+            return PaymentEntitlement::refusal();
+        }
+
+        // A free layout never renders a plan, an installment or a mixed choice, whatever payment
+        // type its saved settings still hold. Such a request is forged, and never reaches Pro.
+        if ( ! $is_pro_form && $posts_pro_field ) {
+            return self::invalid_price();
+        }
+
+        $campaign = $this->resolve_campaign( self::field( $fields, 'campaign_id' ), $page_id );
 
         $resolved = [
             'amount'               => 0.0,
@@ -101,24 +128,36 @@ class PaymentRequestGuard {
             'product_quantities'   => [],
             'currency'             => null !== $campaign && '' !== $campaign['currency'] ? $campaign['currency'] : self::form_currency( $settings ),
             'campaign_id'          => null !== $campaign ? $campaign['id'] : '',
-            'coupon_code'          => self::allowed_coupon_code( $settings, $layout, $fields ),
+            'coupon_code'          => '',
             'is_recurring'         => false,
             'recurring_price_id'   => '',
             'installment_price_id' => '',
         ];
 
-        if ( in_array( $payment_type, [ 'recurring', 'split-payment' ], true ) ) {
-            return $this->resolve_subscription( $resolved, $settings, $fields, $payment_type, $gateway );
+        if ( $is_pro_form ) {
+            return PaymentEntitlement::resolve_form_payment(
+                $this,
+                $resolved,
+                $settings,
+                $fields,
+                [
+                    'page_id'  => $page_id,
+                    'gateway'  => $gateway,
+                    'campaign' => $campaign,
+                ]
+            );
         }
 
-        // A subscription checkout is only ever rendered for a recurring/split form.
-        if ( 'subscription' === self::field( $fields, 'better_payment_recurring_mode' ) ) {
-            return self::invalid_price();
-        }
+        $form_fields             = self::repeater( $settings, 'better_payment_form_fields' );
+        $resolved['coupon_code'] = self::coupon_code( $form_fields, $fields );
 
-        $amount = 'layout-6-pro' === $layout
-            ? $this->resolve_product_list_amount( $settings, $fields )
-            : $this->resolve_single_amount( $settings, $fields, $layout, $campaign );
+        $amount = $this->resolve_amount(
+            $settings,
+            $fields,
+            $form_fields,
+            self::preset_amounts( $settings, 'better_payment_show_amount_list', 'better_payment_amount' ),
+            $campaign
+        );
 
         if ( is_wp_error( $amount ) ) {
             return $amount;
@@ -247,15 +286,19 @@ class PaymentRequestGuard {
     // ------------------------------------------------------------------ one-time amounts
 
     /**
-     * Layouts 1–5: a product-priced form, a verified campaign donation, or the amount field's rules.
+     * A one-time amount: a product-priced form, a verified campaign donation, or the amount field's rules.
      *
-     * @param array      $settings Form settings.
-     * @param array      $fields   Submitted fields.
-     * @param string     $layout   Form layout.
-     * @param array|null $campaign Verified campaign.
-     * @return array|WP_Error
+     * Every one-time form goes through this, Pro's included — Pro's resolver passes the
+     * fields repeater and preset amounts its layout renders.
+     *
+     * @param array      $settings    Form settings.
+     * @param array      $fields      Submitted fields.
+     * @param array      $form_fields The fields repeater the form renders.
+     * @param float[]    $presets     Preset amounts the form renders as radios (preset_amounts()).
+     * @param array|null $campaign    Verified campaign (resolve_campaign()), or null.
+     * @return array|WP_Error `amount`, `unit_amount`, `quantity`, `product_quantities`.
      */
-    private function resolve_single_amount( array $settings, array $fields, $layout, $campaign ) {
+    public function resolve_amount( array $settings, array $fields, array $form_fields, array $presets, $campaign = null ) {
         $posted   = self::posted_amount( $fields, 'primary_payment_amount' );
         $quantity = self::posted_quantity( $fields );
 
@@ -284,7 +327,7 @@ class PaymentRequestGuard {
             if ( ! self::campaign_allows( $campaign, $posted ) ) {
                 return self::invalid_amount();
             }
-        } elseif ( ! self::amount_field_allows( $settings, $layout, $posted ) ) {
+        } elseif ( ! self::amount_field_allows( $form_fields, $presets, $posted ) ) {
             return self::invalid_amount();
         }
 
@@ -301,72 +344,6 @@ class PaymentRequestGuard {
     }
 
     /**
-     * Layout 6: the total of the configured WooCommerce/FluentCart products at their real prices.
-     *
-     * Quantities are the visitor's to choose, prices are not. Stripe and Paystack post one
-     * quantity per product; PayPal's plain form POST keeps only the last `payment_amount_quantity`
-     * input, so with several products and a single quantity the total can only be held to its
-     * floor — every product at least once — which is still never less than the listed price.
-     *
-     * @param array $settings Form settings.
-     * @param array $fields   Submitted fields.
-     * @return array|WP_Error
-     */
-    private function resolve_product_list_amount( array $settings, array $fields ) {
-        $platform    = 'fluentcart' === self::setting( $settings, 'better_payment_form_layout_6_ecommerce_platform', '' ) ? 'fluentcart' : 'woocommerce';
-        $product_ids = isset( $settings[ "better_payment_form_{$platform}_product_ids" ] ) ? (array) $settings[ "better_payment_form_{$platform}_product_ids" ] : [];
-        $product_ids = array_filter( array_map( 'absint', $product_ids ) );
-
-        if ( empty( $product_ids ) ) {
-            return self::price_unavailable();
-        }
-
-        $posted       = self::posted_amount( $fields, 'primary_payment_amount' );
-        $raw_quantity = isset( $fields['payment_amount_quantity'] ) ? $fields['payment_amount_quantity'] : null;
-        $expected     = 0.0;
-        $exact        = true;
-        $quantities   = [];
-
-        foreach ( $product_ids as $key => $product_id ) {
-            if ( is_array( $raw_quantity ) ) {
-                $quantity = isset( $raw_quantity[ $key ] ) ? intval( $raw_quantity[ $key ] ) : 1;
-            } elseif ( null !== $raw_quantity && '' !== $raw_quantity && 1 === count( $product_ids ) ) {
-                $quantity = intval( $raw_quantity );
-            } else {
-                $quantity = 1;
-                $exact    = 1 === count( $product_ids );
-            }
-
-            if ( $quantity < 1 ) {
-                return self::invalid_quantity();
-            }
-
-            $price = $this->product_price( $platform, $product_id );
-            if ( null === $price ) {
-                return self::price_unavailable();
-            }
-
-            $expected            += $price * $quantity;
-            $quantities[ $key ]   = $quantity;
-        }
-
-        $allowed = $exact ? self::same_amount( $posted, $expected ) : $posted + self::TOLERANCE >= $expected;
-
-        if ( $expected <= 0 || ! $allowed ) {
-            return self::invalid_amount();
-        }
-
-        $amount = $exact ? $expected : $posted;
-
-        return [
-            'amount'             => $amount,
-            'unit_amount'        => $amount,
-            'quantity'           => 1,
-            'product_quantities' => $quantities,
-        ];
-    }
-
-    /**
      * Whether an amount is one the form's amount field could have submitted.
      *
      * Mirrors partials/layout-repeater-vars.php and the layouts that include it:
@@ -376,18 +353,18 @@ class PaymentRequestGuard {
      * - a fixed or hidden field can only submit its configured default;
      * - otherwise the visitor types it, within min (default 1, as rendered) and max.
      *
-     * @param array  $settings Form settings.
-     * @param string $layout   Form layout.
-     * @param float  $amount   Submitted amount.
+     * @param array   $form_fields The fields repeater the form renders.
+     * @param float[] $presets     Preset amounts the form renders.
+     * @param float   $amount      Submitted amount.
      * @return bool
      */
-    private static function amount_field_allows( array $settings, $layout, $amount ) {
-        if ( self::amount_in( $amount, self::preset_amounts( $settings, $layout ) ) ) {
+    private static function amount_field_allows( array $form_fields, array $presets, $amount ) {
+        if ( self::amount_in( $amount, $presets ) ) {
             return true;
         }
 
         $field = null;
-        foreach ( self::form_fields( $settings, $layout ) as $item ) {
+        foreach ( $form_fields as $item ) {
             if ( is_array( $item ) && 'primary_payment_amount' === ( isset( $item['better_payment_primary_field_type'] ) ? $item['better_payment_primary_field_type'] : '' ) ) {
                 $field = $item;
                 break;
@@ -485,69 +462,6 @@ class PaymentRequestGuard {
         }
 
         return false;
-    }
-
-    // ------------------------------------------------------------------ subscriptions
-
-    /**
-     * Recurring and split-payment forms: the price ids must be ones the form offers.
-     *
-     * The price decides what Stripe charges, so a request-supplied price id is as dangerous
-     * as a request-supplied amount — any price in the merchant's Stripe account would do.
-     *
-     * @param array  $resolved     Base resolution.
-     * @param array  $settings     Form settings.
-     * @param array  $fields       Submitted fields.
-     * @param string $payment_type 'recurring' | 'split-payment'.
-     * @param string $gateway      Gateway handling the request.
-     * @return array|WP_Error
-     */
-    private function resolve_subscription( array $resolved, array $settings, array $fields, $payment_type, $gateway ) {
-        // Recurring/split layouts render Stripe only; any other gateway would charge a
-        // one-time amount of the visitor's choosing instead of the plan.
-        if ( 'stripe' !== $gateway ) {
-            return new WP_Error( 'bp_subscription_gateway', __( 'This payment plan can only be paid with Stripe.', 'better-payment' ) );
-        }
-
-        $is_split   = 'split-payment' === $payment_type;
-        $main_price = self::setting( $settings, 'better_payment_form_recurring_price_id', '' );
-        $list_key   = $is_split ? 'better_payment_split_installment_price_ids' : 'better_payment_recurring_price_ids';
-        $item_key   = $is_split ? 'better_payment_split_installment_price_id' : 'better_payment_recurring_price_id';
-        $allowed    = [ $main_price ];
-
-        foreach ( (array) ( isset( $settings[ $list_key ] ) ? $settings[ $list_key ] : [] ) as $item ) {
-            if ( is_array( $item ) && ! empty( $item[ $item_key ] ) ) {
-                $allowed[] = sanitize_text_field( $item[ $item_key ] );
-            }
-        }
-
-        $allowed  = array_values( array_filter( $allowed ) );
-        $price_id = self::field( $fields, 'better_payment_recurring_price_id' );
-        $price_id = '' === $price_id ? $main_price : $price_id;
-
-        if ( '' === $price_id || ! in_array( $price_id, $allowed, true ) ) {
-            return self::invalid_price();
-        }
-
-        $installment_id = $is_split ? self::field( $fields, 'split_payment_installment' ) : '';
-        if ( '' !== $installment_id && ! in_array( $installment_id, $allowed, true ) ) {
-            return self::invalid_price();
-        }
-
-        $charged_price = '' !== $installment_id ? $installment_id : $price_id;
-        $unit_amount   = $this->stripe_price_amount( $charged_price, self::stripe_secret_key( $settings ) );
-
-        if ( null === $unit_amount ) {
-            return self::price_unavailable();
-        }
-
-        $resolved['amount']               = $unit_amount;
-        $resolved['unit_amount']          = $unit_amount;
-        $resolved['is_recurring']         = true;
-        $resolved['recurring_price_id']   = $price_id;
-        $resolved['installment_price_id'] = $installment_id;
-
-        return $resolved;
     }
 
     // ------------------------------------------------------------------ campaigns
@@ -736,13 +650,27 @@ class PaymentRequestGuard {
     }
 
     /**
+     * Unit amount (major units) of a Stripe price, read with the form's own Stripe secret key.
+     *
+     * Looked up once per request. Null when it cannot be read — refuse the payment then; it
+     * is never charged at the visitor's amount.
+     *
+     * @param mixed $price_id Stripe price id; anything but a scalar reads as none.
+     * @param array $settings Form settings (they select the live or test secret key).
+     * @return float|null
+     */
+    public function stripe_price( $price_id, array $settings ) {
+        return $this->stripe_price_amount( is_scalar( $price_id ) ? (string) $price_id : '', self::stripe_secret_key( $settings ) );
+    }
+
+    /**
      * Current price of a WooCommerce or FluentCart product, read the way the form renders it.
      *
      * @param string $platform   'woocommerce' | 'fluentcart'.
      * @param int    $product_id Product id.
      * @return float|null
      */
-    private function product_price( $platform, $product_id ) {
+    public function product_price( $platform, $product_id ) {
         $price = null;
 
         if ( 'woocommerce' === $platform && function_exists( 'wc_get_product' ) ) {
@@ -821,41 +749,31 @@ class PaymentRequestGuard {
     // ------------------------------------------------------------------ form configuration
 
     /**
-     * The fields repeater a layout renders — same mapping as Actions::fetch_better_form_fields().
+     * A repeater setting (a list of items), or [] when it is unset or not a list.
      *
      * @param array  $settings Form settings.
-     * @param string $layout   Form layout.
+     * @param string $key      Setting key, e.g. `better_payment_form_fields`.
      * @return array
      */
-    private static function form_fields( array $settings, $layout ) {
-        $keys = [
-            'layout-4-pro' => 'better_payment_form_fields_layout_4_5_6',
-            'layout-5-pro' => 'better_payment_form_fields_layout_4_5_6_desc',
-            'layout-6-pro' => 'better_payment_form_fields_layout_4_5_6_woo',
-        ];
-        $key  = isset( $keys[ $layout ] ) ? $keys[ $layout ] : 'better_payment_form_fields';
-
+    public static function repeater( array $settings, $key ) {
         return isset( $settings[ $key ] ) && is_array( $settings[ $key ] ) ? $settings[ $key ] : [];
     }
 
     /**
-     * Preset amounts the layout renders as radios.
+     * Preset amounts a form renders as radios: the items of `$items_key`, while `$toggle_key` is on.
      *
-     * @param array  $settings Form settings.
-     * @param string $layout   Form layout.
+     * @param array  $settings   Form settings.
+     * @param string $toggle_key Show-amount-list switch, e.g. `better_payment_show_amount_list`.
+     * @param string $items_key  Amount list repeater, e.g. `better_payment_amount`.
      * @return float[]
      */
-    private static function preset_amounts( array $settings, $layout ) {
-        $is_pro_layout = in_array( $layout, [ 'layout-4-pro', 'layout-5-pro', 'layout-6-pro' ], true );
-        $toggle        = $is_pro_layout ? 'better_payment_show_amount_list_layout_4_5_6' : 'better_payment_show_amount_list';
-        $items         = $is_pro_layout ? 'better_payment_amount_layout_4_5_6' : 'better_payment_amount';
-
-        if ( 'yes' !== self::setting( $settings, $toggle, '' ) || empty( $settings[ $items ] ) || ! is_array( $settings[ $items ] ) ) {
+    public static function preset_amounts( array $settings, $toggle_key, $items_key ) {
+        if ( 'yes' !== self::setting( $settings, $toggle_key, '' ) || empty( $settings[ $items_key ] ) || ! is_array( $settings[ $items_key ] ) ) {
             return [];
         }
 
         $amounts = [];
-        foreach ( $settings[ $items ] as $item ) {
+        foreach ( $settings[ $items_key ] as $item ) {
             if ( is_array( $item ) && isset( $item['better_payment_amount_val'] ) ) {
                 $amounts[] = floatval( $item['better_payment_amount_val'] );
             }
@@ -867,19 +785,18 @@ class PaymentRequestGuard {
     /**
      * A coupon code, only when the form actually offers a visible coupon field.
      *
-     * @param array  $settings Form settings.
-     * @param string $layout   Form layout.
-     * @param array  $fields   Submitted fields.
+     * @param array $form_fields The fields repeater the form renders.
+     * @param array $fields      Submitted fields.
      * @return string
      */
-    private static function allowed_coupon_code( array $settings, $layout, array $fields ) {
+    public static function coupon_code( array $form_fields, array $fields ) {
         $code = self::field( $fields, 'primary_coupon_code' );
 
         if ( '' === $code ) {
             return '';
         }
 
-        foreach ( self::form_fields( $settings, $layout ) as $item ) {
+        foreach ( $form_fields as $item ) {
             if ( is_array( $item )
                 && 'primary_coupon_code' === ( isset( $item['better_payment_primary_field_type'] ) ? $item['better_payment_primary_field_type'] : '' )
                 && self::is_visible( $item ) ) {
@@ -903,7 +820,7 @@ class PaymentRequestGuard {
      * Anything else refuses the checkout rather than silently charging full price for a code
      * the donor believes applied.
      *
-     * Call this only with a code allowed_coupon_code() has let through.
+     * Call this only with a code coupon_code() has let through.
      *
      * @since 2.3.4
      *
@@ -1015,7 +932,7 @@ class PaymentRequestGuard {
      * @param string $key    Amount input name.
      * @return float
      */
-    private static function posted_amount( array $fields, $key ) {
+    public static function posted_amount( array $fields, $key ) {
         $amount = self::field( $fields, $key );
 
         if ( '' === $amount || 0.0 === floatval( $amount ) ) {
@@ -1052,7 +969,7 @@ class PaymentRequestGuard {
      * @param string $key    Field name.
      * @return string
      */
-    private static function field( array $fields, $key ) {
+    public static function field( array $fields, $key ) {
         if ( ! isset( $fields[ $key ] ) ) {
             return '';
         }
@@ -1073,7 +990,7 @@ class PaymentRequestGuard {
      * @param string $fallback Value when unset or empty.
      * @return string
      */
-    private static function setting( array $settings, $key, $fallback ) {
+    public static function setting( array $settings, $key, $fallback ) {
         return isset( $settings[ $key ] ) && is_scalar( $settings[ $key ] ) && '' !== (string) $settings[ $key ]
             ? sanitize_text_field( (string) $settings[ $key ] )
             : $fallback;
@@ -1137,28 +1054,28 @@ class PaymentRequestGuard {
      * @param float $b Amount.
      * @return bool
      */
-    private static function same_amount( $a, $b ) {
+    public static function same_amount( $a, $b ) {
         return abs( (float) $a - (float) $b ) < self::TOLERANCE;
     }
 
     /**
      * @return WP_Error
      */
-    private static function invalid_amount() {
+    public static function invalid_amount() {
         return new WP_Error( 'bp_invalid_amount', __( 'The payment amount is not allowed for this form.', 'better-payment' ) );
     }
 
     /**
      * @return WP_Error
      */
-    private static function invalid_quantity() {
+    public static function invalid_quantity() {
         return new WP_Error( 'bp_invalid_quantity', __( 'The quantity must be a whole number of at least 1.', 'better-payment' ) );
     }
 
     /**
      * @return WP_Error
      */
-    private static function invalid_price() {
+    public static function invalid_price() {
         return new WP_Error( 'bp_invalid_price', __( 'The selected payment plan is not available for this form.', 'better-payment' ) );
     }
 
@@ -1179,7 +1096,7 @@ class PaymentRequestGuard {
     /**
      * @return WP_Error
      */
-    private static function price_unavailable() {
+    public static function price_unavailable() {
         return new WP_Error( 'bp_price_unavailable', __( 'The price for this payment could not be verified. Please try again later.', 'better-payment' ) );
     }
 }

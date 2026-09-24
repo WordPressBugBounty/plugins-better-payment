@@ -146,7 +146,7 @@ if ( empty($current_user->user_email) ) {
             
             <?php if ( $bp_settings['subscriptions_show'] ) : ?>
                 <div class="bp--tab-conetnt-wrapper subscriptions-tab-wrapper <?php echo esc_attr( ( $bp_settings['dashboard_show'] || $bp_settings['transactions_show'] ) ? 'd-none' : ''); ?>">
-                    <?php if ( ( ! $this->pro_enabled ) ) : ?>
+                    <?php if ( ( ! $this->pro_enabled ) && current_user_can('manage_options') ) : ?>
                     <p>
                         <a class="width-100" target="_blank" href="//wpdeveloper.com/in/upgrade-better-payment-pro">
                             <img width="100%" src="<?php echo esc_url(BETTER_PAYMENT_ASSETS . '/img/' . 'user-dashboard-subscription-pro-banner.png'); ?>" alt="subscription-pro-banner">

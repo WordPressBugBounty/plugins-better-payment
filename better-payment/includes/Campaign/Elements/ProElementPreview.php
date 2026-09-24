@@ -12,8 +12,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Replaces the old flat "PRO" banner. A banner told a free user nothing about
  * what the element does; this paints a realistic approximation so they can see
- * the widget, watch it react to the (disabled) controls beside it, and judge
- * whether Pro is worth buying.
+ * the widget and judge whether Pro is worth buying.
+ *
+ * A free install registers only a lock stub for these elements
+ * ({@see ProElementStubs}: no schema, no default settings), so a freshly dropped
+ * element reaches here with `[]` settings and every mock must look complete from
+ * built-in sample content alone. Settings that ARE present — a campaign built
+ * while Pro was active — are still honoured, so a downgraded campaign shows the
+ * author's own configuration.
  *
  * ── The one rule that matters ────────────────────────────────────────────────
  * **This NEVER renders on the public frontend.** Every method here fabricates
@@ -175,7 +181,9 @@ class ProElementPreview {
         $show_avatar  = ! isset( $settings['show_avatar'] ) || $settings['show_avatar'];
         $show_date    = ! isset( $settings['show_date'] ) || $settings['show_date'];
 
-        $headline = isset( $settings['headline'] ) ? (string) $settings['headline'] : '';
+        // Unset (a stub-registered element) takes the sample heading; an emptied
+        // heading stays empty.
+        $headline = isset( $settings['headline'] ) ? (string) $settings['headline'] : __( 'Recent Donors', 'better-payment' );
         $accent   = self::safe_color( isset( $settings['accent_color'] ) ? $settings['accent_color'] : '' );
 
         $donors = array_slice( self::sample_donors(), 0, $limit );
@@ -252,19 +260,25 @@ class ProElementPreview {
     }
 
     /**
-     * The FAQ mock renders the author's OWN items, not invented ones — the
-     * questions are already in the saved settings and are not Pro data. Only the
+     * The FAQ mock renders the author's OWN items when the saved settings carry
+     * any (a campaign built while Pro was active) — those questions are not Pro
+     * data. Otherwise it shows {@see self::sample_faq_items()}: placeholder copy
+     * that describes the widget and states nothing about the campaign. Only the
      * accordion's interactivity is missing, so every item is shown open.
      *
      * @param array $settings
      * @return string
      */
     private static function faq( array $settings ): string {
-        $heading = isset( $settings['heading'] ) ? (string) $settings['heading'] : '';
+        $heading = isset( $settings['heading'] ) ? (string) $settings['heading'] : __( 'Frequently Asked Questions', 'better-payment' );
         $accent  = self::safe_color( isset( $settings['accent_color'] ) ? $settings['accent_color'] : '' );
 
         $items = ( isset( $settings['items'] ) && is_array( $settings['items'] ) ) ? $settings['items'] : [];
         $items = array_slice( $items, 0, 30 );
+
+        if ( ! self::has_faq_content( $items ) ) {
+            $items = self::sample_faq_items();
+        }
 
         ob_start();
         ?>
@@ -275,39 +289,80 @@ class ProElementPreview {
                 </h4>
             <?php endif; ?>
 
-            <?php if ( empty( $items ) ) : ?>
-                <p style="margin:0;font-size:12px;color:#787c82;">
-                    <?php esc_html_e( 'No questions added yet.', 'better-payment' ); ?>
-                </p>
-            <?php else : ?>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                    <?php foreach ( $items as $item ) :
-                        $question = isset( $item['question'] ) ? (string) $item['question'] : '';
-                        $answer   = isset( $item['answer'] ) ? (string) $item['answer'] : '';
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <?php foreach ( $items as $item ) :
+                    $question = isset( $item['question'] ) ? (string) $item['question'] : '';
+                    $answer   = isset( $item['answer'] ) ? (string) $item['answer'] : '';
 
-                        if ( '' === $question && '' === $answer ) {
-                            continue;
-                        }
-                        ?>
-                        <div style="border:1px solid #f0f0f1;border-radius:6px;padding:10px 12px;">
-                            <div style="display:flex;align-items:flex-start;gap:8px;">
-                                <span style="flex:0 0 auto;color:<?php echo esc_attr( $accent ); ?>;font-weight:700;line-height:1.4;">+</span>
-                                <span style="flex:1 1 auto;font-size:13px;font-weight:600;color:#1a1a2e;line-height:1.4;">
-                                    <?php echo esc_html( $question ); ?>
-                                </span>
-                            </div>
-                            <?php if ( '' !== $answer ) : ?>
-                                <p style="margin:6px 0 0 18px;font-size:12px;line-height:1.6;color:#50575e;">
-                                    <?php echo esc_html( $answer ); ?>
-                                </p>
-                            <?php endif; ?>
+                    if ( '' === $question && '' === $answer ) {
+                        continue;
+                    }
+                    ?>
+                    <div style="border:1px solid #f0f0f1;border-radius:6px;padding:10px 12px;">
+                        <div style="display:flex;align-items:flex-start;gap:8px;">
+                            <span style="flex:0 0 auto;color:<?php echo esc_attr( $accent ); ?>;font-weight:700;line-height:1.4;">+</span>
+                            <span style="flex:1 1 auto;font-size:13px;font-weight:600;color:#1a1a2e;line-height:1.4;">
+                                <?php echo esc_html( $question ); ?>
+                            </span>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                        <?php if ( '' !== $answer ) : ?>
+                            <p style="margin:6px 0 0 18px;font-size:12px;line-height:1.6;color:#50575e;">
+                                <?php echo esc_html( $answer ); ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </div>
         <?php
         return (string) ob_get_clean();
+    }
+
+    /**
+     * Whether any FAQ row carries a question or an answer.
+     *
+     * @param array $items Saved FAQ rows.
+     * @return bool
+     */
+    private static function has_faq_content( array $items ): bool {
+        foreach ( $items as $item ) {
+            if ( ! is_array( $item ) ) {
+                continue;
+            }
+            $question = isset( $item['question'] ) ? (string) $item['question'] : '';
+            $answer   = isset( $item['answer'] ) ? (string) $item['answer'] : '';
+            if ( '' !== $question || '' !== $answer ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Sample FAQ rows for a mock with no saved questions.
+     *
+     * The questions are the generic ones any donor asks; the answers describe the
+     * widget, not the campaign, so nothing here can be read as a claim about how a
+     * real campaign spends its money.
+     *
+     * @return array<int, array<string, string>>
+     */
+    private static function sample_faq_items(): array {
+        return [
+            [
+                'question' => __( 'How will my donation be used?', 'better-payment' ),
+                'answer'   => __( 'Your own answer appears here. Add the questions donors ask most, each with a short, direct answer.', 'better-payment' ),
+            ],
+            [
+                'question' => __( 'Is my payment secure?', 'better-payment' ),
+                'answer'   => __( 'Sample answer. Each question opens and closes on your live campaign.', 'better-payment' ),
+            ],
+            [
+                'question' => __( 'Can I donate any amount?', 'better-payment' ),
+                'answer'   => __( 'Sample answer. Add, remove and reorder questions as your campaign needs.', 'better-payment' ),
+            ],
+        ];
     }
 
     /**

@@ -6,7 +6,6 @@ use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Campaign\MetaBox;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
-use Better_Payment\Lite\Campaign\Templates\ProTemplatePreviews;
 use Better_Payment\Lite\Campaign\Support\Money;
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
 use Better_Payment\Lite\Campaign\Elements\ProElementPreview;
@@ -1230,43 +1229,29 @@ class RendererService {
      * (it is a fixed crop of the top of the page) and drifts from the layout the
      * moment a template is redesigned.
      *
-     * A locked Pro card (ProTemplateCatalog) carries `columns => []` on purpose —
-     * the registry never hands a Pro layout to the client, and that is the gate.
-     * Its preview comes from `ProTemplatePreviews`, a generated mirror read ONLY
-     * here: the document that goes back is rendered HTML, which cannot be applied.
+     * Only a template with a layout of its own previews live. A locked Pro card
+     * (ProTemplateCatalog, free install only) carries `columns => []`, and Lite
+     * ships no copy of Pro's layouts, so it returns '' and the lightbox shows the
+     * card's screenshot — the builder does not even request it. With Pro active
+     * the same key resolves to Pro's real template and renders like any other.
      * Falling through to `default_layout()` instead would advertise Pro's design
-     * as a generic one-column campaign.
-     *
-     * Returns '' — and the client falls back to the screenshot — only when there
-     * is no layout from either source.
+     * as a generic campaign.
      *
      * @param string $key Template key from TemplateManager.
      * @return string Full HTML document, or '' when the key is unknown or has no layout.
      */
     public static function build_template_preview_document( string $key ): string {
         $templates = TemplateManager::get_all();
-        if ( ! isset( $templates[ $key ] ) ) {
+        if ( empty( $templates[ $key ]['columns'] ) ) {
             return '';
         }
 
         $template = $templates[ $key ];
-        $columns  = $template['columns'] ?? [];
-        $layout   = $template['layout'] ?? '1-column';
-
-        if ( empty( $columns ) ) {
-            $mirror = ProTemplatePreviews::layout( $key );
-            if ( empty( $mirror['columns'] ) ) {
-                return '';
-            }
-
-            $columns = $mirror['columns'];
-            $layout  = $mirror['layout'] ?? $layout;
-        }
 
         return self::build_preview_document(
             [
-                'layout'  => $layout,
-                'columns' => $columns,
+                'layout'  => $template['layout'] ?? '1-column',
+                'columns' => $template['columns'],
             ],
             self::template_preview_meta( $key, $template ),
             0,
@@ -1424,7 +1409,7 @@ class RendererService {
                                 //
                                 // Show a mock preview instead so the element is visible,
                                 // selectable, and demonstrates what Pro would do with the
-                                // settings shown (disabled) in the sidebar.
+                                // upgrade banner shown in the sidebar.
                                 //
                                 // This is the ONLY call site — the public render path has no
                                 // reference to ProElementPreview, and ProElementPreview::render()
@@ -1471,6 +1456,14 @@ class RendererService {
             ? '<link rel="stylesheet" href="' . esc_url( $fundraising_css ) . '?v=' . $v . '">' . "\n"
             : '';
 
+        // Template theme CSS from an add-on — Pro links its themes through
+        // `better_payment/campaign/preview_stylesheets`. A free install links no
+        // Pro design. See Campaign\CampaignStyles.
+        $theme_links = '';
+        foreach ( \Better_Payment\Lite\Campaign\CampaignStyles::preview_stylesheets() as $theme_css ) {
+            $theme_links .= '<link rel="stylesheet" href="' . esc_url( $theme_css ) . '">' . "\n";
+        }
+
         return '<!DOCTYPE html>' . "\n"
             . '<html>' . "\n"
             . '<head>' . "\n"
@@ -1478,6 +1471,7 @@ class RendererService {
             . '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n"
             . '<base href="' . esc_url( home_url( '/' ) ) . '">' . "\n"
             . '<link rel="stylesheet" href="' . esc_url( $display_css ) . '?v=' . $v . '">' . "\n"
+            . $theme_links
             . $extra_link
             . '<style>' . "\n"
             . '*, *::before, *::after { box-sizing: border-box; }' . "\n"
@@ -1517,42 +1511,55 @@ class RendererService {
     }
 
     /**
+     * Per-request memo for pro_locked_types(). A property rather than a
+     * function-local static so tests can reset it.
+     *
+     * @var array<string, array>|null
+     */
+    private static $pro_locked_types_cache = null;
+
+    /**
      * Element types that are Pro-only AND currently locked (Pro inactive).
      *
      * Returns a map of type => schema (label/icon) for elements that carry the
      * `pro` flag in the filtered registry while `better_payment/pro_enabled` is
-     * false. When Pro is active these are overridden by the full schema (no `pro`
-     * flag) so the map is empty and nothing is locked. Result is cached per
-     * request.
+     * false. With Pro active the map is empty and nothing is locked. Result is
+     * cached per request.
      *
      * @return array<string, array>
      */
     private static function pro_locked_types(): array {
-        static $cache = null;
-
-        if ( null !== $cache ) {
-            return $cache;
+        if ( null !== self::$pro_locked_types_cache ) {
+            return self::$pro_locked_types_cache;
         }
 
-        $cache = [];
+        self::$pro_locked_types_cache = [];
 
         if ( apply_filters( 'better_payment/pro_enabled', false ) ) {
-            return $cache;
+            return self::$pro_locked_types_cache;
         }
 
         foreach ( ElementRegistry::get_all() as $type => $schema ) {
             if ( ! empty( $schema['pro'] ) ) {
-                $cache[ $type ] = $schema;
+                self::$pro_locked_types_cache[ $type ] = $schema;
             }
         }
 
-        return $cache;
+        return self::$pro_locked_types_cache;
     }
 
     /**
-     * Editor-only placeholder banner shown in the builder preview for a
-     * Pro-locked element (a Pro element left over from when Pro was active).
-     * Never emitted on the public frontend.
+     * Generic builder-only "PRO" banner for a locked element that has no mock.
+     *
+     * Lite's own three Pro elements always get a ProElementPreview mock, so this
+     * is reached only by some other `pro`-flagged type — a third party's, added
+     * through `better_payment/campaign_elements`, or a future Pro element whose
+     * mock has not been written. It is lock chrome, not Pro functionality: it
+     * renders a label and an upgrade line, nothing of the element itself. Without
+     * it the element's canvas wrapper would be empty and zero-height, so the canvas
+     * could place no hotspot and the element could not be selected or deleted.
+     * Only build_preview_document() calls it, only while Pro is inactive
+     * (pro_locked_types() is empty otherwise). Never emitted on the public frontend.
      *
      * @param array $schema Element schema (label, icon).
      * @return string

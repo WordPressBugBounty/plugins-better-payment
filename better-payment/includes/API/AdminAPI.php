@@ -56,7 +56,15 @@ class AdminAPI extends WP_REST_Controller
         register_rest_route($this->namespace, '/transactions', [
             'methods' => WP_REST_Server::READABLE,
             'callback' => [$this, 'get_transactions'],
-            'permission_callback' => [$this, 'check_admin_permissions']
+            'permission_callback' => [$this, 'check_admin_permissions'],
+            'args' => [
+                // A tab. Anything else is `all` (no `type`, so a non-string falls back too instead of a 400).
+                'status' => [
+                    'required' => false,
+                    'default' => 'all',
+                    'sanitize_callback' => [__CLASS__, 'sanitize_transaction_status']
+                ]
+            ]
         ]);
 
         register_rest_route($this->namespace, '/subscriptions', [
@@ -389,6 +397,26 @@ class AdminAPI extends WP_REST_Controller
     }
 
     /**
+     * The `status` param of GET /transactions: a v2 tab (`all`, `completed`, `incomplete`, `refunded`).
+     *
+     * Anything else is `all`, as DB::get_transactions() reads an unknown status. An unknown value used
+     * to reach the count query as a transaction type and fatal in array_map() over a string. Runs as
+     * the route arg's sanitize_callback and again in the handler.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $value Raw param.
+     * @return string
+     */
+    public static function sanitize_transaction_status($value): string
+    {
+        $status = is_string($value) ? sanitize_text_field($value) : '';
+        $tabs = (new \Better_Payment\Lite\Classes\Helper())->get_transaction_types('v2');
+
+        return in_array($status, $tabs, true) ? $status : 'all';
+    }
+
+    /**
      * Get transactions with filters
      *
      * @since 1.5.0
@@ -404,7 +432,7 @@ class AdminAPI extends WP_REST_Controller
         try {
             $paged = $request->get_param('paged') ?  intval($request->get_param('paged')) : 1;
             $per_page = $request->get_param('per_page') ?  intval($request->get_param('per_page')) : 20;
-            $status = $request->get_param('status') ? sanitize_text_field($request->get_param('status')) : 'all';
+            $status = self::sanitize_transaction_status($request->get_param('status'));
             $search_text = $request->get_param('search_text') ? sanitize_text_field($request->get_param('search_text')) : '';
             $payment_date_from = $request->get_param('payment_date_from') ? sanitize_text_field($request->get_param('payment_date_from')) : '';
             $payment_date_to = $request->get_param('payment_date_to') ? sanitize_text_field($request->get_param('payment_date_to')) : '';
@@ -445,6 +473,9 @@ class AdminAPI extends WP_REST_Controller
             $transactions = DB::get_transactions($filters, 0, 'v2');
 
             foreach ($transactions as $key => $transaction) {
+                // The bucket the row is labelled under (an unconfirmed pre-2.4.0 free checkout is
+                // `incomplete`). The React list prefers it to its own raw-status map.
+                $transactions[$key]->status_type = \Better_Payment\Lite\Classes\Helper::transaction_status_type($transaction, 'v2');
                 $transactions[$key]->form_fields_info = maybe_unserialize($transaction->form_fields_info);
             }
             unset($filters['offset']);
@@ -961,15 +992,17 @@ class AdminAPI extends WP_REST_Controller
         try {
             $id = $request->get_param('id');
             $transaction = DB::get_transaction($id);
-            $transaction->form_fields_info = maybe_unserialize($transaction->form_fields_info);
-            $woo_products = maybe_unserialize($transaction->form_fields_info['detailed_product_info'] ?? []);
-            $transaction->woo_products = $woo_products['woo_products'] ?? [];
-            $transaction->woo_products = array_values($transaction->woo_products);
-
 
             if (!$transaction) {
                 return new WP_Error('transaction_not_found', 'Transaction not found', ['status' => 404]);
             }
+
+            // From the stored row, before form_fields_info is unserialized (see get_transactions()).
+            $transaction->status_type = \Better_Payment\Lite\Classes\Helper::transaction_status_type($transaction, 'v2');
+            $transaction->form_fields_info = maybe_unserialize($transaction->form_fields_info);
+            $woo_products = maybe_unserialize($transaction->form_fields_info['detailed_product_info'] ?? []);
+            $transaction->woo_products = $woo_products['woo_products'] ?? [];
+            $transaction->woo_products = array_values($transaction->woo_products);
 
             return rest_ensure_response($transaction);
         } catch (\Exception $e) {
@@ -1001,6 +1034,13 @@ class AdminAPI extends WP_REST_Controller
             $transaction = DB::get_transaction($id);
             if (!$transaction) {
                 return new WP_Error('transaction_not_found', 'Transaction not found', ['status' => 404]);
+            }
+
+            // A pre-2.4.0 free Stripe checkout stores the form's full amount although nothing was
+            // charged, so `Completed` would count money that never arrived. Such rows are never
+            // rewritten; Helper's counting rule decides them (docs/features/transactions.md).
+            if (\Better_Payment\Lite\Classes\Helper::LEGACY_FREE_CHECKOUT_STATUS === $transaction->status) {
+                return new WP_Error('legacy_free_checkout', __('This free checkout cannot be marked as completed: its stored amount was never charged.', 'better-payment'), ['status' => 400]);
             }
 
             // Check if transaction is already completed

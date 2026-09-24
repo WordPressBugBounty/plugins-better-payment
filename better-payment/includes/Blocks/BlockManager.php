@@ -12,6 +12,8 @@ namespace Better_Payment\Lite\Blocks;
 
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\Helper;
+use Better_Payment\Lite\Classes\ProSubscriptionTransactionData;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -150,9 +152,21 @@ class BlockManager {
         $wrapper_attributes = get_block_wrapper_attributes( array( 'class' => $wrapper_class ) );
 
         if ( ! $has_payment_gateway ) {
+            // A visitor gets nothing: the block has no form to show, and the
+            // instruction that follows is addressed to whoever can act on it.
+            // It used to be printed for everyone, so a public page advertised
+            // that the site owner had not finished setting up payments and named
+            // the admin screen where it is done.
+            if ( ! current_user_can( 'manage_options' ) ) {
+                return '';
+            }
+
             return '<div ' . $wrapper_attributes . '>' .
                    '<div class="better-payment-block__notice">' .
-                   '<p>' . esc_html__( 'Please configure at least one payment gateway (PayPal, Stripe, or Paystack) in Better Payment settings.', 'better-payment' ) . '</p>' .
+                   '<p>' . esc_html__( 'Payment form: enable at least one payment gateway (PayPal, Stripe or Paystack) in Better Payment settings. This notice is only visible to you.', 'better-payment' ) . '</p>' .
+                   '<p><a href="' . esc_url( admin_url( 'admin.php?page=better-payment-admin&tab=settings&section=general' ) ) . '">' .
+                   esc_html__( 'Open Better Payment settings', 'better-payment' ) .
+                   '</a></p>' .
                    '</div></div>';
         }
 
@@ -241,20 +255,16 @@ class BlockManager {
         // Get block attributes with defaults
         $dashboard_layout = isset( $attributes['dashboardLayout'] ) ? sanitize_text_field( $attributes['dashboardLayout'] ) : 'layout-1';
 
-        // Validate layout - only allow layout-1, layout-2, layout-3 plus pro versions
-        $allowed_layouts = array( 'layout-1', 'layout-2', 'layout-3', 'layout-1-pro', 'layout-2-pro', 'layout-3-pro' );
+        // Validate layout. There are no Pro dashboard layouts — Pro extends the
+        // dashboard through the `better_payment/widget/user-dashboard/*` actions —
+        // so any other key (a stale `layout-*-pro` included) falls back to layout-1.
+        $allowed_layouts = array( 'layout-1', 'layout-2', 'layout-3' );
         if ( ! in_array( $dashboard_layout, $allowed_layouts, true ) ) {
             $dashboard_layout = 'layout-1';
         }
 
         // Check if layout file exists, fallback to layout-1 if not
         $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/' . $dashboard_layout . '.php';
-
-        // Check for pro layout if pro plugin is active
-        $is_pro_layout = strpos( $dashboard_layout, '-pro' ) !== false;
-        if ( $is_pro_layout && defined( 'BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH' ) ) {
-            $template_file = BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $dashboard_layout . '.php';
-        }
 
         if ( ! file_exists( $template_file ) ) {
             $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/layout-1.php';
@@ -1606,6 +1616,11 @@ class BlockManager {
             'better_payment_settings_payment_stripe_test_secret',
             'better_payment_settings_payment_paystack_live_secret',
             'better_payment_settings_payment_paystack_test_secret',
+            // AI provider API keys (Campaign Builder); the block editor never needs them.
+            'better_payment_settings_ai_api_key_openai',
+            'better_payment_settings_ai_api_key_claude',
+            'better_payment_settings_ai_api_key_gemini',
+            'better_payment_settings_ai_api_key_openrouter',
         );
 
         foreach ( $sensitive_keys as $key ) {
@@ -1649,6 +1664,14 @@ class BlockManager {
         return array(
             'betterPaymentSettings' => $this->get_safe_settings_for_editor(),
             'adminEmail'            => sanitize_email( get_option( 'admin_email' ) ),
+            // A form with no gateway enabled shows an editor notice instead of
+            // nothing (components/gateway-notice.js). Both keys are about what to
+            // tell the user: the link is only offered to someone who can act on
+            // it, since an author who cannot open Better Payment's settings is
+            // better told to ask an administrator than handed a link to a screen
+            // they will be refused.
+            'settingsUrl'           => admin_url( 'admin.php?page=better-payment-admin&tab=settings&section=general' ),
+            'canManageSettings'     => current_user_can( 'manage_options' ),
         );
     }
 
@@ -1669,7 +1692,10 @@ class BlockManager {
         // The cache is keyed per user so each editor sees only their own data.
         // TTL: 5 minutes — short enough to reflect recent transactions without hammering
         // the DB on every page navigation inside the block editor.
-        $cache_key   = 'bp_editor_dash_' . ( $current_user->ID ?? 0 );
+        // Entitlement is part of the key: subscription rows are fetched only for
+        // Pro (below), so a cached free payload must never be served to Pro.
+        $pro_enabled = (bool) apply_filters( 'better_payment/pro_enabled', false );
+        $cache_key   = 'bp_editor_dash_' . ( $current_user->ID ?? 0 ) . ( $pro_enabled ? '_pro' : '' );
         $cache_group = 'better_payment';
         $cached      = wp_cache_get( $cache_key, $cache_group );
         if ( false !== $cached ) {
@@ -1709,6 +1735,10 @@ class BlockManager {
 
             // Unserialize and normalise to match UserAPI REST response format.
             foreach ( $raw_transactions as $tx ) {
+                // The status bucket, as UserAPI's `status_type`: the preview labels the row from it
+                // (an unconfirmed pre-2.4.0 free checkout reads Incomplete).
+                $tx->status_type = \Better_Payment\Lite\Classes\Helper::transaction_status_type( $tx, 'v2' );
+
                 if ( ! empty( $tx->form_fields_info ) ) {
                     $tx->form_fields_info = maybe_unserialize( $tx->form_fields_info );
                 }
@@ -1727,21 +1757,31 @@ class BlockManager {
                 }
                 $tx->customer_name  = $customer_name;
                 $tx->customer_email = sanitize_text_field( $ffi['primary_email'] ?? ( $ffi['email'] ?? '' ) );
+
+                // 'One Time' unless Pro labels the row (better_payment/transaction/payment_type), as UserAPI does.
+                $tx->payment_type_label = \Better_Payment\Lite\Classes\Helper::payment_type_label( $ffi );
+                $tx->is_subscription    = $tx->payment_type_label;
             }
 
             $user_transactions = apply_filters( 'better_payment/block/user_dashboard/enrich_user_transactions', $raw_transactions );
 
             // Separate query for subscriptions (not a subset of transactions page 1).
-            $sub_result        = \Better_Payment\Lite\Admin\DB::get_user_transactions_paginated(
-                $current_user->user_email,
-                array(
-                    'page'     => 1,
-                    'per_page' => 20,
-                    'type'     => 'subscriptions',
-                )
-            );
+            // These rows are Better Payment's own Stripe recurring and split payments —
+            // Pro features that only Pro's Subscriptions tab displays — so a free
+            // install skips the query and keeps the empty default.
+            $raw_subscriptions = array();
+            if ( $pro_enabled ) {
+                $sub_result        = \Better_Payment\Lite\Admin\DB::get_user_transactions_paginated(
+                    $current_user->user_email,
+                    array(
+                        'page'     => 1,
+                        'per_page' => 20,
+                        'type'     => 'subscriptions',
+                    )
+                );
+                $raw_subscriptions = $sub_result['transactions'];
+            }
 
-            $raw_subscriptions = $sub_result['transactions'];
             foreach ( $raw_subscriptions as $tx ) {
                 if ( ! empty( $tx->form_fields_info ) ) {
                     $tx->form_fields_info = maybe_unserialize( $tx->form_fields_info );
@@ -1753,15 +1793,26 @@ class BlockManager {
             foreach ( $user_subscriptions as $tx ) {
                 $ffi = is_array( $tx->form_fields_info ) ? $tx->form_fields_info : array();
 
-                $tx->subscription_id                 = sanitize_text_field( $ffi['subscription_id'] ?? '' );
-                $tx->subscription_plan_id            = sanitize_text_field( $ffi['subscription_plan_id'] ?? '' );
-                $tx->subscription_status             = sanitize_text_field( $ffi['subscription_status'] ?? '' );
-                $tx->subscription_interval           = sanitize_text_field( $ffi['subscription_interval'] ?? '' );
-                $tx->subscription_created_date       = intval( $ffi['subscription_created_date'] ?? 0 );
-                $tx->subscription_current_period_end = intval( $ffi['subscription_current_period_end'] ?? 0 );
-                $tx->is_payment_split_payment        = ! empty( $ffi['is_payment_split_payment'] ) ? intval( $ffi['is_payment_split_payment'] ) : 0;
-                $tx->subscription_product_name       = sanitize_text_field( $ffi['subscription_product_name'] ?? '' );
-                $tx->is_subscription                 = ! empty( $ffi['subscription_id'] ) ? 'Subscription' : 'One Time';
+                // The subscription columns come from the same place as UserAPI's REST rows: Pro fills
+                // `better_payment/user_api/subscription_row`, and Lite's copy serves only an active Pro
+                // that does not (ProSubscriptionTransactionData, <= 1.4.3).
+                $row = array();
+                if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
+                    $row = ProSubscriptionTransactionData::subscription_row( $row, $ffi );
+                }
+                $built = apply_filters( 'better_payment/user_api/subscription_row', $row, $ffi, $tx );
+                $row   = is_array( $built ) ? $built : $row;
+
+                foreach ( $row as $key => $value ) {
+                    $tx->{$key} = $value;
+                }
+
+                // The enrich_user_subscriptions filter above stores the product name in form_fields_info.
+                if ( ! empty( $ffi['subscription_product_name'] ) ) {
+                    $tx->subscription_product_name = sanitize_text_field( $ffi['subscription_product_name'] );
+                }
+
+                $tx->is_subscription = Helper::payment_type_label( $ffi );
 
                 $customer_name = isset( $ffi['primary_first_name'] )
                     ? trim( sanitize_text_field( $ffi['primary_first_name'] ) . ' ' . sanitize_text_field( $ffi['primary_last_name'] ?? '' ) )

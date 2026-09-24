@@ -4,6 +4,7 @@ namespace Better_Payment\Lite\API;
 
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Helper;
+use Better_Payment\Lite\Classes\ProSubscriptionTransactionData;
 use WP_REST_Controller;
 use WP_REST_Server;
 
@@ -58,13 +59,25 @@ class UserAPI extends WP_REST_Controller {
             ? $request->get_param( 'tab' )
             : 'transactions';
 
+        // Subscription rows are Better Payment's own Stripe recurring and split
+        // payments — Pro features, shown only in the Subscriptions tab Pro renders.
+        // Without Pro nothing can display them, so don't query for them.
+        if ( 'subscriptions' === $tab && ! apply_filters( 'better_payment/pro_enabled', false ) ) {
+            return rest_ensure_response( [
+                'transactions' => [],
+                'total'        => 0,
+                'page'         => max( 1, (int) $request->get_param( 'page' ) ),
+                'per_page'     => max( 1, (int) $request->get_param( 'per_page' ) ),
+                'pages'        => 1,
+            ] );
+        }
+
         $result = DB::get_user_transactions_paginated( $email, [
             'page'     => $request->get_param( 'page' ),
             'per_page' => $request->get_param( 'per_page' ),
             'type'     => $tab,
         ] );
 
-        $helper       = new Helper();
         $transactions = [];
 
         foreach ( $result['transactions'] as $txn ) {
@@ -102,26 +115,30 @@ class UserAPI extends WP_REST_Controller {
                 'amount'         => floatval( $txn->amount ),
                 'currency'       => sanitize_text_field( $txn->currency ),
                 'status'         => $status_raw,
-                'status_color'   => $helper->get_color_by_transaction_status( $status_raw, 'v2' ),
-                'status_label'   => ucfirst( $helper->get_type_by_transaction_status( $status_raw, 'v2' ) ),
+                // From the stored row: an unconfirmed pre-2.4.0 free checkout reads Incomplete
+                // (Helper::transaction_status_type()), as it is in no dashboard figure.
+                'status_type'    => Helper::transaction_status_type( $txn, 'v2' ),
+                'status_color'   => Helper::transaction_status_color( $txn ),
+                'status_label'   => Helper::transaction_status_label( $txn ),
                 'payment_date'   => $payment_date_formatted,
                 'transaction_id' => sanitize_text_field( $txn->transaction_id ),
                 'source'         => strtolower( sanitize_text_field( $txn->source ) ),
                 'customer_name'  => $customer_name,
                 'customer_email' => $customer_email,
-                'is_subscription'=> ! empty( $form_fields_info['subscription_id'] ) ? 'Subscription' : 'One Time',
+                // 'One Time' unless Pro labels the row (better_payment/transaction/payment_type).
+                'is_subscription'=> Helper::payment_type_label( $form_fields_info ),
                 'is_imported'    => ! empty( $form_fields_info['is_imported'] ) && 1 === intval( $form_fields_info['is_imported'] ),
             ];
 
             if ( 'subscriptions' === $tab ) {
-                $row['subscription_id']              = sanitize_text_field( $form_fields_info['subscription_id'] ?? '' );
-                $row['subscription_plan_id']         = sanitize_text_field( $form_fields_info['subscription_plan_id'] ?? '' );
-                $row['subscription_status']          = sanitize_text_field( $form_fields_info['subscription_status'] ?? '' );
-                $row['subscription_interval']        = sanitize_text_field( $form_fields_info['subscription_interval'] ?? '' );
-                $row['subscription_created_date']    = intval( $form_fields_info['subscription_created_date'] ?? 0 );
-                $row['subscription_current_period_end'] = intval( $form_fields_info['subscription_current_period_end'] ?? 0 );
-                $row['is_payment_split_payment']     = ! empty( $form_fields_info['is_payment_split_payment'] ) ? intval( $form_fields_info['is_payment_split_payment'] ) : 0;
-                $row['subscription_product_name']    = '';
+                // Pro builds the subscription columns on `better_payment/user_api/subscription_row`.
+                // Lite's copy serves only an active Pro that does not (<= 1.4.3).
+                if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
+                    $row = ProSubscriptionTransactionData::subscription_row( $row, $form_fields_info );
+                }
+
+                $built = apply_filters( 'better_payment/user_api/subscription_row', $row, $form_fields_info, $txn );
+                $row   = is_array( $built ) ? $built : $row;
 
                 $row = apply_filters( 'better_payment/user_api/enrich_subscription_row', $row );
             }

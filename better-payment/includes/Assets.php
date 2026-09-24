@@ -2,6 +2,8 @@
 
 namespace Better_Payment\Lite;
 
+use Better_Payment\Lite\Classes\ProPaymentFormScripts;
+use Better_Payment\Lite\Classes\ProUserDashboardAssets;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 /**
@@ -13,7 +15,7 @@ if (!defined('ABSPATH')) {
 
 /**
  * Assets handler class
- * 
+ *
  * @since 0.0.1
  */
 class Assets extends Controller
@@ -53,6 +55,11 @@ class Assets extends Controller
     /**
      * All available scripts
      *
+     * The Pro-feature copies (Classes\ProPaymentFormScripts, Classes\ProUserDashboardAssets)
+     * are always registered, but they are a dependency of `better-payment` and
+     * `better-payment-common-script` only while ProCompatibility::lite_copy_applies()
+     * says so, and nothing else enqueues them.
+     *
      * @return array
      * @since 0.0.1
      */
@@ -91,7 +98,13 @@ class Assets extends Controller
             'better-payment-common-script' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/js/common.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/common.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/common.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['jquery', 'wp-util']
+                'deps'    => array_merge( ['jquery', 'wp-util'], ProUserDashboardAssets::script_depends() ),
+            ],
+            // Transitional copy of Pro's User Dashboard handlers (datepicker, date range modal, View All); see Classes\ProUserDashboardAssets.
+            ProUserDashboardAssets::SCRIPT_HANDLE => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/js/user-dashboard-pro.min.js',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/user-dashboard-pro.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/user-dashboard-pro.min.js') : BETTER_PAYMENT_VERSION,
+                'deps'    => ['jquery', 'jquery-ui-datepicker'],
             ],
             'better-payment-stripe' => [
                 'src'     => 'https://js.stripe.com/v3/',
@@ -99,7 +112,13 @@ class Assets extends Controller
             'better-payment' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/js/better-payment.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/better-payment.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/better-payment.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['jquery', 'better-payment-stripe', 'toastr-js']
+                'deps'    => array_merge( ['jquery', 'better-payment-stripe', 'toastr-js'], ProPaymentFormScripts::script_depends() ),
+            ],
+            // Transitional copy of Pro's Payment Form quantity total (layouts 4 and 5); see Classes\ProPaymentFormScripts.
+            ProPaymentFormScripts::HANDLE => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/js/payment-form-pro-quantity.min.js',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/payment-form-pro-quantity.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/payment-form-pro-quantity.min.js') : BETTER_PAYMENT_VERSION,
+                'deps'    => ['jquery'],
             ],
             'bp-dashboard-pagination' => [
                 'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/js/bp-dashboard-pagination.min.js' )
@@ -116,16 +135,6 @@ class Assets extends Controller
             'bp-admin-settings' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/js/admin.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/admin.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/admin.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['jquery']
-            ],
-            'toastr-js-admin' => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/vendor/toastr/js/toastr.min.js',
-                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/vendor/toastr/js/toastr.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/vendor/toastr/js/toastr.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['jquery']
-            ],
-            'sweetalert2-js' => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/vendor/sweetalert2/js/sweetalert2.min.js',
-                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/vendor/sweetalert2/js/sweetalert2.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/vendor/sweetalert2/js/sweetalert2.min.js') : BETTER_PAYMENT_VERSION,
                 'deps'    => ['jquery']
             ],
             'better-payment-script' => [
@@ -154,6 +163,14 @@ class Assets extends Controller
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/common.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/common.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/common.min.css') : BETTER_PAYMENT_VERSION,
             ],
+            // Transitional copy of Pro's User Dashboard card styles; a dependency of the admin
+            // stylesheet only while it applies, so it prints between common and admin. See
+            // Classes\ProUserDashboardAssets.
+            ProUserDashboardAssets::STYLE_HANDLE => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/css/user-dashboard-pro.min.css',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/user-dashboard-pro.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/user-dashboard-pro.min.css') : BETTER_PAYMENT_VERSION,
+                'deps'    => ['better-payment-common-style'],
+            ],
             'bp-dashboard-pagination-style' => [
                 'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/css/bp-dashboard-pagination.min.css' )
                     ? BETTER_PAYMENT_ASSETS . '/css/bp-dashboard-pagination.min.css'
@@ -174,18 +191,9 @@ class Assets extends Controller
             'jquery-ui' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/vendor/jquery-ui/css/jquery-ui.min.css',
             ],
-            'bp-settings-style' => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/css/style.min.css',
-            ],
             'bp-icon-admin' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/icon/style.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/icon/style.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/icon/style.min.css') : BETTER_PAYMENT_VERSION,
-            ],
-            'toastr-css-admin' => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/vendor/toastr/css/toastr.min.css',
-            ],
-            'sweetalert2-css' => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/vendor/sweetalert2/css/sweetalert2.min.css',
             ],
             'better-payment-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/frontend.min.css',
@@ -194,6 +202,7 @@ class Assets extends Controller
             'better-payment-admin-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/admin.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/admin.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/admin.min.css') : BETTER_PAYMENT_VERSION,
+                'deps'    => ProUserDashboardAssets::style_depends(),
             ],
             'bp-font-awesome' => [
                 'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/vendor/fontawesome/css/all.min.css' )
@@ -210,6 +219,12 @@ class Assets extends Controller
             'fundraising-campaign-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css') : BETTER_PAYMENT_VERSION,
+            ],
+            // The Pro Updates tab; loaded by Classes\ProFundraisingUpdateStyles for Pro releases that do not load their own.
+            'fundraising-campaign-updates-style' => [
+                'src'     => BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign-updates.min.css',
+                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign-updates.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign-updates.min.css') : BETTER_PAYMENT_VERSION,
+                'deps'    => ['fundraising-campaign-style'],
             ],
             'better-payment-editor-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/editor.min.css',
@@ -276,7 +291,7 @@ class Assets extends Controller
                 wp_enqueue_style($handle, $style['src'], $deps, $version);
             }
         }
-        
+
 
         wp_localize_script('better-payment', 'betterPayment', [
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -297,27 +312,12 @@ class Assets extends Controller
             'currency_symbols' => $this->get_currency_symbols_list(),
         ]);
 
-        wp_localize_script('bp-admin-settings', 'betterPaymentObj', array(
-            'nonce'  => wp_create_nonce('better_payment_admin_nonce'),
-            'alerts' => [
-                'confirm' => __('Are you sure?', 'better-payment'),
-                'confirm_description' => __("You won't be able to revert this!", 'better-payment'),
-                'yes' => __('Yes, delete it!', 'better-payment'),
-                'no' => __('No, cancel!', 'better-payment'),
-            ],
-            'messages' => [
-                'success' => __('Changes saved successfully!', 'better-payment'),
-                'error' => __('Opps! something went wrong!', 'better-payment'),
-                'no_action_taken' => __('No action taken!', 'better-payment'),
-            ]
-        ));
-
         if (is_admin() && function_exists('get_current_screen')) {
             $screen = get_current_screen();
             $hook = $screen && isset($screen->id) ? $screen->id : null;
             if ($hook && $hook == 'elementor_page_elementor-element-manager') {
                 wp_enqueue_style('bp-icon-admin', BETTER_PAYMENT_ASSETS . '/icon/style.min.css', array(), BETTER_PAYMENT_VERSION);
             }
-        }     
+        }
     }
 }

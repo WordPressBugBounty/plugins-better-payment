@@ -1519,11 +1519,6 @@ class User_Dashboard extends Widget_Base {
         ] );
         wp_enqueue_script( 'bp-dashboard-pagination' );
 
-        if( $this->pro_enabled ){
-            wp_enqueue_script( 'better-payment-common-script' );
-            wp_enqueue_style( 'better-payment-common-style' );
-        }
-
         $action       = esc_url( admin_url( 'admin-post.php' ) );
         $setting_meta = wp_json_encode( [
             'page_id'   => get_the_ID(),
@@ -1547,16 +1542,9 @@ class User_Dashboard extends Widget_Base {
 
         $better_payment_form_layout = sanitize_text_field($settings[ 'better_payment_user_dashboard_layout' ]);
 
+        // There are no Pro dashboard layouts; Pro extends this widget through the
+        // `better_payment/widget/user-dashboard/*` actions instead.
         $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/' . $better_payment_form_layout . '.php';
-        $is_pro_layout = false !== strpos( $better_payment_form_layout, '-pro' );
-        
-        if ( $this->pro_enabled && $is_pro_layout ){
-            $template_file = BETTER_PAYMENT_PRO_ADMIN_VIEWS_PATH . '/elementor/layouts/' . $better_payment_form_layout . '.php';
-        }
-
-        if ( ( ! $this->pro_enabled ) && $is_pro_layout ){
-            $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/partials/layout-pro-banners.php';
-        }
 		
 		if( $better_payment_form_layout !== 'layout-1' ){
 			$template_file = $this->get_template( $better_payment_form_layout );
@@ -1582,16 +1570,6 @@ class User_Dashboard extends Widget_Base {
             // 'layout-2' => 'Layout 2',
             // 'layout-3' => 'Layout 3'
         ]);
-
-        if ( ! $this->pro_enabled ) {
-            $pro_banners = [
-                // 'layout-4-pro' => 'Layout 4 (Pro)',
-                // 'layout-5-pro' => 'Layout 5 (Pro)',
-                // 'layout-6-pro' => 'Layout 6 (Pro)',
-            ];
-
-            $layouts = array_merge( $layouts, $pro_banners );
-        }
 
         return $layouts;
     }

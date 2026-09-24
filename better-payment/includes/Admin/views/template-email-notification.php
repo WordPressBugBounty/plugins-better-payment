@@ -218,52 +218,46 @@
                                             ?>
                                             <p style="color: rgba(110, 88, 247, 1); font-size: 24px; color: rgba(43, 39, 72, 1); font-weight: 400; margin: 0 0 14px; line-height: 1.2em;" class="bp-email"><?php echo esc_html( $email_address ); ?></p>
                                             <?php 
+                                            $email_rows = array();
+
                                             foreach ( $all_data['form_fields_info_arr'] as $key => $field ) {
-                                                if ( $key === 'is_payment_split_payment' ) {
-                                                    $is_payment_split_payment = 1;
-                                                }
-                                                
-                                                if ( $key === 'split_payment_installment_iteration' ) {
-                                                    $key = 'installment_iteration';
-                                                }
-                                                
                                                 //Hide few fields
                                                 if( $key === 'referer_page_id' || $key === 'referer_widget_id' || $key === 'source' || $key === 'el_form_fields' ||
-                                                    $key === 'primary_first_name' || $key === 'primary_last_name' || $key === 'primary_email' 
+                                                    $key === 'primary_first_name' || $key === 'primary_last_name' || $key === 'primary_email'
                                                     || $key === 'primary_payment_amount'
                                                     || $key === 'amount_quantity'
-                                                    || $key === 'is_woo_layout'
                                                     || $key === 'woo_product_id'
                                                     || $key === 'woo_product_ids'
                                                     || $key === 'fluentcart_product_id'
                                                     || $key === 'fluentcart_product_ids'
-                                                    || $key === 'is_fluentcart_layout'
                                                     || $key === 'detailed_product_info'
-                                                    || $key === 'is_payment_split_payment'
-                                                    || $key === 'split_payment_total_amount'
-                                                    || $key === 'split_payment_total_amount_price_id'
-                                                    || $key === 'split_payment_installment_price_id'
-                                                    || $key === 'recurring_price_id'
+                                                    || $key === 'email_settings'
                                                 ) {
                                                     if($key === 'referer_page_id'){
                                                         $referer_content_page_link = !empty($field) ? get_permalink( $field ) : $referer_content_page_link;
                                                     }
-                                
+
                                                     continue;
                                                 }
-                                
+
                                                 $key_formatted = self::better_title_case($key);
-                                                
+
                                                 if( $key_formatted === 'Amount' ){
                                                     $key_formatted = __('Paid', 'better-payment');
-
-                                                    if ( ! empty( $is_payment_split_payment ) ) {
-                                                        $key_formatted = __('Total Amount', 'better-payment');
-                                                    }
                                                 }
+
+                                                $email_rows[] = array(
+                                                    'key'   => $key,
+                                                    'label' => $key_formatted,
+                                                    'value' => $field,
+                                                );
+                                            }
+
+                                            // A Pro payment's own fields (split payments, layout 6) are hidden or relabelled by Pro.
+                                            foreach ( \Better_Payment\Lite\Classes\PaymentEntitlement::email_rows( $email_rows, 'summary', $all_data['form_fields_info_arr'] ) as $email_row ) {
                                                 ?>
-                                                <p style="color: rgba(110, 88, 247, 1); font-size: 24px; color: rgba(43, 39, 72, 1); font-weight: 400; margin: 0 0 14px; line-height: 1.2em;" class="bp-content"><?php echo esc_html( $key_formatted ); ?>: <?php echo esc_html( $field ); ?></p>
-                                                <?php 
+                                                <p style="color: rgba(110, 88, 247, 1); font-size: 24px; color: rgba(43, 39, 72, 1); font-weight: 400; margin: 0 0 14px; line-height: 1.2em;" class="bp-content"><?php echo esc_html( $email_row['label'] ); ?>: <?php echo esc_html( $email_row['value'] ); ?></p>
+                                                <?php
                                             }
                                             ?>
                                         </td>

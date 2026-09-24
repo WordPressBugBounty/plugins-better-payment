@@ -189,7 +189,8 @@ class CampaignGenerator {
 
         // Same reasoning as photos, sharper consequence: a model cannot know a real
         // video address either, and an invented one resolves to a stranger's video.
-        $result['operations'] = self::guard_video_urls( $result['operations'], $video_urls );
+        // The video guard ships with Pro; Lite runs its copy until Pro provides it.
+        $result['operations'] = self::guard_generated_operations( $result['operations'], $video_urls );
 
         // The amount tiers and the button that submits them are one action: the
         // button must sit directly under the Donate Amount block. Structural, so
@@ -279,9 +280,10 @@ class CampaignGenerator {
     /**
      * Instruction naming the Pro widgets, appended only on an entitled install.
      *
-     * The blueprint's per-column `pro` hints say *where* these go; this says what
-     * they are and when they earn their place, so the model treats them as
-     * deliberate additions rather than boxes to fill. Without it a Pro install
+     * Generation no longer prescribes a blueprint, so this is the only text that
+     * proposes a placement: it says what the widgets are and when they earn their
+     * place, so the model treats them as deliberate additions rather than boxes to
+     * fill. Without it a Pro install
      * generated pages indistinguishable from a free one — the user paid for three
      * widgets the assistant never reached for.
      *
@@ -296,7 +298,48 @@ class CampaignGenerator {
             return '';
         }
 
-        return "\n\n" . __( "PRO WIDGETS AVAILABLE — this site has Better Payment Pro, so you may also use `donors_wall`, `faq` and `video`. Use them where they genuinely strengthen THIS campaign, not as a checklist: `faq` when a donor would hesitate over how the money is spent or whether giving is safe; `donors_wall` beside the donation ask to show momentum; `video` in the hero only when the brief actually supplies a video URL. Do not write donor names, amounts or dates into `donors_wall` — it renders real donations by itself. Do not invent a `video` URL.", 'better-payment' );
+        // Pro supplies this itself once it declares `ai_pro_widget_guidance`; this
+        // copy serves older Pro releases.
+        $instruction = CampaignSchema::lite_supplies_pro_guidance()
+            ? "\n\n" . __( "PRO WIDGETS AVAILABLE — this site has Better Payment Pro, so you may also use `donors_wall`, `faq` and `video`. Use them where they genuinely strengthen THIS campaign, not as a checklist: `faq` when a donor would hesitate over how the money is spent or whether giving is safe; `donors_wall` beside the donation ask to show momentum; `video` in the hero only when the brief actually supplies a video URL. Do not write donor names, amounts or dates into `donors_wall` — it renders real donations by itself. Do not invent a `video` URL.", 'better-payment' )
+            : '';
+
+        /**
+         * Filter the Pro-widget instruction appended to a generation brief on a Pro
+         * install. The value is the text appended to the brief, including its leading
+         * blank line — '' when Pro supplies the instruction itself.
+         */
+        return (string) apply_filters( 'better_payment/ai/pro_generation_instruction', $instruction );
+    }
+
+    /**
+     * The generation guards that only concern Pro widgets, for one attempt.
+     *
+     * Runs after fill_default_photos() and before donate-button placement, user
+     * fields and element defaults, so a `url` dropped here lets the Video widget's
+     * default fill in. Lite runs its own video URL guard only for an active Pro that
+     * does not declare `ai_pro_widget_guidance`; a current Pro guards through the
+     * filter. A free install needs no guard: its `video` is a lock stub with no
+     * settings keys, so the validator has already dropped any `url`.
+     *
+     * @param array $operations Validated operations.
+     * @param array $brief_urls http(s) URLs found in the user's original brief.
+     * @return array
+     */
+    public static function guard_generated_operations( array $operations, array $brief_urls = [] ): array {
+        if ( CampaignSchema::lite_supplies_pro_guidance() ) {
+            $operations = self::guard_video_urls( $operations, $brief_urls );
+        }
+
+        /**
+         * Filter one generation attempt's operations before donate-button placement,
+         * user-field enforcement and element defaults are applied. The second
+         * argument is `[ 'brief_urls' => string[] ]`, the URLs in the user's original
+         * brief — the only ones a generated element may keep.
+         */
+        $filtered = apply_filters( 'better_payment/ai/generated_operations', $operations, [ 'brief_urls' => $brief_urls ] );
+
+        return is_array( $filtered ) ? $filtered : $operations;
     }
 
     /**

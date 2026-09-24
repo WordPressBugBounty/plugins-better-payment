@@ -234,35 +234,6 @@ class ReactAdmin extends Controller
                     margin-left: -2px;
                 }
             }
-
-            @media print {
-                body {
-                    transform: scale(1);
-                    background: white !important;
-                }
-
-                body, body *, .wpcontent {
-                    visibility: hidden !important;
-                }
-
-                .bp-invoice-body,
-                .bp-invoice-body * {
-                    visibility: visible !important;
-                }
-
-                /* Make modal fill the full page */
-                .bp-invoice-body {
-                    position: absolute !important;
-                    left: 0;
-                    top: 100;
-                    width: 100% !important;
-                    height: auto !important;
-                }
-                
-                .bp-button-wrapper {
-                    display: none !important;
-                }
-            }
         </style>
         <?php
     }
@@ -427,6 +398,10 @@ class ReactAdmin extends Controller
             [],
             $this->file_version
         );
+
+        // Styles for the screens only Pro renders (receipt modal, Analytics, refund card,
+        // licence page): Lite's copy until Pro declares `react_admin_pro_styles`.
+        \Better_Payment\Lite\Classes\ProAdminStyles::enqueue( $this->file_version );
 
         // Campaign-list CSS contains the template-select modal styles needed on this page too.
         $campaign_list_css = BETTER_PAYMENT_ASSETS . '/admin/campaign-list/campaign-list.min.css';

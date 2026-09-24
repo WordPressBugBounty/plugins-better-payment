@@ -22,90 +22,277 @@ class Helper extends Controller
     use TraitsHelper;
 
     /**
-	 * check is plugin active or not
-	 *
-	 * @param $plugin
-	 * @return bool
-     * @since 0.0.2
-	 */
-    public function is_plugin_active($plugin) {
-	    if ( !function_exists( 'is_plugin_active' ) ){
-		    require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-        }
+     * The statuses of a confirmed payment, as campaign totals, donor counts and Pro's Donors Wall
+     * count them. See approved_donation_sql() for the one other row that counts.
+     *
+     * `success` is the status Paystack verification writes. It was missing, so Paystack donations
+     * never counted toward a campaign's total or donor count, even though the transactions screen
+     * and analytics already treated it as paid. Only a transaction Paystack reported as succeeded
+     * is ever stored as `success`.
+     *
+     * @since 2.4.0 (was Campaign\CampaignStats::approved_statuses())
+     */
+    const APPROVED_DONATION_STATUSES = array( 'Completed', 'paid', 'complete', 'succeeded', 'success' );
 
-	    return is_plugin_active( $plugin );
-    }
+    /**
+     * The status rows written before 2.4.0 can carry for a free Stripe checkout (a 100%-off
+     * promotion code, a subscription trial).
+     *
+     * Such a row is one of two things, and the status alone cannot tell them apart:
+     *   - a CONFIRMED free checkout. The old confirmation stored Stripe's `payment_status` as the
+     *     row status and, because `amount_total` was 0 and `! empty()` treated 0 as missing, kept
+     *     the form's full amount. Nothing was charged.
+     *   - a checkout Stripe reported as `no_payment_required` when it was CREATED and that nobody
+     *     completed. The old confirmation only claimed `unpaid` rows, so it was never touched.
+     * 2.4.0 stores neither: a confirmed row is always `paid` at its real amount, and a pending
+     * one `unpaid`. Stored rows are left as they are and counted by the rule below.
+     *
+     * @since 2.4.0
+     */
+    const LEGACY_FREE_CHECKOUT_STATUS = 'no_payment_required';
 
-    public static function sanitize_bp_field($key, $arr, $default_value='', $type='text'){
-        $value = $default_value;
-        
-        if( !empty( $arr[ $key ] ) ) {
-            $value = $arr[ $key ];
+    /**
+     * What only the old Stripe confirmation wrote: the serialized `exact_paid_amount` key of
+     * `form_fields_info`, followed by its float value.
+     *
+     * Every confirmation from the release that introduced discounts (and with them the only way
+     * to reach a free checkout) onwards set `$form_fields_info['exact_paid_amount']` to a float
+     * in the same UPDATE that wrote the status. No creation path ever writes that key. The
+     * columns the confirmation also wrote are no use: `customer_info` and `transaction_id` are
+     * already set at creation (the created session and its PaymentIntent), and `email` comes from
+     * the charge's billing details, which a checkout that charged nothing does not have.
+     *
+     * The trailing `d:` makes it the key: after a string VALUE the next token is a key (`s:` or
+     * `i:`) or `}`, so a form field whose value happens to be "exact_paid_amount" cannot match.
+     *
+     * @since 2.4.0
+     */
+    const LEGACY_CONFIRMATION_MARKER = 's:17:"exact_paid_amount";d:';
 
-            switch($type){
-                case 'text':
-                    $value = sanitize_text_field( $value );
-                    break;
-                case 'email':
-                    $value = sanitize_email( $value );
-                    break;
-                case 'textarea':
-                    $value = sanitize_textarea_field( $value );
-                    break;
-                default: 
-                    $value = sanitize_text_field( $value );
-                    break;
-            }
-        }
+    /**
+     * SQL condition: true only for an unconfirmed legacy free checkout. Null-safe: a NULL status or
+     * NULL form_fields_info never makes it true.
+     *
+     * OR it into the `incomplete` bucket's `status IN (…)` clause, so the Incomplete tab lists the
+     * rows the Completed tab drops (DB::get_transactions()). Contains no `%`.
+     *
+     * @since 2.4.0
+     */
+    const UNCONFIRMED_LEGACY_SQL = "( COALESCE(status, '') = '" . self::LEGACY_FREE_CHECKOUT_STATUS . "' AND INSTR(COALESCE(form_fields_info, ''), '" . self::LEGACY_CONFIRMATION_MARKER . "') = 0 )";
 
-        return $value;
+    /**
+     * SQL condition: false only for an unconfirmed legacy free checkout, the exact negation of
+     * UNCONFIRMED_LEGACY_SQL. Null-safe, so a row with a NULL status (PayPal's pending sentinel) or
+     * NULL form_fields_info is never dropped by it.
+     *
+     * AND it onto any aggregation that selects rows by a status bucket containing
+     * `no_payment_required` (`completed`, `all`). Admin\DB and Pro's AnalyticsModel do; Pro keeps
+     * the literal value, and AnalyticsModelParityTest compares the two values.
+     *
+     * @since 2.4.0
+     */
+    const COUNTED_ROW_SQL = 'NOT ' . self::UNCONFIRMED_LEGACY_SQL;
+
+    /**
+     * SQL expression: what a row contributes to a money total. A legacy free checkout adds 0,
+     * confirmed or not, because its stored amount (the form's) was never charged.
+     *
+     * @since 2.4.0
+     */
+    const COUNTABLE_AMOUNT_SQL = "CASE WHEN status = '" . self::LEGACY_FREE_CHECKOUT_STATUS . "' THEN 0 ELSE amount END";
+
+    /**
+     * SQL condition: the row is a confirmed donation.
+     *
+     * An approved status, or a CONFIRMED legacy free checkout (see LEGACY_CONFIRMATION_MARKER).
+     * Pair it with COUNTABLE_AMOUNT_SQL for any sum. Contains no `%`, so it can be interpolated
+     * into a string passed to `$wpdb->prepare()`.
+     *
+     * Pro keeps an identical copy in Models\AnalyticsModel (it supports a Lite older than this
+     * method), pinned by Pro's AnalyticsModelParityTest.
+     *
+     * @since 2.4.0
+     *
+     * @return string
+     */
+    public static function approved_donation_sql(): string {
+        return "( status IN ('" . implode( "', '", self::APPROVED_DONATION_STATUSES ) . "')"
+            . " OR ( status = '" . self::LEGACY_FREE_CHECKOUT_STATUS . "' AND INSTR(COALESCE(form_fields_info, ''), '" . self::LEGACY_CONFIRMATION_MARKER . "') > 0 ) )";
     }
 
     /**
-     * Get widget settings
+     * PHP twin of `NOT COUNTED_ROW_SQL`, for rows already loaded: is this a legacy free checkout
+     * that was never confirmed?
      *
-     * @since 0.0.1
+     * A row without `form_fields_info` loaded is treated as unconfirmed (never counted), the safe
+     * side of the rule. An already-unserialized `form_fields_info` array is read as the string it was
+     * stored as, so a caller that unserialized the row first gets the same answer.
+     *
+     * @since 2.4.0
+     *
+     * @param object|array $row A transaction row.
+     * @return bool
      */
-    public function get_better_payment_widget_settings( $page_id, $widget_id ) {
-        $document = \Elementor\Plugin::$instance->documents->get( $page_id );
-        $settings = [];
-        if ( $document ) {
-            $elements    = \Elementor\Plugin::instance()->documents->get( $page_id )->get_elements_data();
-            $widget_data = $this->find_element_recursive( $elements, $widget_id );
-            if ( $widget_data ) {
-                $widget      = \Elementor\Plugin::instance()->elements_manager->create_element_instance( $widget_data );
-                if ( $widget ) {
-                    $settings = $widget->get_settings_for_display();
-                }
-            }
-            
-        }
-        return $settings;
+    public static function is_unconfirmed_legacy_free_checkout( $row ): bool {
+        return self::LEGACY_FREE_CHECKOUT_STATUS === self::row_value( $row, 'status' )
+            && false === strpos( self::form_fields_info_string( $row ), self::LEGACY_CONFIRMATION_MARKER );
     }
 
     /**
-     * Find element recursively
+     * The status bucket a loaded transaction row is labelled and listed under.
      *
-     * @since 0.0.1
+     * The raw status's bucket (get_type_by_transaction_status()), except for an unconfirmed legacy
+     * free checkout: no count or total includes it, so it is `incomplete` (v1: `unpaid`) rather than
+     * the `completed` its `no_payment_required` status maps to. A confirmed one stays `completed`.
+     * The row itself is never changed. Every PHP surface that labels a row reads this: the admin REST
+     * rows (`status_type`), the CSV export, UserAPI, the User Dashboard template and the block's
+     * editor rows. DB::get_transactions() applies the same rule to the Completed / Incomplete tabs.
+     *
+     * @since 2.4.0
+     *
+     * @param object|array $row     A transaction row.
+     * @param string       $version 'v2' (completed / incomplete / refunded) or 'v1'.
+     * @return string The bucket key; '' for a status no bucket lists, as get_type_by_transaction_status().
      */
-    public function find_element_recursive( $elements, $form_id ) {
-
-        foreach ( $elements as $element ) {
-            if ( $form_id === $element[ 'id' ] ) {
-                return $element;
-            }
-
-            if ( !empty( $element[ 'elements' ] ) ) {
-                $element = $this->find_element_recursive( $element[ 'elements' ], $form_id );
-
-                if ( $element ) {
-                    return $element;
-                }
-            }
+    public static function transaction_status_type( $row, string $version = 'v2' ): string {
+        if ( self::is_unconfirmed_legacy_free_checkout( $row ) ) {
+            return 'v1' === $version ? 'unpaid' : 'incomplete';
         }
 
-        return false;
+        return ( new self() )->get_type_by_transaction_status( self::row_value( $row, 'status' ), $version );
     }
+
+    /**
+     * The status label of a loaded row ("Completed", "Incomplete", "Refunded"), v2 buckets.
+     *
+     * @since 2.4.0
+     *
+     * @param object|array $row A transaction row.
+     * @return string
+     */
+    public static function transaction_status_label( $row ): string {
+        return ucfirst( self::transaction_status_type( $row, 'v2' ) );
+    }
+
+    /**
+     * The status colour of a loaded row, v2 buckets: the colour of transaction_status_type()'s bucket.
+     *
+     * @since 2.4.0
+     *
+     * @param object|array $row A transaction row.
+     * @return string
+     */
+    public static function transaction_status_color( $row ): string {
+        $helper = new self();
+
+        if ( self::is_unconfirmed_legacy_free_checkout( $row ) ) {
+            $buckets = $helper->transaction_statuses_with_type_v2();
+
+            return $buckets['incomplete']['color'];
+        }
+
+        return $helper->get_color_by_transaction_status( self::row_value( $row, 'status' ), 'v2' );
+    }
+
+    /**
+     * PHP twin of COUNTABLE_AMOUNT_SQL: what a loaded row contributes to a money total.
+     *
+     * @since 2.4.0
+     *
+     * @param object|array $row A transaction row.
+     * @return float
+     */
+    public static function countable_amount( $row ): float {
+        if ( self::LEGACY_FREE_CHECKOUT_STATUS === self::row_value( $row, 'status' ) ) {
+            return 0.0;
+        }
+
+        $amount = self::row_value( $row, 'amount' );
+
+        return '' === $amount ? 0.0 : floatval( $amount );
+    }
+
+    /**
+     * Raised total and payment count over loaded transaction rows (the Elementor Fundraising
+     * Campaign widget's progress).
+     *
+     * Counts the same rows CampaignStats counts: an approved status (Stripe `paid`, Paystack
+     * `success`, `Completed`, …) or a confirmed legacy free checkout, which adds 0. It used to
+     * count only `paid`, so Paystack and manually completed donations never moved the bar.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $rows Transaction rows (objects or arrays).
+     * @return array{amount: float, count: int}
+     */
+    public static function campaign_totals_from_rows( $rows ): array {
+        $totals = array(
+            'amount' => 0.0,
+            'count'  => 0,
+        );
+
+        foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+            $status = self::row_value( $row, 'status' );
+
+            $counted = in_array( $status, self::APPROVED_DONATION_STATUSES, true )
+                || ( self::LEGACY_FREE_CHECKOUT_STATUS === $status && ! self::is_unconfirmed_legacy_free_checkout( $row ) );
+
+            if ( ! $counted ) {
+                continue;
+            }
+
+            $totals['amount'] += self::countable_amount( $row );
+            ++$totals['count'];
+        }
+
+        return $totals;
+    }
+
+    /**
+     * A scalar column of a row object or array, as a string ('' when absent or not scalar).
+     *
+     * @param object|array $row A transaction row.
+     * @param string       $key Column name.
+     * @return string
+     */
+    private static function row_value( $row, string $key ): string {
+        $value = null;
+
+        if ( is_object( $row ) && isset( $row->$key ) ) {
+            $value = $row->$key;
+        } elseif ( is_array( $row ) && isset( $row[ $key ] ) ) {
+            $value = $row[ $key ];
+        }
+
+        return is_scalar( $value ) ? (string) $value : '';
+    }
+
+    /**
+     * A row's `form_fields_info` as stored: the serialized string, an already-unserialized array
+     * serialized back, or '' when absent. Only ever searched for LEGACY_CONFIRMATION_MARKER.
+     *
+     * @param object|array $row A transaction row.
+     * @return string
+     */
+    private static function form_fields_info_string( $row ): string {
+        $value = null;
+
+        if ( is_object( $row ) && isset( $row->form_fields_info ) ) {
+            $value = $row->form_fields_info;
+        } elseif ( is_array( $row ) && isset( $row['form_fields_info'] ) ) {
+            $value = $row['form_fields_info'];
+        }
+
+        if ( is_array( $value ) ) {
+            // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize -- searched for the marker, never unserialized.
+            return serialize( $value );
+        }
+
+        return is_scalar( $value ) ? (string) $value : '';
+    }
+
+    // find_element_recursive() comes from Traits\Helper; this class used to carry
+    // a byte-identical copy of it.
 
     public function titleToSnake($text, $divider = '_') {
         // Handle null or empty values to prevent deprecated warnings.
@@ -126,15 +313,6 @@ class Helper extends Controller
         }
 
         return $text;
-    }
-
-    public function arrayToString($array, $separator = ', ', $extraString = ''){
-        $string = rtrim( implode($separator, $array ), $separator ) ;
-        if($extraString) {
-            $string .= $extraString;
-        }
-
-        return $string;
     }
 
     public function transaction_statuses_with_type(){
@@ -170,6 +348,8 @@ class Helper extends Controller
             'unpaid' => [
                 'statuses' => [
                     'unpaid',
+                    // A payment that failed.
+                    'failed',
                 ],
                 'color' => '#999',
             ],
@@ -183,6 +363,7 @@ class Helper extends Controller
                     'refunded',
                     'pending',
                     'Pending',
+                    'failed',
                     NULL,
                 ],
                 'color' => '#999',
@@ -218,6 +399,8 @@ class Helper extends Controller
                     'unpaid',
                     'incomplete',
                     'Incomplete',
+                    // A payment that failed.
+                    'failed',
                     NULL,
                 ],
                 'color' => '#FFDA15',
@@ -241,6 +424,7 @@ class Helper extends Controller
                     'success',
                     'incomplete',
                     'Incomplete',
+                    'failed',
                     NULL,
                 ],
                 'color' => '#999',
@@ -299,26 +483,6 @@ class Helper extends Controller
         
     }
 
-    public function get_color_by_transaction_type($status_type = '', $version = 'v1'){
-        if('v1' === $version){
-            $statuses = $this->transaction_statuses_with_type();
-        } else {
-            $statuses = $this->transaction_statuses_with_type_v2();
-        }
-
-        $color = '';
-        if(!empty($status_type)){
-            foreach($statuses as $type => $statuses_and_color){
-                if($type == $status_type){
-                    $color = $statuses_and_color['color'];
-                    break;
-                }
-            }
-        }
-
-        return $color;
-    }
-
     public function get_statuses_by_transaction_type($status_type = 'all', $version = 'v1'){
         if('v1' === $version){
             $statuses = $this->transaction_statuses_with_type();
@@ -375,6 +539,35 @@ class Helper extends Controller
         }
 
         return esc_html( ucfirst( $interval_text ) );
+    }
+
+    /**
+     * The payment type label of a transaction, as the User Dashboard REST rows and
+     * the CSV export print it.
+     *
+     * Lite's own checkouts only take one-time payments, so Lite says 'One Time'.
+     * `better_payment/transaction/payment_type` ($label, $form_fields_info) relabels
+     * a row: Pro returns 'Subscription' for its recurring and split payments. Lite's
+     * copy of that (ProSubscriptionTransactionData::payment_type()) serves only an
+     * active Pro that does not (<= 1.4.3). The CSV import reads the label back, so
+     * keep these two strings.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $form_fields_info The transaction's unserialized form_fields_info.
+     * @return string
+     */
+    public static function payment_type_label( $form_fields_info ): string {
+        $form_fields_info = is_array( $form_fields_info ) ? $form_fields_info : [];
+        $label            = 'One Time';
+
+        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
+            $label = ProSubscriptionTransactionData::payment_type( $label, $form_fields_info );
+        }
+
+        $filtered = apply_filters( 'better_payment/transaction/payment_type', $label, $form_fields_info );
+
+        return is_string( $filtered ) ? $filtered : $label;
     }
 
     /**

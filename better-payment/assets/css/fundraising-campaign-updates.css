@@ -1,0 +1,154 @@
+/*!**************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[6].use[1]!./node_modules/postcss-loader/dist/cjs.js!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[6].use[3]!./src/css/fundraising-campaign-updates.scss ***!
+  \**************************************************************************************************************************************************************************************************************************************/
+.better-payment.better-payment-campaign .bp-news_card a {
+  display: block;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+  background-color: #ffffff;
+  padding: 48px 72px;
+  border-radius: 24px;
+}
+@media (max-width: 1200px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+    padding: 48px;
+  }
+}
+@media (max-width: 900px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+    padding: 30px;
+  }
+}
+@media (max-width: 500px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+    padding: 12px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_icon {
+  width: 84px;
+  height: 84px;
+  margin-bottom: 10px;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_header {
+  font-size: 36px;
+  color: #252525;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_header {
+    font-size: 30px;
+  }
+}
+@media (max-width: 500px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_header {
+    font-size: 25px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_1 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box + .bp-update_box {
+  margin-top: 24px;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+  background-color: #ffffff;
+  padding: 48px 72px;
+  border-radius: 24px;
+}
+@media (max-width: 1200px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+    padding: 48px;
+  }
+}
+@media (max-width: 900px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+    padding: 30px;
+  }
+}
+@media (max-width: 500px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box {
+    padding: 12px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_icon {
+  width: 84px;
+  height: 84px;
+  margin-bottom: 10px;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_header {
+  font-size: 36px;
+  color: #252525;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_header {
+    font-size: 30px;
+  }
+}
+@media (max-width: 500px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box .bp-announcement_header {
+    font-size: 25px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_2 .bp-content_navigation-section .bp-tab_content .bp-tab_pane#update .bp-update_box + .bp-update_box {
+  margin-top: 24px;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card {
+  background-color: #f9fafb;
+  border: 1px solid #ecf0f5;
+  padding: 32px 32px 20px 32px;
+  border-radius: 16px;
+  width: 100%;
+}
+@media (max-width: 1200px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card {
+    padding: 20px 20px 0px 20px;
+    margin-bottom: 40px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .news-card_icon {
+  background-color: #ffffff;
+  border: 0.8px solid #eef0f3;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-header {
+  margin-bottom: 20px;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-sub_text {
+  margin-bottom: 48px;
+  max-width: 333px;
+  width: 100%;
+}
+@media (max-width: 900px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-sub_text {
+    margin-bottom: 25px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-btn {
+  text-align: center;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  color: #1d2939;
+  background-color: transparent;
+  transition: all 0.3s;
+}
+@media (max-width: 900px) {
+  .better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-btn {
+    padding: 12px;
+  }
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-btn.card-btn_learn-more {
+  background-color: #4e36e9;
+  color: #ffffff;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-btn.card-btn_learn-more:hover {
+  background-color: #3b21e4;
+  color: #ffffff;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .bp-news_card .card-btn.card-btn_contact-us:hover {
+  background-color: #4e36e9;
+  color: #ffffff;
+}
+.better-payment.better-payment-campaign .better-payment_campaign-layout_3 .bp-help_section .fixed-id_card + .fixed-id_card {
+  margin-bottom: 20px;
+}

@@ -62,5 +62,7 @@ class Shortcode extends Controller {
         if ( ! wp_style_is( $handle, 'enqueued' ) ) {
             wp_enqueue_style( $handle );
         }
+
+        CampaignStyles::enqueue_theme_styles( 'frontend' );
     }
 }

@@ -126,7 +126,7 @@ class StripeService {
                 ? sanitize_text_field( $session->error->message )
                 : __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' );
 
-            return new \WP_Error( 'stripe_error', $message );
+            return new \WP_Error( 'stripe_error', $message, self::error_details( $session->error ) );
         }
 
         if ( empty( $session->id ) ) {
@@ -284,7 +284,12 @@ class StripeService {
                 ? sanitize_text_field( $object->error->message )
                 : __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' );
 
-            return new \WP_Error( 'stripe_error', $message );
+            // The error code/type travels as WP_Error DATA, never as its code:
+            // every existing consumer matches on 'stripe_error' and on the
+            // message. Callers that must tell a declined card from a
+            // mis-configured Stripe account read it from here (see
+            // WooCommerce\Subscriptions::renewal_failure_is_configuration()).
+            return new \WP_Error( 'stripe_error', $message, self::error_details( $object->error ) );
         }
 
         if ( empty( $object->id ) ) {
@@ -292,5 +297,29 @@ class StripeService {
         }
 
         return $object;
+    }
+
+    /**
+     * Pure: the `type`/`code`/`decline_code` of a Stripe error payload, as
+     * the WP_Error data array. Keys are always present (empty strings when
+     * Stripe sent none), so a consumer never has to isset() its way through.
+     *
+     * @since 2.4.0
+     *
+     * @param mixed $error Stripe error object.
+     * @return array `type`, `code`, `decline_code`.
+     */
+    public static function error_details( $error ) {
+        $read = static function ( $key ) use ( $error ) {
+            return is_object( $error ) && isset( $error->{$key} ) && is_scalar( $error->{$key} )
+                ? sanitize_text_field( (string) $error->{$key} )
+                : '';
+        };
+
+        return array(
+            'type'         => $read( 'type' ),
+            'code'         => $read( 'code' ),
+            'decline_code' => $read( 'decline_code' ),
+        );
     }
 }

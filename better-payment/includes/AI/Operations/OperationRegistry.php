@@ -41,7 +41,7 @@ class OperationRegistry {
                 'summary' => 'Replace the entire campaign layout. Use only for initial generation or a full structural rebuild.',
                 'params'  => [
                     'layout'  => [ 'type' => 'string', 'required' => true, 'summary' => 'One of the layout presets (e.g. 2-column).' ],
-                    'columns' => [ 'type' => 'array', 'required' => true, 'summary' => 'Ordered columns, each with id, label, width and elements.' ],
+                    'columns' => [ 'type' => 'array', 'required' => true, 'summary' => 'Ordered columns, each with id, label, width and elements. Keep the exact id of every element that already exists; omit id only for a new element.' ],
                 ],
             ],
             'insert_block' => [

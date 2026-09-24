@@ -2,8 +2,6 @@
 
 namespace Better_Payment\Lite\AI\Layout;
 
-use Better_Payment\Lite\AI\Schema\CampaignSchema;
-
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -33,17 +31,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *     'tags'    => array<string>,      // campaign categories it suits
  *     'preset'  => '1-column'|'2-column'|'3-column'|'split',
  *     'columns' => [ [ 'id','label','width','role',
- *                      'suggested' => [element types],
- *                      'pro'       => [Pro element types] ], ... ],
+ *                      'suggested' => [element types] ], ... ],
  *   ]
  *
- * `pro` names the Pro widgets that genuinely belong in that column — appended to
- * `suggested` only when Pro is active ({@see self::suggested_for()}). Without it,
- * a paying install generated pages made entirely of free widgets: the schema
- * listed the Pro elements but nothing ever proposed *where* one should go, and
- * the model builds from the design direction, not from the type list. Placement
- * is per-column on purpose — a Donors Wall belongs beside the donation ask, an
- * FAQ belongs under the story, and a video belongs in the hero.
+ * Blueprints name free element types only. They used to carry a per-column `pro`
+ * list of Pro widgets, read by a `suggested_for()` helper — but generation stopped
+ * prescribing a blueprint, nothing called it any more, and Pro-widget placement
+ * is proposed to a Pro install by CampaignGenerator::pro_elements_instruction().
  *
  * @see \Better_Payment\Lite\AI\Services\CampaignGenerator  Consumer.
  */
@@ -103,8 +97,8 @@ class LayoutLibrary {
                 'tags'    => [ 'general', 'medical', 'community', 'nonprofit' ],
                 'preset'  => '2-column',
                 'columns' => [
-                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '64%', 'role' => 'Hero title, image and the campaign story, ending with the progress bar', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'progress_bar' ], 'pro' => [ 'video', 'faq' ] ],
-                    [ 'id' => 'sidebar', 'label' => 'Sidebar', 'width' => '36%', 'role' => 'Donation actions and quick stats', 'suggested' => [ 'donation_form', 'donate_amount', 'campaign_summary', 'social_sharing' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '64%', 'role' => 'Hero title, image and the campaign story, ending with the progress bar', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'progress_bar' ] ],
+                    [ 'id' => 'sidebar', 'label' => 'Sidebar', 'width' => '36%', 'role' => 'Donation actions and quick stats', 'suggested' => [ 'donation_form', 'donate_amount', 'campaign_summary', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -114,8 +108,8 @@ class LayoutLibrary {
                 'tags'    => [ 'emergency', 'medical', 'nonprofit' ],
                 'preset'  => '2-column',
                 'columns' => [
-                    [ 'id' => 'action', 'label' => 'Donate', 'width' => '42%', 'role' => 'Prominent donation panel with amounts, progress and summary', 'suggested' => [ 'donate_amount', 'donation_form', 'progress_bar', 'campaign_summary' ], 'pro' => [ 'donors_wall' ] ],
-                    [ 'id' => 'story', 'label' => 'Story', 'width' => '58%', 'role' => 'Title, image, story and organizer', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'organizer' ], 'pro' => [ 'video', 'faq' ] ],
+                    [ 'id' => 'action', 'label' => 'Donate', 'width' => '42%', 'role' => 'Prominent donation panel with amounts, progress and summary', 'suggested' => [ 'donate_amount', 'donation_form', 'progress_bar', 'campaign_summary' ] ],
+                    [ 'id' => 'story', 'label' => 'Story', 'width' => '58%', 'role' => 'Title, image, story and organizer', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'organizer' ] ],
                 ],
             ],
             [
@@ -125,7 +119,7 @@ class LayoutLibrary {
                 'tags'    => [ 'memorial', 'community', 'nonprofit', 'general' ],
                 'preset'  => '1-column',
                 'columns' => [
-                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '100%', 'role' => 'A single vertical narrative: hero, story, progress, then the donation ask and organizer', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'progress_bar', 'donate_amount', 'donation_form', 'organizer', 'social_sharing' ], 'pro' => [ 'video', 'faq', 'donors_wall' ] ],
+                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '100%', 'role' => 'A single vertical narrative: hero, story, progress, then the donation ask and organizer', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'progress_bar', 'donate_amount', 'donation_form', 'organizer', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -135,9 +129,9 @@ class LayoutLibrary {
                 'tags'    => [ 'event', 'community', 'general', 'creative' ],
                 'preset'  => 'split',
                 'columns' => [
-                    [ 'id' => 'hero', 'label' => 'Hero', 'width' => '100%', 'role' => 'Full-width hero: title and a strong image', 'suggested' => [ 'campaign_title', 'photo' ], 'pro' => [ 'video' ] ],
-                    [ 'id' => 'story', 'label' => 'Story', 'width' => '50%', 'role' => 'The story, progress and organizer', 'suggested' => [ 'campaign_description', 'progress_bar', 'organizer' ], 'pro' => [ 'faq' ] ],
-                    [ 'id' => 'donate', 'label' => 'Donate', 'width' => '50%', 'role' => 'Summary and the donation ask', 'suggested' => [ 'campaign_summary', 'donate_amount', 'donation_form', 'social_sharing' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'hero', 'label' => 'Hero', 'width' => '100%', 'role' => 'Full-width hero: title and a strong image', 'suggested' => [ 'campaign_title', 'photo' ] ],
+                    [ 'id' => 'story', 'label' => 'Story', 'width' => '50%', 'role' => 'The story, progress and organizer', 'suggested' => [ 'campaign_description', 'progress_bar', 'organizer' ] ],
+                    [ 'id' => 'donate', 'label' => 'Donate', 'width' => '50%', 'role' => 'Summary and the donation ask', 'suggested' => [ 'campaign_summary', 'donate_amount', 'donation_form', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -147,9 +141,9 @@ class LayoutLibrary {
                 'tags'    => [ 'nonprofit', 'medical', 'education', 'community' ],
                 'preset'  => 'split',
                 'columns' => [
-                    [ 'id' => 'intro', 'label' => 'Intro', 'width' => '100%', 'role' => 'Full-width title and a concise mission statement', 'suggested' => [ 'campaign_title', 'campaign_description' ], 'pro' => [ 'video' ] ],
-                    [ 'id' => 'impact', 'label' => 'Impact', 'width' => '50%', 'role' => 'Visual impact: image, summary stats and progress', 'suggested' => [ 'photo', 'campaign_summary', 'progress_bar' ], 'pro' => [ 'faq' ] ],
-                    [ 'id' => 'donate', 'label' => 'Donate', 'width' => '50%', 'role' => 'Donation amounts, the form and sharing', 'suggested' => [ 'donate_amount', 'donation_form', 'social_sharing' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'intro', 'label' => 'Intro', 'width' => '100%', 'role' => 'Full-width title and a concise mission statement', 'suggested' => [ 'campaign_title', 'campaign_description' ] ],
+                    [ 'id' => 'impact', 'label' => 'Impact', 'width' => '50%', 'role' => 'Visual impact: image, summary stats and progress', 'suggested' => [ 'photo', 'campaign_summary', 'progress_bar' ] ],
+                    [ 'id' => 'donate', 'label' => 'Donate', 'width' => '50%', 'role' => 'Donation amounts, the form and sharing', 'suggested' => [ 'donate_amount', 'donation_form', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -169,9 +163,9 @@ class LayoutLibrary {
                 'tags'    => [ 'creative', 'community', 'nonprofit', 'event' ],
                 'preset'  => '3-column',
                 'columns' => [
-                    [ 'id' => 'story', 'label' => 'Story', 'width' => '38%', 'role' => 'Title and the story', 'suggested' => [ 'campaign_title', 'campaign_description' ], 'pro' => [ 'faq' ] ],
-                    [ 'id' => 'visual', 'label' => 'Visual', 'width' => '32%', 'role' => 'Image and progress', 'suggested' => [ 'photo', 'progress_bar' ], 'pro' => [ 'video' ] ],
-                    [ 'id' => 'action', 'label' => 'Action', 'width' => '30%', 'role' => 'Amounts and the donation form', 'suggested' => [ 'donate_amount', 'donation_form', 'social_sharing' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'story', 'label' => 'Story', 'width' => '38%', 'role' => 'Title and the story', 'suggested' => [ 'campaign_title', 'campaign_description' ] ],
+                    [ 'id' => 'visual', 'label' => 'Visual', 'width' => '32%', 'role' => 'Image and progress', 'suggested' => [ 'photo', 'progress_bar' ] ],
+                    [ 'id' => 'action', 'label' => 'Action', 'width' => '30%', 'role' => 'Amounts and the donation form', 'suggested' => [ 'donate_amount', 'donation_form', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -181,8 +175,8 @@ class LayoutLibrary {
                 'tags'    => [ 'nonprofit', 'community', 'memorial' ],
                 'preset'  => '2-column',
                 'columns' => [
-                    [ 'id' => 'profile', 'label' => 'Organizer', 'width' => '36%', 'role' => 'Who is running this: organizer card, summary and links', 'suggested' => [ 'organizer', 'campaign_summary', 'social_links' ], 'pro' => [ 'donors_wall' ] ],
-                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '64%', 'role' => 'Title, image, story, progress and the donation ask', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'progress_bar', 'donation_form' ], 'pro' => [ 'video', 'faq' ] ],
+                    [ 'id' => 'profile', 'label' => 'Organizer', 'width' => '36%', 'role' => 'Who is running this: organizer card, summary and links', 'suggested' => [ 'organizer', 'campaign_summary', 'social_links' ] ],
+                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '64%', 'role' => 'Title, image, story, progress and the donation ask', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'progress_bar', 'donation_form' ] ],
                 ],
             ],
             [
@@ -192,7 +186,7 @@ class LayoutLibrary {
                 'tags'    => [ 'event', 'creative', 'community', 'animal' ],
                 'preset'  => '1-column',
                 'columns' => [
-                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '100%', 'role' => 'An image-rich narrative: title, image, story, a second image, progress, then donate and share', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'photo', 'progress_bar', 'donation_form', 'social_sharing' ], 'pro' => [ 'video', 'donors_wall', 'faq' ] ],
+                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '100%', 'role' => 'An image-rich narrative: title, image, story, a second image, progress, then donate and share', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description', 'photo', 'progress_bar', 'donation_form', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -202,8 +196,8 @@ class LayoutLibrary {
                 'tags'    => [ 'emergency', 'medical', 'animal' ],
                 'preset'  => '2-column',
                 'columns' => [
-                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '58%', 'role' => 'An urgent title, the situation, live progress and an image', 'suggested' => [ 'campaign_title', 'campaign_description', 'progress_bar', 'photo' ], 'pro' => [ 'video' ] ],
-                    [ 'id' => 'sidebar', 'label' => 'Sidebar', 'width' => '42%', 'role' => 'Immediate donation ask with amounts and summary', 'suggested' => [ 'donate_amount', 'donation_form', 'campaign_summary', 'social_sharing' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'main', 'label' => 'Main Content', 'width' => '58%', 'role' => 'An urgent title, the situation, live progress and an image', 'suggested' => [ 'campaign_title', 'campaign_description', 'progress_bar', 'photo' ] ],
+                    [ 'id' => 'sidebar', 'label' => 'Sidebar', 'width' => '42%', 'role' => 'Immediate donation ask with amounts and summary', 'suggested' => [ 'donate_amount', 'donation_form', 'campaign_summary', 'social_sharing' ] ],
                 ],
             ],
             [
@@ -213,8 +207,8 @@ class LayoutLibrary {
                 'tags'    => [ 'general', 'education', 'community', 'creative' ],
                 'preset'  => '2-column',
                 'columns' => [
-                    [ 'id' => 'left', 'label' => 'Left', 'width' => '50%', 'role' => 'Title, image and the story', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description' ], 'pro' => [ 'video', 'faq' ] ],
-                    [ 'id' => 'right', 'label' => 'Right', 'width' => '50%', 'role' => 'Progress, amounts, the form and summary', 'suggested' => [ 'progress_bar', 'donate_amount', 'donation_form', 'campaign_summary' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'left', 'label' => 'Left', 'width' => '50%', 'role' => 'Title, image and the story', 'suggested' => [ 'campaign_title', 'photo', 'campaign_description' ] ],
+                    [ 'id' => 'right', 'label' => 'Right', 'width' => '50%', 'role' => 'Progress, amounts, the form and summary', 'suggested' => [ 'progress_bar', 'donate_amount', 'donation_form', 'campaign_summary' ] ],
                 ],
             ],
             [
@@ -224,9 +218,9 @@ class LayoutLibrary {
                 'tags'    => [ 'medical', 'emergency', 'education', 'general' ],
                 'preset'  => 'split',
                 'columns' => [
-                    [ 'id' => 'hero', 'label' => 'Hero', 'width' => '100%', 'role' => 'Full-width title with the progress bar right up top', 'suggested' => [ 'campaign_title', 'progress_bar' ], 'pro' => [ 'video' ] ],
-                    [ 'id' => 'story', 'label' => 'Story', 'width' => '50%', 'role' => 'Image and the story', 'suggested' => [ 'photo', 'campaign_description' ], 'pro' => [ 'faq' ] ],
-                    [ 'id' => 'donate', 'label' => 'Donate', 'width' => '50%', 'role' => 'Amounts, the form and summary', 'suggested' => [ 'donate_amount', 'donation_form', 'campaign_summary', 'social_sharing' ], 'pro' => [ 'donors_wall' ] ],
+                    [ 'id' => 'hero', 'label' => 'Hero', 'width' => '100%', 'role' => 'Full-width title with the progress bar right up top', 'suggested' => [ 'campaign_title', 'progress_bar' ] ],
+                    [ 'id' => 'story', 'label' => 'Story', 'width' => '50%', 'role' => 'Image and the story', 'suggested' => [ 'photo', 'campaign_description' ] ],
+                    [ 'id' => 'donate', 'label' => 'Donate', 'width' => '50%', 'role' => 'Amounts, the form and summary', 'suggested' => [ 'donate_amount', 'donation_form', 'campaign_summary', 'social_sharing' ] ],
                 ],
             ],
         ];
@@ -334,44 +328,8 @@ class LayoutLibrary {
     }
 
     /**
-     * The element types to suggest for one blueprint column.
-     *
-     * The column's free `suggested` list, plus its `pro` list when Pro is active.
-     * Pro types are appended rather than interleaved so the free composition stays
-     * the backbone of the page and the Pro widgets read as additions to it — a
-     * campaign whose donation column is all Donors Wall and no donate button is a
-     * worse page, not a more premium one.
-     *
-     * `$pro_enabled` is the authority on entitlement — this method does not
-     * re-read the filter, so the caller's answer and this one can never disagree.
-     * The only extra check is registration: a `pro` entry naming a type no longer
-     * in the registry (a blueprint added through the filter, say) must not be
-     * named to the model as something it may use.
-     *
-     * @param array $column      A blueprint column.
-     * @param bool  $pro_enabled Whether Pro is active.
-     * @return array<int, string>
-     */
-    public static function suggested_for( array $column, bool $pro_enabled ): array {
-        $suggested = array_values( (array) ( $column['suggested'] ?? [] ) );
-
-        if ( ! $pro_enabled ) {
-            return $suggested;
-        }
-
-        foreach ( (array) ( $column['pro'] ?? [] ) as $type ) {
-            $type = (string) $type;
-            if ( '' !== $type && CampaignSchema::is_element_type( $type ) && ! in_array( $type, $suggested, true ) ) {
-                $suggested[] = $type;
-            }
-        }
-
-        return $suggested;
-    }
-
-    /**
      * The trusted column structure for enforcement — only id/label/width (the
-     * role/suggested/pro hints are for the prompt, not the stored layout).
+     * role/suggested hints are for the prompt, not the stored layout).
      *
      * @param array $blueprint
      * @return array{preset: string, columns: array}
