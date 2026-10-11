@@ -22,6 +22,16 @@ if (!defined('ABSPATH')) {
 class Export extends Controller{
 
     use Helper;
+
+    /**
+     * CSV escape character, passed to fputcsv() explicitly on every call.
+     *
+     * PHP 8.4 deprecates relying on fputcsv()'s default $escape, because that
+     * default will change in a later release. Passing the current default (a
+     * backslash) keeps the output byte-identical on PHP 7.4 through 8.5.
+     */
+    const CSV_ESCAPE = "\\";
+
     /**
      * Class constructor
      * 
@@ -90,13 +100,26 @@ class Export extends Controller{
         return $this->transactions_array_to_csv_download($all_transactions, $filename);
     }
 
+    /**
+     * Write one CSV row. All CSV writes go through here so none can rely on the
+     * deprecated default $escape.
+     *
+     * @param resource $handle    Open, writable stream.
+     * @param array    $fields    Row values.
+     * @param string   $delimiter Field delimiter.
+     * @return int|false Bytes written, or false on failure.
+     */
+    public static function put_csv_row($handle, array $fields, $delimiter = ";") {
+        return fputcsv($handle, $fields, $delimiter, "\"", self::CSV_ESCAPE);
+    }
+
     public function transactions_array_to_csv_download($array, $filename = "export.csv", $delimiter=";") {
         $wp_date_format = get_option('date_format');
         $wp_time_format = get_option('time_format');
 
         $f = fopen('php://memory', 'w'); 
 
-        fputcsv($f, $this->export_transactions_heading(), $delimiter);
+        self::put_csv_row($f, $this->export_transactions_heading(), $delimiter);
 
         foreach ($array as $line) { 
             $line = (array)$line;
@@ -142,7 +165,7 @@ class Export extends Controller{
                 ! empty( $line['form_fields_info'] ) ? maybe_serialize( $line['form_fields_info'] ) : '',
             );
 
-            fputcsv($f, $line_formatted, $delimiter); 
+            self::put_csv_row($f, $line_formatted, $delimiter);
         }
         
         // reset the file pointer to the start of the file
@@ -180,9 +203,8 @@ class Export extends Controller{
      * The fields a transaction contributes to the CSV: customer name and email, plus
      * whatever `better_payment/export/form_fields_info` adds.
      *
-     * Pro adds the subscription keys its recurring and split checkouts store. Lite's
-     * copy of that (ProSubscriptionTransactionData::export_fields()) serves only an
-     * active Pro that does not (<= 1.4.3); a free install exports name and email.
+     * Pro adds the subscription keys its recurring and split checkouts store; a free
+     * install exports name and email.
      *
      * @param mixed $form_fields_info Serialized or unserialized form_fields_info.
      * @return array
@@ -213,10 +235,6 @@ class Export extends Controller{
         ];
 
         $raw_fields = is_array( $bp_form_fields_info ) ? $bp_form_fields_info : [];
-
-        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
-            $formatted = ProSubscriptionTransactionData::export_fields( $formatted, $raw_fields );
-        }
 
         $filtered = apply_filters( 'better_payment/export/form_fields_info', $formatted, $raw_fields );
 

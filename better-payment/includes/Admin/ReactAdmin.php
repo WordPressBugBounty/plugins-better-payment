@@ -270,6 +270,10 @@ class ReactAdmin extends Controller
             // still needs get_all(); see TemplateManager::get_for_picker().
             'campaignTemplates' => array_values( TemplateManager::get_for_picker() ),
             'adminBaseUrl' => admin_url(),
+            // How `payment_date` (UTC) is shown: the site's timezone, an IANA name or a
+            // fixed offset such as `+06:00` (never '' — the `timezone_string` option is
+            // empty on a site set to a manual UTC offset).
+            'siteTimezone' => wp_timezone_string(),
         ];
     }
     
@@ -400,8 +404,7 @@ class ReactAdmin extends Controller
         );
 
         // Styles for the screens only Pro renders (receipt modal, Analytics, refund card,
-        // licence page): Lite's copy until Pro declares `react_admin_pro_styles`.
-        \Better_Payment\Lite\Classes\ProAdminStyles::enqueue( $this->file_version );
+        // licence page) ship with Better Payment Pro, which depends on this handle.
 
         // Campaign-list CSS contains the template-select modal styles needed on this page too.
         $campaign_list_css = BETTER_PAYMENT_ASSETS . '/admin/campaign-list/campaign-list.min.css';

@@ -50,9 +50,12 @@ class Migrator
      */
     public static function update_tables() {
         //Add column
-        // Transitional: only Better Payment Pro's refunds write `refund_info`. Pro 1.4.4
-        // adds the column itself (Pro Installer::add_refund_info_column()); Pro <= 1.4.3
-        // relies on this. Stop adding it when ProCompatibility::MIN_PRO_VERSION >= 1.4.4.
+        // `refund_info` is Pro's: only Pro's refunds write it, and Better Payment Pro
+        // 1.4.4+ adds the column itself (Pro Installer::add_refund_info_column()). Lite
+        // still adds it, idempotently, as a data guard for Pro 1.4.3: that Pro relies
+        // on Lite for it, and on a fresh install its refund would reach the gateway
+        // and then fail to record, leaving a refunded row marked paid. Stop once no
+        // supported site can run Pro 1.4.3.
         self::add_column( 'refund_info', 'longtext' );
         self::add_column( 'campaign_id', 'text' );
     }

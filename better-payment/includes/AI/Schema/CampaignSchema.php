@@ -33,28 +33,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class CampaignSchema {
 
     /**
-     * Feature slug Pro declares on `better_payment/pro_provides` once it ships the
-     * Pro-widget guidance itself: the generation instruction, the "Pro widgets"
-     * prompt section on a Pro install, the three widgets' content guides and the
-     * video URL guard. See Classes\ProCompatibility.
+     * Feature slug Pro declares on `better_payment/pro_provides` for the Pro-widget
+     * guidance it ships: the generation instruction, the "Pro widgets" prompt section
+     * on a Pro install, the three widgets' content guides, the setting-key aliases
+     * and the video URL guard. Lite's copy was deleted when
+     * ProCompatibility::MIN_PRO_VERSION reached 1.4.4; the slug stays as the
+     * documented name of the hand-off.
      */
     const PRO_GUIDANCE_FEATURE = 'ai_pro_widget_guidance';
-
-    /**
-     * Whether Lite still supplies its own copy of the Pro-widget guidance.
-     *
-     * True only for an active Pro that does not declare
-     * {@see self::PRO_GUIDANCE_FEATURE} (Better Payment Pro <= 1.4.3). A free install
-     * never runs the Pro-install guidance, the Pro content guides, the Pro setting-key
-     * aliases or the video URL guard: its Pro elements are lock stubs with no
-     * settings to write, and its locked-widget disclosure
-     * ({@see \Better_Payment\Lite\AI\Prompt\PromptBuilder}'s locked section,
-     * {@see \Better_Payment\Lite\AI\Services\AIService::pro_locked_notice()}) is
-     * not gated on this.
-     */
-    public static function lite_supplies_pro_guidance(): bool {
-        return \Better_Payment\Lite\Classes\ProCompatibility::lite_copy_applies( self::PRO_GUIDANCE_FEATURE );
-    }
 
     /**
      * Layout presets the builder understands.
@@ -326,34 +312,8 @@ class CampaignSchema {
             'social_links'         => [ 'title' => 'headline', 'text' => 'headline' ],
         ];
 
-        // Pro supplies its widgets' aliases through the filter below once it declares
-        // `ai_pro_widget_guidance`; this copy serves older Pro releases only.
-        if ( self::lite_supplies_pro_guidance() ) {
-            $aliases += self::lite_pro_setting_key_aliases();
-        }
-
+        // Pro supplies its widgets' aliases through the filter below.
         return apply_filters( 'better_payment/ai/setting_key_aliases', $aliases );
-    }
-
-    /**
-     * Transitional copy for Better Payment Pro <= 1.4.3; delete when
-     * ProCompatibility::MIN_PRO_VERSION >= 1.4.4.
-     * Pro copy: better-payment-pro/includes/AI/ProWidgetGuidance.php (setting_key_aliases()).
-     * Slug: ai_pro_widget_guidance.
-     *
-     * Setting-key aliases for the three Pro widgets. Only reached through
-     * {@see self::setting_key_aliases()} while {@see self::lite_supplies_pro_guidance()}.
-     *
-     * @return array<string, array<string, string>>
-     */
-    public static function lite_pro_setting_key_aliases(): array {
-        return [
-            'donors_wall' => [ 'title' => 'headline', 'text' => 'headline', 'heading' => 'headline', 'limit' => 'number_to_show', 'count' => 'number_to_show' ],
-            // `faq` names its heading `heading`, not `headline` — the one element
-            // that breaks the pattern, so the reverse alias matters here.
-            'faq'         => [ 'title' => 'heading', 'text' => 'heading', 'headline' => 'heading', 'questions' => 'items', 'faqs' => 'items', 'list' => 'items' ],
-            'video'       => [ 'src' => 'url', 'link' => 'url', 'video_url' => 'url', 'embed_url' => 'url' ],
-        ];
     }
 
     /**

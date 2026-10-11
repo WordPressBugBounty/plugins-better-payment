@@ -299,6 +299,8 @@ class BlockActions {
             'amount_quantity'      => ! empty( $primary_payment_amount_quantity ) ? intval( $primary_payment_amount_quantity ) : '',
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
             'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
+            // The PayPal environment the order was sent to; the IPN must come from the same one.
+            'paypal_mode'           => 'yes' === $el_settings['better_payment_paypal_live_mode'] ? 'live' : 'sandbox',
             // Persisted so the async PayPal IPN can rebuild the e-mail body + on/off toggle.
             'email_settings'        => Handler::extract_email_settings( $el_settings ),
         );

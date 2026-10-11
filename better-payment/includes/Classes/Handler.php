@@ -371,12 +371,16 @@ class Handler extends Controller{
             return false;
         }
 
-        // IPN confirmed — return verified DB data.
+        // IPN confirmed — return verified DB data. The payer's e-mail and the PayPal transaction
+        // id only for an unguessable order id: before 2.4.0 ids were `paypal_` . uniqid(), which is
+        // time-based and can be enumerated, so anyone could read them off the return page.
         if ( $row->status === 'Completed' ) {
+            $unguessable = self::paypal_order_id_is_unguessable( $item_number );
+
             return [
                 'amount'         => floatval( $row->amount ),
-                'email'          => sanitize_email( $row->email ),
-                'transaction_id' => sanitize_text_field( $row->transaction_id ),
+                'email'          => $unguessable ? sanitize_email( $row->email ) : '',
+                'transaction_id' => $unguessable ? sanitize_text_field( $row->transaction_id ) : '',
                 'currency'       => sanitize_text_field( $row->currency ),
                 'method'         => 'paypal',
             ];
@@ -384,6 +388,32 @@ class Handler extends Controller{
 
         // Order exists but IPN hasn't arrived yet — signal pending so JS can poll.
         return [ 'pending' => true, 'order_id' => $item_number ];
+    }
+
+    /**
+     * Whether a PayPal order id came from new_order_id() (24 random characters), not the
+     * enumerable `paypal_` . uniqid() of releases before 2.4.0.
+     *
+     * @since 2.4.1
+     *
+     * @param mixed $order_id The order id.
+     * @return bool
+     */
+    public static function paypal_order_id_is_unguessable( $order_id ) {
+        return is_string( $order_id ) && 1 === preg_match( '/^paypal_[0-9a-z]{24}$/', $order_id );
+    }
+
+    /**
+     * Whether an order id of any gateway came from new_order_id() (`{gateway}_` + 24 random
+     * characters), not the enumerable `{gateway}_` . uniqid() of releases before 2.4.0.
+     *
+     * @since 2.4.1
+     *
+     * @param mixed $order_id The order id.
+     * @return bool
+     */
+    public static function order_id_is_unguessable( $order_id ) {
+        return is_string( $order_id ) && 1 === preg_match( '/^[a-z0-9-]+_[0-9a-z]{24}$/', $order_id );
     }
 
     /**
@@ -473,6 +503,33 @@ class Handler extends Controller{
     }
 
     /**
+     * Whether a notification's PayPal environment matches the order's.
+     *
+     * Orders since 2.4.1 record `paypal_mode` (`live` | `sandbox`) when created, and must match
+     * exactly. An older order has no record, so a live notification is accepted (a real payment
+     * must never be stranded) and a sandbox one only while the site's PayPal setting is not live.
+     *
+     * @since 2.4.1
+     *
+     * @param mixed  $form_info The order's `form_fields_info`, unserialized.
+     * @param string $ipn_mode  `live` or `sandbox` (from the notification's `test_ipn`).
+     * @return bool
+     */
+    public static function paypal_ipn_mode_matches( $form_info, $ipn_mode ) {
+        $order_mode = is_array( $form_info ) && isset( $form_info['paypal_mode'] ) ? $form_info['paypal_mode'] : '';
+
+        if ( 'live' === $order_mode || 'sandbox' === $order_mode ) {
+            return $order_mode === $ipn_mode;
+        }
+
+        if ( 'live' === $ipn_mode ) {
+            return true;
+        }
+
+        return 'yes' !== DB::get_settings( 'better_payment_settings_payment_paypal_live_mode' );
+    }
+
+    /**
      * Apply a PayPal IPN to the order it names.
      *
      * Call ONLY with a notification handle_paypal_ipn() posted back and PayPal answered VERIFIED —
@@ -514,6 +571,14 @@ class Handler extends Controller{
         $receiver       = ! empty( $data['receiver_email'] ) ? strtolower( $data['receiver_email'] ) : ( ! empty( $data['business'] ) ? strtolower( $data['business'] ) : '' );
 
         if ( $expected_email && $receiver && $expected_email !== $receiver ) {
+            return 'refused';
+        }
+
+        // A sandbox notification is VERIFIED by PayPal's sandbox, which pays in play money to an
+        // account anyone can create under any address. It must never confirm a live order.
+        $ipn_mode = ! empty( $data['test_ipn'] ) ? 'sandbox' : 'live';
+
+        if ( ! self::paypal_ipn_mode_matches( $form_info, $ipn_mode ) ) {
             return 'refused';
         }
 
@@ -1162,7 +1227,7 @@ class Handler extends Controller{
         );
 
         $response = wp_safe_remote_get(
-            'https://api.paystack.co/transaction/verify/'. $reference,
+            'https://api.paystack.co/transaction/verify/' . rawurlencode( $reference ),
             array(
                 'headers' => $header_info,
                 'timeout' => 70,
@@ -1830,7 +1895,9 @@ class Handler extends Controller{
                 'amount' => floatval( $result->amount ),
                 'currency' => sanitize_text_field( $result->currency ),
                 'currency_symbol' => $helper_obj->get_currency_symbol( $result->currency ),
-                'transaction_id' => !empty( $result->transaction_id ) ? sanitize_text_field( $result->transaction_id ) : 'N/A',
+                // The order id is request data, and ids before 2.4.0 were `{gateway}_` . uniqid() —
+                // enumerable — so the gateway's transaction id is shown only for an unguessable id.
+                'transaction_id' => ! empty( $result->transaction_id ) && self::order_id_is_unguessable( $order_id ) ? sanitize_text_field( $result->transaction_id ) : 'N/A',
                 'method' => sanitize_text_field( $result->source ),
             ];
         }

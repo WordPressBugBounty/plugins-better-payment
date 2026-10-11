@@ -165,7 +165,7 @@ class CampaignGenerator {
      * @param string     $photo_url  Image to force onto every photo element.
      * @param array      $fields     The user's own campaign fields (see generate()).
      * @param array      $video_urls URLs found in the user's brief — the only ones a
-     *                               `video` element may keep (see guard_video_urls()).
+     *                               `video` element may keep (see guard_generated_operations()).
      * @return array|\WP_Error
      */
     private static function attempt( string $brief, array $context, $selected, int $max_tokens, bool $force, string $photo_url = '', array $fields = [], array $video_urls = [] ) {
@@ -189,7 +189,7 @@ class CampaignGenerator {
 
         // Same reasoning as photos, sharper consequence: a model cannot know a real
         // video address either, and an invented one resolves to a stranger's video.
-        // The video guard ships with Pro; Lite runs its copy until Pro provides it.
+        // The video guard ships with Pro, on `better_payment/ai/generated_operations`.
         $result['operations'] = self::guard_generated_operations( $result['operations'], $video_urls );
 
         // The amount tiers and the button that submits them are one action: the
@@ -207,10 +207,10 @@ class CampaignGenerator {
         // one never does. The model routinely omits keys, or emits a blank
         // ("" / [] / null) for a value it has no real answer for — and a blank
         // must fall back to the default, not overwrite it. The visible casualty is
-        // the Video widget: guard_video_urls() drops an invented url and the model
+        // the Video widget: Pro's video guard drops an invented url and the model
         // often sends an empty one, which then clobbered the default sample video
         // and rendered an empty embed. This is general — every widget, every
-        // default. Runs AFTER guard_video_urls() (so an invented/empty url is gone
+        // default. Runs AFTER guard_generated_operations() (so an invented/empty url is gone
         // and the default now fills it) and AFTER fill_default_photos() (so the
         // forced, non-blank photo src is preserved).
         $result['operations'] = self::fill_element_defaults( $result['operations'] );
@@ -287,10 +287,10 @@ class CampaignGenerator {
      * generated pages indistinguishable from a free one — the user paid for three
      * widgets the assistant never reached for.
      *
-     * Two of the three carry a correctness constraint rather than a stylistic one,
-     * repeated here because this is the text that actually invites their use:
-     * Donors Wall renders live transaction data (writing donor names into a
-     * fundraising page would be fabricating a record of who gave money), and Video
+     * Better Payment Pro supplies the text (`AI\ProWidgetGuidance`), including the two
+     * correctness constraints it must repeat because this is the text that invites
+     * the widgets' use: Donors Wall renders live transaction data (writing donor names
+     * into a fundraising page would fabricate a record of who gave money), and Video
      * must not carry an invented URL.
      */
     private static function pro_elements_instruction(): string {
@@ -298,18 +298,12 @@ class CampaignGenerator {
             return '';
         }
 
-        // Pro supplies this itself once it declares `ai_pro_widget_guidance`; this
-        // copy serves older Pro releases.
-        $instruction = CampaignSchema::lite_supplies_pro_guidance()
-            ? "\n\n" . __( "PRO WIDGETS AVAILABLE — this site has Better Payment Pro, so you may also use `donors_wall`, `faq` and `video`. Use them where they genuinely strengthen THIS campaign, not as a checklist: `faq` when a donor would hesitate over how the money is spent or whether giving is safe; `donors_wall` beside the donation ask to show momentum; `video` in the hero only when the brief actually supplies a video URL. Do not write donor names, amounts or dates into `donors_wall` — it renders real donations by itself. Do not invent a `video` URL.", 'better-payment' )
-            : '';
-
         /**
          * Filter the Pro-widget instruction appended to a generation brief on a Pro
-         * install. The value is the text appended to the brief, including its leading
-         * blank line — '' when Pro supplies the instruction itself.
+         * install. Better Payment Pro supplies it; the value is the text appended to
+         * the brief, including its leading blank line.
          */
-        return (string) apply_filters( 'better_payment/ai/pro_generation_instruction', $instruction );
+        return (string) apply_filters( 'better_payment/ai/pro_generation_instruction', '' );
     }
 
     /**
@@ -317,8 +311,7 @@ class CampaignGenerator {
      *
      * Runs after fill_default_photos() and before donate-button placement, user
      * fields and element defaults, so a `url` dropped here lets the Video widget's
-     * default fill in. Lite runs its own video URL guard only for an active Pro that
-     * does not declare `ai_pro_widget_guidance`; a current Pro guards through the
+     * default fill in. Better Payment Pro guards the Video widget's URL through the
      * filter. A free install needs no guard: its `video` is a lock stub with no
      * settings keys, so the validator has already dropped any `url`.
      *
@@ -327,10 +320,6 @@ class CampaignGenerator {
      * @return array
      */
     public static function guard_generated_operations( array $operations, array $brief_urls = [] ): array {
-        if ( CampaignSchema::lite_supplies_pro_guidance() ) {
-            $operations = self::guard_video_urls( $operations, $brief_urls );
-        }
-
         /**
          * Filter one generation attempt's operations before donate-button placement,
          * user-field enforcement and element defaults are applied. The second
@@ -476,96 +465,6 @@ class CampaignGenerator {
         }
 
         return array_values( array_unique( array_filter( $urls ) ) );
-    }
-
-    /**
-     * Drop a `video` element's `url` unless the user's brief actually contained it.
-     *
-     * The exact problem {@see self::fill_default_photos()} solves, with a worse
-     * failure mode. A text model has no way to know a real video address, so asked
-     * for a campaign video it produces a well-formed YouTube URL with an invented
-     * ID — and that ID belongs to *something*. The result is an unrelated
-     * stranger's video embedded on a fundraising page, presented as the campaign's
-     * own appeal. That is materially worse than a broken image, because it looks
-     * entirely intentional.
-     *
-     * A URL the user typed is theirs and is kept verbatim. Anything else is
-     * removed, which lets the element's schema default apply — the same sample
-     * video a user gets when they drop the Video widget by hand, so the outcome is
-     * a widget in its ordinary unconfigured state rather than a false claim.
-     *
-     * Note this cannot be left to the prompt: `rules.php` already forbids inventing
-     * values, and a prompt is a request. This is the part that holds.
-     *
-     * @param array $operations
-     * @param array $allowed URLs found in the user's brief.
-     * @return array
-     */
-    public static function guard_video_urls( array $operations, array $allowed = [] ): array {
-        foreach ( $operations as &$op ) {
-            if ( ! is_array( $op ) ) {
-                continue;
-            }
-            $name = $op['op'] ?? '';
-
-            if ( 'set_layout' === $name && ! empty( $op['columns'] ) && is_array( $op['columns'] ) ) {
-                foreach ( $op['columns'] as &$col ) {
-                    if ( empty( $col['elements'] ) || ! is_array( $col['elements'] ) ) {
-                        continue;
-                    }
-                    foreach ( $col['elements'] as &$el ) {
-                        if ( is_array( $el ) && 'video' === ( $el['type'] ?? '' ) ) {
-                            $el['settings'] = self::guarded_video_settings( $el['settings'] ?? [], $allowed );
-                        }
-                    }
-                    unset( $el );
-                }
-                unset( $col );
-            } elseif ( 'insert_block' === $name && 'video' === ( $op['type'] ?? '' ) ) {
-                $op['settings'] = self::guarded_video_settings( $op['settings'] ?? [], $allowed );
-            }
-        }
-        unset( $op );
-
-        return $operations;
-    }
-
-    /**
-     * Remove an unvouched `url` from a video element's settings.
-     *
-     * Matching is exact against the brief's URLs, plus a prefix match so a user's
-     * link that the model reproduced with extra query parameters (`&t=30s`) still
-     * counts as theirs.
-     *
-     * @param mixed $settings
-     * @param array $allowed
-     * @return array
-     */
-    private static function guarded_video_settings( $settings, array $allowed ): array {
-        $settings = is_array( $settings ) ? $settings : [];
-
-        if ( ! isset( $settings['url'] ) ) {
-            return $settings;
-        }
-
-        $url = trim( (string) $settings['url'] );
-        if ( '' === $url ) {
-            return $settings;
-        }
-
-        foreach ( $allowed as $candidate ) {
-            $candidate = trim( (string) $candidate );
-            if ( '' === $candidate ) {
-                continue;
-            }
-            if ( $url === $candidate || 0 === strpos( $url, $candidate ) ) {
-                return $settings;
-            }
-        }
-
-        unset( $settings['url'] );
-
-        return $settings;
     }
 
     /**

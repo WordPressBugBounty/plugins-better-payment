@@ -21,12 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   field only a Pro form renders (`bp_pro_required`), before any gateway is contacted or any
  *   transaction row is stored. A free layout is a one-time form on every install, whatever
  *   payment type its saved settings still hold.
- * - With a Pro that ships the payment types itself (declares FEATURE on
- *   `better_payment/pro_provides`), each step is asked of Pro through a hook. A step that
- *   decides what is charged or how the checkout is built is refused
- *   (`bp_pro_payment_unhandled`) when no callback answers it; every other step keeps what
- *   Lite built.
- * - With an older Pro that does not, Lite's transitional copy, ProPaymentTypes, answers.
+ * - With Pro, each step is asked of Pro through a hook. A step that decides what is
+ *   charged or how the checkout is built is refused (`bp_pro_payment_unhandled`) when no
+ *   callback answers it; every other step keeps what Lite built. Better Payment Pro 1.4.4+
+ *   answers them (`Frontend\PaymentTypes`, slug FEATURE); Lite ships no copy.
  *
  * Hooks (each fires only while `better_payment/pro_enabled` is true):
  * - `better_payment/payment_guard/resolve_pro_payment` (null, $base, $settings, $fields, $context, $guard)
@@ -40,9 +38,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `better_payment/success_page/pro_rows` ([], $position, $settings, $payment, $context) → thank-you page rows.
  * - `better_payment/email/pro_form_field_rows` ($rows, $context, $form_fields_info) → e-mail field rows.
  *
- * This class is permanent. When ProCompatibility::MIN_PRO_VERSION reaches 1.4.4, delete
- * ProPaymentTypes and the lite_copy_applies() branch in answer(); the entitlement check
- * and the hooks stay.
+ * This class is permanent: the entitlement check and the hooks are Lite's side of the
+ * contract. Lite's transitional copy of the payment types was deleted when
+ * ProCompatibility::MIN_PRO_VERSION reached 1.4.4.
  *
  * @since 2.4.0
  */
@@ -115,15 +113,6 @@ final class PaymentEntitlement {
     }
 
     /**
-     * Whether Lite's transitional copy answers: an active Pro that does not ship the payment types.
-     *
-     * @return bool
-     */
-    public static function lite_copy_applies(): bool {
-        return ProCompatibility::lite_copy_applies( self::FEATURE );
-    }
-
-    /**
      * The refusal of a Pro form's payment on a site without Pro.
      *
      * @return WP_Error
@@ -159,7 +148,7 @@ final class PaymentEntitlement {
             return self::refusal();
         }
 
-        $resolution = self::answer( 'better_payment/payment_guard/resolve_pro_payment', 'resolve_form_payment', [ null, $base, $settings, $fields, $context, $guard ] );
+        $resolution = self::answer( 'better_payment/payment_guard/resolve_pro_payment', [ null, $base, $settings, $fields, $context, $guard ] );
 
         if ( is_wp_error( $resolution ) ) {
             return $resolution;
@@ -191,7 +180,7 @@ final class PaymentEntitlement {
             return self::refusal();
         }
 
-        $result = self::answer( 'better_payment/stripe_checkout/pro_request', 'stripe_checkout', [ null, $checkout, $context ] );
+        $result = self::answer( 'better_payment/stripe_checkout/pro_request', [ null, $checkout, $context ] );
 
         if ( is_wp_error( $result ) ) {
             return $result;
@@ -226,7 +215,7 @@ final class PaymentEntitlement {
             return [];
         }
 
-        $form_fields = self::answer( 'better_payment/payment_form/pro_form_fields', 'form_fields', [ [], $settings ] );
+        $form_fields = self::answer( 'better_payment/payment_form/pro_form_fields', [ [], $settings ] );
 
         return is_array( $form_fields ) ? $form_fields : [];
     }
@@ -243,7 +232,7 @@ final class PaymentEntitlement {
             return $form_fields_info;
         }
 
-        $result = self::answer( 'better_payment/payment_form/pro_transaction_fields', 'transaction_fields', [ $form_fields_info, $settings ] );
+        $result = self::answer( 'better_payment/payment_form/pro_transaction_fields', [ $form_fields_info, $settings ] );
 
         return is_array( $result ) ? $result : $form_fields_info;
     }
@@ -260,7 +249,7 @@ final class PaymentEntitlement {
             return $args;
         }
 
-        $result = self::answer( 'better_payment/stripe_payment/pro_verification_args', 'stripe_verification_args', [ $args, $form_fields_info ] );
+        $result = self::answer( 'better_payment/stripe_payment/pro_verification_args', [ $args, $form_fields_info ] );
 
         if ( ! is_array( $result ) || ! isset( $result['expand'] ) || ! is_array( $result['expand'] ) ) {
             return $args;
@@ -286,7 +275,7 @@ final class PaymentEntitlement {
             return $details;
         }
 
-        $result = self::answer( 'better_payment/stripe_payment/pro_verified_session', 'stripe_verified_session', [ $details, $session, $args ] );
+        $result = self::answer( 'better_payment/stripe_payment/pro_verified_session', [ $details, $session, $args ] );
 
         if ( ! is_array( $result ) || ! array_key_exists( 'form_fields_info', $result )
             || ! isset( $result['frontend_data'] ) || ! is_array( $result['frontend_data'] ) ) {
@@ -318,7 +307,6 @@ final class PaymentEntitlement {
 
         $rows = self::answer(
             'better_payment/success_page/pro_rows',
-            'success_rows',
             [ [], (string) $position, $settings, is_array( $payment ) ? $payment : [], $context ]
         );
 
@@ -349,7 +337,7 @@ final class PaymentEntitlement {
             return $rows;
         }
 
-        $result = self::answer( 'better_payment/email/pro_form_field_rows', 'email_rows', [ $rows, (string) $context, is_array( $form_fields_info ) ? $form_fields_info : [] ] );
+        $result = self::answer( 'better_payment/email/pro_form_field_rows', [ $rows, (string) $context, is_array( $form_fields_info ) ? $form_fields_info : [] ] );
 
         if ( ! is_array( $result ) ) {
             return $rows;
@@ -367,22 +355,16 @@ final class PaymentEntitlement {
     }
 
     /**
-     * One step of a Pro payment: Lite's transitional copy for an older Pro, otherwise the hook.
+     * One step of a Pro payment, answered by Pro through its hook.
      *
      * Every caller checks ProCompatibility::pro_enabled() first, so a free install never
-     * reaches the copy or the hook.
+     * reaches the hook.
      *
-     * @param string $hook   Filter name.
-     * @param string $method ProPaymentTypes method with the filter's arguments.
-     * @param array  $args   Filter arguments, the filtered value first.
+     * @param string $hook Filter name.
+     * @param array  $args Filter arguments, the filtered value first.
      * @return mixed
      */
-    private static function answer( $hook, $method, array $args ) {
-        // Transitional: delete this branch with ProPaymentTypes (MIN_PRO_VERSION >= 1.4.4).
-        if ( self::lite_copy_applies() ) {
-            return call_user_func_array( [ ProPaymentTypes::class, $method ], $args );
-        }
-
+    private static function answer( $hook, array $args ) {
         return apply_filters_ref_array( $hook, $args );
     }
 }

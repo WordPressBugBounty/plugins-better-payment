@@ -14,30 +14,15 @@ $is_payment_type_woocommerce = !empty($settings["better_payment_form_payment_sou
 $is_payment_type_fluentcart = !empty($settings["better_payment_form_payment_source"]) && 'fluentcart' === $settings["better_payment_form_payment_source"] ? true : false;
 $is_payment_type_stripe = !empty($settings["better_payment_form_payment_source"]) && 'stripe' === $settings["better_payment_form_payment_source"] ? true : false;
 
-// Pro layouts 4-6: the payment type (layouts 4 and 5) and eCommerce platform (layout 6).
-// Transitional copy for Better Payment Pro <= 1.4.3 (Classes\ProPaymentFormLayouts, slug
-// `elementor_pro_layout_rendering`): a current Pro computes these in its own
-// partials/layout-vars.php, which its templates include right after this file, and a free
-// install never renders a Pro layout. The values below are neutral defaults otherwise.
-// Delete this block, every `$bp_lite_renders_pro_layout` check below and the matching
-// check in layout-repeater-vars.php together with the copy.
+// Pro layouts 4-6 (payment type, eCommerce platform, layout 6's product list) are computed
+// by Better Payment Pro in its own partials/layout-vars.php, which its templates include
+// right after this file. These neutral defaults keep the names defined for those templates,
+// and a free install never renders a Pro layout.
 $is_payment_recurring = 0;
 $is_payment_split_payment = 0;
 $payment_type_text = 'One Time';
 $is_layout_for_woocommerce = 0;
 $is_layout_for_fluentcart = 0;
-$bp_lite_renders_pro_layout = \Better_Payment\Lite\Classes\ProPaymentFormLayouts::lite_copy_applies();
-
-if ( $bp_lite_renders_pro_layout ) {
-    $bp_pro_layout_vars = \Better_Payment\Lite\Classes\ProPaymentFormLayouts::layout_vars( $settings );
-    $is_payment_recurring = $bp_pro_layout_vars['is_payment_recurring'];
-    $is_payment_split_payment = $bp_pro_layout_vars['is_payment_split_payment'];
-    $payment_type_text = $bp_pro_layout_vars['payment_type_text'];
-    $layout_put_amount_field_hide_show = ( $is_payment_recurring || $is_payment_split_payment ) ? 'is-hidden' : $layout_put_amount_field_hide_show;
-    $is_layout_for_woocommerce = $bp_pro_layout_vars['is_layout_for_woocommerce'];
-    $is_layout_for_fluentcart = $bp_pro_layout_vars['is_layout_for_fluentcart'];
-    $product_details = [];
-}
 
 if( !empty($_GET[ 'campaign_currency' ]) ) {
     $layout_form_currency = sanitize_text_field( $_GET[ 'campaign_currency' ] );
@@ -56,7 +41,7 @@ $payment_amount_field_exists = 0;
 $is_payment_amount_field_hidden = 0;
 $valid_html_tags = wp_kses_allowed_html( 'post' );
 $sidebar_show = ! empty( $settings['better_payment_form_sidebar_show'] ) && 'yes' === $settings['better_payment_form_sidebar_show'];
-if ( $is_payment_type_woocommerce || $is_layout_for_woocommerce ) {
+if ( $is_payment_type_woocommerce ) {
     if(
         !empty($settings['better_payment_form_currency_use_woocommerce']) && 'yes' === $settings['better_payment_form_currency_use_woocommerce'] &&
         !empty($settings['better_payment_form_currency_woocommerce'])
@@ -67,80 +52,50 @@ if ( $is_payment_type_woocommerce || $is_layout_for_woocommerce ) {
     //Fetch product data using product ID
     $layout_form_woocommerce_product_id = !empty($settings["better_payment_form_woocommerce_product_id"]) ? intval($settings["better_payment_form_woocommerce_product_id"]) : 0;
 
-    if ( $bp_lite_renders_pro_layout ) {
-        $layout_form_woocommerce_product_ids = !empty($settings["better_payment_form_woocommerce_product_ids"]) ? $settings["better_payment_form_woocommerce_product_ids"] : [0];
-        $product_price_total = 0;
-    }
-
     if (function_exists('wc_get_product')) {
-        if ( $is_layout_for_woocommerce ) {
-            // Layout 6 (Pro). Pro builds this list in its own partial once it declares
-            // `layout_6_product_details`.
-            if ( \Better_Payment\Lite\Classes\ProCompatibility::lite_copy_applies( \Better_Payment\Lite\Classes\ProLayoutProducts::FEATURE ) ) {
-                $layout_6_products   = \Better_Payment\Lite\Classes\ProLayoutProducts::woocommerce( $layout_form_woocommerce_product_ids );
-                $product_details     = $layout_6_products['details'];
-                $product_price_total = $layout_6_products['total'];
-            }
-        } else {
-            $bp_woocommerce_product = wc_get_product($layout_form_woocommerce_product_id);
-            $product = $bp_woocommerce_product;
+        $bp_woocommerce_product = wc_get_product($layout_form_woocommerce_product_id);
+        $product = $bp_woocommerce_product;
 
-            if ($product) {
-                $product_name = $product->get_name();
-                $product_permalink = get_permalink($product->get_id());
-                $product_price = $product->get_price();
-                $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $product->get_id() ), 'single-post-thumbnail' );
-                $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
-            }
+        if ($product) {
+            $product_name = $product->get_name();
+            $product_permalink = get_permalink($product->get_id());
+            $product_price = $product->get_price();
+            $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $product->get_id() ), 'single-post-thumbnail' );
+            $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
         }
     }
 }
 
-if ( $is_payment_type_fluentcart || $is_layout_for_fluentcart ) {
+if ( $is_payment_type_fluentcart ) {
     $layout_form_fluentcart_product_id = !empty($settings["better_payment_form_fluentcart_product_id"]) ? intval($settings["better_payment_form_fluentcart_product_id"]) : 0;
 
-    if ( $bp_lite_renders_pro_layout ) {
-        $layout_form_fluentcart_product_ids = !empty($settings["better_payment_form_fluentcart_product_ids"]) ? $settings["better_payment_form_fluentcart_product_ids"] : [0];
-        $product_price_total = 0;
-    }
-
     if (function_exists('fluentCart') && class_exists( '\FluentCart\App\Models\Product' ) ) {
-        if ( $is_layout_for_fluentcart ) {
-            // Layout 6 (Pro). Pro builds this list in its own partial once it declares
-            // `layout_6_product_details`.
-            if ( \Better_Payment\Lite\Classes\ProCompatibility::lite_copy_applies( \Better_Payment\Lite\Classes\ProLayoutProducts::FEATURE ) ) {
-                $layout_6_products   = \Better_Payment\Lite\Classes\ProLayoutProducts::fluentcart( $layout_form_fluentcart_product_ids );
-                $product_details     = $layout_6_products['details'];
-                $product_price_total = $layout_6_products['total'];
-            }
-        } else {
-            try {
-                $fluentcart_product = \FluentCart\App\Models\Product::query()
-                    ->with(['detail', 'variants'])
-                    ->find($layout_form_fluentcart_product_id);
+        try {
+            $fluentcart_product = \FluentCart\App\Models\Product::query()
+                ->with(['detail', 'variants'])
+                ->find($layout_form_fluentcart_product_id);
 
-                if ($fluentcart_product) {
-                    $product_name = $fluentcart_product->post_title;
-                    $product_permalink = get_permalink($fluentcart_product->ID);
+            if ($fluentcart_product) {
+                $product_name = $fluentcart_product->post_title;
+                $product_permalink = get_permalink($fluentcart_product->ID);
 
-                    $fluentcart_price = 0;
-                    if (!empty($fluentcart_product->variants) && count($fluentcart_product->variants) > 0) {
-                        $fluentcart_price = $fluentcart_product->variants[0]->item_price;
-                    } elseif (!empty($fluentcart_product->detail)) {
-                        $fluentcart_price = $fluentcart_product->detail->min_price;
-                    }
-
-                    if ( ! empty( $fluentcart_price ) ) {
-                        $fluentcart_price = floatval( $fluentcart_price / 100 );
-                    }
-
-                    $product_price = $fluentcart_price;
-                    $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $fluentcart_product->ID ), 'single-post-thumbnail' );
-                    $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
+                $fluentcart_price = 0;
+                if (!empty($fluentcart_product->variants) && count($fluentcart_product->variants) > 0) {
+                    $fluentcart_price = $fluentcart_product->variants[0]->item_price;
+                } elseif (!empty($fluentcart_product->detail)) {
+                    $fluentcart_price = $fluentcart_product->detail->min_price;
                 }
-            } catch (Exception $e) {
-                // Handle exception silently
+
+                if ( ! empty( $fluentcart_price ) ) {
+                    $fluentcart_price = floatval( $fluentcart_price / 100 );
+                }
+
+                $product_price = $fluentcart_price;
+                $product_image_src_array = wp_get_attachment_image_src( get_post_thumbnail_id( $fluentcart_product->ID ), 'single-post-thumbnail' );
+                $product_image_src = is_array( $product_image_src_array ) && count( $product_image_src_array ) ? $product_image_src_array[0] : '';
             }
+        } catch (Exception $e) {
+            // Handle exception silently
         }
     }
 }

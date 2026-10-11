@@ -518,7 +518,14 @@ class Helper extends Controller
     /**
      * Get interval text for recurring and split payment
      *
+     * Lite never calls this. Better Payment Pro <= 1.4.3's layout partials did, from
+     * templates that no longer load (Pro 1.4.3 fills no `layout_template` filter), and
+     * tests/Unit/ProCouplingContractTest.php still pins it. Pro 1.4.4+ uses its own
+     * Admin\Elementor\LayoutRenderer::interval_text().
+     *
      * @since 1.3.0
+     * @deprecated 2.4.0 Kept as belt-and-braces for Pro 1.4.3. Delete once no supported
+     *             site can run it.
      */
     public function get_interval_text( $interval = '' ){
         $interval_text = '';
@@ -547,10 +554,8 @@ class Helper extends Controller
      *
      * Lite's own checkouts only take one-time payments, so Lite says 'One Time'.
      * `better_payment/transaction/payment_type` ($label, $form_fields_info) relabels
-     * a row: Pro returns 'Subscription' for its recurring and split payments. Lite's
-     * copy of that (ProSubscriptionTransactionData::payment_type()) serves only an
-     * active Pro that does not (<= 1.4.3). The CSV import reads the label back, so
-     * keep these two strings.
+     * a row: Pro returns 'Subscription' for its recurring and split payments. The CSV
+     * import reads the label back, so keep these two strings.
      *
      * @since 2.4.0
      *
@@ -560,10 +565,6 @@ class Helper extends Controller
     public static function payment_type_label( $form_fields_info ): string {
         $form_fields_info = is_array( $form_fields_info ) ? $form_fields_info : [];
         $label            = 'One Time';
-
-        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
-            $label = ProSubscriptionTransactionData::payment_type( $label, $form_fields_info );
-        }
 
         $filtered = apply_filters( 'better_payment/transaction/payment_type', $label, $form_fields_info );
 

@@ -9,10 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * The Lite ↔ Pro compatibility contract.
  *
- * Pro-feature code is being moved out of Lite in stages — expand, migrate,
- * contract: a Lite release adds the hook, a Pro release takes the code over and
- * announces it, and only a later Lite release deletes Lite's copy. Two things
- * make that safe, and both live here.
+ * Pro-feature code moves out of Lite in stages — expand, migrate, contract: a
+ * Lite release adds the hook, a Pro release takes the code over and announces it,
+ * and only a later Lite release deletes Lite's copy. The first hand-off (fourteen
+ * features, Pro 1.4.4) completed when MIN_PRO_VERSION reached 1.4.4 and Lite's
+ * copies were deleted; the machinery stays for the next one. Two things make it
+ * safe, and both live here.
  *
  * - provides(): Pro lists what it now ships itself on `better_payment/pro_provides`,
  *   and Lite skips its own copy of that feature. Without it a transition release
@@ -34,7 +36,7 @@ final class ProCompatibility {
     /**
      * The oldest Better Payment Pro this Lite is known to work with.
      */
-    const MIN_PRO_VERSION = '1.4.3';
+    const MIN_PRO_VERSION = '1.4.4';
 
     /**
      * Wire the admin notice.

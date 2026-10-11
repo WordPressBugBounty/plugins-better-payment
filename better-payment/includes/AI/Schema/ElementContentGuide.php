@@ -75,21 +75,8 @@ class ElementContentGuide {
             'social_links' => __( 'Links to the organiser\'s OWN existing profiles. Set a network\'s URL ONLY if the brief gives you that exact address; otherwise leave every URL unset and let the element stay empty. Never construct a plausible handle — an invented profile link points a fundraising page at an account nobody involved controls.', 'better-payment' ),
         ];
 
-        // --- Pro elements. Transitional copy for Better Payment Pro <= 1.4.3; delete
-        // when ProCompatibility::MIN_PRO_VERSION >= 1.4.4. Pro copy:
-        // better-payment-pro/includes/AI/ProWidgetGuidance.php (guides()), supplied
-        // through the filter below. Slug: ai_pro_widget_guidance. A free install gets
-        // none: its Pro elements are lock stubs with no content settings to write.
-        if ( CampaignSchema::lite_supplies_pro_guidance() ) {
-            $guides += [
-                'donors_wall' => __( 'A live list of real donors, rendered from actual transactions — you write no donor names, amounts or dates, and there is no setting to put them in. Your job is `headline` ("Thank you to our supporters") and the display options: `layout`, how many to show, and which columns are visible.', 'better-payment' ),
-
-                'faq' => __( 'Answers to what a hesitant donor of THIS campaign would actually ask before giving. Write 3–5 items in `items`, each a real question in the donor\'s voice with a direct 1–3 sentence answer — how the money is used, what happens if the goal is not met, whether the payment is secure, when the help arrives. Never generic filler, and never a question the page already answers.', 'better-payment' ),
-
-                'video' => __( 'An embedded campaign video. Set `url` ONLY if the brief contains the actual video address; a video ID you invent resolves to an unrelated stranger\'s video on the fundraising page. With no URL in the brief, leave `url` out entirely and set only the display options.', 'better-payment' ),
-            ];
-        }
-
+        // The three Pro widgets' guides ship with Pro, through the filter below. A free
+        // install gets none: its Pro elements are lock stubs with no content to write.
         /**
          * Filter the per-element content guidance sent to the model.
          *

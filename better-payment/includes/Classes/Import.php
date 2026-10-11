@@ -35,6 +35,38 @@ class Import extends Controller{
     }
 
     /**
+     * A CSV `payment_date` cell as the UTC `Y-m-d H:i:s` the table stores.
+     *
+     * The export writes the date in site time, in the site's date and time
+     * format (`Export`: `wp_date()`), so a cell without a timezone is read as
+     * site time and converted. It used to be stored as if it were UTC, so an
+     * export → import round trip moved every row by the site's UTC offset. A
+     * cell that names its own timezone (`Z`, `+06:00`, `UTC`, `GMT`) is honoured
+     * as given. An unparseable cell keeps the old result (the epoch).
+     *
+     * @since 2.4.1
+     *
+     * @param string $value Cell value.
+     * @return string
+     */
+    public static function payment_date_from_csv( $value ) {
+        $value     = trim( (string) $value );
+        $timestamp = strtotime( $value );
+
+        if ( false === $timestamp ) {
+            return gmdate( 'Y-m-d H:i:s', 0 );
+        }
+
+        if ( preg_match( '/(?:Z|[+-]\d{2}:?\d{2}|\bUTC|\bGMT)$/i', $value ) ) {
+            return gmdate( 'Y-m-d H:i:s', $timestamp );
+        }
+
+        // strtotime() read the wall-clock time as UTC (WordPress runs PHP in UTC);
+        // it is site time, so convert it.
+        return get_gmt_from_date( gmdate( 'Y-m-d H:i:s', $timestamp ), 'Y-m-d H:i:s' );
+    }
+
+    /**
      * Decode a CSV `form_fields_info` cell into an array.
      *
      * The cell comes from an uploaded file, so it is never handed to maybe_unserialize():
@@ -118,7 +150,7 @@ class Import extends Controller{
                     'transaction_id'    => sanitize_text_field( $record['transaction_id'] ),
                     'source'            => sanitize_text_field( $record['source'] ),
                     'status'            => sanitize_text_field( $record['status'] ),
-                    'payment_date'      => date( 'Y-m-d H:i:s', strtotime( sanitize_text_field( $record['payment_date'] ) ) ),
+                    'payment_date'      => self::payment_date_from_csv( sanitize_text_field( $record['payment_date'] ) ),
                     'form_fields_info'  => maybe_serialize( $better_form_fields ),
                 );
             }
@@ -150,9 +182,7 @@ class Import extends Controller{
      * Lite keeps the name, email and source and marks the row imported.
      * `better_payment/import/form_fields_info` receives that, the CSV row and the
      * row's decoded `form_fields_info` cell: Pro adds the subscription keys of a
-     * "Subscription" row there. Lite's copy of that
-     * (ProSubscriptionTransactionData::import_fields()) serves only an active Pro
-     * that does not (<= 1.4.3).
+     * "Subscription" row there.
      *
      * @since 2.4.0
      *
@@ -171,10 +201,6 @@ class Import extends Controller{
 
         // Decoded without instantiating objects; see decode_form_fields_info().
         $decoded = isset( $record['form_fields_info'] ) ? self::decode_form_fields_info( $record['form_fields_info'] ) : [];
-
-        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
-            $better_form_fields = ProSubscriptionTransactionData::import_fields( $better_form_fields, $record, $decoded );
-        }
 
         $filtered = apply_filters( 'better_payment/import/form_fields_info', $better_form_fields, $record, $decoded );
 

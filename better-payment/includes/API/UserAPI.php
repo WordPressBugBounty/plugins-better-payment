@@ -4,7 +4,6 @@ namespace Better_Payment\Lite\API;
 
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Helper;
-use Better_Payment\Lite\Classes\ProSubscriptionTransactionData;
 use WP_REST_Controller;
 use WP_REST_Server;
 
@@ -132,11 +131,6 @@ class UserAPI extends WP_REST_Controller {
 
             if ( 'subscriptions' === $tab ) {
                 // Pro builds the subscription columns on `better_payment/user_api/subscription_row`.
-                // Lite's copy serves only an active Pro that does not (<= 1.4.3).
-                if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
-                    $row = ProSubscriptionTransactionData::subscription_row( $row, $form_fields_info );
-                }
-
                 $built = apply_filters( 'better_payment/user_api/subscription_row', $row, $form_fields_info, $txn );
                 $row   = is_array( $built ) ? $built : $row;
 

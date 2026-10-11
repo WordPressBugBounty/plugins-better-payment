@@ -160,7 +160,8 @@ class OrderHandler {
         return array(
             'amount'           => (float) $data['amount'],
             'order_id'         => (string) $data['bp_order_id'],
-            'payment_date'     => current_time( 'mysql' ),
+            // UTC, like every other writer of this table (see Classes\PaymentDateMigration).
+            'payment_date'     => gmdate( 'Y-m-d H:i:s' ),
             'source'           => 'stripe',
             'transaction_id'   => ! empty( $session->payment_intent ) ? sanitize_text_field( $session->payment_intent ) : '',
             'customer_info'    => maybe_serialize( $session ),

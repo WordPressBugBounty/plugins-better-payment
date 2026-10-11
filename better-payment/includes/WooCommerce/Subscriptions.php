@@ -1792,7 +1792,8 @@ class Subscriptions {
         return array(
             'amount'           => (float) $data['amount'],
             'order_id'         => (string) $data['bp_order_id'],
-            'payment_date'     => current_time( 'mysql' ),
+            // UTC, like every other writer of this table (see Classes\PaymentDateMigration).
+            'payment_date'     => gmdate( 'Y-m-d H:i:s' ),
             'source'           => 'stripe',
             'transaction_id'   => ! empty( $intent->id ) ? sanitize_text_field( $intent->id ) : '',
             'customer_info'    => maybe_serialize( $intent ),
@@ -3342,9 +3343,11 @@ class Subscriptions {
      * when WooCommerce (or the order) is unavailable, and the caller keeps
      * its un-hydrated base row.
      *
-     * Dates are returned as site-local `Y-m-d H:i:s` strings — the same shape
-     * as the transactions table's `payment_date` — so the React admin formats
-     * them with the one date helper it already has.
+     * Dates are returned as site-local `Y-m-d H:i:s` strings (the subscription
+     * filter compares `start_date` in site time), and the React admin renders
+     * them as wall-clock times with `formatDateCompact()`. Note the transactions
+     * table's `payment_date` is different: it is stored in UTC and rendered with
+     * `formatDateTime()`, which converts it to the site timezone.
      *
      * @param int $subscription_id Parent (subscription) order id.
      * @return array|null

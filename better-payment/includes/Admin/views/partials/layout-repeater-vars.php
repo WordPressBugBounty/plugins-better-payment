@@ -85,13 +85,6 @@ $payment_amount_field_class = '';
 
 if ( $is_payment_amount_field ) {
     $payment_amount_field_class = $is_payment_type_woocommerce || $is_payment_type_fluentcart || $render_attribute_default_dynamic || $is_bp_campaign || $is_payment_type_stripe ? 'is-hidden' : '';
-
-    // A recurring or split payment (Pro layouts 4 and 5) takes its amount from Stripe.
-    // Transitional copy for Better Payment Pro <= 1.4.3 (slug `elementor_pro_layout_rendering`):
-    // a current Pro hides the field in its own partials/layout-repeater-vars.php.
-    if ( ( ! empty( $is_payment_recurring ) || ! empty( $is_payment_split_payment ) ) && \Better_Payment\Lite\Classes\ProPaymentFormLayouts::lite_copy_applies() ) {
-        $payment_amount_field_class = 'is-hidden';
-    }
 }
 
 $field_display_inline_class = ! empty( $item["better_payment_field_name_display_inline"] ) && 'inline-block' === $item["better_payment_field_name_display_inline"] ? ' field-display-inline ' : '';

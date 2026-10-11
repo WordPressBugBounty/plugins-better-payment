@@ -2,8 +2,6 @@
 
 namespace Better_Payment\Lite;
 
-use Better_Payment\Lite\Classes\ProPaymentFormScripts;
-use Better_Payment\Lite\Classes\ProUserDashboardAssets;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 /**
@@ -55,11 +53,6 @@ class Assets extends Controller
     /**
      * All available scripts
      *
-     * The Pro-feature copies (Classes\ProPaymentFormScripts, Classes\ProUserDashboardAssets)
-     * are always registered, but they are a dependency of `better-payment` and
-     * `better-payment-common-script` only while ProCompatibility::lite_copy_applies()
-     * says so, and nothing else enqueues them.
-     *
      * @return array
      * @since 0.0.1
      */
@@ -98,13 +91,7 @@ class Assets extends Controller
             'better-payment-common-script' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/js/common.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/common.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/common.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => array_merge( ['jquery', 'wp-util'], ProUserDashboardAssets::script_depends() ),
-            ],
-            // Transitional copy of Pro's User Dashboard handlers (datepicker, date range modal, View All); see Classes\ProUserDashboardAssets.
-            ProUserDashboardAssets::SCRIPT_HANDLE => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/js/user-dashboard-pro.min.js',
-                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/user-dashboard-pro.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/user-dashboard-pro.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['jquery', 'jquery-ui-datepicker'],
+                'deps'    => ['jquery', 'wp-util'],
             ],
             'better-payment-stripe' => [
                 'src'     => 'https://js.stripe.com/v3/',
@@ -112,13 +99,7 @@ class Assets extends Controller
             'better-payment' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/js/better-payment.min.js',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/better-payment.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/better-payment.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => array_merge( ['jquery', 'better-payment-stripe', 'toastr-js'], ProPaymentFormScripts::script_depends() ),
-            ],
-            // Transitional copy of Pro's Payment Form quantity total (layouts 4 and 5); see Classes\ProPaymentFormScripts.
-            ProPaymentFormScripts::HANDLE => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/js/payment-form-pro-quantity.min.js',
-                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/js/payment-form-pro-quantity.min.js') ? filemtime(BETTER_PAYMENT_PATH . '/assets/js/payment-form-pro-quantity.min.js') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['jquery'],
+                'deps'    => ['jquery', 'better-payment-stripe', 'toastr-js'],
             ],
             'bp-dashboard-pagination' => [
                 'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/js/bp-dashboard-pagination.min.js' )
@@ -163,14 +144,6 @@ class Assets extends Controller
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/common.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/common.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/common.min.css') : BETTER_PAYMENT_VERSION,
             ],
-            // Transitional copy of Pro's User Dashboard card styles; a dependency of the admin
-            // stylesheet only while it applies, so it prints between common and admin. See
-            // Classes\ProUserDashboardAssets.
-            ProUserDashboardAssets::STYLE_HANDLE => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/css/user-dashboard-pro.min.css',
-                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/user-dashboard-pro.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/user-dashboard-pro.min.css') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['better-payment-common-style'],
-            ],
             'bp-dashboard-pagination-style' => [
                 'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/css/bp-dashboard-pagination.min.css' )
                     ? BETTER_PAYMENT_ASSETS . '/css/bp-dashboard-pagination.min.css'
@@ -202,7 +175,6 @@ class Assets extends Controller
             'better-payment-admin-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/admin.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/admin.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/admin.min.css') : BETTER_PAYMENT_VERSION,
-                'deps'    => ProUserDashboardAssets::style_depends(),
             ],
             'bp-font-awesome' => [
                 'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/vendor/fontawesome/css/all.min.css' )
@@ -219,12 +191,6 @@ class Assets extends Controller
             'fundraising-campaign-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign.min.css') : BETTER_PAYMENT_VERSION,
-            ],
-            // The Pro Updates tab; loaded by Classes\ProFundraisingUpdateStyles for Pro releases that do not load their own.
-            'fundraising-campaign-updates-style' => [
-                'src'     => BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign-updates.min.css',
-                'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign-updates.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/fundraising-campaign-updates.min.css') : BETTER_PAYMENT_VERSION,
-                'deps'    => ['fundraising-campaign-style'],
             ],
             'better-payment-editor-style' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/editor.min.css',

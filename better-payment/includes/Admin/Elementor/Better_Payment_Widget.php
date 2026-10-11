@@ -5,9 +5,6 @@ namespace Better_Payment\Lite\Admin\Elementor;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\Helper as ClassesHelper;
-use Better_Payment\Lite\Classes\ProCompatibility;
-use Better_Payment\Lite\Classes\ProPaymentFormControls;
-use Better_Payment\Lite\Classes\ProPaymentFormLayouts;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 use \Elementor\Controls_Manager as Controls_Manager;
 use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
@@ -117,9 +114,6 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            ProPaymentFormControls::payment_controls( $this );
-        }
         do_action( 'better_payment/elementor/editor/pro_layout_payment_controls', $this );
 
         $this->add_control(
@@ -220,9 +214,6 @@ class Better_Payment_Widget extends Widget_Base {
             ],
         ] );
 
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            ProPaymentFormControls::product_controls( $this );
-        }
         do_action( 'better_payment/elementor/editor/pro_layout_product_controls', $this );
 
         $this->add_control( 'better_payment_form_payment_source_fluentcart_notice', [
@@ -1045,9 +1036,6 @@ class Better_Payment_Widget extends Widget_Base {
 			]
 		);
         
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            ProPaymentFormControls::form_fields_controls( $this, $form_fields_repeater );
-        }
         do_action( 'better_payment/elementor/editor/pro_layout_form_fields_controls', $this, $form_fields_repeater );
 
         $repeater = new Repeater();
@@ -1078,9 +1066,6 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            ProPaymentFormControls::amount_list_toggle_control( $this );
-        }
         do_action( 'better_payment/elementor/editor/pro_layout_amount_list_toggle_control', $this );
 
         $this->add_control(
@@ -1112,9 +1097,6 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            ProPaymentFormControls::amount_list_control( $this, $repeater );
-        }
         do_action( 'better_payment/elementor/editor/pro_layout_amount_list_control', $this, $repeater );
 
         do_action('better_payment/elementor/editor/layouts_form_settings_amount_list_section', $this);
@@ -1197,9 +1179,6 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            ProPaymentFormControls::form_title_controls( $this );
-        }
         do_action( 'better_payment/elementor/editor/pro_layout_form_title_controls', $this );
 
         $this->add_control(
@@ -3698,21 +3677,17 @@ class Better_Payment_Widget extends Widget_Base {
     /**
      * Render amount element
      *
-     * `'version' => 'v2'` is the amount list of Pro layouts 4 and 5, and only Pro's
-     * templates ask for it. Better Payment Pro prints it itself once it declares
-     * `elementor_pro_layout_rendering`; Lite's copy (Classes\ProPaymentFormLayouts)
-     * serves Pro 1.4.3 and older, and nothing is printed otherwise. The method stays
-     * public with this signature because Pro 1.4.3 calls it
-     * (tests/Unit/ProCouplingContractTest.php).
+     * Lite's own layouts print their amount list with it. `'version' => 'v2'` is the
+     * amount list of Pro layouts 4 and 5, which Better Payment Pro prints itself
+     * (Admin\Elementor\LayoutRenderer), so Lite prints nothing for it. Public with this
+     * signature because Pro 1.4.3's templates called it; those templates no longer
+     * load (Pro 1.4.3 fills no `layout_template` filter), so the signature is kept as
+     * belt-and-braces (tests/Unit/ProCouplingContractTest.php).
      *
      * @since 0.0.1
      */
     public function render_amount_element( $settings, $args = [] ) {
         if ( ! empty( $args['version'] ) ) {
-            if ( ProPaymentFormLayouts::lite_copy_applies() ) {
-                ProPaymentFormLayouts::render_amount_element( $this, $settings );
-            }
-
             return;
         }
 
@@ -3740,6 +3715,18 @@ class Better_Payment_Widget extends Widget_Base {
         <?php
     }
 
+    /**
+     * The dynamic default amount of a free layout's payment amount field.
+     *
+     * Pro layouts 4, 5 and 6 read their own repeater in Better Payment Pro
+     * (Admin\Elementor\LayoutRenderer::attribute_default_text()), so they get ''
+     * here. Public with this signature because Pro 1.4.3's templates called it; they
+     * no longer load, so it is kept as belt-and-braces
+     * (tests/Unit/ProCouplingContractTest.php).
+     *
+     * @param array $settings Widget settings.
+     * @return float|string
+     */
     public function render_attribute_default_text( $settings ) {
         $render_attribute_default_text = '';
 
@@ -3754,11 +3741,6 @@ class Better_Payment_Widget extends Widget_Base {
                 break;
 
             default:
-                // Pro layouts 4, 5 and 6. Better Payment Pro reads its own repeater once it
-                // declares `elementor_pro_layout_rendering`; Lite's copy serves older Pro.
-                if ( ProPaymentFormLayouts::lite_copy_applies() ) {
-                    $items = ProPaymentFormLayouts::default_text_items( $settings );
-                }
                 break;
         }
 
@@ -3826,43 +3808,23 @@ class Better_Payment_Widget extends Widget_Base {
     }
 
     /**
-     * Whether Lite registers its copy of the controls only Pro layouts (4, 5, 6) use.
-     *
-     * Only for an active Pro that does not declare `elementor_payment_form_pro_controls`
-     * (1.4.3 and older); the copy is Classes\ProPaymentFormControls. A current Pro
-     * registers its own copy of each group on the `better_payment/elementor/editor/pro_layout_*`
-     * action fired right after each call, so the panel position is unchanged. A free
-     * install registers none of them: a Pro layout shows only its upgrade banner there,
-     * and Elementor keeps the saved value of a control that is not registered, so a site
-     * that loses Pro keeps its configuration. Control ids must never change: saved
-     * Elementor data, PaymentRequestGuard and the payment handlers read them.
-     *
-     * @return bool
-     */
-    protected function lite_registers_pro_layout_controls() {
-        return ProCompatibility::lite_copy_applies( ProPaymentFormControls::FEATURE );
-    }
-
-    /**
      * A free control's condition, plus what Pro's payment types add to it.
      *
      * PayPal, Paystack and the amount list hide for a recurring or split payment. That
      * condition names `better_payment_form_payment_type`, a Pro-layout control, and
      * Elementor hides — and nulls when rendering — a control whose condition names a
-     * control that is not registered. So a free install gets the bare condition, Better
-     * Payment Pro adds the payment type on
-     * `better_payment/elementor/editor/pro_layout_control_condition`, and Lite adds it
-     * itself only while it registers the Pro-layout controls for an older Pro.
+     * control that is not registered. So a free install gets the bare condition, and
+     * Better Payment Pro, which registers the Pro-layout controls on the
+     * `better_payment/elementor/editor/pro_layout_*` actions, adds the payment type on
+     * `better_payment/elementor/editor/pro_layout_control_condition`. Control ids must
+     * never change: saved Elementor data, PaymentRequestGuard and the payment handlers
+     * read them.
      *
      * @param string $control_id The control id.
      * @param array  $condition  The control's own condition.
      * @return array
      */
     protected function pro_layout_control_condition( $control_id, array $condition = [] ) {
-        if ( $this->lite_registers_pro_layout_controls() ) {
-            $condition = ProPaymentFormControls::control_condition( $condition, $control_id );
-        }
-
         $filtered = apply_filters( 'better_payment/elementor/editor/pro_layout_control_condition', $condition, $control_id, $this );
 
         return is_array( $filtered ) ? $filtered : $condition;
@@ -3872,10 +3834,8 @@ class Better_Payment_Widget extends Widget_Base {
      * The template that renders a Pro layout (`layout-4-pro`, `layout-5-pro`, `layout-6-pro`).
      *
      * Without Pro it is the upgrade banner. With Pro it is whatever
-     * `better_payment/elementor/widget/layout_template` returns: Better Payment Pro
-     * supplies its template there once it declares `elementor_pro_layout_rendering`, and
-     * for an older Pro the filter starts at Pro's own template
-     * (Classes\ProPaymentFormLayouts). An active Pro never gets the banner; with no
+     * `better_payment/elementor/widget/layout_template` returns, which is where Better
+     * Payment Pro supplies its template. An active Pro never gets the banner; with no
      * template nothing renders.
      *
      * @param string $layout   Whitelisted `-pro` layout key.
@@ -3887,8 +3847,7 @@ class Better_Payment_Widget extends Widget_Base {
             return BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/partials/layout-pro-banners.php';
         }
 
-        $template = ProPaymentFormLayouts::lite_copy_applies() ? ProPaymentFormLayouts::template_file( $layout ) : '';
-        $template = apply_filters( 'better_payment/elementor/widget/layout_template', $template, $layout, $settings, $this );
+        $template = apply_filters( 'better_payment/elementor/widget/layout_template', '', $layout, $settings, $this );
 
         return is_string( $template ) ? $template : '';
     }

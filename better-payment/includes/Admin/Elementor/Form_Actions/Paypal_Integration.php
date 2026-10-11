@@ -238,6 +238,8 @@ class Paypal_Integration extends Action_Base {
             'referer_widget_id'     => $widget_id,
             'source'                => 'paypal',
             'paypal_business_email' => sanitize_email( $email ),
+            // The PayPal environment the order was sent to; the IPN must come from the same one.
+            'paypal_mode'           => 'yes' === $live_mode ? 'live' : 'sandbox',
         ];
 
         // Get campaign_id from form data if available

@@ -77,12 +77,9 @@ class Fundraising_Campaign_Widget extends Widget_Base {
     }
 
     public function get_style_depends() {
-        // The Pro Updates tab styles: Lite's copy until Pro declares
-        // `fundraising_campaign_update_styles`. Pro adds its own copy, and needs
-        // this widget passed to tell it apart from the other widgets on the filter.
-        $depends = \Better_Payment\Lite\Classes\ProFundraisingUpdateStyles::style_depends( [ 'fundraising-campaign-style' ] );
-
-        return apply_filters( 'better_payment/elementor/editor/get_style_depends', $depends, $this );
+        // Better Payment Pro adds its Updates tab styles here, and needs this widget
+        // passed to tell it apart from the other widgets on the filter.
+        return apply_filters( 'better_payment/elementor/editor/get_style_depends', [ 'fundraising-campaign-style' ], $this );
     }
 
     public function get_script_depends() {

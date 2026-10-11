@@ -953,9 +953,5 @@ class CampaignElements {
         foreach ( ProElementStubs::get_all() as $type => $stub ) {
             ElementRegistry::register( $type, $stub );
         }
-
-        // Transitional: full schemas for Better Payment Pro <= 1.4.3 (ProElementSchemas).
-        // Delete this line with that class.
-        add_filter( 'better_payment/campaign_elements', [ ProElementSchemas::class, 'apply_lite_copy' ], 5 );
     }
 }

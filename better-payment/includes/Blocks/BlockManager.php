@@ -13,7 +13,6 @@ namespace Better_Payment\Lite\Blocks;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\Helper;
-use Better_Payment\Lite\Classes\ProSubscriptionTransactionData;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -162,12 +161,8 @@ class BlockManager {
             }
 
             return '<div ' . $wrapper_attributes . '>' .
-                   '<div class="better-payment-block__notice">' .
-                   '<p>' . esc_html__( 'Payment form: enable at least one payment gateway (PayPal, Stripe or Paystack) in Better Payment settings. This notice is only visible to you.', 'better-payment' ) . '</p>' .
-                   '<p><a href="' . esc_url( admin_url( 'admin.php?page=better-payment-admin&tab=settings&section=general' ) ) . '">' .
-                   esc_html__( 'Open Better Payment settings', 'better-payment' ) .
-                   '</a></p>' .
-                   '</div></div>';
+                   $this->render_gateway_notice( $attributes, $global_settings ) .
+                   '</div>';
         }
 
         // Enqueue scripts/styles before manage_response() so they are present even when the
@@ -1014,6 +1009,163 @@ class BlockManager {
     }
 
     /**
+     * Why a Payment Form block has no gateway, decided per gateway.
+     *
+     * Each gateway resolves in `build_block_settings()` from the block's own
+     * toggle when the block saved one, and from the site setting only when it
+     * did not. So a gateway is off for one of two reasons, and they are fixed in
+     * different places:
+     *
+     * - `block`  — the site has a gateway enabled, but this block switches it
+     *   off. Settings cannot fix it: the gateway is already on there.
+     * - `global` — no gateway is enabled site-wide. Settings fixes it on its own
+     *   for any gateway the block leaves to the site (`settings_fixes`); a
+     *   gateway the block also switched off needs both (`needs_block`). A new
+     *   block seeds its toggles from the settings, so on a site with nothing
+     *   enabled `needs_block` is the usual case.
+     *
+     * Mirrors the editor's `gatewayNoticeState()` (helpers/gatewayNotice.js), so
+     * the editor and the page never give two different answers.
+     *
+     * @param array $attributes      Block attributes.
+     * @param array $global_settings Global plugin settings.
+     * @return array{reason: string, site_gateways: string[], settings_fixes: string[], needs_block: bool}
+     */
+    public static function gateway_notice_state( $attributes, $global_settings ) {
+        $gateways = array(
+            'PayPal'   => array( 'paypalEnabled', 'better_payment_settings_general_general_paypal' ),
+            'Stripe'   => array( 'stripeEnabled', 'better_payment_settings_general_general_stripe' ),
+            'Paystack' => array( 'paystackEnabled', 'better_payment_settings_general_general_paystack' ),
+        );
+
+        $site_gateways  = array();
+        $settings_fixes = array();
+
+        foreach ( $gateways as $label => $keys ) {
+            if ( isset( $global_settings[ $keys[1] ] ) && 'yes' === $global_settings[ $keys[1] ] ) {
+                $site_gateways[] = $label;
+            }
+            if ( ! isset( $attributes[ $keys[0] ] ) ) {
+                $settings_fixes[] = $label;
+            }
+        }
+
+        $reason = empty( $site_gateways ) ? 'global' : 'block';
+
+        return array(
+            'reason'         => $reason,
+            'site_gateways'  => $site_gateways,
+            'settings_fixes' => $settings_fixes,
+            'needs_block'    => 'block' === $reason || empty( $settings_fixes ),
+        );
+    }
+
+    /**
+     * The admin-only notice printed in place of a form with no gateway.
+     *
+     * Names the gateways and the place that fixes them, and links to each place
+     * the fix needs: Better Payment settings, this block's editor, or both. The
+     * editor link is offered only when the block is really in the current post's
+     * content — in a template, template part, synced pattern or widget area the
+     * current post's editor does not contain it, so the notice says where to look
+     * instead of linking to the wrong screen.
+     *
+     * @param array $attributes      Block attributes.
+     * @param array $global_settings Global plugin settings.
+     * @return string Notice HTML.
+     */
+    private function render_gateway_notice( $attributes, $global_settings ) {
+        $state = self::gateway_notice_state( $attributes, $global_settings );
+
+        if ( 'block' === $state['reason'] ) {
+            $message = sprintf(
+                /* translators: %s: gateway names, e.g. "PayPal or Stripe". */
+                __( 'Payment form: every payment method is switched off in this block’s settings. Turn on %s under Payment Settings in the block sidebar.', 'better-payment' ),
+                self::join_gateway_names( $state['site_gateways'] )
+            );
+        } elseif ( $state['needs_block'] ) {
+            $message = __( 'Payment form: no payment gateway is enabled in Better Payment settings, and every payment method is switched off in this block’s settings. Enable PayPal, Stripe or Paystack in Better Payment settings, then turn the same gateway on under Payment Settings in the block sidebar.', 'better-payment' );
+        } else {
+            $message = sprintf(
+                /* translators: %s: gateway names, e.g. "PayPal, Stripe or Paystack". */
+                __( 'Payment form: enable at least one payment gateway (%s) in Better Payment settings.', 'better-payment' ),
+                self::join_gateway_names( $state['settings_fixes'] )
+            );
+        }
+
+        $links = array();
+
+        if ( 'global' === $state['reason'] ) {
+            $links[] = '<a href="' . esc_url( admin_url( 'admin.php?page=better-payment-admin&tab=settings&section=general' ) ) . '">' .
+                       esc_html__( 'Open Better Payment settings', 'better-payment' ) . '</a>';
+        }
+
+        $hint = '';
+
+        if ( $state['needs_block'] ) {
+            $edit_url = self::block_edit_url();
+
+            if ( '' !== $edit_url ) {
+                $links[] = '<a href="' . esc_url( $edit_url ) . '">' .
+                           esc_html__( 'Edit this form in the block editor', 'better-payment' ) . '</a>';
+            } else {
+                $hint = '<p>' . esc_html__( 'This form is not part of this page’s content. Open the template, template part, pattern or widget area that contains it to change its settings.', 'better-payment' ) . '</p>';
+            }
+        }
+
+        return '<div class="better-payment-block__notice">' .
+               '<p>' . esc_html( $message ) . ' ' . esc_html__( 'This notice is only visible to you.', 'better-payment' ) . '</p>' .
+               $hint .
+               ( $links ? '<p class="better-payment-block__notice-actions">' . implode( ' ', $links ) . '</p>' : '' ) .
+               '</div>';
+    }
+
+    /**
+     * The editor URL of the current post, when it holds a Payment Form block.
+     *
+     * Empty when there is no current post, the user may not edit it, or its
+     * content has no Payment Form block (the block came from a template, template
+     * part, synced pattern or widget area).
+     *
+     * @return string Raw edit URL, or ''.
+     */
+    private static function block_edit_url() {
+        $post_id = (int) get_the_ID();
+
+        if ( $post_id <= 0 || ! current_user_can( 'edit_post', $post_id ) ) {
+            return '';
+        }
+
+        if ( ! has_block( 'better-payment/payment-form', $post_id ) ) {
+            return '';
+        }
+
+        return (string) get_edit_post_link( $post_id, 'raw' );
+    }
+
+    /**
+     * "A", "A or B", "A, B or C".
+     *
+     * @param string[] $names Gateway names (brand names, not translated).
+     * @return string Joined list.
+     */
+    private static function join_gateway_names( $names ) {
+        $names = array_values( $names );
+        $last  = array_pop( $names );
+
+        if ( empty( $names ) ) {
+            return (string) $last;
+        }
+
+        return sprintf(
+            /* translators: 1: comma-separated gateway names, 2: the last gateway name. */
+            __( '%1$s or %2$s', 'better-payment' ),
+            implode( ', ', $names ),
+            $last
+        );
+    }
+
+    /**
      * Resolve the correct Stripe key based on live mode setting.
      *
      * This matches Elementor's behavior where the key is resolved before being stored
@@ -1794,12 +1946,8 @@ class BlockManager {
                 $ffi = is_array( $tx->form_fields_info ) ? $tx->form_fields_info : array();
 
                 // The subscription columns come from the same place as UserAPI's REST rows: Pro fills
-                // `better_payment/user_api/subscription_row`, and Lite's copy serves only an active Pro
-                // that does not (ProSubscriptionTransactionData, <= 1.4.3).
-                $row = array();
-                if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
-                    $row = ProSubscriptionTransactionData::subscription_row( $row, $ffi );
-                }
+                // `better_payment/user_api/subscription_row`.
+                $row   = array();
                 $built = apply_filters( 'better_payment/user_api/subscription_row', $row, $ffi, $tx );
                 $row   = is_array( $built ) ? $built : $row;
 

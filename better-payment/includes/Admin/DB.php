@@ -3,7 +3,6 @@
 namespace Better_Payment\Lite\Admin;
 
 use Better_Payment\Lite\Classes\Helper;
-use Better_Payment\Lite\Classes\ProSubscriptionTransactionData;
 
 /**
  * Exit if accessed directly
@@ -158,6 +157,38 @@ class DB {
     }
 
     /**
+     * The UTC `payment_date` bounds for a date range picked in site time.
+     *
+     * The admin date filter sends whole days (`Y-m-d`), picked on the site's
+     * calendar. Compared as-is, `BETWEEN '2026-10-11' AND '2026-10-11'` matched
+     * only rows at exactly midnight — so the last day of every range was dropped
+     * — and the days were UTC days, not the site's. A day bound is widened to the
+     * whole site day (00:00:00 – 23:59:59) and converted to UTC, which is how
+     * `payment_date` is stored. A bound that already carries a time is passed
+     * through unchanged.
+     *
+     * @since 2.4.1
+     *
+     * @param string $from Lower bound.
+     * @param string $to   Upper bound.
+     * @return string[] [ from, to ].
+     */
+    public static function payment_date_range( $from, $to ) {
+        $from = trim( (string) $from );
+        $to   = trim( (string) $to );
+
+        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $from ) ) {
+            $from = get_gmt_from_date( $from . ' 00:00:00', 'Y-m-d H:i:s' );
+        }
+
+        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $to ) ) {
+            $to = get_gmt_from_date( $to . ' 23:59:59', 'Y-m-d H:i:s' );
+        }
+
+        return array( $from, $to );
+    }
+
+    /**
      * Get all transactions from better payment table.
      *
      * @param array|string $args Filters, as wp_parse_args() reads them (every caller passes an array).
@@ -298,7 +329,8 @@ class DB {
         }
         
         if( $args['payment_date_from'] != '' && $args['payment_date_to'] != ''){
-            $whereQuery .= $wpdb->prepare(" AND payment_date BETWEEN %s AND %s", $args['payment_date_from'], $args['payment_date_to']); 
+            $range = self::payment_date_range( $args['payment_date_from'], $args['payment_date_to'] );
+            $whereQuery .= $wpdb->prepare(" AND payment_date BETWEEN %s AND %s", $range[0], $range[1]); 
         }
 
         if($count_only === 1){
@@ -590,10 +622,8 @@ class DB {
      * 'transactions' (or no type) is every row the user owns. Every other type is
      * defined by `better_payment/db/user_transactions_type_where` ($where, $type),
      * which starts from null: Pro supplies the 'subscriptions' condition for its
-     * recurring and split payments. Lite's copy of it
-     * (ProSubscriptionTransactionData::subscriptions_type_where()) serves only an
-     * active Pro that does not (<= 1.4.3). A type nobody defines returns null, and
-     * the caller answers with no rows.
+     * recurring and split payments. A type nobody defines returns null, and the
+     * caller answers with no rows.
      *
      * @since 2.4.0
      *
@@ -605,13 +635,7 @@ class DB {
             return '';
         }
 
-        $where = null;
-
-        if ( ProSubscriptionTransactionData::lite_copy_applies() ) {
-            $where = ProSubscriptionTransactionData::subscriptions_type_where( $where, $type );
-        }
-
-        $where = apply_filters( 'better_payment/db/user_transactions_type_where', $where, $type );
+        $where = apply_filters( 'better_payment/db/user_transactions_type_where', null, $type );
 
         return is_string( $where ) ? $where : null;
     }
@@ -664,10 +688,13 @@ class DB {
      * Get transactions amount
      *
      * Lite never calls this; Better Payment Pro <= 1.4.3's AnalyticsModel does, and
-     * tests/Unit/ProCouplingContractTest.php pins it. Pro 1.4.4 carries its own copy.
+     * tests/Unit/ProCouplingContractTest.php pins it. Pro 1.4.4 carries its own copy
+     * (better-payment-pro/includes/Models/AnalyticsModel.php).
      *
-     * @deprecated 2.4.0 Kept only for Better Payment Pro <= 1.4.3; delete when MIN_PRO_VERSION >= 1.4.4.
-     *             Pro copy: better-payment-pro/includes/Models/AnalyticsModel.php::get_transactions_by_statuses().
+     * @deprecated 2.4.0 A fatal guard only: Pro 1.4.3 is unsupported since
+     *             ProCompatibility::MIN_PRO_VERSION 1.4.4, but a site that updates Lite
+     *             first must not fatal on Pro's Analytics screen. Delete once no
+     *             supported site can run Pro 1.4.3.
      *
      * @return array
      * @since 0.0.1
@@ -774,9 +801,9 @@ class DB {
      * The SQL count or sum behind get_transactions_amount_by_statuses() when no
      * filtered transactions are passed.
      *
-     * @deprecated 2.4.0 Kept only for Better Payment Pro <= 1.4.3; delete when MIN_PRO_VERSION >= 1.4.4.
-     *             Pro copy: better-payment-pro/includes/Models/AnalyticsModel.php::transactions_amount_by_statuses_query(),
-     *             kept identical by Pro's AnalyticsModelParityTest.
+     * @deprecated 2.4.0 A fatal guard only, for Better Payment Pro <= 1.4.3 (see
+     *             get_transactions_by_statuses()). Pro 1.4.4 carries its own copy in
+     *             better-payment-pro/includes/Models/AnalyticsModel.php.
      *
      * @param string $statuses          Quoted, comma-separated statuses for IN().
      * @param string $nullDataQuery     " OR status IS NULL " or ''.
