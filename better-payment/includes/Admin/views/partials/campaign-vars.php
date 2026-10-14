@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
 $better_payment_campaign_currency = ! empty( $settings['better_payment_campaign_currency'] ) 
     ? $settings['better_payment_campaign_currency'] 
     : 'USD';

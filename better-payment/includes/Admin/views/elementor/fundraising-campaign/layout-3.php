@@ -1,4 +1,8 @@
 <?php 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
     include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/partials/campaign-vars.php";
 ?>
 <main class="better-payment better-payment-campaign">
@@ -22,11 +26,11 @@
                                 
                                 <form class="bp-payment_form">
                                     <?php if ( method_exists( $widgetObj, 'render_campaign_hidden_fields' ) ) {
-                                        echo $widgetObj->render_campaign_hidden_fields( $settings );
+                                        echo $widgetObj->render_campaign_hidden_fields( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value is esc_attr()'d where render_campaign_hidden_fields() builds it.
                                     }?>
                                     <div
                                         class="bp-flex bp-justify_content-space_between bp-align_items-center margin-bottom_32 input-fild">
-                                        <input type="number" min="1" name="campaign-custom-amount" placeholder="<?php echo esc_html__( $placeholder_text, 'better-payment' ); ?>"
+                                        <input type="number" min="1" name="campaign-custom-amount" placeholder="<?php echo esc_html( $placeholder_text ); ?>"
                                             class="bp-inter_font bp-payment_form-input other_amount campaign-custom-amount">
                                         <span class="bp-ibm_font bp-text_xm layout-3-currency"><?php echo esc_html( $better_payment_campaign_currency ); ?></span>
                                     </div>
@@ -46,8 +50,8 @@
                                     </div>
 
                                     <div class="bp-flex">
-                                        <a <?php echo $this->print_render_attribute_string( 'better_payment_campaign_form_button_link' ); ?> class="btn-3 bp-inter_font bp-donation_btn bp-flex bp-align_items-center bp-donate_btn">
-                                            <span><?php esc_html_e( $button_text, 'better-payment' ); ?></span>
+                                        <a <?php $this->print_render_attribute_string( 'better_payment_campaign_form_button_link' ); ?> class="btn-3 bp-inter_font bp-donation_btn bp-flex bp-align_items-center bp-donate_btn">
+                                            <span><?php echo esc_html( $button_text ); ?></span>
                                             <span>
                                                 <svg width="16" height="12" viewBox="0 0 16 12" fill="none"
                                                     xmlns="http://www.w3.org/2000/svg">

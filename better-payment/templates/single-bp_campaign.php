@@ -16,37 +16,37 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // For block themes, pre-render header/footer template parts so they display
 // correctly on this CPT page (which bypasses the theme's block templates).
-$bp_header = '';
-$bp_footer = '';
+$better_payment_header = '';
+$better_payment_footer = '';
 if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
-    $theme_slug = wp_get_theme()->get( 'TextDomain' );
-    $bp_header  = do_blocks( '<!-- wp:template-part {"slug":"header","theme":"' . esc_attr( $theme_slug ) . '"} /-->' );
-    $bp_footer  = do_blocks( '<!-- wp:template-part {"slug":"footer","theme":"' . esc_attr( $theme_slug ) . '"} /-->' );
+    $better_payment_theme_slug = wp_get_theme()->get( 'TextDomain' );
+    $better_payment_header  = do_blocks( '<!-- wp:template-part {"slug":"header","theme":"' . esc_attr( $better_payment_theme_slug ) . '"} /-->' );
+    $better_payment_footer  = do_blocks( '<!-- wp:template-part {"slug":"footer","theme":"' . esc_attr( $better_payment_theme_slug ) . '"} /-->' );
 }
 
-Helper::render_header( $bp_header );
+Helper::render_header( $better_payment_header );
 
 if ( have_posts() ) :
     the_post();
-    $campaign_id = get_the_ID();
+    $better_payment_campaign_id = get_the_ID();
 
-    if ( get_post_status( $campaign_id ) !== 'publish' ) {
+    if ( get_post_status( $better_payment_campaign_id ) !== 'publish' ) {
         global $wp_query;
         $wp_query->set_404();
         status_header( 404 );
         nocache_headers();
-        Helper::render_footer( $bp_footer );
+        Helper::render_footer( $better_payment_footer );
         exit;
     }
 
     // Enqueue frontend styles.
-    $css_file = BETTER_PAYMENT_PATH . '/assets/blocks/campaign-display/style.min.css';
-    if ( file_exists( $css_file ) ) {
+    $better_payment_css_file = BETTER_PAYMENT_PATH . '/assets/blocks/campaign-display/style.min.css';
+    if ( file_exists( $better_payment_css_file ) ) {
         wp_enqueue_style(
             'better-payment-campaign-display-style',
             BETTER_PAYMENT_ASSETS . '/blocks/campaign-display/style.min.css',
             [],
-            filemtime( $css_file )
+            filemtime( $better_payment_css_file )
         );
     }
 
@@ -59,9 +59,9 @@ if ( have_posts() ) :
 
     ?>
     <main id="bp-campaign-main" class="bp-campaign-page-wrap" role="main">
-        <?php echo RendererService::render_campaign( $campaign_id, is_preview() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+        <?php echo RendererService::render_campaign( $better_payment_campaign_id, is_preview() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- RendererService escapes every value as it builds the campaign markup. ?>
     </main>
     <?php
 endif;
 
-Helper::render_footer( $bp_footer );
+Helper::render_footer( $better_payment_footer );

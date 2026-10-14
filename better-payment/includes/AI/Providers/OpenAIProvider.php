@@ -31,10 +31,12 @@ class OpenAIProvider extends AbstractProvider {
     }
 
     protected function chat_endpoint(): string {
+        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Plugin supports WordPress 6.0, before the WordPress AI Client existed; user-selected provider with the user's own key.
         return 'https://api.openai.com/v1/chat/completions';
     }
 
     protected function images_endpoint(): string {
+        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Plugin supports WordPress 6.0, before the WordPress AI Client existed; user-selected provider with the user's own key.
         return 'https://api.openai.com/v1/images/generations';
     }
 

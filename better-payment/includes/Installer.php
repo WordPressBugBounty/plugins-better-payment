@@ -103,46 +103,14 @@ class Installer extends Controller {
             update_option( 'better_payment_setup_wizard', 'redirect' );
 
             /**
-             * A missing `better_payment_setup_wizard` option is this plugin's
-             * definition of a fresh install — it is what decides that the setup
-             * wizard is owed a redirect at all. The same test marks the install
-             * as eligible for the automatic usage-tracking opt-in, so the two can
-             * never disagree about what "new install" means.
-             *
-             * Deliberately scoped to fresh installs: an existing site that has
-             * already been through (or dismissed) the wizard keeps whatever
-             * tracking state it has. See
-             * Traits\Helper::maybe_auto_enable_usage_tracking(), which consumes
-             * this marker exactly once.
-             *
-             * @since 2.3.2
+             * A fresh install starts with usage tracking OFF. It used to be
+             * marked for an automatic opt-in here (2.3.2 – 2.4.1), which turned
+             * tracking on for anyone who never answered the setup wizard. That
+             * broke WordPress.org Guideline 7: consent must be an explicit
+             * action. Tracking is now enabled only by the wizard's "Proceed To
+             * Next Step" button. See Classes\TrackingConsentRepair for the sites
+             * the old behaviour already opted in.
              */
-            self::mark_tracking_auto_optin_pending();
         }
-    }
-
-    /**
-     * Flag a fresh install for the automatic usage-tracking opt-in.
-     *
-     * Only ever sets the marker when the site has no tracking state at all. A
-     * site that reached consent before this option existed (an upgrade that
-     * re-runs activation, say) must not be handed a second, automatic opt-in.
-     *
-     * @return void
-     * @since 2.3.2
-     */
-    public function mark_tracking_auto_optin_pending()
-    {
-        if ( get_option( 'better_payment_tracking_auto_optin' ) ) {
-            return;
-        }
-
-        $allow_tracking = get_option( 'wpins_allow_tracking' );
-
-        if ( is_array( $allow_tracking ) && isset( $allow_tracking[ basename( BETTER_PAYMENT_FILE, '.php' ) ] ) ) {
-            return;
-        }
-
-        update_option( 'better_payment_tracking_auto_optin', 'pending' );
     }
 }

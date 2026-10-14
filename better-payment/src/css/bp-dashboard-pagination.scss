@@ -1,0 +1,128 @@
+/**
+ * Better Payment – User Dashboard Pagination
+ *
+ * Self-contained styles for the .bp--pagination container used in both
+ * the Elementor User Dashboard widget and the Gutenberg block frontend.
+ * Mirrors the admin bp_paginate_links() visual style (gradient active state,
+ * caret icons, hover effects) so the user dashboard matches the admin panel.
+ *
+ * Scoped under .better-payment to avoid leaking into other themes/plugins.
+ */
+
+.better-payment {
+	.bp--pagination.pagination {
+		padding: 16px 0 8px;
+
+		ul {
+			list-style: none !important;
+			margin: 0 !important;
+			padding: 0 !important;
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 6px;
+
+			li {
+				display: inline-flex;
+				margin: 0 !important;
+
+				> a,
+				> span,
+				> button {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					min-width: 36px;
+					height: 36px;
+					padding: 0 10px;
+					background: #ffffff;
+					border: 1px solid rgba(131, 133, 142, 0.3);
+					border-radius: 6px;
+					font-size: 14px;
+					font-weight: 400;
+					color: #9095a2;
+					cursor: pointer;
+					text-decoration: none;
+					line-height: 1;
+					transition: color 0.2s ease, border-color 0.2s ease;
+					position: relative;
+					overflow: hidden;
+					z-index: 1;
+					outline: none;
+					box-shadow: none;
+					font-family: inherit;
+
+					// Hover tint layer (purple at 10% opacity)
+					&::before {
+						content: '';
+						position: absolute;
+						inset: 0;
+						background: rgba(110, 88, 247, 0.1);
+						opacity: 0;
+						z-index: -1;
+						transition: opacity 0.2s ease;
+					}
+
+					// Active / hover gradient layer
+					&::after {
+						content: '';
+						position: absolute;
+						inset: 0;
+						background: linear-gradient(97.4deg, #a293ff 0%, #6e58f7 100%);
+						opacity: 0;
+						z-index: -1;
+						transition: opacity 0.2s ease;
+					}
+
+					&:hover {
+						color: #ffffff;
+						border-color: transparent;
+
+						&::before { opacity: 0; }
+						&::after  { opacity: 1; }
+					}
+
+					// Current / active page
+					&.is-current,
+					&.active {
+						color: #ffffff;
+						border-color: transparent;
+
+						&::before { opacity: 0; }
+						&::after  { opacity: 1; }
+					}
+
+					// Disabled prev/next
+					&.disabled,
+					&[aria-disabled="true"] {
+						opacity: 0.38;
+						cursor: default;
+						pointer-events: none;
+
+						&::before,
+						&::after { opacity: 0; }
+					}
+
+					i {
+						font-size: 11px;
+						line-height: 1;
+					}
+				}
+
+				// Ellipsis button — styled slightly differently to signal interactivity
+				> a.bp--ellipsis,
+				> button.bp--ellipsis {
+					letter-spacing: 2px;
+					font-size: 12px;
+					color: #6e58f7;
+					border-color: rgba(110, 88, 247, 0.25);
+					font-weight: 700;
+
+					&:hover {
+						color: #ffffff;
+					}
+				}
+			}
+		}
+	}
+}

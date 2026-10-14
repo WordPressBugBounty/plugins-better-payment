@@ -1,0 +1,31 @@
+// Container
+.bp-container {
+  max-width: 1280px;
+  margin   : 0 auto;
+  padding  : 0 12px;
+  position : relative;
+}
+
+// Row
+.bp-row {
+  display     : flex;
+  flex-wrap   : wrap;
+  margin-left : -12px;
+  margin-right: -12px;
+}
+
+// Column
+.bp-col {
+  padding-left : 12px !important;
+  padding-right: 12px !important;
+  flex         : 1; // Default behavior
+}
+
+
+// Grid Columns (12 Columns)
+@for $i from 1 through 12 {
+  .bp-col_#{$i} {
+    flex     : 0 0 percentage($i / 12); // Calculate column width
+    max-width: percentage($i / 12);
+  }
+}

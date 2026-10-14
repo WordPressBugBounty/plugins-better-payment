@@ -3316,6 +3316,7 @@ class Subscriptions {
                 'limit'       => 1,
                 'type'        => 'shop_order',
                 'customer_id' => $customer_id,
+                // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_exclude -- Excludes a single order id from a limit-1 lookup.
                 'exclude'     => array( $order->get_id() ),
                 'return'      => 'ids',
                 'meta_query'  => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded (limit 1), event-driven.

@@ -137,6 +137,7 @@ class Better_Payment_Widget extends Widget_Base {
         $this->add_control( 'better_payment_form_payment_source_stripe_price_id', [
             'label'       => __( 'Default Price ID', 'better-payment' ),
             'description' => sprintf( 
+                /* translators: %1$s: Stripe price docs URL, %2$s: Stripe promotion code docs URL. */
                 __( '<p>Create a product from Stripe dashboard and <a href="%1$s" target="_blank">get the (default) price id.</a></p> <p>For coupons, create a <a href="%2$s" target="_blank">promotion code</a> and share its code, or tag a coupon with the metadata <code>better_payment_public</code> = <code>yes</code> to accept its ID. Make sure they are global or product independent.</p>', 'better-payment' ),
                 esc_url('//betterpayment.co/docs/retrieve-price-id-for-recurring-payments/'),
                 esc_url('//docs.stripe.com/payments/checkout/discounts')
@@ -155,6 +156,7 @@ class Better_Payment_Widget extends Widget_Base {
 
         $this->add_control( 'better_payment_form_payment_source_notice', [
             'type'            => Controls_Manager::RAW_HTML,
+            /* translators: %1$s: WooCommerce plugin install URL. */
             'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>WooCommerce</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=woocommerce&tab=search&type=term') ),
             'content_classes' => 'better-payment-warning',
             // Layout 6 (Pro) has its own notice, registered with its product controls.
@@ -218,6 +220,7 @@ class Better_Payment_Widget extends Widget_Base {
 
         $this->add_control( 'better_payment_form_payment_source_fluentcart_notice', [
             'type'            => Controls_Manager::RAW_HTML,
+            /* translators: %1$s: FluentCart plugin install URL. */
             'raw'             => sprintf( __( '<a href="%1$s" target="_blank"><strong>FluentCart</strong></a> is not installed/activated on your site. Please install and activate <a href="%1$s" target="_blank"><strong>FluentCart</strong></a> first.', 'better-payment' ), esc_url('plugin-install.php?s=fluentcart&tab=search&type=term') ),
             'content_classes' => 'better-payment-warning',
             // Layout 6 (Pro) has its own notice, registered with its product controls.
@@ -571,6 +574,7 @@ class Better_Payment_Widget extends Widget_Base {
             'better_payment_form_currency_notice',
             [
                 'type'            => Controls_Manager::RAW_HTML,
+                /* translators: %1$s: opening <strong> tag, %2$s: closing </strong> tag. */
                 'raw'             => sprintf( __( 'Supported by %1$sStripe%2$s (and/or %1$sPaystack%2$s) only', 'better-payment' ), '<strong>', '</strong>' ),
                 'content_classes' => 'better-payment-warning',
                 'conditions' => [
@@ -899,6 +903,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'type'        => Controls_Manager::RAW_HTML,
                 'raw' => sprintf( 
+                    /* translators: %1$s: sample payment URL. */
                     __( '<p class="better-payment-dynamic-value-info" style="word-break: break-word;"><a href="%1$s" target="_blank">Sample url »</a><br>%1$s</p>', 'better-payment' ), 
                     esc_url_raw( get_permalink( get_the_ID() ) . '?payment_amount=100' ) 
                 ),
@@ -1490,7 +1495,8 @@ class Better_Payment_Widget extends Widget_Base {
             ],
         ]);
 
-        $default_subject = !empty($this->better_payment_global_settings['better_payment_settings_general_email_subject']) ? esc_html__($this->better_payment_global_settings['better_payment_settings_general_email_subject'], 'better-payment') : sprintf(__('Better Payment transaction on %s', 'better-payment'), esc_html(get_option('blogname')));
+        /* translators: %s: site name. */
+        $default_subject = !empty($this->better_payment_global_settings['better_payment_settings_general_email_subject']) ? esc_html($this->better_payment_global_settings['better_payment_settings_general_email_subject']) : sprintf(__('Better Payment transaction on %s', 'better-payment'), esc_html(get_option('blogname')));
 
         $this->add_control('better_payment_email_subject', [
             'label' => __('Subject', 'better-payment'),
@@ -1657,7 +1663,8 @@ class Better_Payment_Widget extends Widget_Base {
 			'label' => __( 'Customer', 'better-payment' ),
 		] );
 
-        $default_subject = !empty($this->better_payment_global_settings['better_payment_settings_general_email_subject_customer']) ? esc_html__($this->better_payment_global_settings['better_payment_settings_general_email_subject_customer'], 'better-payment') : sprintf(__('Better Payment transaction on %s', 'better-payment'), esc_html(get_option('blogname')));
+        /* translators: %s: site name. */
+        $default_subject = !empty($this->better_payment_global_settings['better_payment_settings_general_email_subject_customer']) ? esc_html($this->better_payment_global_settings['better_payment_settings_general_email_subject_customer']) : sprintf(__('Better Payment transaction on %s', 'better-payment'), esc_html(get_option('blogname')));
 
         $this->add_control('better_payment_email_subject_customer', [
             'label' => __('Subject', 'better-payment'),
@@ -3671,6 +3678,7 @@ class Better_Payment_Widget extends Widget_Base {
 
         $better_payment_form_content = apply_filters( 'better_payment/elementor/editor/get_layout_content', $better_payment_form_content, $settings, $this, $data );
 
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Layout template output; each value is escaped inside the layout view files.
         echo $better_payment_form_content;
     }
 
@@ -3751,8 +3759,10 @@ class Better_Payment_Widget extends Widget_Base {
 
                 if ( $is_payment_amount_field ) {
                     $render_attribute_default_dynamic = ! empty( $item["better_payment_field_name_default_dynamic_enable"] ) && 'yes' ===  $item["better_payment_field_name_default_dynamic_enable"] ? 1 : 0;
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (prefills the amount field).
                     $is_campaign_widget = ! empty( $_GET['campaign_id'] ) ? 1 : 0;
-                    $render_attribute_default_text = ( $render_attribute_default_dynamic || $is_campaign_widget ) && ! empty( $_GET['payment_amount'] ) ? floatval( sanitize_text_field( $_GET['payment_amount'] ) ) : '';
+                    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (prefills the amount field); the charge is decided server-side by PaymentRequestGuard.
+                    $render_attribute_default_text = ( $render_attribute_default_dynamic || $is_campaign_widget ) && ! empty( $_GET['payment_amount'] ) ? floatval( sanitize_text_field( wp_unslash( $_GET['payment_amount'] ) ) ) : '';
                 }
             endforeach;
         endif;
@@ -3766,8 +3776,10 @@ class Better_Payment_Widget extends Widget_Base {
      * @since 1.0.0
      */
     public function render_campaign_id_hidden_field( $settings ) {
-        $campaign_id_value = ! empty( $_GET['campaign_id'] ) ? sanitize_text_field( $_GET['campaign_id'] ) : '';
-        $campaign_currency_value = ! empty( $_GET['campaign_currency'] ) ? sanitize_text_field( $_GET['campaign_currency'] ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (prefills a hidden field); verified server-side by PaymentRequestGuard.
+        $campaign_id_value = ! empty( $_GET['campaign_id'] ) ? sanitize_text_field( wp_unslash( $_GET['campaign_id'] ) ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (prefills a hidden field); verified server-side by PaymentRequestGuard.
+        $campaign_currency_value = ! empty( $_GET['campaign_currency'] ) ? sanitize_text_field( wp_unslash( $_GET['campaign_currency'] ) ) : '';
 
         return '
             <input type="hidden" name="campaign_id" value="' . esc_attr( $campaign_id_value ) . '">

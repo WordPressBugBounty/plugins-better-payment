@@ -1,0 +1,823 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&family=Exo:ital,wght@0,100..900;1,100..900&family=Figtree:ital,wght@0,300..900;1,300..900&family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans+Bengali:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sora:wght@100..800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
+
+* {
+	margin: 0;
+	padding: 0;
+	text-decoration: none;
+	list-style: none;
+	box-sizing: border-box;
+}
+
+body {
+	background-color: #f0f3f7 !important;
+
+	a.wp-has-current-submenu:after {
+		border-right-color: #f0f3f7 !important;
+	}
+
+	&.better-body-dark {
+		background-color: #141d28 !important;
+
+		a.wp-has-current-submenu:after {
+			border-right-color: #141d28 !important;
+		}
+	}
+}
+
+.better-payment {
+	background-color: #f0f3f7 !important;
+	width: 100%;
+
+	&.better-payment-dark {
+		background-color: #141d28 !important;
+	}
+
+	p {
+		line-height: 1.5;
+	}
+
+	img {
+		width: 100%;
+		height: auto;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6,
+	a,
+	span,
+	li,
+	button,
+	p {
+		margin: 0;
+		padding: 0;
+	}
+
+	label,
+	span {
+		display: inline-block;
+	}
+
+	a {
+		display: block;
+		cursor: pointer;
+		z-index: 998;
+		word-break: break-word;
+		position: relative;
+
+		&:focus {
+			box-shadow: none;
+			outline: none;
+		}
+	}
+
+	button {
+		border: none;
+		background-color: transparent;
+		cursor: pointer;
+	}
+
+	a,
+	button {
+		transition: all 0.3s;
+	}
+
+	.setting-tab-content,
+	.bp-mode_tabs-content,
+	.tab-content {
+		display: none;
+	}
+
+	.position-relative {
+		position: relative;
+	}
+
+	.bp-tab_active {
+		display: block;
+	}
+
+	/*
+     * Tab content eases in instead of snapping.
+     *
+     * This covers all three kinds of tab in one rule, because all three are
+     * switched the same way (`display: none` → `.bp-tab_active`): the page tabs
+     * (`.tab-content` — Dashboard / Transactions / Analytics / Campaigns /
+     * Settings / License), the Settings sidebar panels (`.setting-tab-content`),
+     * and the gateways' Live/Test panels (`.bp-mode_tabs-content`).
+     *
+     * SCOPED TO THE CONTENT CONTAINERS ON PURPOSE — do not move this onto bare
+     * `.bp-tab_active`. That class is also on the Settings sidebar nav items and
+     * the header nav; adding an `animation` there would re-run it on every click
+     * and make the item you just pressed flash at you.
+     *
+     * OPACITY ONLY — deliberately no `transform`. `.bp-data_setting-wrapper` (the
+     * campaigns row menu) is `position: fixed` and renders INSIDE `.tab-content`
+     * (Campaigns.js imports `createPortal` but never calls it), and the
+     * `.bp-popup-overlay` modals are fixed too. Any transform here — even one
+     * ending at `none` — makes this element the containing block for those while
+     * it runs, which moves a fixed overlay off its viewport anchor. A fade needs
+     * no compositing tricks to look smooth, and it can't break layout.
+     *
+     * The page tabs mount a fresh element per navigation, so the animation runs on
+     * insert. The Settings/mode panels are all mounted at once and only toggle the
+     * class, so it runs when `.bp-tab_active` lands — same effect, no extra state.
+     * A re-render of an already-visible tab does NOT re-run it, which is what we
+     * want: data resolving inside a tab must not re-fade the whole page.
+     *
+     * A Live/Test panel nests inside a Settings panel, so opening a gateway tab
+     * runs both at once and their opacities multiply — a slightly steeper curve
+     * over the same 260ms. That is accepted: the alternative is no fade when you
+     * switch Live↔Test, which is the more visible half of the trade.
+     *
+     * `.bp-transaction_details-page` is not a tab, but it is tab-LIKE: opening a
+     * transaction early-returns it in place of the whole Transactions tab, so
+     * list → details → back is the same kind of navigation. Without it, that one
+     * route would be the only place in the admin that still snaps.
+     */
+	/*
+     * `backwards` for the same reason as the content fade below — see the long
+     * note there. `both` left a forwards fill in place permanently, making every
+     * active tab a stacking context and trapping the `position: fixed` things
+     * inside it (the row action menus, the `.bp-popup-overlay` modals) so they
+     * could never rise above anything painted after the tab. Same fade, no
+     * lingering stacking context.
+     */
+	.tab-content.bp-tab_active,
+	.setting-tab-content.bp-tab_active,
+	.bp-mode_tabs-content.bp-tab_active,
+	.bp-transaction_details-page {
+		animation: bp-tab-fade-in 260ms ease-out backwards;
+	}
+
+	@keyframes bp-tab-fade-in {
+		from {
+			opacity: 0;
+		}
+
+		to {
+			opacity: 1;
+		}
+	}
+
+	/*
+     * Content easing in as it replaces a skeleton.
+     *
+     * The tab rule above only fires on navigation — the tab element itself
+     * survives a data load, so nothing there covers the skeleton → content swap,
+     * which is the moment the user actually watches. These are the elements that
+     * take a placeholder's place; they are inserted at the instant the data
+     * lands, so a mount animation is exactly the hook we need and no JS state has
+     * to be threaded through to drive it.
+     *
+     * Short (180ms) and opacity-only. The skeleton already reserved the space, so
+     * there is no motion to smooth over — the only job is to stop the swap
+     * reading as a flicker. Anything longer starts to feel like the data is still
+     * loading after it has arrived.
+     *
+     * Table rows are included, so a refilter fades its new rows in rather than
+     * hard-cutting them. They re-run per insert, which is correct: those really
+     * are new elements each time.
+     */
+	/*
+     * `backwards`, NOT `both` — this one word decides whether the row action
+     * menus work.
+     *
+     * `both` keeps the forwards fill applied forever after the 180ms ends, and an
+     * element with a forwards-filled animation on `opacity` is a **permanent
+     * stacking context**. Every table row therefore became its own stacking
+     * context, which traps anything positioned inside it: the three-dot menu is
+     * `position: fixed; z-index: 9999`, but 9999 only ranked it *within its own
+     * row*, so every later row — and the pagination below the list — painted
+     * straight over it. It looked like the menu was sliding under the rows.
+     * Both the Campaigns and Transactions lists use this class, so both broke.
+     *
+     * `backwards` still applies the `from` keyframe before the animation starts,
+     * so the fade-in is visually identical and rows never flash in at full
+     * opacity. It just stops filling once the animation is over, and the row
+     * drops back to being a plain, non-stacking element. Nothing is lost because
+     * `to { opacity: 1 }` is already the row's natural opacity — the forwards
+     * fill was holding a value the element had anyway.
+     *
+     * Do not "tidy" this back to `both`.
+     *
+     * Pro's dashboard Analytics amounts and charts (`.bp-transaction_value`,
+     * `.bp-analytics_graph-box canvas`) use the same keyframes; their selectors
+     * ship with Better Payment Pro (src/admin/styles/pro-features.scss).
+     */
+	.bp-transaction_ret h2,
+	.bp-information_value,
+	.bp-transactions_list-table_data {
+		animation: bp-content-fade-in 180ms ease-out backwards;
+	}
+
+	@keyframes bp-content-fade-in {
+		from {
+			opacity: 0;
+		}
+
+		to {
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.bp-transaction_ret h2,
+		.bp-information_value,
+		.bp-transactions_list-table_data {
+			animation: none;
+		}
+	}
+
+	// Honour the OS setting — an entrance animation is decoration, and this one
+	// has no informational value to lose.
+	@media (prefers-reduced-motion: reduce) {
+		.tab-content.bp-tab_active,
+		.setting-tab-content.bp-tab_active,
+		.bp-mode_tabs-content.bp-tab_active,
+		.bp-transaction_details-page {
+			animation: none;
+		}
+	}
+
+	.bp-overflow_hidden {
+		overflow: hidden;
+	}
+
+	.line-height_0 {
+		line-height: 0;
+	}
+
+	.display-block {
+		display: block;
+	}
+
+	.gap-8 {
+		gap: 8px;
+	}
+
+	.border-none {
+		border: none !important;
+	}
+
+	.margin-0 {
+		margin: 0 !important;
+	}
+
+	.margin-left_4 {
+		margin-left: 4px;
+	}
+
+	.margin-left-24 {
+		margin-left: 24px;
+	}
+
+	.margin-bottom_8 {
+		margin-bottom: 8px;
+	}
+
+	.margin-bottom_12 {
+		margin-bottom: 12px;
+	}
+
+	.margin-bottom_20 {
+		margin-bottom: 20px;
+	}
+
+	.margin-bottom_40 {
+		margin-bottom: 40px;
+	}
+
+	.margin-bottom_24 {
+		margin-bottom: 24px;
+	}
+
+	.padding-20 {
+		padding: 20px;
+	}
+
+	.padding-24 {
+		padding: 24px;
+	}
+
+	.padding-32 {
+		padding: 32px;
+	}
+
+	.border-radius_12 {
+		border-radius: 12px;
+	}
+
+	.bp-full-width {
+		width: 100%;
+	}
+
+	.bp-flex {
+		display: flex;
+	}
+
+	.gap-8 {
+		gap: 8px;
+	}
+
+	.gap-12 {
+		gap: 12px;
+	}
+
+	.align-items_center {
+		align-items: center;
+	}
+
+	.justify-content-center {
+		justify-content: center;
+	}
+
+	.justify-content-space_between {
+		justify-content: space-between;
+	}
+
+	.justify-content_flex-end {
+		justify-content: flex-end;
+	}
+
+	.bp-font_inter {
+		font-family: "Inter", serif;
+	}
+
+	.bp-font_ibm {
+		font-family: "IBM Plex Sans", serif;
+	}
+
+	.bp-font-figtree {
+		font-family: "Figtree", sans-serif;
+	}
+
+	.bp-font-rubik {
+		font-family: "Rubik", sans-serif;
+	}
+
+	.bp-font-dm {
+		font-family: "DM Sans", sans-serif;
+	}
+
+	.font-weight-500 {
+		font-weight: 500;
+	}
+
+	.cursor-pointer {
+		cursor: pointer;
+	}
+
+	.bp-position_relative {
+		position: relative;
+	}
+
+	.fx-1 {
+		font-size: 24px;
+		font-weight: 600;
+
+		@media (max-width: 992px) {
+			font-size: 20px;
+		}
+
+		@media (max-width: 600px) {
+			font-size: 18px;
+		}
+	}
+
+	.fx-2 {
+		font-size: 20px;
+		font-weight: 600;
+
+		@media (max-width: 992px) {
+			font-size: 18px;
+		}
+
+		@media (max-width: 600px) {
+			font-size: 16px;
+		}
+	}
+
+	.fx-3 {
+		font-size: 18px;
+		font-weight: 600;
+
+		@media (max-width: 992px) {
+			font-size: 16px;
+		}
+
+		@media (max-width: 600px) {
+			font-size: 14px;
+		}
+	}
+
+	.fx-7 {
+		font-size: 16px;
+		font-weight: 500;
+
+		@media (max-width: 992px) {
+			font-size: 14px;
+		}
+
+		@media (max-width: 600px) {
+			font-size: 12px;
+		}
+	}
+
+	.fx-4 {
+		font-size: 14px;
+		font-weight: 400;
+
+		@media (max-width: 992px) {
+			font-size: 12px;
+		}
+	}
+
+	.fx-5 {
+		font-size: 14px;
+		font-weight: 300;
+
+		@media (max-width: 992px) {
+			font-size: 12px;
+		}
+	}
+
+	.fx-6 {
+		font-size: 12px;
+		font-weight: 400;
+		// @media (max-width: 992px) {
+		//     font-size  : 12px;
+		// }
+	}
+
+	.bp-btn {
+		border: none;
+		background-color: #6b59ee;
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 400;
+
+		&:hover {
+			background-color: #5234c8;
+		}
+	}
+
+	.bp-card_btn,
+	.bp-btn {
+		&:focus,
+		&:active {
+			box-shadow: none;
+			border: none;
+			outline: none;
+		}
+	}
+
+	.bp-btn_2 {
+		border: 1px solid #b9bfca;
+		color: #6a758c;
+		border-radius: 4px;
+		padding: 7px 12px;
+
+		&:hover {
+			background-color: #6b59ee;
+			color: #f7f8fa;
+		}
+	}
+
+	.bp-custome_col-9 {
+		flex: 0 0 78%;
+		max-width: 78%;
+	}
+
+	.bp-custome_col-3 {
+		flex: 0 0 22%;
+		max-width: 22%;
+	}
+
+	.bp-custome_col-10 {
+		flex: 0 0 81%;
+		max-width: 81%;
+	}
+
+	.bp-custome_col-2 {
+		flex: 0 0 19%;
+		max-width: 19%;
+	}
+
+	.bp-down-arrow-select-wrapper {
+		position: relative;
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+
+		.bp-down-arrow {
+			appearance: none;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			background-image: none;
+			cursor: pointer;
+			color: #222b3d !important;
+
+			// The base color is `!important`, so the dark override must be too.
+			@include mode("dark") {
+				color: $bp-dark-secondary-text-color !important;
+			}
+		}
+
+		&::after {
+			content: "";
+			position: absolute;
+			right: 21px;
+			height: 7px;
+			width: 14px;
+			background-image: url("data:image/svg+xml;utf8,<svg width='16' height='8' viewBox='0 0 16 8' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M15 1L8 7L1 1' stroke='%231C274C' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+			background-repeat: no-repeat;
+			background-size: cover;
+			pointer-events: none;
+
+			// Light-stroked chevron so it stays visible on the dark background.
+			@include mode("dark") {
+				background-image: url("data:image/svg+xml;utf8,<svg width='16' height='8' viewBox='0 0 16 8' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M15 1L8 7L1 1' stroke='%23B9BFCA' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+			}
+		}
+	}
+
+	.bp-width_156 {
+		width: 156px;
+		padding: 17px 13px;
+	}
+
+	.bp-width_226 {
+		width: 226px;
+		padding: 17px 13px;
+	}
+
+	.bp-width_96 {
+		width: 100px;
+		padding: 17px 13px;
+	}
+
+	.bp-width_116 {
+		width: 116px;
+		padding: 17px 13px;
+	}
+
+	.bp-width_214 {
+		width: 214px;
+		padding: 17px 13px;
+	}
+
+	.bp-width_114 {
+		width: 114px;
+		padding: 17px 13px;
+	}
+
+	.bp-width_200 {
+		width: 200px;
+		padding: 17px 13px;
+	}
+
+	@media (max-width: 992px) {
+		.bp-row_active-992 {
+			display: flex;
+			flex-wrap: wrap;
+			margin-left: -12px;
+			margin-right: -12px;
+		}
+
+		.bp-col_50-active_992 {
+			flex: 0 0 50% !important;
+			max-width: 50% !important;
+		}
+
+		.bp-custome_col-10 {
+			flex: 0 0 73%;
+			max-width: 73%;
+		}
+
+		.bp-custome_col-2 {
+			flex: 0 0 27%;
+			max-width: 27%;
+		}
+
+		.bp-custome_col-9 {
+			flex: 0 0 100%;
+			max-width: 100%;
+		}
+
+		.bp-custome_col-3 {
+			flex: 0 0 100%;
+			max-width: 100%;
+		}
+
+		.bp-col_active-992 {
+			padding-left: 12px;
+			padding-right: 12px;
+			flex: 1; // Default behavior
+		}
+
+		.bp-custome_col-6_active-992 {
+			flex: 0 0 50%;
+			max-width: 50%;
+		}
+
+		.bp-custome_col-100 {
+			flex: 0 0 100%;
+			max-width: 100%;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.bp-custome_col-6_active-992 {
+			flex: 0 0 100%;
+			max-width: 100%;
+		}
+
+		.bp-custome_col-10 {
+			flex: 0 0 65%;
+			max-width: 65%;
+		}
+
+		.bp-custome_col-2 {
+			flex: 0 0 35%;
+			max-width: 35%;
+		}
+	}
+
+	@media (max-width: 1180px) {
+		.bp-visible-xs {
+			display: block !important;
+		}
+
+		.bp-hidden-xs {
+			display: none !important;
+		}
+	}
+
+	@media (max-width: 992px) {
+		.justify-content-space_between-active_992 {
+			justify-content: space-between;
+		}
+
+		.justify-content-center-active_992 {
+			justify-content: center;
+		}
+	}
+
+	@media (max-width: 800px) {
+		.bp-col_100-active_800 {
+			flex: 0 0 50% !important;
+			max-width: 50% !important;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.bp-col_100-active_600 {
+			flex: 0 0 100% !important;
+			max-width: 100% !important;
+		}
+	}
+
+	.bp-dismissible_video-popup_bg {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.65);
+		backdrop-filter: blur(4px);
+		z-index: 9999;
+		display: none;
+		justify-content: center;
+		align-items: center;
+		padding: 20px;
+	}
+
+	/* Popup box */
+	.bp-dismissible_video-popup {
+		position: relative;
+		width: 100%;
+		max-width: 800px;
+		aspect-ratio: 16 / 9;
+		background: #000;
+		border-radius: 12px;
+		overflow: hidden;
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+		animation: popupScale 0.3s ease;
+	}
+
+	.bp-dismissible_video-popup iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+		display: block;
+	}
+
+	@keyframes popupScale {
+		from {
+			transform: scale(0.85);
+			opacity: 0;
+		}
+
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	.bp-dismissible_close-btn {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		background: rgba(255, 255, 255, 0.8);
+		border: none;
+		border-radius: 50%;
+		width: 32px;
+		height: 32px;
+		cursor: pointer;
+		font-size: 18px;
+		font-weight: bold;
+		color: #000;
+		transition: background 0.2s;
+	}
+
+	.bp-dismissible_close-btn:hover {
+		background: #fff;
+	}
+
+	.bp-date-range-dropdown {
+		span {
+			display: flex !important;
+		}
+
+		.rdrStaticRange {
+			span {
+				padding: 10px;
+			}
+		}
+	}
+}
+
+#wpfooter {
+	.alignright {
+		gap: 30px;
+		display: flex;
+	}
+
+	.alignright,
+	.alignleft {
+		color: #6a758c;
+		font-weight: 400;
+		font-family: "IBM Plex Sans", serif;
+		font-size: 14px;
+
+		a {
+			font-weight: 500;
+			font-family: "IBM Plex Sans", serif;
+			color: #6b59ee;
+		}
+
+		.bp-footer-version {
+			padding: 4px 8px;
+			background-color: #fcfcfc;
+			border-radius: 20px;
+			margin: 0 8px;
+			color: #6b59ee;
+		}
+
+		.bp-footer-version-divider {
+			position: relative;
+
+			&::after {
+				position: absolute;
+				content: "";
+				background-color: #b9bfca;
+				padding: 1px;
+				/* border       : 0; */
+				top: 2px;
+				bottom: 2px;
+				right: -11px;
+			}
+		}
+	}
+
+	.bp-free-version {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+}
+
+.better-body-dark {
+	.alignright,
+	.alignleft {
+		color: #cbcfd7 !important;
+	}
+
+	.bp-footer-version {
+		background-color: #111621 !important;
+	}
+}
+
+.bp-setting_tab-wrapper {
+	margin-top: 24px;
+}

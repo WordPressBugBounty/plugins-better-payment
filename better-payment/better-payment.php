@@ -5,12 +5,14 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.4.1
+ * Version: 2.4.2
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
  * Text Domain: better-payment
  * Domain Path: /languages
+ * License: GPLv3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  */
 
 if (!defined('ABSPATH')) {
@@ -34,7 +36,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.4.1';
+    const version = '2.4.2';
 
     /**
      * Class construcotr
@@ -335,10 +337,16 @@ add_action('wp_loaded', function () {
     // Once per site, not per version: WooCommerce rows written in site time → UTC.
     Better_Payment\Lite\Classes\PaymentDateMigration::maybe_run();
 
+    // Once per site: revoke the tracking consent 2.3.2 – 2.4.1 recorded without asking.
+    Better_Payment\Lite\Classes\TrackingConsentRepair::maybe_run();
+
     $setup_wizard = get_option('better_payment_setup_wizard');
 
     if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
-        $is_from_better_payment = (isset( $_POST['form_data'] ) && isset( $_POST['form_data'][0] ) && isset( $_POST['form_data'][0]['name'] ) && strpos( $_POST['form_data'][0]['name'], 'better_payment_' ) !== false) || (isset( $_POST['is_tracking'] ) && $_POST['is_tracking'] === 'true') || (isset( $_POST['action'] ) && $_POST['action'] === 'save_setup_wizard_data');
+        // Routing only: decides whether this AJAX request is ours. Nothing is processed or stored
+        // here; each AJAX handler verifies its own nonce.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only routing check; the AJAX handlers verify their own nonces.
+        $is_from_better_payment = (isset( $_POST['form_data'] ) && isset( $_POST['form_data'][0] ) && isset( $_POST['form_data'][0]['name'] ) && strpos( sanitize_text_field( wp_unslash( $_POST['form_data'][0]['name'] ) ), 'better_payment_' ) !== false) || (isset( $_POST['is_tracking'] ) && $_POST['is_tracking'] === 'true') || (isset( $_POST['action'] ) && $_POST['action'] === 'save_setup_wizard_data');
 
         if ( ! $is_from_better_payment ) {
             return;

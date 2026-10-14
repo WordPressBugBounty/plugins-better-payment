@@ -2,6 +2,10 @@
 
 namespace Better_Payment\Lite\Blocks; 
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 class Settings
 {
 
@@ -50,6 +54,7 @@ class Settings
 
 
             // Fires after saving all settings
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks public hook name, kept for compatibility.
             do_action( "eb_after_save_all_settings", $settings, $prev_value );
 
             return update_option( 'eb_settings', $settings );
@@ -83,6 +88,7 @@ class Settings
          * @param mixed $value current value of settings
          * @param mixed $prev_value previous value of settings
          */
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks public hook name, kept for compatibility.
         do_action( "eb_after_save_{$key}_settings", $value, $prev_value );
 
 
@@ -148,6 +154,7 @@ class Settings
          * @param mixed $value current value of settings
          * @param mixed $prev_value previous value of settings
          */
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks public hook name, kept for compatibility.
         do_action( "eb_after_reset_{$key}_settings", $prev_value );
         return update_option( 'eb_settings', $settings );
     }

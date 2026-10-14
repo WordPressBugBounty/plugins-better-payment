@@ -1,0 +1,33 @@
+{
+    "name": "better-payment/better-payment",
+    "description": "Make instant payment with one click through Better Payment. It offers seamless integrations with Elementor and allows you to get payment through PayPal and Stripe and other popular gateways.",
+    "type": "wordpress-plugin",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "WPDeveloper",
+            "email": "support@wpdeveloper.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/priyomukul/wp-notice"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "priyomukul/wp-notice": "v2.x-dev",
+        "league/csv": "9.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Better_Payment\\Lite\\": "includes/"
+        },
+        "files": [
+            "includes/functions.php"
+        ]
+    }
+}

@@ -28,6 +28,70 @@ class DB {
     private const COUNTED_ROW_SQL      = Helper::COUNTED_ROW_SQL;
     private const COUNTABLE_AMOUNT_SQL = Helper::COUNTABLE_AMOUNT_SQL;
 
+    /**
+     * The settings key of E-commerce > Subscription > Role After Subscription Ends.
+     */
+    const INACTIVE_ROLE_KEY = 'better_payment_settings_ecommerce_subscription_inactive_role';
+
+    /**
+     * The role the inactive-role setting defaulted to before 2.4.2 on every site.
+     *
+     * `customer` is created by WooCommerce, not WordPress, so on a site without
+     * it the default named a role that does not exist and the Settings select
+     * read "Customer (unavailable)" on an install nobody had touched.
+     */
+    const LEGACY_INACTIVE_ROLE = 'customer';
+
+    /**
+     * Default for Role After Subscription Ends: WooCommerce's `customer` where
+     * that role exists, otherwise `subscriber`, which WordPress always has.
+     *
+     * @since 2.4.2
+     * @return string
+     */
+    public static function default_inactive_role() {
+        return self::role_exists( self::LEGACY_INACTIVE_ROLE ) ? self::LEGACY_INACTIVE_ROLE : 'subscriber';
+    }
+
+    /**
+     * Repair the one stored inactive role that was never the admin's choice.
+     *
+     * The Settings page saves the whole settings array, defaults included, so
+     * every site that saved any setting before 2.4.2 stored `customer` whether or
+     * not the role existed. A stored `customer` that the site does not have is
+     * therefore the old default, not a decision, and resolves to today's default.
+     * Any other missing role is left alone: that one the admin picked, and the
+     * select keeps showing it as unavailable (src/admin/utils/roleOptions.js).
+     *
+     * Read-time only — nothing is written — so installing WooCommerce later makes
+     * an untouched `customer` valid again.
+     *
+     * @since 2.4.2
+     * @param array $settings Settings merged with defaults.
+     * @return array
+     */
+    public static function resolve_legacy_inactive_role( $settings ) {
+        if (
+            isset( $settings[ self::INACTIVE_ROLE_KEY ] )
+            && self::LEGACY_INACTIVE_ROLE === $settings[ self::INACTIVE_ROLE_KEY ]
+            && ! self::role_exists( self::LEGACY_INACTIVE_ROLE )
+        ) {
+            $settings[ self::INACTIVE_ROLE_KEY ] = self::default_inactive_role();
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Whether a role is registered on this site.
+     *
+     * @param string $role Role slug.
+     * @return bool
+     */
+    private static function role_exists( $role ) {
+        return function_exists( 'get_role' ) && null !== get_role( $role );
+    }
+
     public static function get_table_name() {
         global $wpdb;
 
@@ -108,7 +172,7 @@ class DB {
             'better_payment_settings_ecommerce_subscription_auto_renewal_toggle' => 'yes',
             'better_payment_settings_ecommerce_subscription_myaccount_tab'       => 'yes',
             'better_payment_settings_ecommerce_subscription_active_role'         => 'subscriber',
-            'better_payment_settings_ecommerce_subscription_inactive_role'       => 'customer',
+            'better_payment_settings_ecommerce_subscription_inactive_role'       => self::default_inactive_role(),
         ));
     }
     /**
@@ -127,6 +191,7 @@ class DB {
         $default = self::default_settings();
 
         $settings = wp_parse_args($settings, $default);
+        $settings = self::resolve_legacy_inactive_role($settings);
 
         if (!empty($name) && isset($settings[$name])) {
             return $settings[$name];
@@ -290,7 +355,10 @@ class DB {
             }else {
                 //version 2
                 if('v1' === $version){
-                    $whereQuery .= $wpdb->prepare( " AND status = %s OR status = %s", $status, strtolower($status) ); 
+                    // Parenthesised: without them the OR escaped every other condition, so a
+                    // status filter also returned rows outside the search, source, currency
+                    // and date filters.
+                    $whereQuery .= $wpdb->prepare( " AND ( status = %s OR status = %s )", $status, strtolower($status) ); 
                 } else {
                     
                     if($transaction_type){
@@ -333,8 +401,13 @@ class DB {
             $whereQuery .= $wpdb->prepare(" AND payment_date BETWEEN %s AND %s", $range[0], $range[1]); 
         }
 
+        // Table name from $wpdb->prefix; $whereQuery is built above only from prepare()/esc_sql()
+        // fragments and Helper constants; $order_by/$order are whitelisted against
+        // $allowed_order_by/$allowed_order.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the comment above.
         if($count_only === 1){
             if($valid_search_text){
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table, no WP API, uncached on purpose (live payment data); table name from $wpdb->prefix, fragments as described above.
                 $items = $wpdb->get_var(
                         "SELECT count(id) FROM $table WHERE 1
                         $whereQuery
@@ -342,6 +415,7 @@ class DB {
                         "
                 );
             }else {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
                 $items = $wpdb->get_var(
                     $wpdb->prepare(
                         "SELECT count(id) FROM $table WHERE 1
@@ -356,6 +430,7 @@ class DB {
             }
             
         }else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $items = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT * FROM $table WHERE 1
@@ -369,6 +444,7 @@ class DB {
             );
             
         }
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return $items;
     }
@@ -394,8 +470,9 @@ class DB {
         if($args !== ''){
             $count = self::get_transactions($args, 1, $version, $fetchNull);
         }else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $count = $wpdb->get_var(
-                "SELECT count(id) FROM $table"
+                "SELECT count(id) FROM $table" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
             );
         }
 
@@ -472,9 +549,10 @@ class DB {
         $table = self::get_table_name();
         $transaction_id = (int) sanitize_text_field($id);
         
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
         $item = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM $table WHERE id = %d",
+                "SELECT * FROM $table WHERE id = %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
                 $transaction_id
             )
         );
@@ -504,6 +582,9 @@ class DB {
         $completed        = "status IN ('paid','Completed','completed','success','" . Helper::LEGACY_FREE_CHECKOUT_STATUS . "')";
         $counted_row      = Helper::COUNTED_ROW_SQL;
 
+        // Table name from $wpdb->prefix; the other interpolations are the Helper-constant fragments built above.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the comment above.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table, no WP API, uncached on purpose; $countable_amount is built from Helper constants above.
         $row = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT
@@ -525,6 +606,7 @@ class DB {
                 $ffi_like
             )
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         if ( ! $row ) {
             $row = (object) array_fill_keys(
@@ -587,19 +669,21 @@ class DB {
         // email exclusively inside form_fields_info.
         $ffi_like = '%' . $wpdb->esc_like( '"' . $email . '"' ) . '%';
 
-        $email_where = 'email = %s OR form_fields_info LIKE %s';
-
+        // Table name from $wpdb->prefix. $type_where is '' or the SQL fragment answered by the
+        // better_payment/db/user_transactions_type_where filter (Better Payment Pro), never request data.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
         $total = (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(id) FROM $table WHERE ( $email_where )" . $type_where,
+                "SELECT COUNT(id) FROM $table WHERE ( email = %s OR form_fields_info LIKE %s )" . $type_where, // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- see the comment above.
                 $email,
                 $ffi_like
             )
         );
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
         $transactions = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM $table WHERE ( $email_where )" . $type_where . " ORDER BY payment_date DESC LIMIT %d OFFSET %d",
+                "SELECT * FROM $table WHERE ( email = %s OR form_fields_info LIKE %s )" . $type_where . " ORDER BY payment_date DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- see the comment above $total.
                 $email,
                 $ffi_like,
                 $per_page,
@@ -653,6 +737,7 @@ class DB {
         global $wpdb;
         $table = self::get_table_name();
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table (no WP API); uncached on purpose (live payment data).
         return $wpdb->delete(
             $table,
             ['id' => $id],
@@ -721,16 +806,19 @@ class DB {
         $statuses = implode(',', $statuses);
 
         if(!empty($payment_date_from) && !empty($payment_date_to)){
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $amount = $wpdb->get_results(
-                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
+                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
             );
         } else if(!empty($payment_date_from) && empty($payment_date_to)){
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $amount = $wpdb->get_results(
-                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date >= '" . esc_sql($payment_date_from) . "'"
+                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date >= '" . esc_sql($payment_date_from) . "'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
             );
         } else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $amount = $wpdb->get_results(
-                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL
+                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
             );
         }
 
@@ -818,21 +906,24 @@ class DB {
         $table = DB::get_table_name();
 
         if($count_or_amount == 'count') {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $count = (int) $wpdb->get_var(
-                "SELECT count(id) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL
+                "SELECT count(id) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
             );
 
             return $count;
         }
 
         if(!empty($payment_date_from) && !empty($payment_date_to)){
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $amount = $wpdb->get_var(
-                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'"
+                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
             );
         }else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
             $amount = $wpdb->get_var(
                 // #TODO Amount based on filtered transactions
-                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL
+                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
             );
         }
 
@@ -847,6 +938,7 @@ class DB {
         $id = (int) sanitize_text_field($id);
 
         if ($id > 0) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table (no WP API); uncached on purpose (live payment data).
             return $wpdb->update($table, ['status' => 'Completed'], ['id' => $id]);
         }
 

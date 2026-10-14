@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
 
 $current_user = wp_get_current_user();
 $username = '';
@@ -55,7 +59,7 @@ if ( empty($current_user->user_email) ) {
                             </defs>
                         </svg>
                     </span>
-                    <span class="bp--nav-text"><?php esc_html_e($bp_settings['dashboard_label'], 'better-payment'); ?></span>
+                    <span class="bp--nav-text"><?php echo esc_html( $bp_settings['dashboard_label'] ); ?></span>
                 </div>
                 <?php endif; ?>
 
@@ -98,7 +102,7 @@ if ( empty($current_user->user_email) ) {
                             />
                         </svg>
                     </span>
-                    <span class="bp--nav-text"><?php esc_html_e($bp_settings['transaction_label'], 'better-payment'); ?></span>
+                    <span class="bp--nav-text"><?php echo esc_html( $bp_settings['transaction_label'] ); ?></span>
                 </div>
                 <?php endif; ?>
 
@@ -123,7 +127,7 @@ if ( empty($current_user->user_email) ) {
                             </defs>
                         </svg>
                     </span>
-                    <span class="bp--nav-text"><?php esc_html_e($bp_settings['subscription_label'], 'better-payment'); ?></span>
+                    <span class="bp--nav-text"><?php echo esc_html( $bp_settings['subscription_label'] ); ?></span>
                 </div>
                 <?php endif; ?>
 

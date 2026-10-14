@@ -176,13 +176,14 @@ class Assets extends Controller
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/admin.min.css',
                 'version' => file_exists(BETTER_PAYMENT_PATH . '/assets/css/admin.min.css') ? filemtime(BETTER_PAYMENT_PATH . '/assets/css/admin.min.css') : BETTER_PAYMENT_VERSION,
             ],
+            // Always the bundled copy. A CDN fallback (cdn.jsdelivr.net) used to load
+            // when the file was missing; WordPress.org Guideline 8 forbids loading
+            // non-service CSS from a third party, and the file ships in every zip.
             'bp-font-awesome' => [
-                'src'     => file_exists( BETTER_PAYMENT_PATH . '/assets/vendor/fontawesome/css/all.min.css' )
-                    ? BETTER_PAYMENT_ASSETS . '/vendor/fontawesome/css/all.min.css'
-                    : 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css',
+                'src'     => BETTER_PAYMENT_ASSETS . '/vendor/fontawesome/css/all.min.css',
                 'version' => file_exists( BETTER_PAYMENT_PATH . '/assets/vendor/fontawesome/css/all.min.css' )
                     ? filemtime( BETTER_PAYMENT_PATH . '/assets/vendor/fontawesome/css/all.min.css' )
-                    : '6',
+                    : BETTER_PAYMENT_VERSION,
             ],
             'better-payment-wc-subscriptions' => [
                 'src'     => BETTER_PAYMENT_ASSETS . '/css/woocommerce-subscriptions.css',

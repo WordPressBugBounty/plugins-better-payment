@@ -62,7 +62,7 @@ class MetaBox extends Controller {
                 continue;
             }
 
-            $value = wp_unslash( $_POST[ $key ] );
+            $value = wp_unslash( $_POST[ $key ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized on the next line by the per-field callback from meta_fields(); nonce verified above.
             $value = is_callable( $sanitize ) ? call_user_func( $sanitize, $value ) : $value;
 
             if ( '_bpc_fields_layout' === $key ) {

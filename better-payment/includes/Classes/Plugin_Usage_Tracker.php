@@ -252,8 +252,9 @@ class Plugin_Usage_Tracker
      */
     private function redirect_to()
     {
-        $request_uri  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $query_string = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+        $current_uri  = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+        $request_uri  = wp_parse_url($current_uri, PHP_URL_PATH);
+        $query_string = wp_parse_url($current_uri, PHP_URL_QUERY);
         parse_str($query_string, $current_url);
 
         $unset_array = array('dismiss', 'plugin', '_wpnonce', 'later', 'plugin_action', 'marketing_optin');
@@ -425,7 +426,15 @@ class Plugin_Usage_Tracker
             'wpins_version'        => self::WPINS_VERSION,
             'php_version'        => phpversion(),
             'multisite'            => is_multisite(),
-            'file_location'        => __FILE__
+            /**
+             * Upstream also sends `'file_location' => __FILE__`: the absolute
+             * path of this file on the server, which shows the hosting account's
+             * directory layout (often the account user name). It carries no
+             * compatibility signal and was not disclosed, so it is not sent.
+             * Pinned by TrackerPrivacyTest; a re-sync would bring it back.
+             *
+             * @since 2.4.2
+             */
         );
 
         // Collect the email if the correct option has been set
@@ -445,7 +454,7 @@ class Plugin_Usage_Tracker
             }
         }
         $body['marketing_method'] = $this->marketing;
-        $body['server'] = isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : '';
+        $body['server'] = isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '';
 
         /**
          * Collect active plugins.
@@ -750,6 +759,7 @@ class Plugin_Usage_Tracker
         $output .= "<script type='text/javascript'>jQuery('.wpinsights-" . $this->plugin_name . "-collect').on('click', function(e) {e.preventDefault();jQuery('.wpinsights-data').slideToggle('fast');});</script>";
         $output .= '</div>';
 
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Opt-in notice built from the plugin's own hardcoded notice_options (set in code, may contain markup); URLs are esc_url()'d above.
         printf( '%1$s', $output );
     }
     /**
@@ -775,16 +785,17 @@ class Plugin_Usage_Tracker
      */
     public function clicked()
     {
-        if ( isset( $_GET['_wpnonce'] ) && isset( $_GET['plugin'] ) && trim( $_GET['plugin'] ) === $this->plugin_name && isset( $_GET['plugin_action'] ) ) {
-            if ( ! wp_verify_nonce( $_GET['_wpnonce'], '_wpnonce_optin_' . $this->plugin_name ) ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only selects which plugin's link was clicked; the nonce is verified on the next line before anything changes.
+        if ( isset( $_GET['_wpnonce'] ) && isset( $_GET['plugin'] ) && trim( sanitize_text_field( wp_unslash( $_GET['plugin'] ) ) ) === $this->plugin_name && isset( $_GET['plugin_action'] ) ) {
+            if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), '_wpnonce_optin_' . $this->plugin_name ) ) {
                 return;
             }
 
             if( isset( $_GET['tab'] ) && $_GET['tab'] === 'plugin-information' ) {
                 return;
             }
-            $plugin = sanitize_text_field( $_GET['plugin'] );
-            $action = sanitize_text_field( $_GET['plugin_action'] );
+            $plugin = sanitize_text_field( wp_unslash( $_GET['plugin'] ) );
+            $action = sanitize_text_field( wp_unslash( $_GET['plugin_action'] ) );
             if( $action == 'yes' ) {
                 $this->schedule_tracking();
                 $this->set_is_tracking_allowed( true, $plugin );
@@ -889,6 +900,7 @@ class Plugin_Usage_Tracker
                 'type' => 'textarea'
             ]
         );
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing public WPInsights tracker hook name, kept for compatibility.
         return apply_filters('wpins_form_text_' . $this->plugin_name, $form);
     }
     /**
@@ -979,6 +991,7 @@ class Plugin_Usage_Tracker
         $styles .= '</style>';
         $styles .= '';
 
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static CSS; the only dynamic part is the plugin name, esc_attr()'d where $styles is built.
         echo $styles;
 ?>
         <script type="text/javascript">
@@ -988,7 +1001,7 @@ class Plugin_Usage_Tracker
                     var url = document.getElementById("wpinsights-goodbye-link-<?php echo esc_attr( $class_plugin_name ); ?>");
                     $('body').toggleClass('wpinsights-form-active-<?php echo esc_attr( $class_plugin_name ); ?>');
                     $(".wpinsights-goodbye-form-wrapper-<?php echo esc_attr( $class_plugin_name ); ?> #wpinsights-goodbye-form").fadeIn();
-                    $(".wpinsights-goodbye-form-wrapper-<?php echo esc_attr( $class_plugin_name ); ?> #wpinsights-goodbye-form").html('<?php echo $html; ?>' + '<div class="wpinsights-goodbye-form-footer"><div class="wpinsights-goodbye-form-buttons"><a id="wpinsights-submit-form-<?php echo esc_attr( $class_plugin_name ); ?>" class="wpinsights-submit-btn" href="#"><?php esc_html_e('Submit and Deactivate', 'better-payment'); ?></a>&nbsp;<a class="wpsp-put-deactivate-btn" href="' + url + '"><?php esc_html_e('Just Deactivate', 'better-payment'); ?></a></div></div>');
+                    $(".wpinsights-goodbye-form-wrapper-<?php echo esc_attr( $class_plugin_name ); ?> #wpinsights-goodbye-form").html('<?php echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $html is built above from esc_attr()/esc_html()'d values and the hardcoded field type. ?>' + '<div class="wpinsights-goodbye-form-footer"><div class="wpinsights-goodbye-form-buttons"><a id="wpinsights-submit-form-<?php echo esc_attr( $class_plugin_name ); ?>" class="wpinsights-submit-btn" href="#"><?php esc_html_e('Submit and Deactivate', 'better-payment'); ?></a>&nbsp;<a class="wpsp-put-deactivate-btn" href="' + url + '"><?php esc_html_e('Just Deactivate', 'better-payment'); ?></a></div></div>');
                     $('#wpinsights-submit-form-<?php echo esc_attr( $class_plugin_name ); ?>').on('click', function(e) {
                         // As soon as we click, the body of the form should disappear
                         $("#wpinsights-goodbye-form-<?php echo esc_attr( $class_plugin_name ); ?> .wpinsights-goodbye-form-body").fadeOut();

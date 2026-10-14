@@ -5,6 +5,10 @@ namespace Better_Payment\Lite\Models;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Model;
 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
+}
+
 /**
  * The Transaction handler database class
  * 

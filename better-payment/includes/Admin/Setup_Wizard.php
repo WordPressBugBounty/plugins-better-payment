@@ -47,6 +47,7 @@ class Setup_Wizard
      */
     public function remove_notice()
     {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (admin page slug); only hides notices.
         if (isset($_GET['page']) && $_GET['page'] == 'better-payment-setup-wizard') {
             remove_all_actions('admin_notices');
             remove_all_actions('all_admin_notices');
@@ -136,7 +137,7 @@ class Setup_Wizard
 
     public function bp_quick_setup_save_tracking() {
         // Verify the Nonce
-		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'better_payment_admin_nonce')) {
+		if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'better_payment_admin_nonce')) {
 			wp_send_json_error( __( 'Nonce verification failed.', 'better-payment' ) );
 			return;
 		}
@@ -146,7 +147,20 @@ class Setup_Wizard
             return;
 		}
 
+        /**
+         * Only an explicit "Proceed To Next Step" click is consent.
+         *
+         * 2.3.2 – 2.4.1 also turned tracking on from "Skip It" (`context=skip`).
+         * Skipping is declining, so that broke WordPress.org Guideline 7. Skip
+         * no longer sends this request at all. A `skip` posted anyway (a cached
+         * copy of the old script, or a hand-made request) is refused here, so
+         * nothing it sends can record consent.
+         */
         $context = isset( $_POST['context'] ) ? sanitize_key( wp_unslash( $_POST['context'] ) ) : 'proceed';
+
+        if ( 'proceed' !== $context ) {
+            wp_send_json_error( __( 'Usage tracking is enabled only when you choose to share data.', 'better-payment' ) );
+        }
 
         if ( isset( $_POST[ 'is_tracking' ] ) && $_POST[ 'is_tracking' ] === 'true' ) {
             /**
@@ -154,17 +168,10 @@ class Setup_Wizard
              * `wpins_allow_tracking`, written by wpins_process() below. This option
              * is wizard UI state: it is localized as `is_tracking` (see
              * setup_wizard_scripts()) and makes QuickSetupWizard open on the
-             * Settings step with back-navigation to Start disabled.
-             *
-             * So the Skip path deliberately does not write it. Skip must leave the
-             * wizard behaving exactly as it does today — Start screen shown, Back
-             * still available — while still turning tracking on.
-             *
-             * @since 2.3.2
+             * Settings step with back-navigation to Start disabled. It is also the
+             * record that this site gave consent, which TrackingConsentRepair reads.
              */
-            if ( 'skip' !== $context ) {
-                update_option('better_payment_settings_opt_in', 'yes');
-            }
+            update_option('better_payment_settings_opt_in', 'yes');
 
             self::wpins_process();
             wp_send_json_success( __( 'Tracking data saved successfully.', 'better-payment' ) );
@@ -183,7 +190,7 @@ class Setup_Wizard
 		/**
 		 * Verify the Nonce
 		 */
-		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'better_payment_admin_nonce')) {
+		if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'better_payment_admin_nonce')) {
 			return;
 		}
 
@@ -193,7 +200,9 @@ class Setup_Wizard
 
         try{
             Settings::save_default_settings(1);
-            Settings::save_settings(json_decode(stripslashes($_POST['form_data']), true));
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- JSON payload; its exact bytes must reach json_decode(). Settings::save_settings() sanitizes the decoded values.
+            $form_data = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
+            Settings::save_settings(json_decode($form_data, true));
 
             update_option( 'better_payment_setup_wizard', 'complete' );
 
@@ -212,19 +221,16 @@ class Setup_Wizard
     /**
      * WPIns process
      *
-     * The single tracking-activation routine. Every path that turns usage
-     * tracking on goes through here — the wizard's "Proceed To Next Step" and
-     * "Skip It" buttons, and the automatic opt-in for fresh installs in
-     * Traits\Helper::maybe_auto_enable_usage_tracking().
+     * The single tracking-activation routine. Its only caller is the wizard's
+     * "Proceed To Next Step" button (bp_quick_setup_save_tracking()), the one
+     * explicit opt-in this plugin has. Never call it from code that runs
+     * without that click: recording consent the admin did not give is what
+     * WordPress.org Guideline 7 forbids.
      *
-     * @param bool $force_send Send the payload immediately. True for the wizard
-     *                         buttons, which run inside an AJAX request. Pass
-     *                         FALSE from anything that runs during a page render:
+     * @param bool $force_send Send the payload immediately. The wizard runs
+     *                         inside an AJAX request, so it sends at once.
      *                         send_data() posts with `blocking => true` and a 30s
-     *                         timeout, so a forced send there would stall the
-     *                         response. Consent alone is enough — the caller's
-     *                         Plugin_Usage_Tracker::init() schedules the daily
-     *                         event and the first run sends.
+     *                         timeout, so never force a send during a page render.
      *
      * @return void
      * @since 0.0.1
@@ -254,6 +260,6 @@ class Setup_Wizard
     public static function redirect()
     {
         update_option('better_payment_setup_wizard', 'init');
-        wp_redirect(admin_url('admin.php?page=better-payment-setup-wizard'));
+        wp_safe_redirect(admin_url('admin.php?page=better-payment-setup-wizard'));
     }
 }

@@ -2,6 +2,10 @@
 
 namespace Better_Payment\Lite\Traits;
 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
+}
+
 trait HasSingletone {
 	/**
 	 * Holds the plugin instance.

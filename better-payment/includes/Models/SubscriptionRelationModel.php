@@ -194,7 +194,7 @@ class SubscriptionRelationModel {
 
         $table = self::get_table_name();
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table owned by this model; name is not user input.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; name is not user input; table name from $wpdb->prefix.
         return (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT id FROM {$table} WHERE subscription_id = %d AND order_id = %d AND type = %s AND source = %s LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -221,7 +221,7 @@ class SubscriptionRelationModel {
         $source = self::sanitize_source( $source );
 
         if ( '' !== $source ) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT * FROM {$table} WHERE subscription_id = %d AND source = %s ORDER BY id ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -230,7 +230,7 @@ class SubscriptionRelationModel {
                 )
             );
         } else {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT * FROM {$table} WHERE subscription_id = %d ORDER BY id ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -258,7 +258,7 @@ class SubscriptionRelationModel {
         $source = self::sanitize_source( $source );
 
         if ( '' !== $source ) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
             return (int) $wpdb->get_var(
                 $wpdb->prepare(
                     "SELECT subscription_id FROM {$table} WHERE order_id = %d AND source = %s ORDER BY id ASC LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -268,7 +268,7 @@ class SubscriptionRelationModel {
             );
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
         return (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT subscription_id FROM {$table} WHERE order_id = %d ORDER BY id ASC LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -302,12 +302,14 @@ class SubscriptionRelationModel {
         $per_page = max( 1, intval( $args['per_page'] ) );
         $offset   = ( $paged - 1 ) * $per_page;
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table owned by this model; name is not user input.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; name is not user input; table name from $wpdb->prefix.
         $total = (int) $wpdb->get_var(
             "SELECT COUNT(*) FROM ( SELECT subscription_id FROM {$table} GROUP BY subscription_id, source ) AS grouped" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+        // Table name from self::get_table_name() ($wpdb->prefix).
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the comment above.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT subscription_id, source,
@@ -315,12 +317,13 @@ class SubscriptionRelationModel {
                  FROM {$table}
                  GROUP BY subscription_id, source
                  ORDER BY subscription_id DESC, source ASC
-                 LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                 LIMIT %d OFFSET %d",
                 self::TYPE_RENEW,
                 $per_page,
                 $offset
             )
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return array(
             'subscriptions' => is_array( $rows ) ? $rows : array(),
@@ -356,17 +359,20 @@ class SubscriptionRelationModel {
 
         $table = self::get_table_name();
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+        // Table name from self::get_table_name() ($wpdb->prefix).
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the comment above.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT subscription_id, source,
                         SUM( CASE WHEN type = %s THEN 1 ELSE 0 END ) AS renewal_orders
                  FROM {$table}
                  GROUP BY subscription_id, source
-                 ORDER BY subscription_id DESC, source ASC", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                 ORDER BY subscription_id DESC, source ASC",
                 self::TYPE_RENEW
             )
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return is_array( $rows ) ? $rows : array();
     }
@@ -384,7 +390,7 @@ class SubscriptionRelationModel {
 
         $table = self::get_table_name();
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table owned by this model.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table owned by this model; table name from $wpdb->prefix.
         $rows = $wpdb->get_results(
             "SELECT subscription_id, source FROM {$table} GROUP BY subscription_id, source" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );

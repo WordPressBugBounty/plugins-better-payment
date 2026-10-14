@@ -250,7 +250,7 @@ class Paypal_Integration extends Action_Base {
                 // The whole order, so the IPN's `mc_gross >= amount` check also holds the quantity.
                 'amount'       => $guarded['amount'],
                 'order_id'     => $order_id,
-                'payment_date' => date( 'Y-m-d H:i:s' ),
+                'payment_date' => gmdate( 'Y-m-d H:i:s' ),
                 'source'       => 'paypal',
                 'form_fields_info' => maybe_serialize( $better_form_fields ),
                 'currency'     => $currency_code,

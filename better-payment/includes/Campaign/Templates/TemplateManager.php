@@ -359,7 +359,7 @@ class TemplateManager {
                                 'id'       => 'el_photo2',
                                 'type'     => 'photo',
                                 'settings' => [
-                                    'src' => 'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&w=740&q=80&fit=crop',
+                                    'src' => self::template_image( 'legacy/medical-care.jpg' ),
                                     'alt' => 'Doctor providing compassionate care',
                                 ],
                             ],
@@ -457,7 +457,7 @@ class TemplateManager {
                                 'id'       => 'el_photo_hero',
                                 'type'     => 'photo',
                                 'settings' => [
-                                    'src' => 'https://images.unsplash.com/photo-1587560699334-cc4ff634909a?q=80&w=1740&auto=format&fit=crop',
+                                    'src' => self::template_image( 'legacy/school-trip.jpg' ),
                                     'alt' => 'Students on a school camping trip',
                                 ],
                             ],
@@ -740,7 +740,7 @@ class TemplateManager {
                                 'id'       => 'el_photo2',
                                 'type'     => 'photo',
                                 'settings' => [
-                                    'src' => 'https://images.unsplash.com/photo-1520962880247-cfaf541c8724?auto=format&w=1200&q=80&fit=crop',
+                                    'src' => self::template_image( 'legacy/climate-march.jpg' ),
                                     'alt' => 'Environmental activists marching for climate action',
                                 ],
                             ],
@@ -971,7 +971,7 @@ class TemplateManager {
                                 'id'       => 'el_photo2',
                                 'type'     => 'photo',
                                 'settings' => [
-                                    'src' => 'https://images.unsplash.com/photo-1547032175-7fc8c7bd15b3?q=80&w=2340&auto=format&fit=crop',
+                                    'src' => self::template_image( 'legacy/disaster-relief.jpg' ),
                                     'alt' => 'Rescue and recovery efforts after disaster',
                                 ],
                             ],
@@ -1892,14 +1892,61 @@ class TemplateManager {
     /* --------------------------------------------------------------------- */
 
     /**
+     * Unsplash photos the four original prebuilt templates used to hotlink,
+     * keyed by Unsplash photo id, mapped to the copy that now ships in
+     * assets/img/campaign/templates/legacy/.
+     *
+     * The templates themselves now point at the shipped copies. But `columns`
+     * are a snapshot: every campaign built from one of them before 2.4.2 still
+     * stores the Unsplash URL in its own layout. local_photo_url() swaps it at
+     * render time, so those pages stop loading images from a third party too
+     * (WordPress.org Guideline 8, issue #147). Nothing stored is rewritten.
+     */
+    const LEGACY_REMOTE_PHOTOS = [
+        'photo-1631217868264-e5b90bb7e133' => 'legacy/medical-care.jpg',
+        'photo-1587560699334-cc4ff634909a' => 'legacy/school-trip.jpg',
+        'photo-1520962880247-cfaf541c8724' => 'legacy/climate-march.jpg',
+        'photo-1547032175-7fc8c7bd15b3'    => 'legacy/disaster-relief.jpg',
+    ];
+
+    /**
+     * The shipped copy of a photo an old template hotlinked, or $src unchanged.
+     *
+     * Matches only images.unsplash.com URLs whose photo id is in
+     * LEGACY_REMOTE_PHOTOS. Any other image an author chose is left alone.
+     *
+     * @since 2.4.2
+     *
+     * @param string $src Stored photo URL.
+     * @return string
+     */
+    public static function local_photo_url( string $src ): string {
+        if ( '' === $src || false === strpos( $src, 'images.unsplash.com' ) ) {
+            return $src;
+        }
+
+        $host = wp_parse_url( $src, PHP_URL_HOST );
+        $path = wp_parse_url( $src, PHP_URL_PATH );
+
+        if ( 'images.unsplash.com' !== $host || ! is_string( $path ) ) {
+            return $src;
+        }
+
+        $id = trim( $path, '/' );
+
+        return isset( self::LEGACY_REMOTE_PHOTOS[ $id ] )
+            ? self::template_image( self::LEGACY_REMOTE_PHOTOS[ $id ] )
+            : $src;
+    }
+
+    /**
      * URL for campaign artwork shipped with the plugin.
      *
-     * Templates must never hotlink a third-party image host. Four of the
-     * original prebuilt templates pull a second photo from `images.unsplash.com`
-     * — that URL is copied verbatim into every campaign built from them, so the
-     * page depends on a CDN nobody here controls, leaks each visitor's IP and
-     * referrer to it, and shows a broken image the day the photo is pulled. The
-     * `-v2` templates ship every image they use.
+     * Templates must never hotlink a third-party image host: the URL is copied
+     * into every campaign built from the template, so the page would depend on
+     * a CDN nobody here controls, leak each visitor's IP and referrer to it,
+     * and show a broken image the day the photo is pulled. Every template,
+     * frozen ones included, ships every image it uses.
      *
      * @since 2.3.2
      *

@@ -2,6 +2,10 @@
 
 namespace Better_Payment\Lite\Blocks;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 final class StyleHandler {
     private static $instance;
 
@@ -97,6 +101,7 @@ final class StyleHandler {
     public function enqueue_frontend_assets() {
         global $post;
 
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks public hook name, kept for compatibility.
         $deps = apply_filters( 'eb_generated_css_frontend_deps', array(  ) );
 
         //FSE Template Predefined Style Enqueue
@@ -140,6 +145,7 @@ final class StyleHandler {
         }
 
         // generatepress elements
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core 'active_plugins' option filter.
         if ( in_array( 'gp-premium/gp-premium.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
             $gp_elements = get_posts( array( 'post_type' => 'gp_elements' ) );
             if ( is_array( $gp_elements ) && ! empty( $gp_elements ) ) {
@@ -152,6 +158,7 @@ final class StyleHandler {
         }
 
         //Blocksy theme support
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core 'active_plugins' option filter.
         if ( in_array( 'blocksy-companion-pro/blocksy-companion.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
             $ct_elements = get_posts( array( 'post_type' => 'ct_content_block' ) );
             if ( is_array( $ct_elements ) && ! empty( $ct_elements ) ) {
@@ -183,6 +190,7 @@ final class StyleHandler {
         }
 
         // NotificationX Post Type Support
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core 'active_plugins' option filter.
         if ( in_array( 'notificationx/notificationx.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
             $gutenberg_ids = $this->get_gutenberg_id_from_nx();
             if ( is_array( $gutenberg_ids ) && ! empty( $gutenberg_ids ) ) {
@@ -200,6 +208,7 @@ final class StyleHandler {
         }
 
         // Astra Addon Advanced Hooks CSS files are now handled by astra_advanced_hooks_css_generation() method
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core 'active_plugins' option filter.
         if ( in_array( 'astra-addon/astra-addon.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) && defined( 'ASTRA_ADVANCED_HOOKS_POST_TYPE' ) ) {
             foreach ( $this->astra_hook_ids as $element_id ) {
                 if ( file_exists( $this->style_dir . $this->get_eb_filename( $element_id ) ) ) {
@@ -229,6 +238,7 @@ final class StyleHandler {
          *
          * @since 3.0.0
          */
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks public hook name, kept for compatibility.
         do_action( 'eb_frontend_assets', $this->style_dir, $this->style_url );
     }
 
@@ -291,6 +301,7 @@ final class StyleHandler {
                     continue;
                 }
                 if ( file_exists( $dir ) && strlen( $blockname ) > 0 ) {
+                    // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks public hook name, kept for compatibility.
                     $css .= apply_filters( "eb_fixed_frontend_styles/{$blockname}", file_get_contents( $dir ), $blockname, );
                 }
             }
@@ -299,7 +310,7 @@ final class StyleHandler {
         //Write CSS File and Enqueue
         if ( strlen( trim( $css ) ) > 0 ) {
             if ( ! file_exists( $this->frontend_style_dir ) ) {
-                mkdir( $this->frontend_style_dir, 0755, true );
+                wp_mkdir_p( $this->frontend_style_dir );
             }
 
             //Replace Breakpoints
@@ -441,12 +452,12 @@ final class StyleHandler {
         if ( ! empty( $css = CSSParser::build_css( $block_styles ) ) ) {
             if ( 'wp_template' === $post_type || 'wp_template_part' === $post_type ) {
                 if ( ! file_exists( $this->fse_style_dir ) ) {
-                    mkdir( $this->fse_style_dir, 0755, true );
+                    wp_mkdir_p( $this->fse_style_dir );
                 }
                 file_put_contents( $this->fse_style_dir . $this->get_fse_filename( $post_id ), $css );
             } else {
                 if ( ! file_exists( $this->style_dir ) ) {
-                    mkdir( $this->style_dir, 0755, true );
+                    wp_mkdir_p( $this->style_dir );
                 }
                 file_put_contents( $this->style_dir . $this->get_eb_filename( $post_id ), $css );
             }
@@ -463,7 +474,7 @@ final class StyleHandler {
             if ( ! empty( $css = CSSParser::build_css( $block_styles ) ) ) {
                 $upload_dir = $this->style_dir . 'reusable-blocks/';
                 if ( ! file_exists( $upload_dir ) ) {
-                    mkdir( $upload_dir, 0755, true );
+                    wp_mkdir_p( $upload_dir );
                 }
                 file_put_contents( $upload_dir . DIRECTORY_SEPARATOR . 'eb-reusable-' . abs( $id ) . '.min.css', $css );
             }
@@ -502,7 +513,7 @@ final class StyleHandler {
 
             if ( ! empty( $css = CSSParser::build_css( self::$_block_styles ) ) ) {
                 if ( ! file_exists( $upload_dir ) ) {
-                    mkdir( $upload_dir );
+                    wp_mkdir_p( $upload_dir );
                 }
 
                 file_put_contents( $editSiteCssPath, $css );
@@ -511,7 +522,7 @@ final class StyleHandler {
             self::$_block_styles = $block_styles;
             if ( ! empty( $css = CSSParser::build_css( $block_styles ) ) ) {
                 if ( ! file_exists( $this->style_dir ) ) {
-                    mkdir( $this->style_dir );
+                    wp_mkdir_p( $this->style_dir );
                 }
                 file_put_contents( $editSiteCssPath, $css );
             }
@@ -642,9 +653,8 @@ final class StyleHandler {
      */
     public static function eb_get_post_content_by_post_name( $post_name ) {
         global $wpdb;
-        $sql = $wpdb->prepare( "SELECT ID FROM {$wpdb->prefix}posts WHERE post_name = %s", $post_name );
-
-        return $wpdb->get_results( $sql, ARRAY_A );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared lookup by post_name across every post type; no WP API returns that.
+        return $wpdb->get_results( $wpdb->prepare( "SELECT ID FROM {$wpdb->prefix}posts WHERE post_name = %s", $post_name ), ARRAY_A );
     }
 
     /**
@@ -739,6 +749,7 @@ final class StyleHandler {
     public function astra_advanced_hooks_css_generation() {
         // Check if Astra Addon is active and advanced hooks are available
         if (
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WordPress core 'active_plugins' option filter.
             ! in_array( 'astra-addon/astra-addon.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ||
             ! defined( 'ASTRA_ADVANCED_HOOKS_POST_TYPE' ) ||
             ! class_exists( 'Astra_Target_Rules_Fields' )

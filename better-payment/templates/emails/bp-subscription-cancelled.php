@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
+do_action( 'woocommerce_email_header', $email_heading, $email ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own e-mail hook (third-party hook). ?>
 
 <p>
     <?php
@@ -75,4 +75,4 @@ if ( $additional_content ) {
     echo wp_kses_post( wpautop( wptexturize( $additional_content ) ) );
 }
 
-do_action( 'woocommerce_email_footer', $email );
+do_action( 'woocommerce_email_footer', $email ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own e-mail hook (third-party hook).

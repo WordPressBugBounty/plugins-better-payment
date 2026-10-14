@@ -2,6 +2,10 @@
 
 namespace Better_Payment\Lite\Blocks;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 class CSSParser
 {
     private static $instance;
@@ -211,6 +215,7 @@ class CSSParser
          * @param string $css The generated CSS string.
          * @param array $style_object The original style object array used to generate the CSS.
          */
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Existing Essential Blocks hook name, kept for compatibility with the shared block controls.
         return apply_filters( 'eb_blocks_generated_css', $css, $style_object );
     }
 

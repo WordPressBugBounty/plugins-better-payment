@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
 $item_primary_field_type = !empty($item["better_payment_primary_field_type"]) ? $item["better_payment_primary_field_type"] : "";
 
 $is_primary_first_name_field = 'primary_first_name' === $item_primary_field_type ? 1 : 0;
@@ -54,10 +58,13 @@ if ($is_payment_amount_field) {
     $required_placeholder = ' *';
     
     $render_attribute_default_dynamic = ! empty( $item["better_payment_field_name_default_dynamic_enable"] ) && 'yes' ===  $item["better_payment_field_name_default_dynamic_enable"] ? 1 : 0;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (amount prefill); PaymentRequestGuard re-validates the amount server-side.
     $is_bp_campaign = ! empty( $_GET['payment_amount'] ) && ! empty( $_GET['campaign_id'] ) ? 1 : 0;
     if( $is_bp_campaign ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (amount prefill); PaymentRequestGuard re-validates the amount server-side.
         $render_attribute_default = floatval($_GET['payment_amount']);
     } else {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (amount prefill); PaymentRequestGuard re-validates the amount server-side.
         $render_attribute_default = $render_attribute_default_dynamic && ! empty( $_GET['payment_amount'] ) ? floatval($_GET['payment_amount']) : $render_attribute_default;
     }
 }

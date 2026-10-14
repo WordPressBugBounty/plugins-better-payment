@@ -51,6 +51,7 @@ trait WordPressHelper {
         }
 
         $query = "select post_title,ID  from $wpdb->posts where post_status = 'publish' $where $limit";
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $where and $limit are built above from $wpdb->prepare() fragments and esc_sql()'d post types; the table name is $wpdb->posts.
         $results = $wpdb->get_results($query);
         if (!empty($results)) {
             foreach ($results as $row) {

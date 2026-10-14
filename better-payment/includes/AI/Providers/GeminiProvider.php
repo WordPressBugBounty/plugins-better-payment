@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class GeminiProvider extends AbstractProvider {
 
+    // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Plugin supports WordPress 6.0, before the WordPress AI Client existed; user-selected provider with the user's own key.
     const BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
     public function get_id(): string {

@@ -5,6 +5,10 @@ namespace Better_Payment\Lite\Blocks;
 use Better_Payment\Lite\Blocks\Settings as Settings;
 use Better_Payment\Lite\Traits\HasSingletone as HasSingletone;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 abstract class ThirdPartyIntegration {
 	use HasSingletone;
 
@@ -20,7 +24,7 @@ abstract class ThirdPartyIntegration {
 	}
 
 	public static function is_isset( $value, $default = '' ) {
-		return isset( $_POST[ $value ] ) ? sanitize_text_field( $_POST[ $value ] ) : $default;
+		return isset( $_POST[ $value ] ) ? sanitize_text_field( wp_unslash( $_POST[ $value ] ) ) : $default; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Read-only accessor (no callers in this plugin); the calling handler is responsible for nonce verification.
 	}
 
 	public function settings() {

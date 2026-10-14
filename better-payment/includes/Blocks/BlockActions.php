@@ -189,7 +189,7 @@ class BlockActions {
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
         $page_id   = ! empty( $_POST['better_payment_page_id'] ) ? intval( $_POST['better_payment_page_id'] ) : 0;
-        $widget_id = ! empty( $_POST['better_payment_widget_id'] ) ? sanitize_text_field( $_POST['better_payment_widget_id'] ) : '';
+        $widget_id = ! empty( $_POST['better_payment_widget_id'] ) ? sanitize_text_field( wp_unslash( $_POST['better_payment_widget_id'] ) ) : '';
         // phpcs:enable WordPress.Security.NonceVerification.Missing
 
         if ( empty( $page_id ) || empty( $widget_id ) ) {
@@ -262,8 +262,10 @@ class BlockActions {
         $order_id            = Handler::new_order_id( 'paypal' );
         $paypal_button_type  = ! empty( $el_settings['better_payment_paypal_button_type'] ) ? $el_settings['better_payment_paypal_button_type'] : '_xclick';
         $site_url            = get_permalink( $page_id );
-        $return_url          = ! empty( $_POST['return'] ) ? wp_validate_redirect( esc_url_raw( $_POST['return'] ), $site_url ) : '';
-        $cancel_return_url   = ! empty( $_POST['cancel_return'] ) ? wp_validate_redirect( esc_url_raw( $_POST['cancel_return'] ), $site_url ) : '';
+        // An off-site return URL falls back to the form's page with the status arguments, so
+        // the thank-you / error message still shows (see Handler::paypal_return_fallback()).
+        $return_url          = ! empty( $_POST['return'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['return'] ) ), Handler::paypal_return_fallback( $site_url, $widget_id, 'success' ) ) : '';
+        $cancel_return_url   = ! empty( $_POST['cancel_return'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['cancel_return'] ) ), Handler::paypal_return_fallback( $site_url, $widget_id, 'error' ) ) : '';
         $cancel_return_url   = add_query_arg( 'better_payment_paypal_id', $order_id, $cancel_return_url );
 
         $request_data = array(
@@ -273,7 +275,7 @@ class BlockActions {
             'return'        => $return_url,
             'cancel_return' => $cancel_return_url,
             'item_number'   => $order_id,
-            'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__( 'Better Payment', 'better-payment' ),
+            'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__( 'Better Payment', 'better-payment' ),
             'amount'        => $primary_payment_amount,
             'cmd'           => $paypal_button_type,
             'notify_url'    => admin_url( 'admin-post.php?action=better_payment_paypal_ipn' ),
@@ -345,6 +347,7 @@ class BlockActions {
         $paypal_url  = "https://www.$path.com/cgi-bin/webscr?";
         $paypal_url .= http_build_query( $request_data );
 
+        // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Redirect to the PayPal gateway (paypal.com / sandbox.paypal.com), an external host by design.
         wp_redirect( esc_url_raw( $paypal_url ) );
         exit;
     }
@@ -370,7 +373,7 @@ class BlockActions {
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
         $page_id   = isset( $_POST['setting_data']['page_id'] ) ? intval( $_POST['setting_data']['page_id'] ) : 0;
-        $widget_id = isset( $_POST['setting_data']['widget_id'] ) ? sanitize_text_field( $_POST['setting_data']['widget_id'] ) : '';
+        $widget_id = isset( $_POST['setting_data']['widget_id'] ) ? sanitize_text_field( wp_unslash( $_POST['setting_data']['widget_id'] ) ) : '';
         // phpcs:enable WordPress.Security.NonceVerification.Missing
 
         if ( empty( $page_id ) || empty( $widget_id ) ) {
@@ -406,7 +409,7 @@ class BlockActions {
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
         $page_id   = isset( $_POST['setting_data']['page_id'] ) ? intval( $_POST['setting_data']['page_id'] ) : 0;
-        $widget_id = isset( $_POST['setting_data']['widget_id'] ) ? sanitize_text_field( $_POST['setting_data']['widget_id'] ) : '';
+        $widget_id = isset( $_POST['setting_data']['widget_id'] ) ? sanitize_text_field( wp_unslash( $_POST['setting_data']['widget_id'] ) ) : '';
         // phpcs:enable WordPress.Security.NonceVerification.Missing
 
         if ( empty( $page_id ) || empty( $widget_id ) ) {
@@ -449,6 +452,7 @@ class BlockActions {
         // from the request — see PaymentRequestGuard.
         $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
             $el_settings,
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw field array handed to PaymentRequestGuard, which validates/sanitizes each field it reads; nonce checked at the top of the handler.
             isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array(),
             array(
                 'page_id' => $page_id,
@@ -519,9 +523,10 @@ class BlockActions {
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         );
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST['fields'] ) );
 
-        $item_name = ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__( 'Better Payment', 'better-payment' );
+        $item_name = ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__( 'Better Payment', 'better-payment' );
 
         // The Stripe Price ID (when Payment Source = Stripe) is display-only —
         // it pre-fills the amount input on the frontend (see layout-1/2/3.php line input value).
@@ -667,6 +672,7 @@ class BlockActions {
         // from the request — see PaymentRequestGuard.
         $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
             $el_settings,
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw field array handed to PaymentRequestGuard, which validates/sanitizes each field it reads; nonce checked at the top of the handler.
             isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array(),
             array(
                 'page_id' => $page_id,
@@ -737,6 +743,7 @@ class BlockActions {
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         );
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST['fields'] ) );
 
         $primary_email = ! empty( $better_form_fields['primary_email'] ) ? sanitize_email( $better_form_fields['primary_email'] ) : '';

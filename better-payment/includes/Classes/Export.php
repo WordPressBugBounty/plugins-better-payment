@@ -44,7 +44,7 @@ class Export extends Controller{
     public function export_transactions() {
         $response = [];
 
-		if (!wp_verify_nonce($_REQUEST['nonce'], 'wp_rest')) {
+		if (!isset($_REQUEST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_REQUEST['nonce'])), 'wp_rest')) {
 			$response['message'] = __("Access Denied!", 'better-payment');
 			wp_send_json_error($response);
 		}
@@ -64,37 +64,37 @@ class Export extends Controller{
             $filter_args = [];
             
             if (!empty($_REQUEST['search_text'])) {
-                $filter_args['search_text'] = sanitize_text_field($_REQUEST['search_text']);
+                $filter_args['search_text'] = sanitize_text_field(wp_unslash($_REQUEST['search_text']));
             }
             
             if (!empty($_REQUEST['payment_date_from'])) {
-                $filter_args['payment_date_from'] = sanitize_text_field($_REQUEST['payment_date_from']);
+                $filter_args['payment_date_from'] = sanitize_text_field(wp_unslash($_REQUEST['payment_date_from']));
             }
             
             if (!empty($_REQUEST['payment_date_to'])) {
-                $filter_args['payment_date_to'] = sanitize_text_field($_REQUEST['payment_date_to']);
+                $filter_args['payment_date_to'] = sanitize_text_field(wp_unslash($_REQUEST['payment_date_to']));
             }
             
             if (!empty($_REQUEST['source'])) {
-                $filter_args['source'] = sanitize_text_field($_REQUEST['source']);
+                $filter_args['source'] = sanitize_text_field(wp_unslash($_REQUEST['source']));
             }
             
             if (!empty($_REQUEST['currency'])) {
-                $filter_args['currency'] = sanitize_text_field($_REQUEST['currency']);
+                $filter_args['currency'] = sanitize_text_field(wp_unslash($_REQUEST['currency']));
             }
             
             if (!empty($_REQUEST['status'])) {
-                $filter_args['status'] = sanitize_text_field($_REQUEST['status']);
+                $filter_args['status'] = sanitize_text_field(wp_unslash($_REQUEST['status']));
             }
             
             $filter_args['per_page'] = '999999999';
             // The admin list's v2 tab buckets, so an export of a tab holds exactly the rows that tab
             // lists. The v1 path matched `completed` against the raw status `completed` only.
             $all_transactions = $transaction_model->get_transactions($filter_args, 'v2');
-            $filename = 'better-payment-transactions-filtered-' . date('Y-m-d') . '.csv';
+            $filename = 'better-payment-transactions-filtered-' . gmdate('Y-m-d') . '.csv';
         } else {
             $all_transactions = $transaction_model->get_transactions();
-            $filename = 'better-payment-transactions-' . date('Y-m-d') . '.csv';
+            $filename = 'better-payment-transactions-' . gmdate('Y-m-d') . '.csv';
         }
 
         return $this->transactions_array_to_csv_download($all_transactions, $filename);
@@ -117,6 +117,7 @@ class Export extends Controller{
         $wp_date_format = get_option('date_format');
         $wp_time_format = get_option('time_format');
 
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- In-memory stream for the CSV download; WP_Filesystem has no php://memory equivalent.
         $f = fopen('php://memory', 'w'); 
 
         self::put_csv_row($f, $this->export_transactions_heading(), $delimiter);

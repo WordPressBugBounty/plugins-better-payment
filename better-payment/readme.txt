@@ -5,11 +5,11 @@ Tags: donation, fundraising, recurring donations, payments, stripe paypal paysta
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.4.1
+Stable tag: 2.4.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
-Better Payment allows you to automate payment transactions to manage payments, donations, subscriptions, sell products, etc on your Elementor and Gutenberg website.
+Accept payments, donations and subscriptions, run fundraising campaigns and sell products on your Elementor and Gutenberg website.
 
 == Description ==
 
@@ -174,7 +174,98 @@ Yes, you can build regular forms like contact forms without adding payment metho
 8. Custom email settings
 
 
+== External services ==
+
+Better Payment connects to the third-party services below. Each one is used only for the purpose described. No data is sent to a service until you turn on the feature that needs it.
+
+= Stripe =
+Processes card payments for the payment form widget and block, Elementor Form actions, fundraising campaigns and the WooCommerce gateway.
+
+* When: a visitor pays with Stripe, the visitor returns from Stripe Checkout, a WooCommerce subscription renews, or you open the payment settings (to look up a Stripe product or price you entered). A form whose amount comes from a Stripe price also reads that price from Stripe each time a visitor views the page, to show it.
+* What is sent to `api.stripe.com`: the amount, currency, product or price ID, payment description, the payer's email address and name when the form collects them, the order ID, the return URLs and your Stripe secret key (as authentication). For WooCommerce subscriptions, the saved payment method ID is sent to charge each renewal.
+* Stripe.js is loaded from `js.stripe.com` on every page that shows a Better Payment payment form, a User Dashboard or an Elementor form with a Better Payment payment action, and on the WooCommerce order payment page when a customer pays with the Better Payment gateway. It loads on those pages even when Stripe is not enabled in the settings. The browser sends Stripe the visitor's IP address and browser details, as with any web request.
+* Terms of service: https://stripe.com/legal/ssa
+* Privacy policy: https://stripe.com/privacy
+
+= PayPal =
+Processes PayPal payments for the payment form widget and block, Elementor Form actions and fundraising campaigns.
+
+* When: a visitor pays with PayPal, and when PayPal sends a payment notification (IPN) to your site.
+* What is sent: the visitor is redirected to `www.paypal.com` (or `www.sandbox.paypal.com` in test mode) with the amount, currency, item name, order ID, your PayPal business email and the return URLs. Each IPN message PayPal sends is posted back unchanged to `ipnpb.paypal.com` (or `ipnpb.sandbox.paypal.com`) to confirm that PayPal sent it.
+* Terms of service: https://www.paypal.com/us/legalhub/useragreement-full
+* Privacy policy: https://www.paypal.com/us/legalhub/privacy-full
+
+= Paystack =
+Processes Paystack payments for the payment form widget and block, Elementor Form actions and fundraising campaigns.
+
+* When: a visitor pays with Paystack, and when the visitor returns from Paystack to confirm the payment.
+* What is sent to `api.paystack.co`: the amount, currency, the payer's email address, the payment reference, the return URL and your Paystack secret key (as authentication).
+* Terms of service: https://paystack.com/terms
+* Privacy policy: https://paystack.com/privacy/merchant
+
+= AI providers (OpenAI, Anthropic, Google Gemini, OpenRouter) =
+The optional AI Assistant in the Campaign Builder writes and edits campaign pages. It is off by default. It works only after an administrator turns it on, chooses a provider and enters their own API key in Settings. Only the provider you choose is contacted.
+
+* When: an administrator sends a request from the Campaign Builder's AI Assistant (generate, edit, analyze, refine a brief or generate an image). Site visitors never trigger it.
+* What is sent: the administrator's request text, the current campaign's layout, text and settings, the site's currency, and your API key (as authentication). No payment, transaction or customer data is sent.
+* Generated images: the plugin downloads the image from the address the provider returns (the provider's own file storage) and saves it to your Media Library.
+* OpenAI (`api.openai.com`) — Terms of use: https://openai.com/policies/terms-of-use — Privacy policy: https://openai.com/policies/privacy-policy
+* Anthropic (`api.anthropic.com`) — Commercial terms: https://www.anthropic.com/legal/commercial-terms — Privacy policy: https://www.anthropic.com/legal/privacy
+* Google Gemini (`generativelanguage.googleapis.com`) — Terms of service: https://ai.google.dev/gemini-api/terms — Privacy policy: https://policies.google.com/privacy
+* OpenRouter (`openrouter.ai`) — Terms of service: https://openrouter.ai/terms — Privacy policy: https://openrouter.ai/privacy
+
+= Google Fonts =
+The payment form and fundraising campaign styles, the admin screens and the email receipt template load their fonts from Google Fonts. In the block editor, a Google font chosen in a Better Payment block's typography settings is loaded the same way.
+
+* When: a page that shows one of these styles is opened, an email receipt is opened in an email client, or a Google font is chosen or shown in the block editor.
+* What is sent to `fonts.googleapis.com` and `fonts.gstatic.com`: the request for the font file, which includes the visitor's IP address and browser user agent, as with any web request.
+* Terms of service: https://developers.google.com/fonts/terms
+* Privacy policy: https://policies.google.com/privacy
+
+= YouTube =
+The Better Payment dashboard in wp-admin has a product video.
+
+* When: only when an administrator clicks the video to play it. Nothing loads before that click.
+* What is sent to `www.youtube-nocookie.com` (YouTube's privacy-enhanced mode): the request for the video player, which includes the administrator's IP address and browser details. YouTube sets no cookies until the video plays.
+* Terms of service: https://www.youtube.com/t/terms
+* Privacy policy: https://policies.google.com/privacy
+
+= Gravatar =
+The User Dashboard shows the logged-in user's avatar through WordPress's own avatar functions, which use Gravatar.
+
+* When: a logged-in user views a page with the User Dashboard, or an editor previews the User Dashboard block. Only while avatars are switched on in Settings → Discussion → Show Avatars.
+* What is sent to `secure.gravatar.com` (or a `gravatar.com` host): a hash of the user's email address, with the visitor's IP address and browser details.
+* Terms of service: https://wordpress.com/tos/
+* Privacy policy: https://automattic.com/privacy/
+
+= WPDeveloper usage tracking (WP Insights) =
+Optional usage statistics that help us keep the plugin compatible with other plugins and themes. It is off until an administrator chooses "Proceed To Next Step" on the first screen of the setup wizard. Choosing "Skip It" sends nothing.
+
+* When: only after an administrator opts in. Once right away when they choose "Proceed To Next Step", then once a day, and once when the plugin is deactivated. The daily send does not run while Better Payment Pro is active.
+* What is sent to `send.wpinsight.com`: your site URL and name; WordPress, PHP and server software versions; language, charset, text direction and whether the site is a multisite; your active plugins and theme, and how many plugins are inactive; the Better Payment version; a site ID the service assigns; which Better Payment widgets, blocks, campaign elements, features and gateways you use; and the email address of the administrator who opted in (or the site's admin email), to send the discount coupon. On deactivation it also sends the reason chosen in the optional deactivation form. No payment or transaction data, customer details, API keys, server file paths or inactive plugin names are sent.
+* Terms and conditions: https://wpdeveloper.com/terms-and-conditions/
+* Privacy policy: https://wpdeveloper.com/privacy-policy/
+
+
+== Source code ==
+
+The JavaScript and CSS files in `assets/` are compiled with `@wordpress/scripts` (webpack). Their human-readable source ships with the plugin, in the `src/` directory:
+
+* `src/admin/` — the React admin screens and the setup wizard
+* `src/campaign-builder/` and `src/campaign-list/` — the Campaign Builder
+* `src/blocks/` — the Gutenberg blocks
+* `src/js/` and `src/css/` — the front-end scripts and styles
+
 == Changelog ==
+
+= 2.4.2 - 14/10/2026 =
+- Fixed: PayPal return URL validation, CSV imports, transaction filters, subscription role fallback, and Payment Form block issues
+- Fixed: Admin email transaction links now work, including previously sent emails
+- Improved: External service documentation and bundled assets (photos and source code)
+- Improved: Removed third-party CDN dependency for Custom CSS
+- Improved: One-click gateway enablement for the Payment Form block
+- Improved: Security hardening and WordPress.org Plugin Check compliance
+- Few minor bug fixes & improvements
 
 = 2.4.1 - 11/10/2026 =
 - Fixed: PayPal and Paystack payment handling issues

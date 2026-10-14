@@ -2,7 +2,6 @@
 
 namespace Better_Payment\Lite\Traits;
 
-use Better_Payment\Lite\Admin\Setup_Wizard;
 use Better_Payment\Lite\Classes\Plugin_Usage_Tracker;
 
 /**
@@ -298,13 +297,11 @@ trait Helper
         }
 
         /**
-         * Must run BEFORE init() below: init() calls maybe_schedule_tracking(),
-         * which only schedules once consent is on record. Recording consent
-         * first means a fresh install gets its daily event in this same request
-         * rather than the next one.
+         * Nothing here records consent. Tracking stays off until the admin
+         * clicks "Proceed To Next Step" in the setup wizard
+         * (Setup_Wizard::bp_quick_setup_save_tracking()). init() only schedules
+         * the daily event once that consent is on record.
          */
-        $this->maybe_auto_enable_usage_tracking();
-
         $tracker = Plugin_Usage_Tracker::get_instance( BETTER_PAYMENT_FILE, [
             'opt_in'       => true,
             'goodbye_form' => true,
@@ -312,54 +309,16 @@ trait Helper
         ] );
         $tracker->set_notice_options(array(
             'notice' => 'Want to help make <strong>Better Payment</strong> even more awesome? You can get a <strong>10% discount coupon</strong> for Pro upgrade if you allow.',
-            'extra_notice' => 'Nothing is sent unless you allow it. If you do: your site URL and name;
-            WordPress, PHP and server versions; language and charset; your <strong>active</strong> plugins and
-            theme (and how many inactive); which Better Payment widgets, blocks and campaign elements you use,
-            and which features and gateways you have switched on; and your admin email, for the coupon.
-            We never collect your payment or transaction data, your customers\' details, your API keys,
-            or your inactive plugin names. No spam, I promise.',
+            'extra_notice' => 'Nothing is sent unless you allow it. If you do, we send this once when you
+            allow it, once a day after that, and once when you deactivate the plugin: your site URL and name;
+            WordPress, PHP and server versions; language, charset, text direction and whether it is a multisite;
+            your <strong>active</strong> plugins and theme (and how many plugins are inactive); the Better Payment
+            version; a site ID our service assigns; which Better Payment widgets, blocks and campaign elements you
+            use, and which features and gateways you have switched on; your email address, for the coupon; and, on
+            deactivation, the reason you choose. We never collect your payment or transaction data, your
+            customers\' details, your API keys, your server file paths or your inactive plugin names. No spam, I promise.',
         ));
         $tracker->init();
-    }
-
-    /**
-     * Turn usage tracking on for a fresh install that never answered the wizard.
-     *
-     * The wizard's two buttons cover the cases where the user answers: "Proceed
-     * To Next Step" and "Skip It" both call Setup_Wizard::wpins_process(). A user
-     * who closes the wizard, navigates away, or never opens it at all answers
-     * neither, and this is what covers them.
-     *
-     * Three things this deliberately does:
-     *
-     *   1. **Fresh installs only.** The `pending` marker is written by
-     *      Installer::enable_setup_wizard() and only on a site with no
-     *      `better_payment_setup_wizard` option — i.e. one being installed, not
-     *      upgraded. An existing site keeps whatever tracking state it has.
-     *   2. **Exactly once.** The marker flips to `done` before any work, so this
-     *      cannot re-assert consent on a later request. That is what keeps a
-     *      future opt-out from being silently undone on the next page load, and
-     *      it holds even if the call below throws.
-     *   3. **No forced send.** `wpins_process( false )` records consent and stops.
-     *      This runs on `init` during an ordinary admin (or cron) request, and
-     *      the tracker's send is a blocking POST with a 30s timeout — it belongs
-     *      on the scheduled event, which init() arranges immediately after.
-     *
-     * Inherits start_plugin_tracking()'s Pro gate: a site running Better Payment
-     * Pro never reaches here, exactly like every other tracking code path.
-     *
-     * @return void
-     * @since 2.3.2
-     */
-    protected function maybe_auto_enable_usage_tracking()
-    {
-        if ( get_option( 'better_payment_tracking_auto_optin' ) !== 'pending' ) {
-            return;
-        }
-
-        update_option( 'better_payment_tracking_auto_optin', 'done' );
-
-        Setup_Wizard::wpins_process( false );
     }
 
 	/**
@@ -635,7 +594,10 @@ trait Helper
 		] );
 
 		if ( is_wp_error( $response ) ) {
-			error_log( 'Stripe API error: ' . $response->get_error_message() );
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Records a real Stripe API failure, debug mode only.
+				error_log( 'Stripe API error: ' . $response->get_error_message() );
+			}
 			return [];
 		}
 
@@ -643,7 +605,10 @@ trait Helper
 		$data = json_decode( $body, true );
 
 		if ( ! isset( $data ) || ! is_array( $data ) ) {
-			error_log( 'Stripe API response format error.' );
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Records a real Stripe API failure, debug mode only.
+				error_log( 'Stripe API response format error.' );
+			}
 			return [];
 		}
 
@@ -721,6 +686,7 @@ trait Helper
         global $wpdb;
 
         // Get all posts/pages with Elementor data
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off scan of Elementor data in postmeta; no WP API for a LIKE scan.
         $posts_with_elementor = $wpdb->get_results(
             "SELECT post_id, meta_value FROM {$wpdb->postmeta}
              WHERE meta_key = '_elementor_data'
@@ -816,6 +782,7 @@ trait Helper
     public function scan_existing_pages_for_blocks() {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off scan of post_content for the block; no WP API for a LIKE scan.
         $block_found = $wpdb->get_var(
             "SELECT ID FROM {$wpdb->posts}
              WHERE post_status = 'publish'
@@ -914,6 +881,7 @@ trait Helper
 
 		$steps[] = [
 			'completed' => $api_keys_configured,
+			/* translators: %s: Payment Settings admin page URL. */
 			'text' => sprintf(__('Add your Stripe, PayPal, or Paystack API keys in <a href="%s">Payment Settings</a>', 'better-payment'), $payment_settings_url)
 		];
 

@@ -1,4 +1,8 @@
 <?php 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
     include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/partials/campaign-vars.php";
 ?>
 <main class="better-payment better-payment-campaign">
@@ -65,7 +69,7 @@
 
                                 <form id="myForm">
                                     <?php if ( method_exists( $widgetObj, 'render_campaign_hidden_fields' ) ) {
-                                        echo $widgetObj->render_campaign_hidden_fields( $settings );
+                                        echo $widgetObj->render_campaign_hidden_fields( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value is esc_attr()'d where render_campaign_hidden_fields() builds it.
                                     }?>
 
                                     <div class="bp-flex bp-justify_content-space_between bp-align_items_center bp-form_top">
@@ -100,10 +104,10 @@
                                     </div>
 
                                     <input type="number" min="1" name="campaign-custom-amount" class="campaign-custom-amount bp-inter_font"
-                                        placeholder="<?php echo esc_html__( $placeholder_text, 'better-payment' ); ?>">
+                                        placeholder="<?php echo esc_html( $placeholder_text ); ?>">
                                     <div class="bp-flex">
-                                        <a <?php echo $this->print_render_attribute_string( 'better_payment_campaign_form_button_link' ); ?> class="btn-1 bp-donate_btn bp-inter_font">
-                                            <?php echo esc_html_e( $button_text, 'better-payment' ); ?>
+                                        <a <?php $this->print_render_attribute_string( 'better_payment_campaign_form_button_link' ); ?> class="btn-1 bp-donate_btn bp-inter_font">
+                                            <?php echo esc_html( $button_text ); ?>
                                         </a>
                                     </div>
                                 </form>
@@ -223,7 +227,7 @@
                                                                             $this->add_link_attributes( $link . '_' . $bp_i, $team_member[$link] );
                                                                         ?>
                                                                             
-                                                                            <a <?php echo $this->print_render_attribute_string( $link . '_' . $bp_i ); ?>>
+                                                                            <a <?php $this->print_render_attribute_string( $link . '_' . $bp_i ); ?>>
                                                                                 <?php
                                                                                 if( ! empty( $team_member[$icon] ) ) {
                                                                                     \Elementor\Icons_Manager::render_icon( $team_member[$icon], [ 'aria-hidden' => 'true' ] );

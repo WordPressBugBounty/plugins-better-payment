@@ -90,18 +90,29 @@ class Import extends Controller{
         return is_array( $decoded ) ? $decoded : [];
     }
 
+    /**
+     * The page the import form was posted from, for the redirect back.
+     *
+     * @return string Empty when the browser sent no referer.
+     */
+    private static function referer() {
+        return isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+    }
+
     public function import_transactions() {
         $message = __('Invalid File!', 'better-payment');
         
-        $invalid_nonce  = ! wp_verify_nonce( $_REQUEST['nonce'], 'better_payment_transaction_import_nonce' );
+        // phpcs:ignore PluginCheck.Security.VerifyNonce.UnsafeVerifyNonceStatement -- The result is checked: $invalid_nonce aborts the import below.
+        $invalid_nonce  = ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ), 'better_payment_transaction_import_nonce' );
         $invalid_access = ! current_user_can('manage_options') || ! isset( $_FILES['better-payment-transaction-import-input'] ); 
 
 		if ( $invalid_nonce || $invalid_access ) {
             set_transient('better_payment_import_transactions_error', esc_html( $message ), 30);
-            wp_safe_redirect( $_SERVER['HTTP_REFERER'] );
+            wp_safe_redirect( self::referer() );
             exit;
 		}
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Upload array; tmp_name is set by PHP and the name is checked by validate_csv_file(). Nonce verified above.
         $file = $_FILES['better-payment-transaction-import-input'];
         
         try {
@@ -162,18 +173,39 @@ class Import extends Controller{
             $table = DB::get_table_name();
             $rowsInserted = $this->bulk_insert_transactions( $table, $data );
             if ( $rowsInserted !== false && $rowsInserted > 0 ) {
-                set_transient('better_payment_import_transactions_success', esc_html__( $rowsInserted . ' rows inserted successfully!', 'better-payment' ), 30);
+                /* translators: %d: number of imported transaction rows. */
+                set_transient('better_payment_import_transactions_success', sprintf( esc_html__( '%d rows inserted successfully!', 'better-payment' ), $rowsInserted ), 30);
             } else {
                 throw new Exception( __('Failed to insert records into database!', 'better-payment') );
             }
         } catch (\Exception $exception) {
             set_transient('better_payment_import_transactions_error', esc_html( $exception->getMessage() ), 30);
-            wp_safe_redirect( $_SERVER['HTTP_REFERER'] );
+            wp_safe_redirect( self::referer() );
             exit;
         }
 
-        wp_safe_redirect( $_SERVER['HTTP_REFERER'] );
+        wp_safe_redirect( self::referer() );
         exit;
+    }
+
+    /**
+     * The $wpdb->prepare() placeholder for one imported value.
+     *
+     * @since 2.4.2
+     *
+     * @param mixed $value Value to bind.
+     * @return string '%d' for an int, '%f' for a float, '%s' for anything else.
+     */
+    public static function placeholder_for( $value ) {
+        if ( is_int( $value ) ) {
+            return '%d';
+        }
+
+        if ( is_float( $value ) ) {
+            return '%f';
+        }
+
+        return '%s';
     }
 
     /**
@@ -208,17 +240,17 @@ class Import extends Controller{
     }
 
     public function validate_csv_file( $file ){
-        $message = __('Invalid File!', 'better-payment');
-
         if ( empty( $file ) ){
-            throw new Exception( $message );
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Caught in import_transactions(), which esc_html()s the message before storing it; escaping here too would double-escape.
+            throw new Exception( __('Invalid File!', 'better-payment') );
         }
 
         $extension = pathinfo( $file['name'], PATHINFO_EXTENSION );
         $allowed_extensions = ['csv'];
 
         if ( empty( $extension ) || ! in_array( $extension, $allowed_extensions ) ) {
-            throw new Exception( $message );
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Caught in import_transactions(), which esc_html()s the message before storing it; escaping here too would double-escape.
+            throw new Exception( __('Invalid File!', 'better-payment') );
         }
 
         return true;
@@ -240,13 +272,17 @@ class Import extends Controller{
             $rowPlaceholders = array();
             foreach ($row as $value) {
                 $data[]            = $value;
-                $rowPlaceholders[] = is_numeric($value) ? '%d' : '%s';
+                // Bind by PHP type, never by is_numeric(): '%d' truncated a float amount (10.50
+                // was stored as 10) and turned a numeric string such as an order id '0012'
+                // into 12. MySQL converts a '%s' value for numeric columns itself.
+                $rowPlaceholders[] = self::placeholder_for( $value );
             }
             $placeholders[] = '(' . implode(', ', $rowPlaceholders) . ')';
         }
 
         $sql .= implode(",\n", $placeholders);
         
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom table insert, nothing to cache; $sql holds only the table name from $wpdb->prefix, the column names from the fixed row keys above and %s/%d/%f placeholders; every value is bound by prepare().
         $rowsInserted = $wpdb->query($wpdb->prepare($sql, $data));
         return $rowsInserted;
     }

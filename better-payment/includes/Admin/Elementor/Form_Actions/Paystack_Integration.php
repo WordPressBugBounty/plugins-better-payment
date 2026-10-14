@@ -12,6 +12,10 @@ use ElementorPro\Modules\Forms\Classes\Action_Base;
 use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
 use ElementorPro\Modules\Forms\Classes\Form_Record;
 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
+}
+
 /**
  * Paystack integration class
  *
@@ -262,7 +266,7 @@ class Paystack_Integration extends Action_Base {
                 [
                     'amount'         => $amount,
                     'order_id'       => $order_id,
-                    'payment_date'   => date( 'Y-m-d H:i:s' ),
+                    'payment_date'   => gmdate( 'Y-m-d H:i:s' ),
                     'source'         => 'paystack',
                     // Paystack's reference, so verification can bind it to this order.
                     'transaction_id' => ! empty( $response_ar->data->reference ) ? sanitize_text_field( $response_ar->data->reference ) : '',

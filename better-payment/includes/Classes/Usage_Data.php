@@ -238,7 +238,7 @@ class Usage_Data {
             WHERE pm.meta_key = '_elementor_data'
               AND p.post_status NOT IN ( 'trash', 'auto-draft', 'inherit' )";
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- core tables, aggregate usage scan run at most daily behind opt-in; $sql built from class constants and $wpdb table names, values are placeholders.
         $row = $wpdb->get_row( $wpdb->prepare( $sql, $params ), ARRAY_A );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
@@ -291,7 +291,7 @@ class Usage_Data {
             WHERE post_status NOT IN ( 'trash', 'auto-draft', 'inherit' )
               AND post_type NOT IN ( 'revision' )";
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- core tables, aggregate usage scan run at most daily behind opt-in; $sql built from class constants and $wpdb table names, values are placeholders.
         $row = $wpdb->get_row( $wpdb->prepare( $sql, $params ), ARRAY_A );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
@@ -494,9 +494,9 @@ class Usage_Data {
         $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
 
         if ( $table_exists === $table ) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table, no WP API; usage scan run at most daily behind opt-in; table name from $wpdb->prefix.
             $rows = $wpdb->get_results(
-                "SELECT source, type, COUNT(*) AS total FROM {$table} GROUP BY source, type",
+                "SELECT source, type, COUNT(*) AS total FROM {$table} GROUP BY source, type", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
                 ARRAY_A
             );
 

@@ -1,4 +1,8 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
 $bp_helper_obj = new Better_Payment\Lite\Classes\Helper();
 $layout_action = !empty($extraDatas['action']) ? $extraDatas['action'] : '';
 $layout_setting_meta = !empty($extraDatas['setting_meta']) ? $extraDatas['setting_meta'] : '';
@@ -24,8 +28,10 @@ $payment_type_text = 'One Time';
 $is_layout_for_woocommerce = 0;
 $is_layout_for_fluentcart = 0;
 
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (campaign link prefill); the payment handlers re-validate the currency server-side.
 if( !empty($_GET[ 'campaign_currency' ]) ) {
-    $layout_form_currency = sanitize_text_field( $_GET[ 'campaign_currency' ] );
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (campaign link prefill); the payment handlers re-validate the currency server-side.
+    $layout_form_currency = sanitize_text_field( wp_unslash( $_GET[ 'campaign_currency' ] ) );
 } else {
     $layout_form_currency = !empty($settings["better_payment_form_currency"]) ? sanitize_text_field( $settings["better_payment_form_currency"] ) : '';
 }

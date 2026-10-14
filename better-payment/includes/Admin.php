@@ -158,22 +158,22 @@ class Admin extends Controller{
 		);
 
 		/**
-		 * Summer Offer Notice
+		 * Halloween Offer Notice
 		 */
-		$purchase_url = '//betterpayment.co/summer2026-admin-notice';
-		$summer_notice_message = "<p>🏖️ <strong>Summer Savings:</strong> Streamline transactions with fast, optimized payment forms on your WordPress sites – now <strong>up to $150 OFF!</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I Don't Want Any Discount</button></div>";
+		$purchase_url = 'https://betterpayment.co/halloween2026/admin-notice';
+		$halloween_notice_message = "<p><span class='bp-notice-emoji wp-exclude-emoji' aria-hidden='true'>&#x1F47B;</span> <strong>Halloween Sale:</strong> Streamline transactions with fast, optimized payment forms on your WordPress sites – now <strong>up to 35% OFF!</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I Don't Want Any Discount</button></div>";
 
-		$summer_notice = [
+		$halloween_notice = [
 			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $summer_notice_message,
+			'html'      => $halloween_notice_message,
 		];
 
         $notices->add(
-			'bp_summer_notice',
-			$summer_notice,
+			'bp_halloween_notice',
+			$halloween_notice,
 			[
-				'start'       => $notices->time(),
-				'expire'      => strtotime( '11:59:59pm 25th June, 2026' ),
+				'start'       => strtotime( '12:00:00am 14th October, 2026' ),
+				'expire'      => strtotime( '11:59:59pm 5th November, 2026' ),
 				'refresh'     => BETTER_PAYMENT_VERSION,
 				'dismissible' => true,
 				'screens' 	  => [ 'dashboard' ],

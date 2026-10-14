@@ -41,6 +41,7 @@ class OpenRouterProvider extends OpenAIProvider {
     }
 
     protected function chat_endpoint(): string {
+        // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Plugin supports WordPress 6.0, before the WordPress AI Client existed; user-selected provider with the user's own key.
         return 'https://openrouter.ai/api/v1/chat/completions';
     }
 

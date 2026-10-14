@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class ClaudeProvider extends AbstractProvider {
 
+    // phpcs:ignore PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Plugin supports WordPress 6.0, before the WordPress AI Client existed; user-selected provider with the user's own key.
     const ENDPOINT   = 'https://api.anthropic.com/v1/messages';
     const API_VERSION = '2023-06-01';
 

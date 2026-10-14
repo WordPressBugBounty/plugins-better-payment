@@ -1,3 +1,9 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
+?>
 <div class="better-payment">
     <div class="better-payment--wrapper">
         <div class="better-payment--container">
@@ -16,7 +22,7 @@
                 <input type="hidden" name="better_payment_widget_id" value="<?php echo esc_attr( $widgetObj->get_id() ); ?>">
                 <?php
                     if ( method_exists( $widgetObj, 'render_campaign_id_hidden_field' ) ) {
-                        echo $widgetObj->render_campaign_id_hidden_field( $settings );
+                        echo $widgetObj->render_campaign_id_hidden_field( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Values are esc_attr()'d where render_campaign_id_hidden_field() builds the inputs.
                     }
                 ?>
 
@@ -28,20 +34,20 @@
                                 <div class="dynamic-amount-section-inner has-text-white p-6">
                                     <div class="pt-3 pb-3">
                                         <p class="bp-dynamic-amount-section-icon-wrap"><i class="bp-icon bp-logo-2 is-size-1-fix dynamic-amount-section-icon bp-dynamic-amount-section-icon"></i></p>
-                                        <h4 class="is-size-5-fix pt-5 dynamic-amount-section-title bp-dynamic-amount-section-title"><?php esc_html_e($layout_form_transaction_details_heading, 'better-payment'); ?></h4>
-                                        <p class="is-size-6-fix pt-3 dynamic-amount-section-subtitle bp-dynamic-amount-section-sub-title"><?php esc_html_e($layout_form_transaction_details_sub_heading, 'better-payment'); ?></p>
+                                        <h4 class="is-size-5-fix pt-5 dynamic-amount-section-title bp-dynamic-amount-section-title"><?php echo esc_html( $layout_form_transaction_details_heading ); ?></h4>
+                                        <p class="is-size-6-fix pt-3 dynamic-amount-section-subtitle bp-dynamic-amount-section-sub-title"><?php echo esc_html( $layout_form_transaction_details_sub_heading ); ?></p>
                                         <p class="is-size-6-fix pt-2 dynamic-amount-section-subtitle bp-dynamic-amount-section-amount">
-                                            <?php echo wp_kses( __(sprintf("%s <a class=' %s ' href='%s'>%s</a>", $layout_form_transaction_details_product_title, $layout_dynamic_payment_hide_show ,$product_permalink, $product_name), 'better-payment'), $valid_html_tags ); ?><br>
-                                            <?php echo wp_kses( __(sprintf("%s <span class='bp-transaction-details-amount-text'>%s</span>", $layout_form_transaction_details_amount_text, '' !== $product_price ? floatval($product_price) : $render_attribute_default_text), 'better-payment'), $valid_html_tags ); ?>
+                                            <?php echo wp_kses( sprintf("%s <a class=' %s ' href='%s'>%s</a>", $layout_form_transaction_details_product_title, $layout_dynamic_payment_hide_show ,$product_permalink, $product_name), $valid_html_tags ); ?><br>
+                                            <?php echo wp_kses( sprintf("%s <span class='bp-transaction-details-amount-text'>%s</span>", $layout_form_transaction_details_amount_text, '' !== $product_price ? floatval($product_price) : $render_attribute_default_text), $valid_html_tags ); ?>
                                         </p>
-                                        <h4 class="is-size-2-fix pt-5 dynamic-amount-section-amount bp-dynamic-amount-section-amount-summary"><?php echo wp_kses( __(sprintf('%s<span class="bp-transaction-details-amount-text">%s</span>%s', wp_kses( $layout_form_currency_left, $valid_html_tags ), '' !== $product_price ? floatval($product_price) : $render_attribute_default_text, wp_kses( $layout_form_currency_right, $valid_html_tags ) ), 'better-payment'), $valid_html_tags ); ?></h4>
+                                        <h4 class="is-size-2-fix pt-5 dynamic-amount-section-amount bp-dynamic-amount-section-amount-summary"><?php echo wp_kses( sprintf('%s<span class="bp-transaction-details-amount-text">%s</span>%s', wp_kses( $layout_form_currency_left, $valid_html_tags ), '' !== $product_price ? floatval($product_price) : $render_attribute_default_text, wp_kses( $layout_form_currency_right, $valid_html_tags ) ), $valid_html_tags ); ?></h4>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <?php endif; ?>
 
-                        <div class="tile is-parent has-background-white-fix form-content-section <?php echo ( intval( $sidebar_show ) ? esc_attr('is-8') : esc_attr('is-12') ); ?> <?php esc_attr_e($layout_form_content_offset_class, 'better-payment'); ?>">
+                        <div class="tile is-parent has-background-white-fix form-content-section <?php echo ( intval( $sidebar_show ) ? esc_attr('is-8') : esc_attr('is-12') ); ?> <?php echo esc_attr( $layout_form_content_offset_class ); ?>">
                             <div class="tile is-child">
                                 <div class="form-content-section-inner p-6">
                                     <div class="pt-3 pb-3">
@@ -83,7 +89,7 @@
                                                     include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/partials/layout-repeater-vars.php";
                                                     
                                                     if ($is_payment_amount_field) : ?>
-                                                        <div class="bp-payment-amount-wrap <?php esc_attr_e($layout_put_amount_field_hide_show, 'better-payment'); ?>">
+                                                        <div class="bp-payment-amount-wrap <?php echo esc_attr( $layout_put_amount_field_hide_show ); ?>">
                                                             <?php
                                                             if (!empty($settings['better_payment_show_amount_list']) && 'yes' === $settings['better_payment_show_amount_list']) {
                                                                 $this->render_amount_element($settings);
@@ -139,15 +145,15 @@
                                                     <div class="payment__option">
                                                         <?php
                                                         if ( !empty($settings['better_payment_form_paypal_enable']) && 'yes' === $settings['better_payment_form_paypal_enable'] ) {
-                                                            echo Better_Payment\Lite\Classes\Handler::paypal_button(esc_attr($widgetObj->get_id()), $settings);
+                                                            echo Better_Payment\Lite\Classes\Handler::paypal_button(esc_attr($widgetObj->get_id()), $settings); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The button helper prints its own escaped/wp_kses'd markup and returns nothing.
                                                         }
 
                                                         if ( !empty($settings['better_payment_form_stripe_enable']) && 'yes' === $settings['better_payment_form_stripe_enable'] ) {
-                                                            echo Better_Payment\Lite\Classes\Handler::stripe_button(esc_attr($widgetObj->get_id()), $settings);
+                                                            echo Better_Payment\Lite\Classes\Handler::stripe_button(esc_attr($widgetObj->get_id()), $settings); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The button helper prints its own escaped/wp_kses'd markup and returns nothing.
                                                         }
                                                         
                                                         if ( !empty($settings['better_payment_form_paystack_enable']) && 'yes' === $settings['better_payment_form_paystack_enable'] ) {
-                                                            echo Better_Payment\Lite\Classes\Handler::paystack_button(esc_attr($widgetObj->get_id()), $settings);
+                                                            echo Better_Payment\Lite\Classes\Handler::paystack_button(esc_attr($widgetObj->get_id()), $settings); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The button helper prints its own escaped/wp_kses'd markup and returns nothing.
                                                         }
                                                         ?>
                                                     </div>

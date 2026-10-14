@@ -178,6 +178,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
 
         if ( !$this->pro_enabled ) {
 			$this->add_control( 'better_payment_campaign_updates_pro', [
+				/* translators: %s: Pro badge icon markup. */
 				'label'   => sprintf( __( 'Updates %s', 'better-payment' ), '<i class="bpc-pro-labe eicon-pro-icon"></i>' ),
 				'type'    => Controls_Manager::SWITCHER,
 				'classes' => 'bpc-pro-control',
@@ -767,7 +768,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
                 'type'        => Controls_Manager::TEXT,
                 'label_block' => true,
                 'placeholder' => 'Enter your button text',
-                'default' => 'Donate Now',
+                'default' => __( 'Donate Now', 'better-payment' ),
                 'ai' => [
                     'active' => false,
                 ],
@@ -794,10 +795,11 @@ class Fundraising_Campaign_Widget extends Widget_Base {
             'better_payment_campaign_form_button_link_info',
             [
                 'type'        => Controls_Manager::RAW_HTML,
-                'raw' => sprintf( 
-                    __( '<p>*You must create a separate payment form page with Better Payment and add the URL. Follow <a href="%1$s" target="_blank">this doc.</a></p>', 'better-payment' ), 
-                    esc_url('//betterpayment.co/docs/configure-form-settings-in-better-payment/'), 
-                ),
+                'raw' => '<p>' . sprintf(
+                    /* translators: %1$s: documentation URL. */
+                    __( '*You must create a separate payment form page with Better Payment and add the URL. Follow <a href="%1$s" target="_blank">this doc.</a>', 'better-payment' ),
+                    esc_url('//betterpayment.co/docs/configure-form-settings-in-better-payment/')
+                ) . '</p>',
                 'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
                 'ai' => [
                     'active' => false,
@@ -1453,10 +1455,11 @@ class Fundraising_Campaign_Widget extends Widget_Base {
             'better_payment_campaign_related_campaigns_info',
             [
                 'type'        => Controls_Manager::RAW_HTML,
-                'raw' => sprintf( 
-                    __( '<p class="better-payment-dynamic-value-info" style="word-break: break-word;">Under Items, provide other campaign IDs. The first campaign will be featured. Follow <a href="%1$s" target="_blank">this doc</a> to retrieve campaign ID.</p>', 'better-payment' ), 
+                'raw' => '<p class="better-payment-dynamic-value-info" style="word-break: break-word;">' . sprintf(
+                    /* translators: %1$s: documentation URL. */
+                    __( 'Under Items, provide other campaign IDs. The first campaign will be featured. Follow <a href="%1$s" target="_blank">this doc</a> to retrieve campaign ID.', 'better-payment' ),
                     esc_url('//betterpayment.co/docs/retrieve-fundraising-campaign-id')
-                ),
+                ) . '</p>',
                 'content_classes' => 'elementor-control-alert elementor-panel-alert elementor-panel-alert-info',
                 'ai' => [
                     'active' => false,
@@ -3695,7 +3698,9 @@ class Fundraising_Campaign_Widget extends Widget_Base {
 
         global $wpdb;
         $table   = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table; no WP API, and live payment totals must not be cached.
         $bpc_raised_amount_data = $wpdb->get_results(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is the table name from $wpdb->prefix.
             $wpdb->prepare( "SELECT * FROM $table WHERE campaign_id=%s", sanitize_text_field( $better_payment_campaign_id ) )
         );
 
@@ -3765,6 +3770,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
 
         $better_payment_campaign_content = apply_filters( 'better_payment/elementor/editor/get_layout_content', $better_payment_campaign_content, $settings, $this, $data );
 
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Layout template output; each value is escaped inside the fundraising-campaign view files.
         echo $better_payment_campaign_content;
     }
     

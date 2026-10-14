@@ -1,7 +1,13 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
+?>
 <?php if ( 'admin' === $type && 'plain' === $all_data['email_content_type'] ) : ?>
-<?php echo $all_data['email_content_admin']; ?>
+<?php echo $all_data['email_content_admin']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Passed through wp_kses_post() in Handler::render_email_message(); the [bp-all-fields] block is escaped in email_all_fields_markup(). ?>
 <?php elseif ( 'admin' !== $type && 'plain' === $all_data['email_content_type_customer'] ) : ?>
-<?php echo $all_data['email_content_customer']; ?>
+<?php echo $all_data['email_content_customer']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Passed through wp_kses_post() in Handler::render_email_message(); the [bp-all-fields] block is escaped in email_all_fields_markup(). ?>
 <?php else : ?>
 
     <!-- admin / customer html email  -->
@@ -167,11 +173,13 @@
                     
                     <?php if($type === 'admin') : ?>
                     <h1 style="color: #fff; font-size: 64px; font-weight: 500; margin: 0 0 10px; line-height: 1.2em"><?php esc_html_e( 'Great News! Admin', 'better-payment' ); ?></h1>
-                    <p style="color: rgba(255, 255, 255, 1); font-size: 28px; font-weight: 400; margin: 0; line-height: 1.2em;"><?php esc_html_e( 'You have received a new transaction through', 'better-payment' ); ?> <?php esc_html_e( $all_data['form_name'], 'better-payment' ); ?></p>
+                    <p style="color: rgba(255, 255, 255, 1); font-size: 28px; font-weight: 400; margin: 0; line-height: 1.2em;"><?php esc_html_e( 'You have received a new transaction through', 'better-payment' ); ?> <?php echo esc_html( $all_data['form_name'] ); ?></p>
                     
                     <?php else : ?>
                     <h1 style="color: #fff; font-size: 64px; font-weight: 500; margin: 0 0 10px; line-height: 1.2em"><?php esc_html_e( 'Thank You!', 'better-payment' ); ?> <?php echo esc_html( $all_data['customer_name']); ?></h1>
-                    <p style="color: rgba(255, 255, 255, 1); font-size: 28px; font-weight: 400; max-width: 930px; padding: 0 10px; margin: 0 auto; line-height: 1.2em;"><?php printf( __( 'This is to acknowledge that we have received the payment of %s %s on %s', 'better-payment' ), esc_html( $all_data['amount'] ), esc_html( $all_data['currency'] ), esc_html( $all_data['payment_date_time'] ) ); ?></p>
+                    <p style="color: rgba(255, 255, 255, 1); font-size: 28px; font-weight: 400; max-width: 930px; padding: 0 10px; margin: 0 auto; line-height: 1.2em;"><?php
+                    /* translators: %1$s: payment amount, %2$s: currency code, %3$s: payment date and time. */
+                    printf( esc_html__( 'This is to acknowledge that we have received the payment of %1$s %2$s on %3$s', 'better-payment' ), esc_html( $all_data['amount'] ), esc_html( $all_data['currency'] ), esc_html( $all_data['payment_date_time'] ) ); ?></p>
                     <?php endif; ?>
 
                 </td>
@@ -189,15 +197,15 @@
                                 <table style="width: 100%; padding-bottom: 5px; padding: 55px 0px 0px 0px; margin-bottom: 55px; border-bottom: 1px solid rgba(216, 223, 251, 1); padding-bottom: 5px;">
                                     <tr>
                                         <td style="color: rgba(0, 0, 0, 1); font-weight: 300; font-size: 24px; text-align: left; line-height: 1.2em">
-                                            <span><?php esc_html_e( 'Transaction ID - ', 'better-payment' ); ?><?php esc_html_e( $all_data['transaction_id'], 'better-payment' ); ?></span>
+                                            <span><?php esc_html_e( 'Transaction ID - ', 'better-payment' ); ?><?php echo esc_html( $all_data['transaction_id'] ); ?></span>
                                         </td>
 
                                         <td style="text-align: right;">
                                             <span style="font-size: 18px; font-weight: 400; color: rgba(43, 39, 72, 1);">
-                                                <span style="color:  rgba(113, 120, 148, 1);"><?php esc_html_e( 'Date : ', 'better-payment' ); ?></span><span> <?php esc_html_e( $all_data['payment_date_only'], 'better-payment' ); ?></span>
+                                                <span style="color:  rgba(113, 120, 148, 1);"><?php esc_html_e( 'Date : ', 'better-payment' ); ?></span><span> <?php echo esc_html( $all_data['payment_date_only'] ); ?></span>
                                             </span>
                                             <span>
-                                                <span style="font-size: 18px; font-weight: 400; color: rgba(43, 39, 72, 1); background: rgba(208, 243, 226, 1); padding: 5px 16px; border-radius: 8px; margin-left: 40px; margin-top: 10px;"><?php esc_html_e( $all_data['status'], 'better-payment' ); ?></span>
+                                                <span style="font-size: 18px; font-weight: 400; color: rgba(43, 39, 72, 1); background: rgba(208, 243, 226, 1); padding: 5px 16px; border-radius: 8px; margin-left: 40px; margin-top: 10px;"><?php echo esc_html( $all_data['status'] ); ?></span>
                                             </span>
                                         </td>
                                     </tr>
@@ -270,7 +278,7 @@
                                             <h4 style="color: rgba(110, 88, 247, 1); font-size: 24px; font-weight: 500; margin-bottom: 8px;line-height: 1.2em;"><?php esc_html_e( 'To', 'better-payment' ); ?></h4>
                                             <h3 style="color: rgba(110, 88, 247, 1); font-size: 24px; font-weight: 500; color: rgba(43, 39, 72, 1); margin-bottom: 20px; line-height: 1.2em;" class="bp-name"><?php echo esc_html( $all_data['site_title']); ?></h3>
                                             <p style="color: rgba(110, 88, 247, 1); font-size: 24px; color: rgba(43, 39, 72, 1); font-weight: 400; margin: 0 0 14px; line-height: 1.2em;" class="bp-email"><?php echo esc_html( $all_data['site_admin_email']); ?></p>
-                                            <p style="color: rgba(110, 88, 247, 1); font-size: 24px; font-weight: 500; color: rgba(43, 39, 72, 1); margin: 0 0 14px; line-height: 1.2em;" class="bp-ess__campaign"><?php esc_html_e( $all_data['form_name'], 'better-payment'); ?></p>
+                                            <p style="color: rgba(110, 88, 247, 1); font-size: 24px; font-weight: 500; color: rgba(43, 39, 72, 1); margin: 0 0 14px; line-height: 1.2em;" class="bp-ess__campaign"><?php echo esc_html( $all_data['form_name'] ); ?></p>
                                             
                                             <div style="line-height: 18px;">
                                                 <span style="font-size: 22px; color: rgba(43, 39, 72, 1); font-weight: 400;"><?php esc_html_e( 'Payment Method : ', 'better-payment'); ?></span> <img style="vertical-align:middle;" src="<?php echo esc_url( $source_image_url ); ?>" alt="<?php echo esc_url( $source_image_alt ); ?>">
@@ -292,9 +300,9 @@
                 <td>
                     <div style="max-width: 1000px; margin: 0 auto 20px; font-size: 20px">
                         <?php if($type === 'admin') : ?>
-                        <?php echo $all_data['email_content_admin']; ?>
+                        <?php echo $all_data['email_content_admin']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Passed through wp_kses_post() in Handler::render_email_message(); the [bp-all-fields] block is escaped in email_all_fields_markup(). ?>
                         <?php else : ?>
-                        <?php echo $all_data['email_content_customer']; ?>
+                        <?php echo $all_data['email_content_customer']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Passed through wp_kses_post() in Handler::render_email_message(); the [bp-all-fields] block is escaped in email_all_fields_markup(). ?>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -342,7 +350,7 @@
                                             <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php echo esc_html( $all_data['product_name']); ?></span>
                                             
                                             <?php else : ?>
-                                            <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php esc_html_e( $all_data['form_name'], 'better-payment' ); ?></span>
+                                            <td> <span style="color: rgba(43, 39, 72, 1); font-size: 18px; font-weight: 500; line-height: 1.2em;"><?php echo esc_html( $all_data['form_name'] ); ?></span>
                                             <?php endif; ?>
                                             </td>
                                         </tr>

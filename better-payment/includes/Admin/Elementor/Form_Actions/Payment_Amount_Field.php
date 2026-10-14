@@ -350,10 +350,12 @@ class Payment_Amount_Field extends Field_Base {
 	public function validation( $field, Classes\Form_Record $record, Classes\Ajax_Handler $ajax_handler ) {
 
 		if ( ! empty( $field['bp_field_max'] ) && $field['bp_field_max'] < (int) $field['value'] ) {
+			/* translators: %s: maximum allowed amount. */
 			$ajax_handler->add_error( $field['id'], sprintf( __( 'The value must be less than or equal to %s', 'better-payment' ), esc_html( $field['bp_field_max'] ) ) );
 		}
 
 		if ( ! empty( $field['bp_field_min'] ) && $field['bp_field_min'] > (int) $field['value'] ) {
+			/* translators: %s: minimum allowed amount. */
 			$ajax_handler->add_error( $field['id'], sprintf( __( 'The value must be greater than or equal %s', 'better-payment' ), esc_html( $field['bp_field_min'] ) ) );
 		}
 	}

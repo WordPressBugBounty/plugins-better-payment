@@ -247,7 +247,7 @@ class OrderHandler {
             return;
         }
 
-        $order_key = ! empty( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : '';
+        $order_key = ! empty( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized by wc_clean(), then compared with hash_equals().
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
         if ( ! $order_key || ! hash_equals( $order->get_order_key(), $order_key ) ) {

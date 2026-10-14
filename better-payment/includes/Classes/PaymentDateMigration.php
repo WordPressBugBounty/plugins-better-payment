@@ -66,8 +66,9 @@ class PaymentDateMigration {
 
 		// No table yet (activation has not run): nothing to fix, and nothing written
 		// before the fix can appear later. Claim so the check is not repeated.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- existence check on the plugin custom table; no WP API.
 		$table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table;
-		$max_id       = $table_exists ? (int) $wpdb->get_var( "SELECT MAX(id) FROM {$table}" ) : 0;
+		$max_id       = $table_exists ? (int) $wpdb->get_var( "SELECT MAX(id) FROM {$table}" ) : 0; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- table name from $wpdb->prefix; custom table, no WP API.
 
 		if ( ! self::claim( $max_id ) ) {
 			return 0;
@@ -81,9 +82,10 @@ class PaymentDateMigration {
 		$after_id  = 0;
 
 		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table (no WP API); uncached on purpose (live payment data).
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT id, payment_date FROM {$table} WHERE referer = %s AND id > %d AND id <= %d ORDER BY id ASC LIMIT %d",
+					"SELECT id, payment_date FROM {$table} WHERE referer = %s AND id > %d AND id <= %d ORDER BY id ASC LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
 					'woocommerce',
 					$after_id,
 					$max_id,
@@ -99,6 +101,7 @@ class PaymentDateMigration {
 					continue;
 				}
 
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table (no WP API); uncached on purpose (live payment data).
 				$updated = $wpdb->update(
 					$table,
 					array( 'payment_date' => $utc ),
@@ -146,6 +149,7 @@ class PaymentDateMigration {
 	private static function claim( $max_id ) {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- atomic INSERT IGNORE claim on the options table; add_option() cannot report a lost race.
 		$inserted = $wpdb->query(
 			$wpdb->prepare(
 				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, %s)",

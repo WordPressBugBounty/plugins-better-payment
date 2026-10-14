@@ -2,6 +2,11 @@
 
 use Better_Payment\Lite\Admin\DB;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
+
 $current_user = wp_get_current_user();
 
 if ( empty($email) ) {
@@ -31,8 +36,8 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                 <svg fill="none" viewBox="0 0 24 24" width="25" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="m3 8c0-.55228.44772-1 1-1h16c.5523 0 1 .44772 1 1s-.4477 1-1 1h-16c-.55228 0-1-.44772-1-1zm0 4c0-.5523.44772-1 1-1h16c.5523 0 1 .4477 1 1s-.4477 1-1 1h-16c-.55228 0-1-.4477-1-1zm0 4c0-.5523.44772-1 1-1h8c.5523 0 1 .4477 1 1s-.4477 1-1 1h-8c-.55228 0-1-.4477-1-1z" fill="rgb(0,0,0)" fill-rule="evenodd"/></svg>
             </div>
         <?php endif; ?>
-        <h2><?php esc_html_e($bp_settings['dashboard_label'], 'better-payment'); ?></h2>
-        <button class="primary-btn bp-hidden-xs"><a href="<?php echo the_permalink(); ?>"><?php esc_html_e( $bp_settings['refresh_stats_label'], 'better-payment' ); ?></a></button>
+        <h2><?php echo esc_html( $bp_settings['dashboard_label'] ); ?></h2>
+        <button class="primary-btn bp-hidden-xs"><a href="<?php the_permalink(); ?>"><?php echo esc_html( $bp_settings['refresh_stats_label'] ); ?></a></button>
     </div>
 <?php endif; ?>
 
@@ -42,7 +47,7 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
         <div class="bp-row">
             <div class="bp-col_4 bp-col">
                 <div class="bp-amount">
-                    <h4 class="mb-0 pb-0"><?php esc_html_e($bp_settings['dashboard_total_amount_label'], 'better-payment'); ?></h4>
+                    <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_total_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
                         <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $total_transactions_amount ) ); ?></span>
                     </div>
@@ -54,7 +59,7 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
             </div>
             <div class="bp-col_4 bp-col">
                 <div class="bp-amount">
-                    <h4 class="mb-0 pb-0"><?php esc_html_e($bp_settings['dashboard_completed_amount_label'], 'better-payment'); ?></h4>
+                    <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_completed_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
                         <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $completed_transactions_amount ) ); ?></span>
                     </div>
@@ -66,7 +71,7 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
             </div>
             <div class="bp-col_4 bp-col">
                 <div class="bp-amount">
-                    <h4 class="mb-0 pb-0"><?php esc_html_e($bp_settings['dashboard_incomplete_amount_label'], 'better-payment'); ?></h4>
+                    <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_incomplete_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
                         <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $incomplete_transactions_amount ) ); ?></span>
                     </div>
@@ -78,7 +83,7 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
             </div>
             <div class="bp-col_4 bp-col">
                 <div class="bp-amount">
-                    <h4 class="mb-0 pb-0"><?php esc_html_e($bp_settings['dashboard_refunded_amount_label'], 'better-payment'); ?></h4>
+                    <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_refunded_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
                         <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $refunded_transactions_amount ) ); ?></span>
                     </div>
@@ -133,10 +138,10 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                                 </svg>
 
                             </span>
-                            <h3 class="bp-recent_header-title"><?php esc_html_e($bp_settings['dashboard_recent_transactions_label'], 'better-payment'); ?></h3>
+                            <h3 class="bp-recent_header-title"><?php echo esc_html( $bp_settings['dashboard_recent_transactions_label'] ); ?></h3>
                         </div>
 
-                        <a href="#" class="bp-view_all-btn is-hidden"><?php esc_html_e($bp_settings['dashboard_view_all_label'], 'better-payment'); ?></a>
+                        <a href="#" class="bp-view_all-btn is-hidden"><?php echo esc_html( $bp_settings['dashboard_view_all_label'] ); ?></a>
                     </div>
 
                     <div class="bp-recent_body">

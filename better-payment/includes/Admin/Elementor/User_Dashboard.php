@@ -1561,6 +1561,7 @@ class User_Dashboard extends Widget_Base {
 
         $better_payment_form_content = apply_filters( 'better_payment/elementor/editor/get_layout_content', $better_payment_form_content, $settings, $this, $data );
 
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output of the plugin's own dashboard template, which escapes every value it prints.
         echo $better_payment_form_content;
     }
 
@@ -1585,11 +1586,11 @@ class User_Dashboard extends Widget_Base {
         $bp_settings['subscriptions_show']  = ! empty( $settings['better_payment_user_dashboard_subscriptions_show']) && 'yes' === $settings['better_payment_user_dashboard_subscriptions_show'];
         $bp_settings['header_show']         = ! empty( $settings['better_payment_user_dashboard_header_show']) && 'yes' === $settings['better_payment_user_dashboard_header_show'];
         
-        $bp_settings['dashboard_label']  	= ! empty( $settings['better_payment_user_dashboard_dashboard_label']) ? $settings['better_payment_user_dashboard_dashboard_label'] : 'Dashboard';
-        $bp_settings['transaction_label']  	= ! empty( $settings['better_payment_user_dashboard_transaction_label']) ? $settings['better_payment_user_dashboard_transaction_label'] : 'Transactions';
-        $bp_settings['subscription_label']  = ! empty( $settings['better_payment_user_dashboard_subscription_label']) ? $settings['better_payment_user_dashboard_subscription_label'] : 'Subscriptions';
-        $bp_settings['refresh_stats_label'] = ! empty( $settings['better_payment_user_dashboard_refresh_stats_label']) ? $settings['better_payment_user_dashboard_refresh_stats_label'] : 'Refresh Stats';
-        $bp_settings['no_items_label']  	= ! empty( $settings['better_payment_user_dashboard_no_items_label']) ? $settings['better_payment_user_dashboard_no_items_label'] : 'No subscriptions found!';
+        $bp_settings['dashboard_label']  	= ! empty( $settings['better_payment_user_dashboard_dashboard_label']) ? $settings['better_payment_user_dashboard_dashboard_label'] : __( 'Dashboard', 'better-payment' );
+        $bp_settings['transaction_label']  	= ! empty( $settings['better_payment_user_dashboard_transaction_label']) ? $settings['better_payment_user_dashboard_transaction_label'] : __( 'Transactions', 'better-payment' );
+        $bp_settings['subscription_label']  = ! empty( $settings['better_payment_user_dashboard_subscription_label']) ? $settings['better_payment_user_dashboard_subscription_label'] : __( 'Subscriptions', 'better-payment' );
+        $bp_settings['refresh_stats_label'] = ! empty( $settings['better_payment_user_dashboard_refresh_stats_label']) ? $settings['better_payment_user_dashboard_refresh_stats_label'] : __( 'Refresh Stats', 'better-payment' );
+        $bp_settings['no_items_label']  	= ! empty( $settings['better_payment_user_dashboard_no_items_label']) ? $settings['better_payment_user_dashboard_no_items_label'] : __( 'No subscriptions found!', 'better-payment' );
         
 		// Dashboard
         $bp_settings['dashboard_transaction_summary_show'] = ! empty( $settings['better_payment_user_dashboard_dashboard_transaction_summary_show']) && 'yes' === $settings['better_payment_user_dashboard_dashboard_transaction_summary_show'];
@@ -1598,15 +1599,15 @@ class User_Dashboard extends Widget_Base {
         $bp_settings['dashboard_recurring_subscription_show'] = ! empty( $settings['better_payment_user_dashboard_dashboard_recurring_subscription_show']) && 'yes' === $settings['better_payment_user_dashboard_dashboard_recurring_subscription_show'];
         $bp_settings['dashboard_split_subscription_show'] = ! empty( $settings['better_payment_user_dashboard_dashboard_split_subscription_show']) && 'yes' === $settings['better_payment_user_dashboard_dashboard_split_subscription_show'];
         
-        $bp_settings['dashboard_total_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_total_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_total_amount_label'] : 'Total Amount';
-        $bp_settings['dashboard_completed_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_completed_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_completed_amount_label'] : 'Completed Amount';
-        $bp_settings['dashboard_incomplete_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_incomplete_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_incomplete_amount_label'] : 'Incomplete Amount';
-        $bp_settings['dashboard_refunded_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_refunded_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_refunded_amount_label'] : 'Refunded Amount';
-        $bp_settings['dashboard_view_all_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_view_all_label']) ? $settings['better_payment_user_dashboard_dashboard_view_all_label'] : 'View All';
-        $bp_settings['dashboard_analytics_reports_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_analytics_reports_label']) ? $settings['better_payment_user_dashboard_dashboard_analytics_reports_label'] : 'Analytics Reports';
-        $bp_settings['dashboard_recent_transactions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_recent_transactions_label']) ? $settings['better_payment_user_dashboard_dashboard_recent_transactions_label'] : 'Recent Transactions';
-        $bp_settings['dashboard_recurring_subscriptions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_recurring_subscriptions_label']) ? $settings['better_payment_user_dashboard_dashboard_recurring_subscriptions_label'] : 'Recurring Subscriptions';
-        $bp_settings['dashboard_split_subscriptions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_split_subscriptions_label']) ? $settings['better_payment_user_dashboard_dashboard_split_subscriptions_label'] : 'Split Subscriptions';
+        $bp_settings['dashboard_total_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_total_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_total_amount_label'] : __( 'Total Amount', 'better-payment' );
+        $bp_settings['dashboard_completed_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_completed_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_completed_amount_label'] : __( 'Completed Amount', 'better-payment' );
+        $bp_settings['dashboard_incomplete_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_incomplete_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_incomplete_amount_label'] : __( 'Incomplete Amount', 'better-payment' );
+        $bp_settings['dashboard_refunded_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_refunded_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_refunded_amount_label'] : __( 'Refunded Amount', 'better-payment' );
+        $bp_settings['dashboard_view_all_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_view_all_label']) ? $settings['better_payment_user_dashboard_dashboard_view_all_label'] : __( 'View All', 'better-payment' );
+        $bp_settings['dashboard_analytics_reports_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_analytics_reports_label']) ? $settings['better_payment_user_dashboard_dashboard_analytics_reports_label'] : __( 'Analytics Reports', 'better-payment' );
+        $bp_settings['dashboard_recent_transactions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_recent_transactions_label']) ? $settings['better_payment_user_dashboard_dashboard_recent_transactions_label'] : __( 'Recent Transactions', 'better-payment' );
+        $bp_settings['dashboard_recurring_subscriptions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_recurring_subscriptions_label']) ? $settings['better_payment_user_dashboard_dashboard_recurring_subscriptions_label'] : __( 'Recurring Subscriptions', 'better-payment' );
+        $bp_settings['dashboard_split_subscriptions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_split_subscriptions_label']) ? $settings['better_payment_user_dashboard_dashboard_split_subscriptions_label'] : __( 'Split Subscriptions', 'better-payment' );
         
 		// Transaction
         $bp_settings['transaction_table_name_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_name_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_name_show'];
@@ -1619,15 +1620,15 @@ class User_Dashboard extends Widget_Base {
         $bp_settings['transaction_table_date_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_date_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_date_show'];
         $bp_settings['transaction_table_action_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_action_show'];
         
-        $bp_settings['transaction_table_name_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_name_label']) ? $settings['better_payment_user_dashboard_transactions_list_name_label'] : 'Name';
-        $bp_settings['transaction_table_email_address_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_email_address_label']) ? $settings['better_payment_user_dashboard_transactions_list_email_address_label'] : 'Email Address';
-        $bp_settings['transaction_table_amount_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_amount_label']) ? $settings['better_payment_user_dashboard_transactions_list_amount_label'] : 'Amount';
-		$bp_settings['transaction_table_payment_type_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_payment_type_label']) ? $settings['better_payment_user_dashboard_transactions_list_payment_type_label'] : 'Payment Type';
-        $bp_settings['transaction_table_transaction_id_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_transaction_id_label']) ? $settings['better_payment_user_dashboard_transactions_list_transaction_id_label'] : 'Transaction ID';
-		$bp_settings['transaction_table_source_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_source_label']) ? $settings['better_payment_user_dashboard_transactions_list_source_label'] : 'Source';
-        $bp_settings['transaction_table_status_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_label'] : 'Status';
-        $bp_settings['transaction_table_date_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_date_label']) ? $settings['better_payment_user_dashboard_transactions_list_date_label'] : 'Date';
-        $bp_settings['transaction_table_action_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_label'] : 'Action';
+        $bp_settings['transaction_table_name_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_name_label']) ? $settings['better_payment_user_dashboard_transactions_list_name_label'] : __( 'Name', 'better-payment' );
+        $bp_settings['transaction_table_email_address_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_email_address_label']) ? $settings['better_payment_user_dashboard_transactions_list_email_address_label'] : __( 'Email Address', 'better-payment' );
+        $bp_settings['transaction_table_amount_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_amount_label']) ? $settings['better_payment_user_dashboard_transactions_list_amount_label'] : __( 'Amount', 'better-payment' );
+		$bp_settings['transaction_table_payment_type_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_payment_type_label']) ? $settings['better_payment_user_dashboard_transactions_list_payment_type_label'] : __( 'Payment Type', 'better-payment' );
+        $bp_settings['transaction_table_transaction_id_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_transaction_id_label']) ? $settings['better_payment_user_dashboard_transactions_list_transaction_id_label'] : __( 'Transaction ID', 'better-payment' );
+		$bp_settings['transaction_table_source_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_source_label']) ? $settings['better_payment_user_dashboard_transactions_list_source_label'] : __( 'Source', 'better-payment' );
+        $bp_settings['transaction_table_status_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_label'] : __( 'Status', 'better-payment' );
+        $bp_settings['transaction_table_date_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_date_label']) ? $settings['better_payment_user_dashboard_transactions_list_date_label'] : __( 'Date', 'better-payment' );
+        $bp_settings['transaction_table_action_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_label'] : __( 'Action', 'better-payment' );
         // $bp_settings['transaction_table_status_active_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_active_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_active_label'] : 'Active';
         // $bp_settings['transaction_table_status_inactive_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_inactive_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_inactive_label'] : 'Inactive';
         // $bp_settings['transaction_table_action_cancel_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_cancel_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_cancel_label'] : 'Cancel';

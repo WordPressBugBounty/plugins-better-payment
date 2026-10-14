@@ -175,6 +175,53 @@ class Helper extends Controller
     }
 
     /**
+     * The admin page slug that served transactions before the React admin.
+     *
+     * Nothing registers it any more, so WordPress answers a link to it with "Sorry, you are not
+     * allowed to access this page". Admin e-mails sent before 2.4.2 carry it in their View
+     * Transaction button, which is why ReactAdmin::handle_old_page_redirect() still forwards it.
+     *
+     * @since 2.4.2
+     */
+    const LEGACY_TRANSACTIONS_PAGE = 'better-payment-transactions';
+
+    /**
+     * The React admin URL that opens one transaction's details.
+     *
+     * The single place that spells it: the admin notification e-mail's View Transaction button,
+     * the User Dashboard's View button (PHP rows and the rows bp-dashboard-pagination.js loads)
+     * and the legacy-page redirect all link through here.
+     * Transactions.js opens the details view from `action=view&id=…`.
+     *
+     * @since 2.4.2
+     *
+     * @param int $transaction_id A transaction row id.
+     * @return string Unescaped URL; escape at output.
+     */
+    public static function transaction_view_url( int $transaction_id ): string {
+        return add_query_arg( 'id', $transaction_id, self::transaction_view_base_url() );
+    }
+
+    /**
+     * transaction_view_url() without the `id`, for a script that appends `&id=…` to each row it
+     * builds (bp-dashboard-pagination.js).
+     *
+     * @since 2.4.2
+     *
+     * @return string Unescaped URL; escape at output.
+     */
+    public static function transaction_view_base_url(): string {
+        return add_query_arg(
+            array(
+                'page'   => 'better-payment-admin',
+                'tab'    => 'transactions',
+                'action' => 'view',
+            ),
+            admin_url( 'admin.php' )
+        );
+    }
+
+    /**
      * The status colour of a loaded row, v2 buckets: the colour of transaction_status_type()'s bucket.
      *
      * @since 2.4.0

@@ -1,0 +1,2606 @@
+// Import from utility
+// function + color are pure definitions (the `mode()` mixin and color vars) and
+// emit no CSS — load them first so `base` can use them (dark-mode overrides, etc.).
+@import "./utilities/function";
+@import "./utilities/color";
+@import "./utilities/structure";
+@import "./utilities/base";
+
+// Import from mixogen
+@import "./mixin/header";
+@import "./mixin/common";
+
+.wp-admin #wpcontent {
+	padding-left: 0 !important;
+
+	.wrap {
+		margin: 0 !important;
+	}
+}
+
+// Better Payment Admin Styles
+// Variables
+:root {
+	--bp-primary: #0073aa;
+	--bp-primary-dark: #005a87;
+	--bp-secondary: #646970;
+	--bp-success: #00a32a;
+	--bp-warning: #dba617;
+	--bp-error: #d63638;
+	--bp-background: #f0f0f1;
+	--bp-surface: #ffffff;
+	--bp-border: #c3c4c7;
+	--bp-text: #1d2327;
+	--bp-text-light: #646970;
+	--bp-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);
+	--bp-radius: 4px;
+	--bp-spacing: 16px;
+}
+
+// Reset and base styles
+.better-payment-admin,
+.better-payment {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+		Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	color: var(--bp-text);
+	line-height: 1.4;
+	background: var(--bp-background);
+	min-height: 100vh;
+
+	* {
+		box-sizing: border-box;
+	}
+}
+
+// Header
+.bp-admin-header {
+	background: var(--bp-surface);
+	border-bottom: 1px solid var(--bp-border);
+	padding: calc(var(--bp-spacing) * 1.5) var(--bp-spacing);
+	margin: 0 0 var(--bp-spacing) 0;
+
+	&-content {
+		max-width: none;
+		margin: 0;
+	}
+
+	.bp-admin-logo {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+
+		.bp-logo-img {
+			width: 32px;
+			height: 32px;
+		}
+
+		h1 {
+			margin: 0;
+			font-size: 24px;
+			font-weight: 600;
+			color: var(--bp-text);
+		}
+	}
+}
+
+// Container
+.bp-admin-container {
+	max-width: none;
+	margin: 0;
+	display: flex;
+	gap: var(--bp-spacing);
+	padding: 0 var(--bp-spacing) var(--bp-spacing) var(--bp-spacing);
+}
+
+// Navigation
+.bp-admin-navigation {
+	flex: 0 0 220px;
+
+	.bp-nav-tabs {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		background: var(--bp-surface);
+		border: 1px solid var(--bp-border);
+		border-radius: var(--bp-radius);
+		overflow: hidden;
+		box-shadow: var(--bp-shadow);
+	}
+
+	.bp-nav-tab {
+		border-bottom: 1px solid var(--bp-border);
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+
+	.bp-nav-button {
+		width: 100%;
+		padding: 14px var(--bp-spacing);
+		background: transparent;
+		border: none;
+		text-align: left;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--bp-text);
+		transition: all 0.2s ease;
+		font-size: 14px;
+
+		&:hover {
+			background: var(--bp-background);
+		}
+
+		&--active {
+			background: var(--bp-primary);
+			color: white;
+			font-weight: 600;
+
+			&:hover {
+				background: var(--bp-primary-dark);
+			}
+		}
+
+		.dashicons {
+			font-size: 18px;
+			width: 18px;
+			height: 18px;
+		}
+
+		.bp-nav-label {
+			font-weight: 500;
+		}
+	}
+}
+
+// Content area
+.bp-admin-content {
+	flex: 1;
+	background: var(--bp-surface);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	padding: calc(var(--bp-spacing) * 1.5);
+	min-height: calc(100vh - 200px);
+	box-shadow: var(--bp-shadow);
+	margin: var(--bp-spacing);
+}
+
+// New layout content area (when used with NavHeader)
+.better-payment .bp-admin-content {
+	margin: 0 var(--bp-spacing) var(--bp-spacing) var(--bp-spacing);
+	min-height: calc(100vh - 300px);
+}
+
+// Page header
+.bp-page-header {
+	margin-bottom: calc(var(--bp-spacing) * 1.5);
+	padding-bottom: var(--bp-spacing);
+	border-bottom: 1px solid var(--bp-border);
+
+	h2 {
+		margin: 0 0 8px 0;
+		font-size: 24px;
+		font-weight: 600;
+		color: var(--bp-text);
+	}
+
+	p {
+		margin: 0;
+		color: var(--bp-text-light);
+		font-size: 14px;
+	}
+}
+
+// Loading state
+.bp-page-loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 300px;
+	gap: var(--bp-spacing);
+
+	.bp-spinner {
+		width: 32px;
+		height: 32px;
+		border: 3px solid var(--bp-border);
+		border-top: 3px solid var(--bp-primary);
+		border-radius: 50%;
+		animation: bp-spin 1s linear infinite;
+	}
+
+	p {
+		color: var(--bp-text-light);
+		margin: 0;
+	}
+}
+
+@keyframes bp-spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+// Buttons
+.bp-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 16px;
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	background: var(--bp-surface);
+	color: var(--bp-text);
+	text-decoration: none;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: var(--bp-background);
+		border-color: var(--bp-secondary);
+	}
+
+	&--primary {
+		background: var(--bp-primary);
+		border-color: var(--bp-primary);
+		color: white;
+
+		&:hover {
+			background: var(--bp-primary-dark);
+			border-color: var(--bp-primary-dark);
+		}
+	}
+
+	&--secondary {
+		background: var(--bp-secondary);
+		border-color: var(--bp-secondary);
+		color: white;
+
+		&:hover {
+			background: #50575e;
+			border-color: #50575e;
+		}
+	}
+
+	&--small {
+		padding: 4px 8px;
+		font-size: 12px;
+	}
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+}
+
+// Form elements
+.bp-input,
+.bp-select {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	font-size: 14px;
+	background: var(--bp-surface);
+	color: var(--bp-text);
+
+	&:focus {
+		outline: none;
+		border-color: var(--bp-primary);
+		box-shadow: 0 0 0 1px var(--bp-primary);
+	}
+}
+
+.bp-checkbox {
+	margin-right: 8px;
+}
+
+.bp-checkbox-label {
+	display: flex;
+	align-items: center;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.bp-form-group {
+	margin-bottom: var(--bp-spacing);
+
+	label {
+		display: block;
+		margin-bottom: 4px;
+		font-weight: 500;
+		color: var(--bp-text);
+	}
+
+	.bp-form-description {
+		margin-top: 4px;
+		font-size: 12px;
+		color: var(--bp-text-light);
+	}
+}
+
+// Dashboard specific styles
+.bp-dashboard-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: var(--bp-spacing);
+	margin-bottom: calc(var(--bp-spacing) * 2);
+}
+
+.bp-stat-card {
+	background: var(--bp-surface);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	padding: var(--bp-spacing);
+	display: flex;
+	align-items: center;
+	gap: var(--bp-spacing);
+
+	.bp-stat-icon {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		background: var(--bp-primary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+
+		&--success {
+			background: var(--bp-success);
+		}
+
+		&--warning {
+			background: var(--bp-warning);
+		}
+
+		&--primary {
+			background: var(--bp-primary);
+		}
+
+		.dashicons {
+			font-size: 20px;
+		}
+	}
+
+	.bp-stat-content {
+		h3 {
+			margin: 0 0 4px 0;
+			font-size: 24px;
+			font-weight: 600;
+			color: var(--bp-text);
+		}
+
+		p {
+			margin: 0;
+			font-size: 14px;
+			color: var(--bp-text-light);
+		}
+	}
+}
+
+.bp-dashboard-content {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: var(--bp-spacing);
+}
+
+.bp-dashboard-section {
+	background: var(--bp-background);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	padding: var(--bp-spacing);
+
+	h3 {
+		margin: 0 0 var(--bp-spacing) 0;
+		font-size: 18px;
+		font-weight: 600;
+		color: var(--bp-text);
+	}
+}
+
+.bp-quick-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.bp-placeholder-content {
+	padding: calc(var(--bp-spacing) * 2);
+	text-align: center;
+	color: var(--bp-text-light);
+	font-style: italic;
+}
+
+// Transactions page styles
+.bp-transactions-filters {
+	display: flex;
+	align-items: end;
+	gap: var(--bp-spacing);
+	margin-bottom: var(--bp-spacing);
+	padding: var(--bp-spacing);
+	background: var(--bp-background);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+
+	.bp-filter-group {
+		flex: 1;
+
+		label {
+			display: block;
+			margin-bottom: 4px;
+			font-weight: 500;
+			font-size: 12px;
+			color: var(--bp-text);
+		}
+	}
+
+	.bp-filter-actions {
+		display: flex;
+		gap: 8px;
+	}
+}
+
+.bp-transactions-table-container {
+	overflow-x: auto;
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	margin-bottom: var(--bp-spacing);
+}
+
+.bp-table {
+	width: 100%;
+	border-collapse: collapse;
+	background: var(--bp-surface);
+
+	th,
+	td {
+		padding: 12px;
+		text-align: left;
+		border-bottom: 1px solid var(--bp-border);
+	}
+
+	th {
+		background: var(--bp-background);
+		font-weight: 600;
+		color: var(--bp-text);
+		font-size: 14px;
+	}
+
+	td {
+		font-size: 14px;
+		color: var(--bp-text);
+	}
+
+	.bp-table-empty {
+		text-align: center;
+		color: var(--bp-text-light);
+		font-style: italic;
+		padding: calc(var(--bp-spacing) * 2);
+	}
+
+	.bp-table-actions {
+		display: flex;
+		gap: 4px;
+	}
+}
+
+.bp-badge {
+	display: inline-block;
+	padding: 4px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+
+	&--success {
+		background: rgba(0, 163, 42, 0.1);
+		color: var(--bp-success);
+	}
+
+	&--warning {
+		background: rgba(219, 166, 23, 0.1);
+		color: var(--bp-warning);
+	}
+
+	&--error {
+		background: rgba(214, 54, 56, 0.1);
+		color: var(--bp-error);
+	}
+}
+
+.bp-pagination {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--bp-spacing);
+	background: var(--bp-background);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+
+	p {
+		margin: 0;
+		font-size: 14px;
+		color: var(--bp-text-light);
+	}
+}
+
+// Settings page styles
+.bp-settings-container {
+	display: flex;
+	gap: var(--bp-spacing);
+}
+
+.bp-settings-tabs {
+	flex: 0 0 200px;
+	display: flex;
+	flex-direction: column;
+	background: var(--bp-surface);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	overflow: hidden;
+	height: fit-content;
+}
+
+.bp-settings-tab {
+	padding: 12px var(--bp-spacing);
+	background: transparent;
+	border: none;
+	border-bottom: 1px solid var(--bp-border);
+	text-align: left;
+	cursor: pointer;
+	color: var(--bp-text);
+	font-weight: 500;
+	transition: all 0.2s ease;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	&:hover {
+		background: var(--bp-background);
+	}
+
+	&--active {
+		background: var(--bp-primary);
+		color: white;
+
+		&:hover {
+			background: var(--bp-primary-dark);
+		}
+	}
+}
+
+.bp-settings-content {
+	flex: 1;
+	background: var(--bp-surface);
+	border: 1px solid var(--bp-border);
+	border-radius: var(--bp-radius);
+	padding: var(--bp-spacing);
+}
+
+.bp-settings-section {
+	h3 {
+		margin: 0 0 var(--bp-spacing) 0;
+		font-size: 20px;
+		font-weight: 600;
+		color: var(--bp-text);
+		padding-bottom: var(--bp-spacing);
+		border-bottom: 1px solid var(--bp-border);
+	}
+}
+
+.bp-settings-actions {
+	margin-top: calc(var(--bp-spacing) * 2);
+	padding-top: var(--bp-spacing);
+	border-top: 1px solid var(--bp-border);
+}
+
+// Responsive design
+@media (max-width: 1024px) {
+	.bp-admin-container {
+		flex-direction: column;
+		padding: 0 var(--bp-spacing);
+	}
+
+	.bp-admin-navigation {
+		flex: none;
+
+		.bp-nav-tabs {
+			display: flex;
+			overflow-x: auto;
+			border-radius: var(--bp-radius);
+		}
+
+		.bp-nav-tab {
+			flex: 0 0 auto;
+			border-bottom: none;
+			border-right: 1px solid var(--bp-border);
+
+			&:last-child {
+				border-right: none;
+			}
+		}
+
+		.bp-nav-button {
+			white-space: nowrap;
+			padding: 12px 20px;
+			font-size: 14px;
+		}
+	}
+
+	.bp-admin-content {
+		min-height: calc(100vh - 300px);
+	}
+}
+
+@media (max-width: 768px) {
+	.bp-admin-header {
+		padding: var(--bp-spacing);
+
+		.bp-admin-logo h1 {
+			font-size: 20px;
+		}
+	}
+
+	.bp-admin-container {
+		padding: 0 12px;
+	}
+
+	.bp-admin-content {
+		padding: var(--bp-spacing);
+	}
+
+	.bp-dashboard-stats {
+		grid-template-columns: 1fr;
+	}
+
+	.bp-dashboard-content {
+		grid-template-columns: 1fr;
+	}
+
+	.bp-transactions-filters {
+		flex-direction: column;
+		align-items: stretch;
+
+		.bp-filter-actions {
+			justify-content: flex-start;
+		}
+	}
+
+	.bp-settings-container {
+		flex-direction: column;
+	}
+
+	.bp-settings-tabs {
+		flex: none;
+		flex-direction: row;
+		overflow-x: auto;
+
+		.bp-settings-tab {
+			white-space: nowrap;
+			border-bottom: none;
+			border-right: 1px solid var(--bp-border);
+
+			&:last-child {
+				border-right: none;
+			}
+		}
+	}
+}
+
+// WordPress admin integration
+@media (max-width: 960px) {
+	// When WordPress admin menu is folded
+	.folded .better-payment-admin {
+		.bp-admin-container {
+			padding-left: var(--bp-spacing);
+		}
+	}
+}
+
+@media (max-width: 782px) {
+	// WordPress mobile breakpoint
+	.better-payment-admin {
+		.bp-admin-header {
+			padding: 12px;
+		}
+
+		.bp-admin-container {
+			padding: 0 12px 12px 12px;
+		}
+	}
+}
+
+// ── Campaigns + Subscriptions: replicate #transactions CSS scope ──────────────
+// All transaction table styles are scoped to #transactions in _common.scss.
+// The campaigns page uses id="campaigns" and the subscriptions page
+// id="subscriptions", so we re-declare the essential rules here for both.
+// (Shipping a table under a different id WITHOUT joining this scope renders
+// it unstyled — that is exactly how the Subscriptions tab first shipped
+// broken. Any future list page must be added to these selectors too.)
+#campaigns,
+#subscriptions {
+	.bp-transactions_page {
+		.bp-transactions_list-section {
+			background-color: #fff;
+			border: 1px solid #eaecf0;
+			padding: 16px;
+			width: 100%;
+			border-radius: 16px;
+			min-height: 500px;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+		}
+
+		.bp-transactions_list-section_header {
+			margin-bottom: 16px;
+
+			// Section header ("E-commerce Subscriptions") — replicated from
+			// the #transactions scope in _common.scss (line ~4085): icon gap
+			// + title colour. Dark counterparts live in the
+			// `.better-payment-dark` block below, like the rest of this scope.
+			.bp-list_section-icon {
+				margin-right: 8px;
+			}
+
+			.bp-transactions_list-section_header-title {
+				color: #2a3256;
+			}
+		}
+
+		.bp-transactions_header-section {
+			margin-bottom: 16px;
+
+			.bp-transactions_header {
+				color: #394357;
+			}
+
+			.bp-export_all-btn {
+				color: #fff;
+				border: none;
+
+				&:hover {
+					background-color: #5234c8;
+				}
+			}
+		}
+
+		.bp-transactions_list-table {
+			overflow: auto;
+
+			.bp-transactions_list-table_wrapper {
+				border: 1px solid #edeff5;
+				border-radius: 8px;
+				min-width: 850px;
+
+				.bp-transactions_list-table_header {
+					background-color: #edeff5;
+					padding: 12px 16px;
+
+					.bp-transactions_table-list_check {
+						appearance: none;
+						-webkit-appearance: none;
+						-moz-appearance: none;
+						width: 16px;
+						height: 16px;
+						border: 2px solid #edeff5;
+						border-radius: 4px;
+						display: inline-block;
+						position: relative;
+						cursor: pointer;
+						outline: none;
+						background-color: #fcfcfc;
+						box-shadow: none;
+						margin-right: 8px;
+
+						&:checked {
+							background-color: #6b59ee;
+							border: 2px solid #6b59ee;
+
+							&::before {
+								content: "";
+								position: absolute;
+								top: 50%;
+								left: 55%;
+								width: 9px;
+								height: 7px;
+								transform: translate(-50%, -50%);
+								background: url("data:image/svg+xml;utf8,<svg width='11' height='10' viewBox='0 0 11 10' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1 5.5L3.61905 8.5L10.1667 1' stroke='%23F7F8FA' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+									no-repeat center center;
+								background-size: contain;
+								margin: 0;
+							}
+						}
+
+						&:not(:checked)::after {
+							content: none !important;
+						}
+					}
+
+					.bp-transactions_list-table_header-title {
+						color: #394357;
+						font-weight: 500;
+						overflow: hidden;
+					}
+				}
+
+				.bp-transactions_list-table_data {
+					background-color: #fff;
+					border-bottom: 1px solid #edeff5;
+					padding: 12px 16px;
+
+					.bp-transactions_table-list_check {
+						appearance: none;
+						-webkit-appearance: none;
+						-moz-appearance: none;
+						width: 16px;
+						height: 16px;
+						border: 2px solid #edeff5;
+						border-radius: 4px;
+						display: inline-block;
+						position: relative;
+						cursor: pointer;
+						outline: none;
+						background-color: #fcfcfc;
+						box-shadow: none;
+						margin-right: 8px;
+
+						&:checked {
+							background-color: #6b59ee;
+							border: 2px solid #6b59ee;
+
+							&::before {
+								content: "";
+								position: absolute;
+								top: 50%;
+								left: 55%;
+								width: 9px;
+								height: 7px;
+								transform: translate(-50%, -50%);
+								background: url("data:image/svg+xml;utf8,<svg width='11' height='10' viewBox='0 0 11 10' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1 5.5L3.61905 8.5L10.1667 1' stroke='%23F7F8FA' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+									no-repeat center center;
+								background-size: contain;
+								margin: 0;
+							}
+						}
+
+						&:not(:checked)::after {
+							content: none !important;
+						}
+					}
+				}
+			}
+		}
+
+		.bp-data_table-no_data-wrapper {
+			padding: 171px 0 291px;
+		}
+	}
+}
+
+// ── Subscriptions page only ───────────────────────────────────────────────────
+#subscriptions {
+	.bp-transactions_page {
+		// Summary stat cards (Total / Active / Cancelled) — replicated from
+		// the #transactions scope in _common.scss (~line 3967); same trap as
+		// the list styles above: without re-declaring under this id the cards
+		// render as bare unstyled text. Colour variants limited to the three
+		// this page uses (chrome/green/yellow). Dark counterparts live in the
+		// `.better-payment-dark #subscriptions` block below.
+		.bp-transactions_section {
+			.bp-transaction_wrapper {
+				background-color: $bp-light-bg-color;
+				border: 1px solid #eaecf0;
+				padding: 16px;
+				width: 100%;
+				margin-bottom: 24px;
+
+				.bp-transction_color-lavel {
+					width: 16px;
+					height: 16px;
+					border-radius: 2px;
+					margin-right: 8px;
+
+					&--chrome {
+						background-color: #6b59ee;
+					}
+
+					&--green {
+						background-color: #4ba57c;
+					}
+
+					&--yellow {
+						background-color: #e49b36;
+					}
+				}
+
+				.bp-transction_color-name {
+					font-weight: 500;
+					font-size: 16px;
+					color: $bp-light-secondary-text-color;
+
+					@media (max-width: 992px) {
+						font-size: 13px;
+					}
+
+					@media (max-width: 600px) {
+						font-size: 11px;
+					}
+				}
+
+				.bp-transaction_ret {
+					h2 {
+						font-size: 32px;
+						color: $bp-light-primary-text-color;
+					}
+				}
+			}
+		}
+
+		.bp-transactions_list-table {
+			.bp-transactions_list-table_wrapper {
+				// No fixed table width: the bp-width_* classes act as flex
+				// BASES and the cells shrink uniformly (see the ellipsis
+				// rules below) when the viewport is narrower than their sum,
+				// so this table never scrolls horizontally. The replicated
+				// scope's 850px floor above still applies for tiny screens.
+				// (Cells may ONLY use the app-wide width utilities from
+				// utilities/_base.scss — 96/114/116/156/200/214/226. The other
+				// bp-width_* values seen in _common.scss are #transactions-
+				// nested and undefined here, so a cell using one auto-sizes
+				// to its text and the header/data columns drift apart.)
+
+				// Row-height parity with the Transactions tab: #transactions
+				// puts NO padding on the row <li> — each cell's bp-width_*
+				// utility already carries 17px/13px — but the replicated
+				// #campaigns/#subscriptions scope above adds 12px 16px on
+				// top, which made these rows visibly taller than the
+				// Transactions ones. Same specificity, later in file → wins.
+				.bp-transactions_list-table_header,
+				.bp-transactions_list-table_data {
+					padding: 0;
+				}
+
+				// Alignment parity: #transactions indents data-cell text 8px
+				// (and renders it in the secondary color/weight). The header
+				// gets the same 8px here so header and data text start on
+				// the same x — this table has no checkbox column to excuse
+				// the offset.
+				.bp-transactions_list-table_header {
+					.bp-transactions_list-table_header-title {
+						margin-left: 8px;
+					}
+				}
+
+				.bp-transactions_list-table_data {
+					.bp-transactions_list-table_header-title {
+						margin-left: 8px;
+						font-weight: 400;
+						color: #6a758c;
+					}
+
+					// Three-dot actions trigger (mirrors #transactions).
+					.bp-transactions_list-table_header-more-btn {
+						width: 32px;
+						height: 32px;
+						border-radius: 4px;
+						cursor: pointer;
+						display: flex;
+						justify-content: center;
+						align-items: center;
+						margin-left: 8px;
+
+						&:hover,
+						&.bp-transactions_more-btn_active {
+							background-color: #f0f3f7;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.bp-transactions_list-table {
+		// Every cell clips to one line with an ellipsis — a long customer or
+		// product name must never spill into (or under) the next column. The
+		// full value rides in each cell's title attribute.
+		//
+		// Cells keep flex-shrink at its default (1): on a viewport narrower
+		// than the width sum, every row shrinks by the SAME proportions
+		// (identical bases per row → identical computed widths), so columns
+		// stay aligned while the text ellipsizes — instead of forcing a
+		// horizontal scrollbar.
+		.bp-transactions_list-table_header,
+		.bp-transactions_list-table_data {
+			[class*="bp-width_"] {
+				min-width: 0;
+
+				.bp-flex {
+					min-width: 0;
+				}
+
+				h4,
+				p,
+				.bp-subscription_cell-text {
+					min-width: 0;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+			}
+
+			// The status tag and the actions button cannot ellipsize, and the
+			// date columns must always show their full "Mont D, YYYY, h:mm"
+			// value — keep those cells at full width. Only Customer, Product,
+			// Amount and Source absorb narrow viewports.
+			.bp-width_114,
+			.bp-width_200,
+			.bp-width_96 {
+				flex-shrink: 0;
+			}
+
+			// The actions cell hugs the row's right edge (and the trigger
+			// hugs the cell's right edge) regardless of leftover row width.
+			.bp-width_96:last-child {
+				margin-left: auto;
+				display: flex;
+				justify-content: flex-end;
+			}
+		}
+
+		.bp-transactions_list-table_data {
+			.bp-transactions_list-table_header-more-btn {
+				margin-left: auto;
+			}
+		}
+	}
+}
+
+.better-payment-dark {
+	#subscriptions {
+		.bp-transactions_page
+			.bp-transactions_list-table
+			.bp-transactions_list-table_wrapper
+			.bp-transactions_list-table_data
+			.bp-transactions_list-table_header-title {
+			color: #b9bfca;
+		}
+
+		// Stat cards — dark counterparts of the light rules in the
+		// `#subscriptions` scope above (mirrors what #transactions does via
+		// mode("dark") in _common.scss).
+		.bp-transactions_page .bp-transactions_section .bp-transaction_wrapper {
+			background-color: $bp-dark-bg-color;
+			border: 1px solid #292e39;
+
+			.bp-transction_color-name {
+				color: #89909d;
+			}
+
+			.bp-transaction_ret h2 {
+				color: $bp-dark-primary-text-color;
+			}
+		}
+	}
+}
+
+// ── Dark mode for #campaigns ──────────────────────────────────────────────────
+
+// ── Campaigns page ────────────────────────────────────────────────────────────
+.better-payment,
+.better-payment-dark {
+	// Toolbar
+	.bp-campaigns_toolbar {
+		flex-wrap: wrap;
+		gap: 12px;
+		padding: 12px 0 8px;
+		border: none;
+	}
+
+	// Status tabs
+	.bp-campaigns_status-tabs {
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+
+	.bp-campaigns_status-tab-group {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	.bp-campaigns_status-tab {
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		color: #394357;
+		font-size: 13px;
+
+		&--active {
+			color: #6b59ee;
+			font-weight: 600;
+		}
+		&:hover {
+			color: #6b59ee;
+		}
+	}
+
+	.bp-campaigns_status-sep {
+		color: #b9bfca;
+		font-size: 12px;
+	}
+
+	// Search
+	.bp-campaigns_search-wrap {
+		position: relative;
+		display: flex;
+		align-items: center;
+		min-width: 200px;
+	}
+
+	.bp-campaigns_search-icon {
+		position: absolute;
+		right: 10px;
+		top: 50%;
+		transform: translateY(-50%);
+		pointer-events: none;
+		flex-shrink: 0;
+	}
+
+	.bp-campaigns_search-input {
+		height: 34px !important;
+		padding: 0 32px 0 10px !important;
+		border: 1px solid #dde1e7 !important;
+		border-radius: 8px !important;
+		font-size: 13px !important;
+		color: #394357 !important;
+		background: #fff !important;
+		width: 100% !important;
+		outline: none !important;
+		box-shadow: none !important;
+
+		&::placeholder {
+			color: #8f9ab0;
+		}
+		&:focus,
+		&:focus-visible {
+			outline: none !important;
+			border-color: #dde1e7 !important;
+			box-shadow: none !important;
+		}
+	}
+
+	.bp-campaigns_select {
+		height: 36px !important;
+		min-height: 0 !important;
+		line-height: normal !important;
+		box-sizing: border-box !important;
+		padding: 0 8px !important;
+		border: 1px solid #dde1e7 !important;
+		border-radius: 8px !important;
+		font-size: 13px !important;
+		color: #394357 !important;
+		background: #fff !important;
+		cursor: pointer;
+		box-shadow: none !important;
+
+		&:hover {
+			border-color: #c4c9d4 !important;
+			box-shadow: none !important;
+		}
+		&:focus,
+		&:focus-visible {
+			outline: none !important;
+			border-color: #dde1e7 !important;
+			box-shadow: none !important;
+		}
+	}
+
+	// Bulk row
+	.bp-campaigns_bulk-row {
+		padding: 8px 0;
+		gap: 8px;
+		margin-bottom: 4px;
+	}
+
+	.bp-campaigns_apply-btn {
+		height: 36px !important;
+		min-height: 0 !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+		line-height: 1 !important;
+		box-sizing: border-box !important;
+		padding: 0 12px !important;
+		background: #fff !important;
+		border: 1px solid #dde1e7 !important;
+		border-radius: 8px !important;
+		font-size: 13px !important;
+		color: #394357 !important;
+		cursor: pointer;
+		box-shadow: none !important;
+
+		&:hover:not(:disabled) {
+			background: #f5f6f8 !important;
+			border-color: #c4c9d4 !important;
+			box-shadow: none !important;
+		}
+		&:focus,
+		&:focus-visible {
+			outline: none !important;
+			box-shadow: none !important;
+			border-color: #dde1e7 !important;
+		}
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+	}
+
+	// Column widths
+	.bp-campaigns_col-check {
+		width: 36px;
+		flex-shrink: 0;
+		padding-left: 4px;
+	}
+
+	.bp-campaigns_col-title {
+		flex: 1;
+		min-width: 160px;
+		padding-right: 16px;
+	}
+
+	.bp-campaigns_col-donations {
+		width: 180px;
+		flex-shrink: 0;
+		padding-right: 16px;
+	}
+
+	.bp-campaigns_col-status {
+		width: 110px;
+		flex-shrink: 0;
+		padding-right: 16px;
+	}
+
+	.bp-campaigns_col-datecreated {
+		width: 160px;
+		flex-shrink: 0;
+		padding-right: 16px;
+	}
+
+	.bp-campaigns_col-enddate {
+		width: 160px;
+		flex-shrink: 0;
+		padding-right: 16px;
+	}
+
+	.bp-campaigns_col-actions {
+		width: 44px;
+		flex-shrink: 0;
+		position: relative;
+	}
+
+	// Title text
+	.bp-campaigns_title-text {
+		font-size: 14px;
+		font-weight: 500;
+		color: #394357;
+		display: block;
+		line-height: 1.4;
+	}
+
+	.bp-campaigns_title-draft-badge {
+		font-size: 13px;
+		font-weight: 400;
+		color: #8f9ab0;
+	}
+
+	// Donations
+	.bp-campaigns_donations-raised {
+		font-weight: 600;
+		font-size: 13px;
+		color: #394357;
+		margin: 0 0 2px;
+	}
+
+	.bp-campaigns_donations-donors {
+		font-size: 12px;
+		color: #6a758c;
+		margin: 0;
+	}
+
+	// Status badge
+	.bp-campaigns_status-badge {
+		display: inline-flex;
+		align-items: center;
+		height: 24px;
+		padding: 0 10px;
+		border-radius: 20px;
+		font-size: 12px;
+		font-weight: 500;
+		white-space: nowrap;
+
+		&--active {
+			background: #ecfdf5;
+			color: #059669;
+		}
+
+		&--finished {
+			background: #f3f4f6;
+			color: #6a758c;
+		}
+
+		&--draft {
+			background: #eff6ff;
+			color: #3b82f6;
+		}
+
+		&--trash {
+			background: #fff5f5;
+			color: #ef4444;
+		}
+	}
+
+	// End date
+	.bp-campaigns_enddate {
+		font-size: 13px;
+		color: #394357;
+	}
+
+	// Title link
+	.bp-campaigns_title-link {
+		text-decoration: none;
+		&:hover {
+			color: #6b59ee;
+		}
+	}
+
+	// Three-dot actions dropdown
+	.bp-campaigns_dropdown-link {
+		text-decoration: none;
+		color: inherit;
+		width: 100%;
+		gap: 8px;
+		&:hover {
+			color: inherit;
+		}
+	}
+
+	// Shared with the Subscriptions tab's row-actions dropdown.
+	.bp-campaigns_col-actions,
+	.bp-subscriptions_col-actions {
+		.bp-data_setting-wrapper {
+			display: none;
+			position: fixed;
+			padding: 8px;
+			background-color: #fcfcfc;
+			border: 1px solid #edeff5;
+			border-radius: 8px;
+			width: 148px;
+			box-shadow: -4px 4px 8px 0px #00023612;
+			z-index: 9999;
+
+			&.settiong-wrapper-active {
+				display: inline-block;
+			}
+
+			.bp-data_setting-list_item {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 6px 8px;
+				border-radius: 4px;
+				background-color: #fcfcfc;
+				cursor: pointer;
+
+				&:hover {
+					background-color: #f0f3f7;
+					svg {
+						stroke: #222b3d;
+					}
+					.bp-data_setting-name {
+						color: #222b3d;
+					}
+				}
+			}
+
+			.bp-data_setting-logo {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 20px;
+				flex-shrink: 0;
+				line-height: 0;
+				svg {
+					stroke: #6a758c;
+				}
+			}
+
+			.bp-data_setting-name {
+				color: #6a758c;
+				font-size: 13px;
+			}
+
+			// Menu entries are real <button>s (keyboard-reachable); the li
+			// carries the visual style, the button just fills it.
+			.bp-data_setting-item_btn {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				width: 100%;
+				padding: 0;
+				margin: 0;
+				background: transparent;
+				border: 0;
+				cursor: pointer;
+				text-align: left;
+			}
+		}
+	}
+
+	// Pagination
+	.bp-pagination-wrapper {
+		padding-top: 16px;
+
+		.bp-pagination-per-page {
+			.bp-transactions_list-form-select {
+				border: 1px solid #d9e1f4;
+				border-radius: 4px;
+				padding: 6px 8px;
+				background-color: transparent;
+				height: 40px;
+				width: 72px;
+				cursor: pointer;
+				position: relative;
+				justify-content: space-between;
+
+				.select-name {
+					color: #222b3d;
+					font-weight: 500;
+					font-size: 14px;
+				}
+
+				.bp-transactions_list-form-select-dropdown {
+					position: absolute;
+					left: 73px;
+					top: calc(100% - 205px);
+					padding: 8px;
+					background-color: #fcfcfc;
+					border-radius: 8px;
+					border: 1px solid #edeff5;
+					box-shadow: -4px 4px 8px 0px #00023612;
+					z-index: 999;
+					color: #6a758c;
+					width: 88px;
+					overflow: hidden;
+					display: none;
+
+					&.dropdown-active {
+						display: block;
+					}
+
+					.bp-transactions_list-form-select-dropdown-item {
+						color: #6a758c;
+						padding: 8px;
+						font-weight: 500;
+						margin-bottom: 2px;
+						cursor: pointer;
+						border-radius: 4px;
+
+						&:hover {
+							background-color: #f0f3f7;
+						}
+
+						&.bp-selected {
+							background-color: #f0f3f7;
+							// stylelint-disable-next-line function-url-quotes
+							background-image: url("data:image/svg+xml;utf8,<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3.2002 8.71468L5.94305 11.8565L12.8002 4.00195' stroke='%23394357' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+							background-repeat: no-repeat;
+							background-size: auto;
+							background-position: 90% 50%;
+						}
+					}
+				}
+			}
+		}
+
+		.bp-pagination-pages {
+			display: flex;
+			gap: 8px;
+			margin: 0;
+			padding: 0;
+
+			li {
+				border: 1px solid #dfe2ed;
+				border-radius: 4px;
+				width: 32px;
+				height: 32px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				cursor: pointer;
+				color: #6a758c;
+				font-size: 13px;
+				font-weight: 500;
+				list-style: none;
+
+				&.rc-pagination-options {
+					display: none;
+				}
+
+				&.rc-pagination-item-active {
+					color: #6b59ee;
+					border-color: #6b59ee;
+					a {
+						color: #6b59ee;
+					}
+				}
+
+				&:hover:not(.rc-pagination-item-active):not(
+						.rc-pagination-disabled
+					) {
+					color: #6b59ee;
+					border-color: #6b59ee;
+				}
+
+				&.rc-pagination-disabled {
+					opacity: 0.5;
+					cursor: not-allowed;
+					&:hover {
+						color: #6a758c;
+						border-color: #dfe2ed;
+					}
+				}
+
+				// stylelint-disable function-url-quotes
+				&.rc-pagination-prev {
+					background: url("data:image/svg+xml;utf8,<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M6 4L10 8L6 12' stroke='%236B59EE' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+						no-repeat center;
+					transform: rotate(180deg);
+					button {
+						opacity: 0;
+						width: 100%;
+						height: 100%;
+					}
+				}
+
+				&.rc-pagination-next {
+					background: url("data:image/svg+xml;utf8,<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M6 4L10 8L6 12' stroke='%236B59EE' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+						no-repeat center;
+					button {
+						opacity: 0;
+						width: 100%;
+						height: 100%;
+					}
+				}
+				// stylelint-enable function-url-quotes
+
+				&.rc-pagination-jump-prev,
+				&.rc-pagination-jump-next {
+					border: none;
+					button {
+						display: none;
+					}
+					&::after {
+						content: "...";
+						margin-top: -4px;
+					}
+				}
+
+				a {
+					color: inherit;
+					text-decoration: none;
+				}
+
+				button {
+					background: none;
+					border: none;
+					cursor: pointer;
+					color: inherit;
+					padding: 0;
+				}
+			}
+		}
+	}
+
+	// Action icon buttons
+	.bp-campaigns_actions {
+		gap: 4px;
+	}
+
+	.bp-campaigns_action-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+		background: none;
+		border: 1px solid transparent;
+		border-radius: 6px;
+		color: #6a758c;
+		cursor: pointer;
+		text-decoration: none;
+		transition:
+			background 0.15s,
+			border-color 0.15s,
+			color 0.15s;
+
+		&:hover {
+			background: #f3f4f6;
+			border-color: #dde1e7;
+			color: #6b59ee;
+		}
+
+		&--delete:hover {
+			background: #fef2f2;
+			border-color: #fecaca;
+			color: #dc2626;
+		}
+	}
+}
+
+// ── Dark mode — campaigns + subscriptions ─────────────────────────────────────
+.better-payment-dark {
+	// Table shell
+	#campaigns,
+	#subscriptions {
+		.bp-transactions_list-section {
+			background-color: #161b25;
+			border: 1px solid #292e39 !important;
+		}
+
+		// Dark overrides MUST mirror the light replicated scope's nesting.
+		// The light rules live under
+		// `#subscriptions .bp-transactions_page …` (id + 3-6 classes); a
+		// flatter dark selector here (`.better-payment-dark #subscriptions
+		// .bp-transactions_header`, id + 2 classes) LOSES on specificity and
+		// the page keeps its light colours in dark mode — that shipped as the
+		// dark-on-dark "Subscriptions"/"Campaigns" titles and the white
+		// three-dot button. #transactions never has this problem because its
+		// dark rules are generated by mode("dark") at the same nesting depth.
+		.bp-transactions_page {
+			// Page title ("Subscriptions" / "All Campaigns").
+			.bp-transactions_header-section .bp-transactions_header {
+				color: #e2e6ef;
+			}
+
+			// Section sub-header ("E-commerce Subscriptions"): title + icon.
+			.bp-transactions_list-section_header {
+				.bp-transactions_list-section_header-title {
+					color: $bp-dark-primary-text-color;
+				}
+
+				.bp-list_section-icon {
+					svg path {
+						fill: #737a85;
+					}
+				}
+			}
+
+			// Three-dot row-actions trigger: the light scope paints its
+			// hover/open state #f0f3f7 at (1,6,0) — match the chain so the
+			// dark state wins (same colours as #transactions dark).
+			.bp-transactions_list-table
+				.bp-transactions_list-table_wrapper
+				.bp-transactions_list-table_data
+				.bp-transactions_list-table_header-more-btn {
+				&:hover,
+				&.bp-transactions_more-btn_active {
+					background-color: #1c232e;
+
+					svg path {
+						stroke: #b0b6bf;
+					}
+				}
+			}
+		}
+
+		.bp-transactions_page
+			.bp-transactions_list-table
+			.bp-transactions_list-table_wrapper {
+			border: 1px solid #292e39 !important;
+		}
+
+		.bp-transactions_list-table_header {
+			background-color: #1c232e !important;
+			.bp-transactions_table-list_check {
+				background-color: #2a3244;
+				border-color: #3a4560;
+			}
+			.bp-transactions_list-table_header-title {
+				color: #b9bfca !important;
+			}
+		}
+
+		.bp-transactions_list-table_data {
+			background-color: #161b25 !important;
+			border-color: #292e39 !important;
+			.bp-transactions_table-list_check {
+				background-color: #2a3244;
+				border-color: #3a4560;
+			}
+		}
+	}
+
+	// Toolbar — status tabs
+	.bp-campaigns_status-tab {
+		color: #8f9ab0;
+		&:hover {
+			color: #b9bfca;
+		}
+	}
+
+	.bp-campaigns_status-tab--active {
+		color: #6b59ee;
+	}
+	.bp-campaigns_status-sep {
+		color: #3a4560;
+	}
+
+	// Toolbar — search / selects / buttons
+	.bp-campaigns_search-input {
+		background: #1c232e !important;
+		border-color: #292e39 !important;
+		color: #b9bfca !important;
+		box-shadow: none !important;
+		&::placeholder {
+			color: #6a758c;
+		}
+		&:focus,
+		&:focus-visible {
+			outline: none !important;
+			border-color: #292e39 !important;
+			box-shadow: none !important;
+		}
+	}
+
+	.bp-campaigns_search-icon path {
+		stroke: #6a758c;
+	}
+
+	.bp-campaigns_select {
+		background: #1c232e !important;
+		border-color: #292e39 !important;
+		color: #b9bfca !important;
+		box-shadow: none !important;
+		&:hover {
+			background: #222a36 !important;
+			border-color: #3a4560 !important;
+			box-shadow: none !important;
+		}
+		&:focus,
+		&:focus-visible {
+			outline: none !important;
+			border-color: #292e39 !important;
+			box-shadow: none !important;
+		}
+	}
+
+	.bp-campaigns_apply-btn {
+		background: #1c232e !important;
+		border-color: #292e39 !important;
+		color: #b9bfca !important;
+		box-shadow: none !important;
+		&:hover:not(:disabled) {
+			background: #222a36 !important;
+			border-color: #3a4560 !important;
+			box-shadow: none !important;
+		}
+		&:focus,
+		&:focus-visible {
+			outline: none !important;
+			box-shadow: none !important;
+			border-color: #292e39 !important;
+		}
+	}
+
+	// Cell text
+	.bp-campaigns_title-text {
+		color: #e2e6ef;
+	}
+	.bp-campaigns_title-link {
+		color: #e2e6ef;
+		&:hover {
+			color: #9b8ef6;
+		}
+	}
+	.bp-campaigns_title-draft-badge {
+		color: #6a758c;
+	}
+	.bp-campaigns_donations-raised {
+		color: #e2e6ef;
+	}
+	.bp-campaigns_donations-donors {
+		color: #8f9ab0;
+	}
+	.bp-campaigns_enddate {
+		color: #b9bfca;
+	}
+
+	// Status badges
+	.bp-campaigns_status-badge--active {
+		background: #0d2b1e;
+		color: #34d399;
+	}
+	.bp-campaigns_status-badge--finished {
+		background: #1c232e;
+		color: #8f9ab0;
+	}
+	.bp-campaigns_status-badge--draft {
+		background: #0d1f3c;
+		color: #60a5fa;
+	}
+	.bp-campaigns_status-badge--trash {
+		background: #2d1515;
+		color: #f87171;
+	}
+
+	// Three-dot button
+	.bp-transactions_list-table_header-more-btn {
+		&:hover,
+		&.bp-transactions_more-btn_active {
+			background-color: #1c232e;
+			svg path {
+				stroke: #b0b6bf;
+			}
+		}
+	}
+
+	// Actions dropdown card (shared with the Subscriptions tab)
+	.bp-campaigns_col-actions .bp-data_setting-wrapper,
+	.bp-subscriptions_col-actions .bp-data_setting-wrapper {
+		background-color: #1c232e;
+		border-color: #292e39;
+
+		.bp-data_setting-list_item {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			background-color: #1c232e;
+
+			&:hover {
+				background-color: #141d28;
+
+				.bp-data_setting-logo {
+					color: #e2e6ef;
+					svg path,
+					svg circle {
+						stroke: #e2e6ef;
+					}
+				}
+
+				.bp-data_setting-name {
+					color: #e2e6ef;
+				}
+			}
+		}
+
+		.bp-data_setting-logo {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 20px;
+			flex-shrink: 0;
+			color: #b9bfca;
+			svg {
+				stroke: #b9bfca;
+			}
+			svg path,
+			svg circle {
+				stroke: #b9bfca;
+			}
+		}
+
+		.bp-data_setting-name {
+			color: #b9bfca;
+			font-size: 13px;
+		}
+	}
+
+	// Pagination
+	.bp-pagination-wrapper {
+		.bp-pagination-per-page .bp-transactions_list-form-select {
+			border-color: #292e39;
+			.select-name {
+				color: #b9bfca;
+			}
+
+			.bp-transactions_list-form-select-dropdown {
+				background-color: #1c232e;
+				border-color: #292e39;
+
+				.bp-transactions_list-form-select-dropdown-item {
+					color: #b0b6bf;
+					&:hover {
+						background-color: #141d28;
+					}
+					&.bp-selected {
+						background-color: #141d28;
+					}
+				}
+			}
+		}
+
+		.bp-pagination-pages li {
+			border-color: #292e39;
+			color: #b0b6bf;
+
+			&.rc-pagination-item-active {
+				border-color: #6b59ee;
+				color: #9b8ef6;
+				a {
+					color: #9b8ef6;
+				}
+			}
+
+			&:hover:not(.rc-pagination-item-active):not(
+					.rc-pagination-disabled
+				) {
+				border-color: #6b59ee;
+				color: #9b8ef6;
+			}
+
+			&.rc-pagination-disabled:hover {
+				border-color: #292e39;
+				color: #b0b6bf;
+			}
+		}
+	}
+
+	// Old icon-button actions (kept for backward compat)
+	.bp-campaigns_action-btn {
+		color: #8f9ab0;
+		&:hover {
+			background: #2e3648;
+			border-color: #3d4a60;
+			color: #9b8ef6;
+		}
+		&--delete:hover {
+			background: #3b1a1a;
+			border-color: #7f1d1d;
+			color: #f87171;
+		}
+	}
+}
+// ── "Campaign With AI" button (Campaigns list header) ─────────────────────────
+.bp-campaigns_header-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+// Matches the "Add New Campaign" button (shared bp-btn / bp-export_all-btn styles);
+// only adds the AI icon spacing + colour and prevents the label from wrapping.
+.bp-campaign_ai-btn {
+	gap: 6px;
+	white-space: nowrap;
+
+	.bp-ai-icon {
+		color: #fff;
+		flex-shrink: 0;
+	}
+}
+
+// ── Subscription details page (#subscriptionDetails) ─────────────────────────
+// The page reuses the whole #transactionDetails stylesheet (its scope in
+// mixin/_common.scss is `#transactionDetails, #subscriptionDetails`). Only the
+// two subscription-specific pieces are styled here: the Related Orders list
+// and the Subscription Action card.
+.better-payment {
+	#subscriptionDetails {
+		// Related Orders — a compact grid, not the transactions table (that
+		// stylesheet is scoped to the list pages and this is a details card).
+		.bp-related_orders {
+			.bp-related_orders-row {
+				display: grid;
+				// Type holds the longest labels ("New Subscription Order") —
+				// give it real width so it doesn't wrap onto three lines.
+				grid-template-columns: 0.8fr 1.4fr 1.5fr 1fr 0.8fr;
+				gap: 12px;
+				align-items: center;
+				padding: 12px 0;
+				border-bottom: 1px solid #dfe2ed;
+
+				@include mode("dark") {
+					border-bottom: 1px solid #292e39;
+				}
+
+				&:last-child {
+					border-bottom: none;
+				}
+
+				// These two classes carry no colour of their own here: the
+				// details scope styles .bp-information_value only inside
+				// .bp-information_list, and the table-header-title colours are
+				// #transactions-scoped — without these rules the rows were
+				// invisible (dark-on-dark) in dark mode.
+				.bp-transactions_list-table_header-title {
+					color: $bp-light-primary-text-color;
+					font-weight: 500;
+
+					@include mode("dark") {
+						color: $bp-dark-primary-text-color;
+					}
+				}
+
+				.bp-information_value {
+					margin: 0;
+					font-size: 14px;
+					font-family: "IBM Plex Sans", serif;
+					color: $bp-light-secondary-text-color;
+
+					@include mode("dark") {
+						color: $bp-dark-secondary-text-color;
+					}
+
+					a {
+						color: #6b59ee;
+						text-decoration: none;
+
+						&:hover {
+							text-decoration: underline;
+						}
+					}
+				}
+			}
+
+			.bp-related_orders-head {
+				padding-top: 0;
+			}
+
+			.bp-related_orders-empty {
+				color: #8f9ab0;
+				padding: 12px 0;
+				margin: 0;
+			}
+		}
+
+		// Subscription Action card — the page's one editable control.
+		// Billing & Shipping card. Like the Related Orders list, its
+		// .bp-information_value lines sit OUTSIDE .bp-information_list, so
+		// they carry no colour from the details stylesheet — both modes are
+		// styled here explicitly.
+		.bp-billing_shipping-wrapper {
+			.bp-billing_shipping-body {
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+
+				.wp-skeleton {
+					margin-bottom: 8px;
+				}
+			}
+
+			// One bordered card per address, two columns inside: the heading
+			// on the left, the address content on the right. The fixed first
+			// column keeps the two cards' addresses vertically aligned with
+			// each other.
+			.bp-address_block {
+				display: grid;
+				grid-template-columns: 160px 1fr;
+				gap: 4px 24px;
+				align-items: start;
+				border: 1px solid #dfe2ed;
+				border-radius: 8px;
+				background-color: #fff;
+				padding: 24px;
+
+				@include mode("dark") {
+					border: 1px solid #292e39;
+					background-color: transparent;
+				}
+
+				.bp-address_block-heading {
+					color: $bp-light-primary-text-color;
+					font-weight: 600;
+					font-size: 16px;
+					margin: 0;
+
+					@include mode("dark") {
+						color: $bp-dark-primary-text-color;
+					}
+				}
+
+				.bp-information_value {
+					margin: 0;
+					font-size: 14px;
+					font-family: "IBM Plex Sans", serif;
+					line-height: 1.6;
+					color: $bp-light-secondary-text-color;
+
+					@include mode("dark") {
+						color: $bp-dark-secondary-text-color;
+					}
+				}
+
+				// Recipient name — its own emphasized line above the address.
+				.bp-address_block-name {
+					color: $bp-light-primary-text-color;
+					font-weight: 600;
+					margin-bottom: 8px;
+
+					@include mode("dark") {
+						color: $bp-dark-primary-text-color;
+					}
+				}
+
+				.bp-address_block-phone {
+					margin-top: 12px;
+				}
+			}
+		}
+
+		// Cancelled By row: the actor's name and a Customer/Admin tag on one
+		// line. Tag palette mirrors the transaction details status pills —
+		// indigo for the customer, amber for the admin — with no dark-mode
+		// override, same as those pills (light pastel + dark label reads on
+		// both surfaces).
+		.bp-cancelled_by {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.bp-cancelled_by-tag {
+			padding: 4px 8px;
+			border-radius: 20px;
+			font-weight: 500;
+
+			&--customer {
+				background-color: #f0eefe;
+				color: #6b59ee;
+			}
+
+			&--admin {
+				background-color: #fff6ea;
+				color: #b77c29;
+			}
+		}
+
+		// Styled as a highlighted "action card", mirroring Pro's Refund
+		// Payment card on the transaction details page (soft red border +
+		// warm gradient wash, 20px padding, 8px radius) — this is the one
+		// place on the page where something can be changed, and the tint
+		// flags it the same way the refund card does.
+		.bp-subscription_action-wrapper {
+			border: 1px solid #f7cfd3;
+			background: linear-gradient(
+				195.13deg,
+				#fcecee -11.31%,
+				rgba(255, 255, 255, 0) 40.48%
+			);
+			padding: 20px;
+			border-radius: 8px;
+
+			@include mode("dark") {
+				border: 1px solid #331e21;
+				background: linear-gradient(
+					203.13deg,
+					#331e21 -11.31%,
+					rgba(51, 30, 33, 0) 40.48%
+				);
+			}
+
+			.bp-subscription_action-hint {
+				color: #8f9ab0;
+				margin: 0 0 16px;
+			}
+
+			.bp-subscription_action-buttons {
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+
+			// Both buttons share the refund card's button chrome: 8px
+			// radius, 10px/12px padding, 500 weight.
+			.bp-subscription_action-reactivate_btn,
+			.bp-subscription_action-cancel_btn {
+				border-radius: 8px;
+				padding: 10px 12px;
+				font-weight: 500;
+
+				&:disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+				}
+			}
+
+			// Primary action button — filled purple, like the refund card's
+			// "Refund Manually". Not `bp-btn bp-receipt-btn`: bp-btn paints
+			// the purple background but sets NO text colour, and bp-btn_2's
+			// grey #6a758c label rides on top — grey-on-purple in both modes
+			// (bp-receipt-btn's white label is scoped to the receipt popup
+			// and never applied here).
+			.bp-subscription_action-reactivate_btn {
+				background-color: #6b59ee;
+				border: 1px solid #6b59ee;
+				color: #fff;
+
+				&:hover:not(:disabled) {
+					background-color: #5234c8;
+					border-color: #5234c8;
+				}
+
+				// The purple/white pair reads correctly on the dark surface
+				// too; the label colour is restated so no dark-mode bp-btn_2
+				// text override can ever regress it.
+				@include mode("dark") {
+					color: #fff;
+				}
+			}
+
+			// Outline secondary, like "Refund Via Better Payment" — but kept
+			// red rather than neutral: Cancel is destructive, and that signal
+			// outranks pixel-parity with the reference card.
+			.bp-subscription_action-cancel_btn {
+				border: 1px solid #d63638;
+				color: #d63638;
+				background-color: #fff;
+
+				&:hover:not(:disabled) {
+					background-color: #d63638;
+					color: #fff;
+				}
+
+				@include mode("dark") {
+					border-color: #e65054;
+					color: #e65054;
+					background-color: transparent;
+
+					&:hover:not(:disabled) {
+						background-color: #e65054;
+						color: #0e1421;
+					}
+				}
+			}
+		}
+	}
+}
+
+// ── Subscriptions list: clickable Customer / Product cells ────────────────────
+// Mirrors #transactions' `.bp-transaction_name` (cursor + hover colour, base
+// colour untouched) — those rules are #transactions-scoped in _common.scss, so
+// they must be replicated here like the rest of this page's table styles.
+// The dark base cell colour lives in the `.better-payment-dark` block above at
+// (1,6,0); the hover below is declared with the full chain (and a dark-scoped
+// twin) so it wins in both modes.
+#subscriptions {
+	.bp-transactions_page
+		.bp-transactions_list-table
+		.bp-transactions_list-table_wrapper
+		.bp-transactions_list-table_data {
+		.bp-transaction_name {
+			cursor: pointer;
+
+			&:hover {
+				color: $bp-color-blue;
+			}
+		}
+	}
+}
+
+.better-payment-dark {
+	#subscriptions {
+		.bp-transactions_page
+			.bp-transactions_list-table
+			.bp-transactions_list-table_wrapper
+			.bp-transactions_list-table_data
+			.bp-transaction_name:hover {
+			color: $bp-color-blue;
+		}
+	}
+}
+
+// ── Subscriptions list: filter bar (search + status + reset) ──────────────────
+// Replicated from the #transactions scope in mixin/_common.scss (~line 4113),
+// the same trap as this page's table and stat cards: those rules are nested
+// under `#transactions`, so a filter bar shipped under `#subscriptions` without
+// re-declaring them renders as a bare input and unstyled text.
+//
+// Note the `.better-payment` wrapper — it is load-bearing, not decoration. The
+// `mode()` mixin builds its dark selector by CONCATENATING `.better-payment-dark`
+// onto the front of `&`, and the dark class sits on the same element as
+// `.better-payment` (App.js). Nesting under it makes `&` start with
+// `.better-payment …`, so mode("dark") emits
+// `.better-payment-dark.better-payment #subscriptions …` — a correct selector at
+// the same depth as the light rule, exactly how #transactions gets its dark
+// styles. Declared at the top level instead, `&` would start with
+// `#subscriptions` and mode("dark") would emit `.better-payment-dark#subscriptions`,
+// asking for both on one element: a selector that matches nothing.
+//
+// Getting it right here is what lets these rules use mode("dark") inline at all,
+// rather than being mirrored by hand into the `.better-payment-dark #subscriptions`
+// blocks above — which is where the dark-mode specificity bug on this page kept
+// coming from (a flatter dark selector loses to the light rule's longer chain).
+.better-payment {
+	#subscriptions {
+		.bp-transactions_page {
+			.bp-transactions_list-section_header {
+				.bp-transactions_list-section_header-content {
+					justify-content: flex-end;
+					gap: 15px;
+					flex-wrap: nowrap;
+
+					@media (max-width: 1350px) {
+						gap: 8px;
+						justify-content: flex-start;
+					}
+
+					@media (max-width: 992px) {
+						overflow: auto;
+						-webkit-overflow-scrolling: touch;
+						padding-bottom: 15px;
+
+						> * {
+							flex: 0 0 auto;
+						}
+					}
+
+					.search-box {
+						position: relative;
+						display: flex;
+						align-items: center;
+						gap: 8px;
+						height: 40px;
+						width: 105px;
+						background: $bp-light-bg-color;
+						border: 1px solid #dfe2ed;
+						border-radius: 8px;
+						padding: 11px 11px 11px 16px;
+						transition: all 0.3s ease;
+						cursor: text;
+
+						@include mode("dark") {
+							background-color: $bp-dark-bg-color;
+							border: 1px solid #292e39;
+						}
+
+						// wp-admin styles bare `input[type="text"]` at (0,1,1)
+						// with its own border/padding/box-shadow, which beats a
+						// single class — answer every property it sets, or the
+						// search field renders as a second bordered box inside
+						// this one. See .claude/rules/js-coding-standards.md
+						// Rule 2a.
+						input {
+							width: 100%;
+							border: none !important;
+							outline: none;
+							background: transparent !important;
+							box-shadow: none !important;
+							margin: 0 !important;
+							min-height: 0 !important;
+							padding: 0 !important;
+							font-size: 14px;
+							color: #8f9ab0;
+							font-weight: 500;
+
+							&::placeholder {
+								font-size: 14px;
+								color: #6a758c;
+								font-weight: 500;
+							}
+						}
+
+						&.active {
+							width: 230px;
+
+							input {
+								color: $bp-light-primary-text-color;
+
+								@include mode("dark") {
+									color: $bp-dark-primary-text-color;
+								}
+							}
+
+							svg path {
+								stroke: $bp-light-primary-text-color;
+
+								@include mode("dark") {
+									stroke: $bp-dark-primary-text-color;
+								}
+							}
+						}
+					}
+
+					.search-icon {
+						flex-shrink: 0;
+					}
+
+					// The date-range picker's own header strip. react-date-range
+					// paints it grey over the popup's white card; #transactions
+					// clears it the same way (_common.scss ~4113) and the rule
+					// is id-scoped there, so it does not reach this page.
+					.rdrDateDisplayWrapper {
+						background-color: transparent !important;
+					}
+
+					.bp-transactions_list-form-select {
+						border: 1px solid #d9e1f4;
+						border-radius: 8px;
+						padding: 11px 8px 11px 16px;
+						width: auto;
+						background-color: transparent;
+						height: 40px;
+						cursor: pointer;
+						position: relative;
+
+						@include mode("dark") {
+							border: 1px solid #292e39;
+						}
+
+						&.active {
+							border: 1px solid #b9bfca;
+
+							.select-name {
+								color: #222b3d;
+
+								@include mode("dark") {
+									color: #cbcfd5;
+								}
+							}
+
+							svg path {
+								stroke: #222b3d;
+
+								@include mode("dark") {
+									stroke: #cbcfd5;
+								}
+							}
+						}
+
+						.select-name {
+							color: #8f9ab0;
+							font-weight: 500;
+							font-size: 14px;
+							white-space: nowrap;
+
+							@include mode("dark") {
+								color: #737a85;
+							}
+						}
+
+						.bp-filter-dropdown-trigger {
+							background: transparent;
+							border: none;
+							padding: 0;
+							cursor: pointer;
+						}
+					}
+
+					.bp-transactions_list-form-reset-btn {
+						background-color: #f0f3f7;
+						border: 1px solid #dfe2ed;
+						padding: 8px 16px;
+						border-radius: 8px;
+						cursor: pointer;
+						white-space: nowrap;
+
+						@include mode("dark") {
+							background-color: #141d28;
+							border: 1px solid #292e39;
+						}
+
+						// Reset is always mounted so the bar never reflows, and
+						// dims instead of disappearing when there is nothing to
+						// reset. `disabled` (not just a class) so it is
+						// unreachable by keyboard and announced as unavailable,
+						// rather than looking inert while still firing.
+						&:disabled {
+							opacity: 0.5;
+							cursor: default;
+						}
+
+						.reset-btn-title {
+							color: #6a758c;
+							font-weight: 500;
+
+							@include mode("dark") {
+								color: #b0b6bf;
+							}
+						}
+					}
+
+					.bp-transactions_list-form-select-dropdown {
+						position: absolute;
+						left: 0;
+						right: 0;
+						top: calc(100% + 2px);
+						padding: 8px;
+						background-color: $bp-light-bg-color;
+						border-radius: 8px;
+						border: 1px solid #edeff5;
+						box-shadow: -4px 4px 8px 0px #00023612;
+						z-index: 999;
+						color: #6a758c;
+						cursor: auto;
+						width: 170px;
+						overflow: hidden;
+						display: none;
+
+						&.dropdown-active {
+							display: block;
+							max-height: 200px;
+							overflow: auto;
+						}
+
+						@include mode("dark") {
+							background-color: $bp-dark-bg-color;
+							border: 1px solid #292e39;
+						}
+
+						.bp-transactions_list-form-select-dropdown-item {
+							color: #6a758c;
+							padding: 8px;
+							font-weight: 500;
+							margin-bottom: 2px;
+							cursor: pointer;
+							border-radius: 4px;
+
+							&:hover {
+								background-color: #f0f3f7;
+								color: #6a758c;
+							}
+
+							&.bp-selected {
+								background-color: #f0f3f7;
+								color: #222b3d;
+								background-image: url("data:image/svg+xml;utf8,<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3.2002 8.71468L5.94305 11.8565L12.8002 4.00195' stroke='%23394357' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+								background-repeat: no-repeat;
+								background-size: auto;
+								background-position: 90% 50%;
+
+								@include mode("dark") {
+									color: #cbcfd5;
+									background-image: url("data:image/svg+xml;utf8,<svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3.2002 8.71468L5.94305 11.8565L12.8002 4.00195' stroke='%23CBCFD5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+								}
+							}
+
+							@include mode("dark") {
+								color: #b0b6bf;
+								background-color: $bp-dark-bg-color;
+
+								&:hover {
+									background-color: #1c232e;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// "Reset Filters" under the no-matches empty state. A plain text
+			// button, not a second primary CTA: the empty state's job is to
+			// explain, and the way out is one click either way.
+			.bp-subscriptions_no-data-reset {
+				// Block + auto margins, not `text-align: center` on the
+				// wrapper: the wrapper is a flex row and each child centres
+				// its own text, so the button has to centre itself.
+				display: block;
+				margin: 12px auto 0;
+				padding: 0;
+				background: transparent;
+				border: none;
+				color: $bp-color-blue;
+				font-weight: 500;
+				cursor: pointer;
+				text-decoration: underline;
+
+				&:hover {
+					text-decoration: none;
+				}
+			}
+		}
+	}
+}

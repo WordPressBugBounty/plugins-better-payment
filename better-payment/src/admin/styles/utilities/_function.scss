@@ -1,0 +1,26 @@
+// Theme-mode scoping. Emits @content under the light/dark root class
+// (`.better-payment-light` / `.better-payment-dark`) compounded onto the
+// current selector.
+//
+// The prefix is attached PER MEMBER of the parent selector list. The naive
+// `.better-payment-dark#{&}` interpolates the whole list as one string, so in
+// a list context (`#transactionDetails, #subscriptionDetails { ... }`) only
+// the FIRST member got the mode class and every other member received the
+// mode's styles UNCONDITIONALLY — that shipped as the subscription details
+// page rendering dark while the admin was in light mode.
+@mixin mode($current_theme: "light") {
+	@if $current_theme == light or $current_theme == dark {
+		$prefix: if(
+			$current_theme == light,
+			".better-payment-light",
+			".better-payment-dark"
+		);
+		$scoped: ();
+		@each $selector in & {
+			$scoped: append($scoped, #{$prefix}#{$selector}, comma);
+		}
+		@at-root #{$scoped} {
+			@content;
+		}
+	}
+}

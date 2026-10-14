@@ -32,15 +32,20 @@ trait ElementorHelper {
         $post_type = 'post';
         $source_name = 'post_type';
     
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
         if ( !empty( $_GET[ 'post_type' ] ) ) {
-            $post_type = sanitize_text_field( $_GET[ 'post_type' ] );
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
+            $post_type = sanitize_text_field( wp_unslash( $_GET[ 'post_type' ] ) );
         }
     
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
         if ( !empty( $_GET[ 'source_name' ] ) ) {
-            $source_name = sanitize_text_field( $_GET[ 'source_name' ] );
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
+            $source_name = sanitize_text_field( wp_unslash( $_GET[ 'source_name' ] ) );
         }
     
-        $search = !empty( $_GET[ 'term' ] ) ? sanitize_text_field( $_GET[ 'term' ] ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
+        $search = !empty( $_GET[ 'term' ] ) ? sanitize_text_field( wp_unslash( $_GET[ 'term' ] ) ) : '';
         $results = $post_list = [];
         switch($source_name){
             case 'taxonomy':
@@ -101,15 +106,21 @@ trait ElementorHelper {
     public function select2_ajax_get_posts_value_titles() {
         $this->verify_select2_request();
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
         if ( empty( $_POST['id'] ) ) {
             wp_send_json_error( [] );
         }
     
-        if ( empty( array_filter($_POST['id']) ) ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
+        $ids = array_map( 'intval', wp_unslash( $_POST['id'] ) );
+
+        if ( empty( array_filter( $ids ) ) ) {
             wp_send_json_error( [] );
         }
-        $ids            = array_map('intval', $_POST['id']);
-        $source_name    = ! empty( $_POST['source_name'] ) ? sanitize_text_field( $_POST['source_name'] ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
+        $source_name    = ! empty( $_POST['source_name'] ) ? sanitize_text_field( wp_unslash( $_POST['source_name'] ) ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified by verify_select2_request() (check_ajax_referer) above.
+        $post_type      = isset( $_POST['post_type'] ) ? sanitize_text_field( wp_unslash( $_POST['post_type'] ) ) : '';
     
         switch ( $source_name ) {
             case 'taxonomy':
@@ -120,8 +131,8 @@ trait ElementorHelper {
                     'include'    => implode( ',', $ids ),
                 ];
     
-                if ( $_POST['post_type'] !== 'all' ) {
-                    $args['taxonomy'] = sanitize_text_field( $_POST[ 'post_type' ] );
+                if ( $post_type !== 'all' ) {
+                    $args['taxonomy'] = $post_type;
                 }
     
                 $response = wp_list_pluck( get_terms( $args ), 'name', 'term_id' );
@@ -138,7 +149,7 @@ trait ElementorHelper {
                 $response = $users;
                 break;
             default:
-                $post_info = get_posts( [ 'post_type' => sanitize_text_field( $_POST['post_type'] ), 'include' => implode( ',', $ids ) ] );
+                $post_info = get_posts( [ 'post_type' => $post_type, 'include' => implode( ',', $ids ) ] );
                 $response  = wp_list_pluck( $post_info, 'post_title', 'ID' );
         }
     

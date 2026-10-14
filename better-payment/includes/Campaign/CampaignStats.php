@@ -96,6 +96,7 @@ class CampaignStats extends Controller {
      */
     public static function on_payment_confirmed( int $payment_id ): void {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- custom table, no WP API; this method busts the stats cache.
         $campaign_id = (string) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT campaign_id FROM {$wpdb->prefix}better_payment WHERE id = %d LIMIT 1",
@@ -114,9 +115,12 @@ class CampaignStats extends Controller {
         $approved      = Helper::approved_donation_sql();
         $amount        = Helper::COUNTABLE_AMOUNT_SQL;
 
-        // Both fragments are Helper constants (no request data, no `%`).
+        // Both fragments are Helper constants (no request data, no `%`); table name from $wpdb->prefix.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the comment above.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table, no WP API; result is cached by the caller (get_stats); table name from $wpdb->prefix.
         $row = $wpdb->get_row(
             $wpdb->prepare(
+                // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; $amount and $approved are Helper constants (COUNTABLE_AMOUNT_SQL / approved_donation_sql()).
                 "SELECT
                     COALESCE(SUM({$amount}), 0) AS total_raised,
                     COUNT(*)                    AS donor_count,
@@ -124,10 +128,12 @@ class CampaignStats extends Controller {
                 FROM `{$payment_table}`
                 WHERE campaign_id = %s
                    AND {$approved}",
+                // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 (string) $campaign_id
             ),
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         return [
             'total_raised'       => (float) ( $row['total_raised'] ?? 0 ),

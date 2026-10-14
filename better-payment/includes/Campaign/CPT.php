@@ -77,7 +77,7 @@ class CPT extends Controller {
         // Redirect the active-submenu highlight from the hidden "Campaign Builder"
         // entry to the visible "Campaigns" tab so it appears selected in the sidebar.
         add_filter( 'submenu_file', static function ( $submenu_file ) {
-            if ( isset( $_GET['page'] ) && 'bp-campaign-builder' === $_GET['page'] ) {
+            if ( isset( $_GET['page'] ) && 'bp-campaign-builder' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (submenu highlight).
                 return 'better-payment-admin&tab=campaigns';
             }
             return $submenu_file;
@@ -115,7 +115,7 @@ class CPT extends Controller {
      * Render the campaign builder page shell — React app mounts here.
      */
     public function render_builder_page() {
-        $campaign_id = isset( $_GET['campaign_id'] ) ? absint( $_GET['campaign_id'] ) : 0;
+        $campaign_id = isset( $_GET['campaign_id'] ) ? absint( $_GET['campaign_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter (which campaign the builder loads; saves go through the nonce-checked REST API).
         $campaign    = $campaign_id ? get_post( $campaign_id ) : null;
 
         if ( $campaign && $campaign->post_type !== 'bp_campaign' ) {
@@ -172,7 +172,7 @@ class CPT extends Controller {
             return;
         }
 
-        $post_type = isset( $_GET['post_type'] ) ? sanitize_key( $_GET['post_type'] ) : '';
+        $post_type = isset( $_GET['post_type'] ) ? sanitize_key( $_GET['post_type'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for a redirect.
 
         if (
             'edit.php' === $GLOBALS['pagenow']
@@ -188,8 +188,8 @@ class CPT extends Controller {
      * reached directly (bookmarks, browser history, etc.).
      */
     public function redirect_edit_post() {
-        $action  = isset( $_GET['action'] ) ? sanitize_key( $_GET['action'] ) : '';
-        $post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
+        $action  = isset( $_GET['action'] ) ? sanitize_key( $_GET['action'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for a redirect.
+        $post_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for a redirect.
 
         if ( $action !== 'edit' || ! $post_id ) {
             return;
@@ -209,8 +209,8 @@ class CPT extends Controller {
      */
     public function redirect_new_post() {
         if (
-            isset( $_GET['post_type'] ) &&
-            sanitize_key( $_GET['post_type'] ) === 'bp_campaign'
+            isset( $_GET['post_type'] ) && // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for a redirect.
+            sanitize_key( $_GET['post_type'] ) === 'bp_campaign' // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for a redirect.
         ) {
             wp_safe_redirect( admin_url( 'edit.php?post_type=bp_campaign' ) );
             exit;
@@ -226,7 +226,7 @@ class CPT extends Controller {
             return;
         }
 
-        $post_type = isset( $_GET['post_type'] ) ? sanitize_key( $_GET['post_type'] ) : '';
+        $post_type = isset( $_GET['post_type'] ) ? sanitize_key( $_GET['post_type'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for asset loading.
         if ( $post_type !== 'bp_campaign' ) {
             return;
         }
@@ -296,7 +296,7 @@ class CPT extends Controller {
      * Enqueue campaign builder assets on the builder page only.
      */
     public function enqueue_builder_assets() {
-        $page = isset( $_GET['page'] ) ? sanitize_text_field( $_GET['page'] ) : '';
+        $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen detection for asset loading.
 
         if ( $page !== 'bp-campaign-builder' ) {
             return;

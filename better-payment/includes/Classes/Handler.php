@@ -44,7 +44,7 @@ class Handler extends Controller{
         $args['extra_classes']          = is_array($args['extra_classes']) ? implode(' ', $args['extra_classes']) : $args['extra_classes'];
         $args['button_text_default']    = ! empty( $args['button_text_default'] ) ? sanitize_text_field( $args['button_text_default'] ) : 'Proceed to Payment';
 
-        $paypal_button_text             = ! empty( $settings["better_payment_form_form_buttons_paypal_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_paypal_button_text"] ) : __( $args['button_text_default'], 'better-payment' );
+        $paypal_button_text             = ! empty( $settings["better_payment_form_form_buttons_paypal_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_paypal_button_text"] ) : self::default_button_text( $args['button_text_default'] );
 
         $return_url = add_query_arg( $wp->query_vars, get_the_permalink() . '?better_payment_paypal_status=success&better_payment_widget_id=' . $widget_id );
         $cancel_url = add_query_arg( $wp->query_vars, get_the_permalink() . '?better_payment_error_status=error&better_payment_widget_id=' . $widget_id );
@@ -64,6 +64,7 @@ class Handler extends Controller{
         $paypal_button_html = ob_get_clean();
         $paypal_button_html = apply_filters( 'better_payment/elementor/editor/paypal_button_html', $paypal_button_html, $widget_id, $settings );
 
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value in the markup above is escaped where it is printed (esc_url/esc_attr/esc_html); the hidden inputs would not survive wp_kses with bp_allowed_tags().
         echo $paypal_button_html;
     }
 
@@ -77,7 +78,7 @@ class Handler extends Controller{
         $args['extra_classes']          = is_array($args['extra_classes']) ? implode(' ', $args['extra_classes']) : $args['extra_classes'];
         $args['button_text_default']    = ! empty( $args['button_text_default'] ) ? sanitize_text_field( $args['button_text_default'] ) : 'Proceed to Payment';
 
-        $stripe_button_text             = ! empty( $settings["better_payment_form_form_buttons_stripe_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_stripe_button_text"] ) : __( $args['button_text_default'], 'better-payment' );
+        $stripe_button_text             = ! empty( $settings["better_payment_form_form_buttons_stripe_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_stripe_button_text"] ) : self::default_button_text( $args['button_text_default'] );
 
         ob_start();
         ?>
@@ -99,7 +100,7 @@ class Handler extends Controller{
         $args['extra_classes']          = is_array($args['extra_classes']) ? implode(' ', $args['extra_classes']) : $args['extra_classes'];
         $args['button_text_default']    = ! empty( $args['button_text_default'] ) ? sanitize_text_field( $args['button_text_default'] ) : 'Proceed to Payment';
 
-        $paystack_button_text           = ! empty( $settings["better_payment_form_form_buttons_paystack_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_paystack_button_text"] ) : __( $args['button_text_default'], 'better-payment' );
+        $paystack_button_text           = ! empty( $settings["better_payment_form_form_buttons_paystack_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_paystack_button_text"] ) : self::default_button_text( $args['button_text_default'] );
         
         ob_start();
         ?>
@@ -109,6 +110,81 @@ class Handler extends Controller{
         $paystack_button_html = apply_filters( 'better_payment/elementor/editor/paystack_button_html', $paystack_button_html, $widget_id, $settings );
 
         echo wp_kses( $paystack_button_html,  (new Handler())->bp_allowed_tags() );
+    }
+
+    /**
+     * The page PayPal returns the payer to when the posted return URL is not on
+     * this site: the form's page, with the arguments paypal_button() would have
+     * posted, so manage_response() still shows the thank-you or error message.
+     *
+     * @since 2.4.2
+     *
+     * @param string|false $page_url  Permalink of the form's page.
+     * @param string       $widget_id Widget or block id.
+     * @param string       $outcome   'success' or 'error'.
+     * @return string
+     */
+    public static function paypal_return_fallback( $page_url, $widget_id, $outcome ) {
+        $args = 'success' === $outcome
+            ? array( 'better_payment_paypal_status' => 'success' )
+            : array( 'better_payment_error_status' => 'error' );
+
+        $args['better_payment_widget_id'] = $widget_id;
+
+        return add_query_arg( $args, (string) $page_url );
+    }
+
+    /**
+     * The transaction status shown in the notification e-mail, translated.
+     *
+     * The template used to translate the value at render time
+     * (`esc_html_e( $status )`), which Plugin Check rejects because a variable
+     * cannot be a msgid. The known statuses are translated here as literals
+     * instead; any other status prints as before, with its first letter
+     * capitalised.
+     *
+     * @since 2.4.2
+     *
+     * @param string $status Stored transaction status.
+     * @return string
+     */
+    public static function email_status_label( $status ) {
+        $labels = array(
+            'paid'       => __( 'Paid', 'better-payment' ),
+            'unpaid'     => __( 'Unpaid', 'better-payment' ),
+            'completed'  => __( 'Completed', 'better-payment' ),
+            'success'    => __( 'Success', 'better-payment' ),
+            'pending'    => __( 'Pending', 'better-payment' ),
+            'refunded'   => __( 'Refunded', 'better-payment' ),
+            'failed'     => __( 'Failed', 'better-payment' ),
+            'cancelled'  => __( 'Cancelled', 'better-payment' ),
+            'incomplete' => __( 'Incomplete', 'better-payment' ),
+        );
+
+        $key = strtolower( (string) $status );
+
+        return isset( $labels[ $key ] ) ? $labels[ $key ] : ucfirst( (string) $status );
+    }
+
+    /**
+     * The translated fallback label for a payment button.
+     *
+     * The two defaults callers pass (Lite's own, and Pro's donation layout) are translated as
+     * literals; any other caller-supplied text is shown as given.
+     *
+     * @param string $text Default button text, already sanitized.
+     * @return string
+     */
+    private static function default_button_text( $text ) {
+        if ( 'Proceed to Payment' === $text ) {
+            return __( 'Proceed to Payment', 'better-payment' );
+        }
+
+        if ( 'Proceed to Donate' === $text ) {
+            return __( 'Proceed to Donate', 'better-payment' );
+        }
+
+        return $text;
     }
 
     public static function hide_show_payment_button_class( $settings, $type = 'paypal' ){
@@ -162,6 +238,7 @@ class Handler extends Controller{
     public static function payment_create( $data ) {
         global $wpdb;
         $table = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom transactions table; no WP API for it.
         $wpdb->insert( $table, self::normalize_pending_stripe_status( $data ) );
         if ( $wpdb->insert_id ) {
             return $wpdb->insert_id;
@@ -230,19 +307,27 @@ class Handler extends Controller{
         $status = false;
 
         //if widget id is different then return false
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         if ( !empty( $_REQUEST[ 'better_payment_widget_id' ] ) && $_REQUEST[ 'better_payment_widget_id' ] !== $widget_id ) {
             return $status;
         }
         
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         if ( !empty( $_REQUEST[ 'better_payment_error_status' ] ) ) {
             // Determine order_id based on payment method
             $order_id = '';
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
             if ( !empty( $_REQUEST['better_payment_stripe_id'] ) ) {
-                $order_id = sanitize_text_field( $_REQUEST['better_payment_stripe_id'] );
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
+                $order_id = sanitize_text_field( wp_unslash( $_REQUEST['better_payment_stripe_id'] ) );
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
             } elseif ( !empty( $_REQUEST['better_payment_paystack_id'] ) ) {
-                $order_id = sanitize_text_field( $_REQUEST['better_payment_paystack_id'] );
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
+                $order_id = sanitize_text_field( wp_unslash( $_REQUEST['better_payment_paystack_id'] ) );
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
             } elseif ( !empty( $_REQUEST['better_payment_paypal_id'] ) ) {
-                $order_id = sanitize_text_field( $_REQUEST['better_payment_paypal_id'] );
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
+                $order_id = sanitize_text_field( wp_unslash( $_REQUEST['better_payment_paypal_id'] ) );
             }
             
             self::render_failed_response( $settings, $order_id );
@@ -250,10 +335,13 @@ class Handler extends Controller{
             return $status;
         }
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         if ( !empty( $_REQUEST[ 'better_payment_paypal_status' ] ) && $_REQUEST[ 'better_payment_paypal_status' ] == 'success' ) {
             $status = self::paypal_payment_success( $settings );
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         } elseif ( !empty( $_REQUEST[ 'better_payment_stripe_status' ] ) && $_REQUEST[ 'better_payment_stripe_status' ] == 'success' ) {
             $status = self::stripe_payment_success( $settings );
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         } elseif ( !empty( $_REQUEST[ 'better_payment_paystack_status' ] ) && $_REQUEST[ 'better_payment_paystack_status' ] == 'success' ) {
             $status = self::paystack_payment_success( $settings );
         }
@@ -269,6 +357,7 @@ class Handler extends Controller{
             }
 
             if ( 'bp_stripe_payment_incomplete' === $status->get_error_code() ) {
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
                 $stripe_order_id = ! empty( $_REQUEST['better_payment_stripe_id'] ) && is_scalar( $_REQUEST['better_payment_stripe_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['better_payment_stripe_id'] ) ) : '';
 
                 self::render_failed_response( $settings, $stripe_order_id );
@@ -278,7 +367,7 @@ class Handler extends Controller{
             }
         } elseif ( ! empty( $status['pending'] ) ) {
             // Use home_url() instead of HTTP_HOST to avoid open-redirect via forged Host headers.
-            $return_url = home_url( $_SERVER['REQUEST_URI'] );
+            $return_url = home_url( isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '' );
             // PayPal uses rm=2 (POST redirect), so item_number arrives in $_POST and is absent from the URL.
             // Add it explicitly so the poll-complete redirect (a plain GET) still carries item_number.
             if ( ! empty( $status['order_id'] ) && strpos( $return_url, 'item_number=' ) === false ) {
@@ -351,7 +440,8 @@ class Handler extends Controller{
      * @since 0.0.1
      */
     public static function paypal_payment_success( $settings = [] ) {
-        $item_number = ! empty( $_REQUEST['item_number'] ) ? sanitize_text_field( $_REQUEST['item_number'] ) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- PayPal return URL cannot carry a nonce; read-only display, the order is looked up by its unguessable id and nothing is written here.
+        $item_number = ! empty( $_REQUEST['item_number'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['item_number'] ) ) : '';
 
         if ( empty( $item_number ) ) {
             return false;
@@ -359,8 +449,10 @@ class Handler extends Controller{
 
         global $wpdb;
         $table = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $row   = $wpdb->get_row(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
                 "SELECT transaction_id, status, email, amount, currency FROM $table WHERE order_id = %s LIMIT 1",
                 $item_number
             )
@@ -428,7 +520,7 @@ class Handler extends Controller{
     public static function check_paypal_status() {
         check_ajax_referer( 'better-payment', 'security' );
 
-        $order_id = ! empty( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '';
+        $order_id = ! empty( $_POST['order_id'] ) ? sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : '';
 
         if ( empty( $order_id ) ) {
             wp_send_json_error( [ 'message' => 'Missing order_id' ] );
@@ -436,8 +528,10 @@ class Handler extends Controller{
 
         global $wpdb;
         $table = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $row   = $wpdb->get_row(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
                 "SELECT status FROM $table WHERE order_id = %s LIMIT 1",
                 $order_id
             )
@@ -554,8 +648,10 @@ class Handler extends Controller{
 
         global $wpdb;
         $table   = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $results = $wpdb->get_row(
             $wpdb->prepare(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
                 "SELECT id, amount, currency, form_fields_info, referer FROM $table WHERE order_id = %s AND status IS NULL LIMIT 1",
                 $data['item_number']
             )
@@ -598,8 +694,10 @@ class Handler extends Controller{
 
         // Prevent txn_id replay: reject if this transaction ID was already recorded.
         if ( $txn_id ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
             $existing = $wpdb->get_var(
                 $wpdb->prepare(
+                    // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
                     "SELECT id FROM $table WHERE transaction_id = %s LIMIT 1",
                     $txn_id
                 )
@@ -611,6 +709,7 @@ class Handler extends Controller{
 
         $payer_email = ! empty( $data['payer_email'] ) ? sanitize_email( $data['payer_email'] ) : '';
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $claimed = $wpdb->update(
             $table,
             [
@@ -675,6 +774,7 @@ class Handler extends Controller{
      */
     public static function stripe_payment_success( $settings = [] ) {
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         $data = $_REQUEST;
 
         if ( ! empty( $settings[ 'better_payment_stripe_id' ] ) ) {
@@ -826,6 +926,7 @@ class Handler extends Controller{
         $paid_amount      = $amounts['amount'];
         $confirmed_fields = $amounts['form_fields_info'];
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $claimed = $wpdb->update(
             $table,
             array(
@@ -897,7 +998,7 @@ class Handler extends Controller{
         $table  = "{$wpdb->prefix}better_payment";
         $format = 'id' === $field ? '%d' : '%s';
 
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table from $wpdb->prefix, column and format from the whitelist above.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- table from $wpdb->prefix, column and format (the %d/%s placeholder) from the whitelist above.
         $row = $wpdb->get_row( $wpdb->prepare( "SELECT id, order_id, obj_id, amount, transaction_id, currency, email, status, source, referer, form_fields_info, payment_date FROM $table WHERE $field = $format LIMIT 1", $value ) );
 
         return is_object( $row ) ? $row : null;
@@ -1195,6 +1296,7 @@ class Handler extends Controller{
      * @since 0.0.1
      */
     public static function paystack_payment_success( $settings = [] ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the order is verified server-side against the gateway and the DB row.
         $data = $_REQUEST;
 
         if ( empty( $data[ 'better_payment_paystack_id' ] ) || ! is_scalar( $data[ 'better_payment_paystack_id' ] ) ) {
@@ -1209,7 +1311,9 @@ class Handler extends Controller{
         $table     = "{$wpdb->prefix}better_payment";
         $order_id  = sanitize_text_field( (string) $data[ 'better_payment_paystack_id' ] );
         $reference = sanitize_text_field( (string) $data['reference'] );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $results   = $wpdb->get_row(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
             $wpdb->prepare( "SELECT id,obj_id,transaction_id,amount,currency,email,status,form_fields_info,referer FROM $table WHERE order_id=%s limit 1", $order_id )
         );
 
@@ -1247,6 +1351,7 @@ class Handler extends Controller{
             return false;
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $claimed = $wpdb->update(
             $table,
             array(
@@ -1265,7 +1370,9 @@ class Handler extends Controller{
 
         if ( 1 !== (int) $claimed ) {
             // Another return confirmed this order first (or the write failed): nothing is fired or sent twice.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
             $current = $wpdb->get_row(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
                 $wpdb->prepare( "SELECT id,transaction_id,amount,currency,email,status FROM $table WHERE id=%d limit 1", (int) $results->id )
             );
 
@@ -1399,7 +1506,7 @@ class Handler extends Controller{
         }
 
         $table = "{$wpdb->prefix}better_payment";
-        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- table name from $wpdb->prefix.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- table name from $wpdb->prefix.
         $other = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE transaction_id = %s AND id <> %d LIMIT 1", $reference, (int) $row_id ) );
 
         return ! empty( $other );
@@ -1463,7 +1570,7 @@ class Handler extends Controller{
             ? esc_html( $settings['better_payment_form_success_message_thanks'] ) 
             : esc_html__('Thank You!', 'better-payment');
         $better_payment_form_success_message_transaction = !empty( $settings['better_payment_form_success_message_transaction'] ) 
-            ? esc_html__( $settings['better_payment_form_success_message_transaction'], 'better-payment' ) 
+            ? esc_html( $settings['better_payment_form_success_message_transaction'] ) 
             : esc_html__('Transaction ID', 'better-payment');
         $better_payment_form_success_message_amount_text = !empty( $settings['better_payment_form_success_message_amount_text'] ) 
             ? esc_html( $settings['better_payment_form_success_message_amount_text'] ) 
@@ -1571,7 +1678,7 @@ class Handler extends Controller{
                                     echo wp_kses_post( $better_payment_form_success_message_amount_text );
                                 ?>
                             </span>
-                            <span class="bp-info_content  bp-bold"><?php echo $bp__currency_symbol . esc_html( ! empty( $tr_id['amount'] ) ? $tr_id['amount'] : 0 ); ?></span>
+                            <span class="bp-info_content  bp-bold"><?php echo $bp__currency_symbol . esc_html( ! empty( $tr_id['amount'] ) ? $tr_id['amount'] : 0 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $bp__currency_symbol is esc_html()'d where it is built. ?></span>
                         </li>
                         <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                             <span class=" bp-info_content">
@@ -1671,7 +1778,7 @@ class Handler extends Controller{
                             endif;
 
                             if( !empty($product_names) ):
-                                echo '<span class="bp-info_content  bp-bold">' . implode( ', ', $product_names ) . '</span>';
+                                echo '<span class="bp-info_content  bp-bold">' . esc_html( implode( ', ', $product_names ) ) . '</span>';
                             endif;
                             ?>
                         </li>
@@ -1690,7 +1797,7 @@ class Handler extends Controller{
                     </button>
                     
                     <div class="bp-flex bp-btn_wrapper">
-                        <a href="<?php echo $better_payment_form_success_page_view_details_url; ?>" target="_blank" class="bp-font_ibm bp-details_btn">
+                        <a href="<?php echo $better_payment_form_success_page_view_details_url; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_url()'d where it is built; the fallback is the literal javascript:void(0), which esc_url() would strip. ?>" target="_blank" class="bp-font_ibm bp-details_btn">
                             <?php echo wp_kses_post( $better_payment_form_success_message_view_details_btn_text ); ?>
                         </a>
                     </div>
@@ -1803,7 +1910,7 @@ class Handler extends Controller{
                 </div>
                 <div class="bp-thank_page-text">
                     <h2 class="bp-font_ibm bp-page_header"><?php echo wp_kses_post( $failed_heading ); ?></h2>
-                    <p class="bp-font_ibm bp-reason_for-text">Payment of <?php echo $currency_symbol . $transaction_amount; ?> to <?php echo $store_name; ?> failed.</p>
+                    <p class="bp-font_ibm bp-reason_for-text">Payment of <?php echo $currency_symbol . esc_html( $transaction_amount ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $currency_symbol is esc_html()'d where it is built. ?> to <?php echo $store_name; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_html()'d where it is built. ?> failed.</p>
                     <p class="bp-font_ibm bp-payment_info"><?php echo wp_kses_post( $failed_sub_heading ); ?></p>
 
                     <div class="bp-flex bp-transaction_info-wrapper">
@@ -1820,7 +1927,7 @@ class Handler extends Controller{
                             </svg>
                             </span>
                             <span><?php echo wp_kses_post( $transaction_id_text ); ?>:</span>
-                            <span class="bp-bolt bp-transaction_id"><?php echo $transaction_id; ?></span>
+                            <span class="bp-bolt bp-transaction_id"><?php echo $transaction_id; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_html()'d where it is built. ?></span>
                         </p>
 
                         <button class="bp-transaction_data-copy_btn ">
@@ -1832,7 +1939,7 @@ class Handler extends Controller{
                 </div>
                 <?php if( $show_details_button ): ?>
                 <div class="bp-btn_wrapper">
-                    <a href="<?php echo $better_payment_form_error_details_page_url; ?>" target="_blank" class="bp-font_ibm bp-details_btn"><?php echo $details_button_text; ?></a>
+                    <a href="<?php echo $better_payment_form_error_details_page_url; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_url()'d where it is built; the fallback is the literal javascript:void(0), which esc_url() would strip. ?>" target="_blank" class="bp-font_ibm bp-details_btn"><?php echo $details_button_text; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_html()'d where it is built. ?></a>
                 </div>
                 <?php endif; ?>
             </div>
@@ -1882,8 +1989,10 @@ class Handler extends Controller{
         global $wpdb;
         $table = "{$wpdb->prefix}better_payment";
         
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $result = $wpdb->get_row(
             $wpdb->prepare( 
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
                 "SELECT amount, currency, transaction_id, order_id, source FROM $table WHERE order_id=%s LIMIT 1", 
                 $order_id 
             )
@@ -1897,7 +2006,7 @@ class Handler extends Controller{
                 'currency_symbol' => $helper_obj->get_currency_symbol( $result->currency ),
                 // The order id is request data, and ids before 2.4.0 were `{gateway}_` . uniqid() —
                 // enumerable — so the gateway's transaction id is shown only for an unguessable id.
-                'transaction_id' => ! empty( $result->transaction_id ) && self::order_id_is_unguessable( $order_id ) ? sanitize_text_field( $result->transaction_id ) : 'N/A',
+                'transaction_id' => ! empty( $result->transaction_id ) && self::order_id_is_unguessable( $order_id ) ? sanitize_text_field( $result->transaction_id ) : __( 'N/A', 'better-payment' ),
                 'method' => sanitize_text_field( $result->source ),
             ];
         }
@@ -1951,6 +2060,7 @@ class Handler extends Controller{
         //Send Email: customer and admin
         $better_txn_id = sanitize_text_field( $transaction_id );
         $better_cus_email = sanitize_email( $customer_email );
+        /* translators: %s: site name. */
         $default_subject = sprintf(__('Better Payment transaction on %s', 'better-payment'), esc_html(get_option('blogname')));
         $better_payment_global_settings = DB::get_settings();
 
@@ -1975,7 +2085,7 @@ class Handler extends Controller{
         $better_payment_email_content_type_customer = !empty($better_payment_global_settings['better_payment_settings_general_email_send_as_customer']) ? $better_payment_global_settings['better_payment_settings_general_email_send_as_customer'] : 'html';
         $args = [];
 
-        $args['email_form_name'] = ! empty( $settings['better_payment_form_title'] ) ? sanitize_text_field( $settings['better_payment_form_title'] ) : 'N/A';
+        $args['email_form_name'] = ! empty( $settings['better_payment_form_title'] ) ? sanitize_text_field( $settings['better_payment_form_title'] ) : __( 'N/A', 'better-payment' );
         $args['email_content_heading_show'] = ! empty( $settings['better_payment_email_content_heading'] ) && 'yes' === $settings['better_payment_email_content_heading'] ? 1 : 0;
         $args['email_content_from_section_show'] = ! empty( $settings['better_payment_email_content_from_section'] ) && 'yes' === $settings['better_payment_email_content_from_section'] ? 1 : 0;
         $args['email_content_to_section_show'] = ! empty( $settings['better_payment_email_content_to_section'] ) && 'yes' === $settings['better_payment_email_content_to_section'] ? 1 : 0;
@@ -2031,7 +2141,9 @@ class Handler extends Controller{
 
         global $wpdb;
         $table   = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
         $transaction_obj = $wpdb->get_row(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
             $wpdb->prepare( "SELECT * FROM $table WHERE transaction_id=%s limit 1", sanitize_text_field( $transaction_id ) )
         );
 
@@ -2224,7 +2336,7 @@ class Handler extends Controller{
 
         $email_logo_url = ! empty( $args['email_logo_url'] ) ? $args['email_logo_url'] : '';
         $email_content_greeting = ! empty( $args['email_content_greeting'] ) ? 1 : 0;
-        $email_form_name = ! empty( $args['email_form_name'] ) ? $args['email_form_name'] : 'N/A';
+        $email_form_name = ! empty( $args['email_form_name'] ) ? $args['email_form_name'] : __( 'N/A', 'better-payment' );
 
         $form_field_rows = [];
 
@@ -2366,7 +2478,7 @@ class Handler extends Controller{
             'payment_date_time' => ! empty( $payment_date ) ? $payment_date : '',
             'transaction_id' => ! empty( $transaction_id ) ? $transaction_id : '',
             'payment_date_only' => wp_date(get_option('date_format'), strtotime($transaction_obj->payment_date)),
-            'status' => ucfirst( $status ),
+            'status' => self::email_status_label( $status ),
             'form_fields_info_arr' => $form_fields_info_arr,
             // 'admin_name' => $admin_name,
             'customer_name' => $customer_name,
@@ -2377,7 +2489,7 @@ class Handler extends Controller{
             'email_logo_url' => $email_logo_url,
             'source_image_url' => $source_image_url,
             'source_image_alt' => $source_image_alt,
-            'view_transaction_link' => admin_url("admin.php?page=better-payment-transactions&action=view&id={$transaction_obj->id}"),
+            'view_transaction_link' => Helper::transaction_view_url( (int) $transaction_obj->id ),
             'email_content_heading_show' => intval( $args['email_content_heading_show'] ),
             'email_content_from_section_show' => intval( $args['email_content_from_section_show'] ),
             'email_content_to_section_show' => intval( $args['email_content_to_section_show'] ),
@@ -2522,8 +2634,8 @@ class Handler extends Controller{
         // Handle SVG (uploaded via media library)
         if ( $library === 'svg' ) {
             if ( is_array( $value ) && ! empty( $value['url'] ) ) {
-                $svg_url = esc_url( $value['url'] );
-                echo '<img src="' . $svg_url . '" alt="Icon" class="bp-icon-svg" />';
+                $svg_url = $value['url'];
+                echo '<img src="' . esc_url( $svg_url ) . '" alt="Icon" class="bp-icon-svg" />';
                 return;
             }
         }
@@ -2545,9 +2657,10 @@ class Handler extends Controller{
                 // Add the specific icon class
                 $icon_class .= ' ' . esc_attr( $value );
 
-                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . esc_attr( $html_attributes['class'] ) : '';
                 $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
 
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $icon_class, $html_class and $aria_hidden are esc_attr()'d where they are built above.
                 echo '<i class="' . $icon_class . $html_class . '"' . $aria_hidden . '></i>';
                 return;
             }
@@ -2558,9 +2671,10 @@ class Handler extends Controller{
             if ( is_string( $value ) && ! empty( $value ) ) {
                 $icon_class = 'dashicons dashicons-' . esc_attr( $value );
 
-                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . esc_attr( $html_attributes['class'] ) : '';
                 $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
 
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $icon_class, $html_class and $aria_hidden are esc_attr()'d where they are built above.
                 echo '<span class="' . $icon_class . $html_class . '"' . $aria_hidden . '></span>';
                 return;
             }
@@ -2570,9 +2684,10 @@ class Handler extends Controller{
         // These are custom icon fonts or CSS-based icons defined by the theme/plugin
         if ( 'custom' === $library ) {
             if ( is_string( $value ) && ! empty( $value ) ) {
-                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . esc_attr( $html_attributes['class'] ) : '';
                 $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
 
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $html_class and $aria_hidden are esc_attr()'d where they are built above.
                 echo '<i class="' . esc_attr( $value ) . $html_class . '"' . $aria_hidden . '></i>';
                 return;
             }
@@ -2584,9 +2699,10 @@ class Handler extends Controller{
             if ( strpos( $value, 'fa' ) !== false || strpos( $value, 'fa-' ) !== false ) {
                 $icon_class = 'fas ' . esc_attr( $value );
 
-                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . esc_attr( $html_attributes['class'] ) : '';
                 $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
 
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $icon_class, $html_class and $aria_hidden are esc_attr()'d where they are built above.
                 echo '<i class="' . $icon_class . $html_class . '"' . $aria_hidden . '></i>';
                 return;
             }
@@ -2595,9 +2711,10 @@ class Handler extends Controller{
             if ( strpos( $value, 'dashicon' ) !== false || strpos( $value, 'dashicons-' ) !== false ) {
                 $icon_class = 'dashicons ' . esc_attr( $value );
 
-                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . $html_attributes['class'] : '';
+                $html_class = ! empty( $html_attributes['class'] ) ? ' ' . esc_attr( $html_attributes['class'] ) : '';
                 $aria_hidden = isset( $html_attributes['aria-hidden'] ) ? ' aria-hidden="' . esc_attr( $html_attributes['aria-hidden'] ) . '"' : ' aria-hidden="true"';
 
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $icon_class, $html_class and $aria_hidden are esc_attr()'d where they are built above.
                 echo '<span class="' . $icon_class . $html_class . '"' . $aria_hidden . '></span>';
                 return;
             }

@@ -1,0 +1,9 @@
+const ArrowIcon = () => {
+    return (
+        <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0.75 0.75L4.75 4.75L0.75 8.75" stroke="#CBD1DA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+        </svg>
+    );
+};
+
+export default ArrowIcon;

@@ -1,4 +1,8 @@
 <?php 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside a method; these variables are local to it.
     include BETTER_PAYMENT_ADMIN_VIEWS_PATH . "/partials/campaign-vars.php";
 ?>
 <main class="better-payment better-payment-campaign">
@@ -20,8 +24,8 @@
                                 </p>
                             <?php endif; ?>
                             <div class="bp-flex">
-                                <a <?php echo $this->print_render_attribute_string( 'better_payment_campaign_form_button_link' ); ?> class="btn-2 bp-donate_btn bp-inter_font">
-                                    <span><?php esc_html_e( $button_text, 'better-payment' ); ?></span>
+                                <a <?php $this->print_render_attribute_string( 'better_payment_campaign_form_button_link' ); ?> class="btn-2 bp-donate_btn bp-inter_font">
+                                    <span><?php echo esc_html( $button_text ); ?></span>
                                     <span>
                                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +52,7 @@
                             <?php endif; ?>
                             <form>
                                 <?php if ( method_exists( $widgetObj, 'render_campaign_hidden_fields' ) ) {
-                                    echo $widgetObj->render_campaign_hidden_fields( $settings );
+                                    echo $widgetObj->render_campaign_hidden_fields( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Every value is esc_attr()'d where render_campaign_hidden_fields() builds it.
                                 }?>
                                 <?php if( $form_goal_bar_line_enable ): ?>
                                     <progress id="bpProgressBar" class="bp-progress_bar" value="<?php echo esc_attr( $bpc_goal_percentage ); ?>" max="100"><?php echo esc_html( $bpc_goal_percentage ); ?>%</progress>
@@ -169,7 +173,7 @@
                                         </p>
                                         <div class="bp-flex">
                                             <a  href="<?php echo esc_url( $related_campaigns[0]['page_url'] ); ?>" target="_blank" class="btn-2 bp-donate_btn bp-inter_font">
-                                                <span><?php esc_html_e( $button_text, 'better-payment' ); ?></span>
+                                                <span><?php echo esc_html( $button_text ); ?></span>
                                                 <span>
                                                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
                                                         xmlns="http://www.w3.org/2000/svg">

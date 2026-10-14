@@ -4,6 +4,7 @@ namespace Better_Payment\Lite\Admin;
 
 use Better_Payment\Lite\Controller;
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Classes\Helper;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
 
@@ -54,10 +55,56 @@ class ReactAdmin extends Controller
      */
     public function handle_old_page_redirect()
     {
-        if (isset($_GET['page']) && trim(sanitize_text_field($_GET['page'])) === 'better-payment-settings') {
-            wp_safe_redirect(admin_url('admin.php?page=' . $this->page_slug_prefix . '-admin&tab=dashboard'));
+        $target = self::legacy_page_redirect_url( $_GET ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameters (admin page slug, transaction id); only redirects to another admin page.
+
+        if ( '' !== $target ) {
+            wp_safe_redirect( $target );
             exit;
         }
+    }
+
+    /**
+     * Where a request for a removed admin page belongs, or '' when it is not one.
+     *
+     * - `better-payment-settings` (the old settings screen) goes to the dashboard.
+     * - `better-payment-transactions` (the old transactions screen) goes to the Transactions tab,
+     *   and to that transaction's details when the request names one with `action=view&id=…`.
+     *   Admin notification e-mails sent before 2.4.2 link there from their View Transaction
+     *   button, and an e-mail cannot be re-sent, so the old address must keep working.
+     *
+     * Nothing registers either slug, so without the redirect WordPress answers both with
+     * "Sorry, you are not allowed to access this page". Only an admin request is redirected:
+     * on the front end `page` is an ordinary query arg some other plugin may use.
+     *
+     * @since 2.4.2
+     *
+     * @param array $query The request's query args (`$_GET`), unsanitised.
+     * @return string Unescaped admin URL, or ''.
+     */
+    public static function legacy_page_redirect_url( array $query ): string
+    {
+        if ( ! is_admin() || ! isset( $query['page'] ) || ! is_string( $query['page'] ) ) {
+            return '';
+        }
+
+        $page = trim( sanitize_text_field( wp_unslash( $query['page'] ) ) );
+
+        if ( 'better-payment-settings' === $page ) {
+            return admin_url( 'admin.php?page=better-payment-admin&tab=dashboard' );
+        }
+
+        if ( Helper::LEGACY_TRANSACTIONS_PAGE !== $page ) {
+            return '';
+        }
+
+        $action = isset( $query['action'] ) && is_string( $query['action'] ) ? sanitize_key( wp_unslash( $query['action'] ) ) : '';
+        $id     = isset( $query['id'] ) && is_scalar( $query['id'] ) ? absint( $query['id'] ) : 0;
+
+        if ( 'view' === $action && $id > 0 ) {
+            return Helper::transaction_view_url( $id );
+        }
+
+        return admin_url( 'admin.php?page=better-payment-admin&tab=transactions' );
     }
 
     /**
@@ -71,7 +118,8 @@ class ReactAdmin extends Controller
         wp_enqueue_style(
             'bp-icon-admin-editor',
             BETTER_PAYMENT_ASSETS . '/icon/style.min.css',
-            false
+            false,
+            BETTER_PAYMENT_VERSION
         );
     }
     
@@ -265,6 +313,9 @@ class ReactAdmin extends Controller
             ],
             'currencies' => $this->get_currency_list(),
             'userRoles' => $this->get_user_roles_list(),
+            // What Role After Subscription Ends falls back to: `customer` only
+            // where WooCommerce has created it, `subscriber` otherwise.
+            'defaultInactiveRole' => DB::default_inactive_role(),
             'currencySymbol' => $this->get_currency_symbol( $settings['better_payment_settings_general_general_currency'] ),
             // Picker-facing, so retired designs stay out of it. The renderer
             // still needs get_all(); see TemplateManager::get_for_picker().
@@ -341,17 +392,16 @@ class ReactAdmin extends Controller
         // Check if Pro version is installed and active
         if ($this->pro_enabled && defined('BETTER_PAYMENT_PRO_VERSION')) {
             $pro_version = BETTER_PAYMENT_PRO_VERSION;
-            return sprintf(
-                __('<span class="bp-footer-version-divider">Free Version <span class="bp-footer-version">%s</span></span> <span>Pro Version <span class="bp-footer-version">%s</span></span>', 'better-payment'),
-                $free_version,
-                $pro_version
-            );
+            return '<span class="bp-footer-version-divider">'
+                /* translators: %s: Better Payment (free) version number, wrapped in a badge. */
+                . sprintf( __( 'Free Version %s', 'better-payment' ), '<span class="bp-footer-version">' . $free_version . '</span>' )
+                . '</span> <span>'
+                /* translators: %s: Better Payment Pro version number, wrapped in a badge. */
+                . sprintf( __( 'Pro Version %s', 'better-payment' ), '<span class="bp-footer-version">' . $pro_version . '</span>' )
+                . '</span>';
         }
 
-        return sprintf(
-            __('<span class="bp-free-version"><span>Free Version</span> <span class="bp-footer-version">%s</span> </span>', 'better-payment'),
-            $free_version
-        );
+        return '<span class="bp-free-version"><span>' . __( 'Free Version', 'better-payment' ) . '</span> <span class="bp-footer-version">' . $free_version . '</span> </span>';
     }
 
     /**

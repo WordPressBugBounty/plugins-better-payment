@@ -116,7 +116,7 @@ class BlockManager {
             $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/layouts-block/layout-1.php';
             if ( ! file_exists( $template_file ) ) {
                 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                    error_log( 'Better Payment: Layout template not found at ' . $template_file );
+                    error_log( 'Better Payment: Layout template not found at ' . $template_file ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Records a real failure (missing template), WP_DEBUG only.
                 }
                 return '<div class="better-payment-block better-payment-block--error">' .
                        esc_html__( 'Payment form template not found.', 'better-payment' ) .
@@ -265,7 +265,7 @@ class BlockManager {
             $template_file = BETTER_PAYMENT_ADMIN_VIEWS_PATH . '/elementor/user-dashboard/layout-1.php';
             if ( ! file_exists( $template_file ) ) {
                 if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                    error_log( 'Better Payment: Layout template not found at ' . $template_file );
+                    error_log( 'Better Payment: Layout template not found at ' . $template_file ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Records a real failure (missing template), WP_DEBUG only.
                 }
                 return '<div class="better-payment-block better-payment-block--error">' .
                        esc_html__( 'User Dashboard template not found.', 'better-payment' ) .
@@ -363,11 +363,11 @@ class BlockManager {
             'header_show'         => isset( $attributes['headerShow'] ) ? (bool) $attributes['headerShow'] : true,
 
             // Labels
-            'dashboard_label'     => isset( $attributes['dashboardLabel'] ) && ! empty( $attributes['dashboardLabel'] ) ? sanitize_text_field( $attributes['dashboardLabel'] ) : 'Dashboard',
-            'transaction_label'   => isset( $attributes['transactionLabel'] ) && ! empty( $attributes['transactionLabel'] ) ? sanitize_text_field( $attributes['transactionLabel'] ) : 'Transactions',
-            'subscription_label'  => isset( $attributes['subscriptionLabel'] ) && ! empty( $attributes['subscriptionLabel'] ) ? sanitize_text_field( $attributes['subscriptionLabel'] ) : 'Subscriptions',
-            'refresh_stats_label' => isset( $attributes['refreshStatsLabel'] ) && ! empty( $attributes['refreshStatsLabel'] ) ? sanitize_text_field( $attributes['refreshStatsLabel'] ) : 'Refresh Stats',
-            'no_items_label'      => isset( $attributes['noItemsLabel'] ) && ! empty( $attributes['noItemsLabel'] ) ? sanitize_text_field( $attributes['noItemsLabel'] ) : 'No records found!',
+            'dashboard_label'     => isset( $attributes['dashboardLabel'] ) && ! empty( $attributes['dashboardLabel'] ) ? sanitize_text_field( $attributes['dashboardLabel'] ) : __( 'Dashboard', 'better-payment' ),
+            'transaction_label'   => isset( $attributes['transactionLabel'] ) && ! empty( $attributes['transactionLabel'] ) ? sanitize_text_field( $attributes['transactionLabel'] ) : __( 'Transactions', 'better-payment' ),
+            'subscription_label'  => isset( $attributes['subscriptionLabel'] ) && ! empty( $attributes['subscriptionLabel'] ) ? sanitize_text_field( $attributes['subscriptionLabel'] ) : __( 'Subscriptions', 'better-payment' ),
+            'refresh_stats_label' => isset( $attributes['refreshStatsLabel'] ) && ! empty( $attributes['refreshStatsLabel'] ) ? sanitize_text_field( $attributes['refreshStatsLabel'] ) : __( 'Refresh Stats', 'better-payment' ),
+            'no_items_label'      => isset( $attributes['noItemsLabel'] ) && ! empty( $attributes['noItemsLabel'] ) ? sanitize_text_field( $attributes['noItemsLabel'] ) : __( 'No records found!', 'better-payment' ),
 
             // Dashboard section visibility
             'dashboard_transaction_summary_show'   => isset( $attributes['dashboardTransactionSummaryShow'] ) ? (bool) $attributes['dashboardTransactionSummaryShow'] : true,
@@ -377,15 +377,15 @@ class BlockManager {
             'dashboard_split_subscription_show'   => isset( $attributes['dashboardSplitSubscriptionShow'] ) ? (bool) $attributes['dashboardSplitSubscriptionShow'] : true,
 
             // Dashboard labels
-            'dashboard_total_amount_label'        => isset( $attributes['dashboardTotalAmountLabel'] ) && ! empty( $attributes['dashboardTotalAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardTotalAmountLabel'] ) : 'Total Amount',
-            'dashboard_completed_amount_label'    => isset( $attributes['dashboardCompletedAmountLabel'] ) && ! empty( $attributes['dashboardCompletedAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardCompletedAmountLabel'] ) : 'Completed Amount',
-            'dashboard_incomplete_amount_label'   => isset( $attributes['dashboardIncompleteAmountLabel'] ) && ! empty( $attributes['dashboardIncompleteAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardIncompleteAmountLabel'] ) : 'Incomplete Amount',
-            'dashboard_refunded_amount_label'     => isset( $attributes['dashboardRefundedAmountLabel'] ) && ! empty( $attributes['dashboardRefundedAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardRefundedAmountLabel'] ) : 'Refunded Amount',
-            'dashboard_view_all_label'            => isset( $attributes['dashboardViewAllLabel'] ) && ! empty( $attributes['dashboardViewAllLabel'] ) ? sanitize_text_field( $attributes['dashboardViewAllLabel'] ) : 'View All',
-            'dashboard_analytics_reports_label'   => isset( $attributes['dashboardAnalyticsReportsLabel'] ) && ! empty( $attributes['dashboardAnalyticsReportsLabel'] ) ? sanitize_text_field( $attributes['dashboardAnalyticsReportsLabel'] ) : 'Analytics Reports',
-            'dashboard_recent_transactions_label' => isset( $attributes['dashboardRecentTransactionsLabel'] ) && ! empty( $attributes['dashboardRecentTransactionsLabel'] ) ? sanitize_text_field( $attributes['dashboardRecentTransactionsLabel'] ) : 'Recent Transactions',
-            'dashboard_recurring_subscriptions_label' => isset( $attributes['dashboardRecurringSubscriptionsLabel'] ) && ! empty( $attributes['dashboardRecurringSubscriptionsLabel'] ) ? sanitize_text_field( $attributes['dashboardRecurringSubscriptionsLabel'] ) : 'Recurring Subscriptions',
-            'dashboard_split_subscriptions_label' => isset( $attributes['dashboardSplitSubscriptionsLabel'] ) && ! empty( $attributes['dashboardSplitSubscriptionsLabel'] ) ? sanitize_text_field( $attributes['dashboardSplitSubscriptionsLabel'] ) : 'Split Subscriptions',
+            'dashboard_total_amount_label'        => isset( $attributes['dashboardTotalAmountLabel'] ) && ! empty( $attributes['dashboardTotalAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardTotalAmountLabel'] ) : __( 'Total Amount', 'better-payment' ),
+            'dashboard_completed_amount_label'    => isset( $attributes['dashboardCompletedAmountLabel'] ) && ! empty( $attributes['dashboardCompletedAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardCompletedAmountLabel'] ) : __( 'Completed Amount', 'better-payment' ),
+            'dashboard_incomplete_amount_label'   => isset( $attributes['dashboardIncompleteAmountLabel'] ) && ! empty( $attributes['dashboardIncompleteAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardIncompleteAmountLabel'] ) : __( 'Incomplete Amount', 'better-payment' ),
+            'dashboard_refunded_amount_label'     => isset( $attributes['dashboardRefundedAmountLabel'] ) && ! empty( $attributes['dashboardRefundedAmountLabel'] ) ? sanitize_text_field( $attributes['dashboardRefundedAmountLabel'] ) : __( 'Refunded Amount', 'better-payment' ),
+            'dashboard_view_all_label'            => isset( $attributes['dashboardViewAllLabel'] ) && ! empty( $attributes['dashboardViewAllLabel'] ) ? sanitize_text_field( $attributes['dashboardViewAllLabel'] ) : __( 'View All', 'better-payment' ),
+            'dashboard_analytics_reports_label'   => isset( $attributes['dashboardAnalyticsReportsLabel'] ) && ! empty( $attributes['dashboardAnalyticsReportsLabel'] ) ? sanitize_text_field( $attributes['dashboardAnalyticsReportsLabel'] ) : __( 'Analytics Reports', 'better-payment' ),
+            'dashboard_recent_transactions_label' => isset( $attributes['dashboardRecentTransactionsLabel'] ) && ! empty( $attributes['dashboardRecentTransactionsLabel'] ) ? sanitize_text_field( $attributes['dashboardRecentTransactionsLabel'] ) : __( 'Recent Transactions', 'better-payment' ),
+            'dashboard_recurring_subscriptions_label' => isset( $attributes['dashboardRecurringSubscriptionsLabel'] ) && ! empty( $attributes['dashboardRecurringSubscriptionsLabel'] ) ? sanitize_text_field( $attributes['dashboardRecurringSubscriptionsLabel'] ) : __( 'Recurring Subscriptions', 'better-payment' ),
+            'dashboard_split_subscriptions_label' => isset( $attributes['dashboardSplitSubscriptionsLabel'] ) && ! empty( $attributes['dashboardSplitSubscriptionsLabel'] ) ? sanitize_text_field( $attributes['dashboardSplitSubscriptionsLabel'] ) : __( 'Split Subscriptions', 'better-payment' ),
 
             // Transaction table visibility
             'transaction_table_name_show'          => isset( $attributes['transactionTableNameShow'] ) ? (bool) $attributes['transactionTableNameShow'] : true,
@@ -399,15 +399,15 @@ class BlockManager {
             'transaction_table_action_show'        => isset( $attributes['transactionTableActionShow'] ) ? (bool) $attributes['transactionTableActionShow'] : true,
 
             // Transaction table labels
-            'transaction_table_name_label'          => isset( $attributes['transactionTableNameLabel'] ) && ! empty( $attributes['transactionTableNameLabel'] ) ? sanitize_text_field( $attributes['transactionTableNameLabel'] ) : 'Name',
-            'transaction_table_email_address_label' => isset( $attributes['transactionTableEmailAddressLabel'] ) && ! empty( $attributes['transactionTableEmailAddressLabel'] ) ? sanitize_text_field( $attributes['transactionTableEmailAddressLabel'] ) : 'Email Address',
-            'transaction_table_amount_label'        => isset( $attributes['transactionTableAmountLabel'] ) && ! empty( $attributes['transactionTableAmountLabel'] ) ? sanitize_text_field( $attributes['transactionTableAmountLabel'] ) : 'Amount',
-            'transaction_table_payment_type_label'  => isset( $attributes['transactionTablePaymentTypeLabel'] ) && ! empty( $attributes['transactionTablePaymentTypeLabel'] ) ? sanitize_text_field( $attributes['transactionTablePaymentTypeLabel'] ) : 'Payment Type',
-            'transaction_table_transaction_id_label' => isset( $attributes['transactionTableTransactionIdLabel'] ) && ! empty( $attributes['transactionTableTransactionIdLabel'] ) ? sanitize_text_field( $attributes['transactionTableTransactionIdLabel'] ) : 'Transaction ID',
-            'transaction_table_source_label'        => isset( $attributes['transactionTableSourceLabel'] ) && ! empty( $attributes['transactionTableSourceLabel'] ) ? sanitize_text_field( $attributes['transactionTableSourceLabel'] ) : 'Source',
-            'transaction_table_status_label'        => isset( $attributes['transactionTableStatusLabel'] ) && ! empty( $attributes['transactionTableStatusLabel'] ) ? sanitize_text_field( $attributes['transactionTableStatusLabel'] ) : 'Status',
-            'transaction_table_date_label'          => isset( $attributes['transactionTableDateLabel'] ) && ! empty( $attributes['transactionTableDateLabel'] ) ? sanitize_text_field( $attributes['transactionTableDateLabel'] ) : 'Date',
-            'transaction_table_action_label'        => isset( $attributes['transactionTableActionLabel'] ) && ! empty( $attributes['transactionTableActionLabel'] ) ? sanitize_text_field( $attributes['transactionTableActionLabel'] ) : 'Action',
+            'transaction_table_name_label'          => isset( $attributes['transactionTableNameLabel'] ) && ! empty( $attributes['transactionTableNameLabel'] ) ? sanitize_text_field( $attributes['transactionTableNameLabel'] ) : __( 'Name', 'better-payment' ),
+            'transaction_table_email_address_label' => isset( $attributes['transactionTableEmailAddressLabel'] ) && ! empty( $attributes['transactionTableEmailAddressLabel'] ) ? sanitize_text_field( $attributes['transactionTableEmailAddressLabel'] ) : __( 'Email Address', 'better-payment' ),
+            'transaction_table_amount_label'        => isset( $attributes['transactionTableAmountLabel'] ) && ! empty( $attributes['transactionTableAmountLabel'] ) ? sanitize_text_field( $attributes['transactionTableAmountLabel'] ) : __( 'Amount', 'better-payment' ),
+            'transaction_table_payment_type_label'  => isset( $attributes['transactionTablePaymentTypeLabel'] ) && ! empty( $attributes['transactionTablePaymentTypeLabel'] ) ? sanitize_text_field( $attributes['transactionTablePaymentTypeLabel'] ) : __( 'Payment Type', 'better-payment' ),
+            'transaction_table_transaction_id_label' => isset( $attributes['transactionTableTransactionIdLabel'] ) && ! empty( $attributes['transactionTableTransactionIdLabel'] ) ? sanitize_text_field( $attributes['transactionTableTransactionIdLabel'] ) : __( 'Transaction ID', 'better-payment' ),
+            'transaction_table_source_label'        => isset( $attributes['transactionTableSourceLabel'] ) && ! empty( $attributes['transactionTableSourceLabel'] ) ? sanitize_text_field( $attributes['transactionTableSourceLabel'] ) : __( 'Source', 'better-payment' ),
+            'transaction_table_status_label'        => isset( $attributes['transactionTableStatusLabel'] ) && ! empty( $attributes['transactionTableStatusLabel'] ) ? sanitize_text_field( $attributes['transactionTableStatusLabel'] ) : __( 'Status', 'better-payment' ),
+            'transaction_table_date_label'          => isset( $attributes['transactionTableDateLabel'] ) && ! empty( $attributes['transactionTableDateLabel'] ) ? sanitize_text_field( $attributes['transactionTableDateLabel'] ) : __( 'Date', 'better-payment' ),
+            'transaction_table_action_label'        => isset( $attributes['transactionTableActionLabel'] ) && ! empty( $attributes['transactionTableActionLabel'] ) ? sanitize_text_field( $attributes['transactionTableActionLabel'] ) : __( 'Action', 'better-payment' ),
 
             // Subscription table column visibility (pro feature — consumed by template-subscriptions-tab.php)
             'subscription_table_subscription_id_show'  => isset( $attributes['subscriptionTableSubscriptionIdShow'] ) ? (bool) $attributes['subscriptionTableSubscriptionIdShow'] : true,
@@ -419,16 +419,16 @@ class BlockManager {
             'subscription_table_action_show'           => isset( $attributes['subscriptionTableActionShow'] ) ? (bool) $attributes['subscriptionTableActionShow'] : true,
 
             // Subscription table column labels (pro feature)
-            'subscription_table_subscription_id_label'  => ! empty( $attributes['subscriptionTableSubscriptionIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableSubscriptionIdLabel'] ) : 'Subscription ID',
-            'subscription_table_plan_id_label'          => ! empty( $attributes['subscriptionTablePlanIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTablePlanIdLabel'] ) : 'Product Name',
-            'subscription_table_status_label'           => ! empty( $attributes['subscriptionTableStatusLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusLabel'] ) : 'Status',
-            'subscription_table_amount_label'           => ! empty( $attributes['subscriptionTableAmountLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableAmountLabel'] ) : 'Amount',
-            'subscription_table_created_date_label'     => ! empty( $attributes['subscriptionTableCreatedDateLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCreatedDateLabel'] ) : 'Payment Date',
-            'subscription_table_current_period_label'   => ! empty( $attributes['subscriptionTableCurrentPeriodLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCurrentPeriodLabel'] ) : 'Renewal Date',
-            'subscription_table_action_label'           => ! empty( $attributes['subscriptionTableActionLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionLabel'] ) : 'Action',
-            'subscription_table_status_active_label'    => ! empty( $attributes['subscriptionTableStatusActiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusActiveLabel'] ) : 'Active',
-            'subscription_table_status_inactive_label'  => ! empty( $attributes['subscriptionTableStatusInactiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusInactiveLabel'] ) : 'Inactive',
-            'subscription_table_action_cancel_label'    => ! empty( $attributes['subscriptionTableActionCancelLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionCancelLabel'] ) : 'Cancel',
+            'subscription_table_subscription_id_label'  => ! empty( $attributes['subscriptionTableSubscriptionIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableSubscriptionIdLabel'] ) : __( 'Subscription ID', 'better-payment' ),
+            'subscription_table_plan_id_label'          => ! empty( $attributes['subscriptionTablePlanIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTablePlanIdLabel'] ) : __( 'Product Name', 'better-payment' ),
+            'subscription_table_status_label'           => ! empty( $attributes['subscriptionTableStatusLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusLabel'] ) : __( 'Status', 'better-payment' ),
+            'subscription_table_amount_label'           => ! empty( $attributes['subscriptionTableAmountLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableAmountLabel'] ) : __( 'Amount', 'better-payment' ),
+            'subscription_table_created_date_label'     => ! empty( $attributes['subscriptionTableCreatedDateLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCreatedDateLabel'] ) : __( 'Payment Date', 'better-payment' ),
+            'subscription_table_current_period_label'   => ! empty( $attributes['subscriptionTableCurrentPeriodLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCurrentPeriodLabel'] ) : __( 'Renewal Date', 'better-payment' ),
+            'subscription_table_action_label'           => ! empty( $attributes['subscriptionTableActionLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionLabel'] ) : __( 'Action', 'better-payment' ),
+            'subscription_table_status_active_label'    => ! empty( $attributes['subscriptionTableStatusActiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusActiveLabel'] ) : __( 'Active', 'better-payment' ),
+            'subscription_table_status_inactive_label'  => ! empty( $attributes['subscriptionTableStatusInactiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusInactiveLabel'] ) : __( 'Inactive', 'better-payment' ),
+            'subscription_table_action_cancel_label'    => ! empty( $attributes['subscriptionTableActionCancelLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionCancelLabel'] ) : __( 'Cancel', 'better-payment' ),
         );
 
         /**
@@ -638,7 +638,7 @@ class BlockManager {
         if ( ! empty( $stripe_price_id ) && strpos( $stripe_price_id, 'price_' ) !== 0 ) {
             // Invalid format - log warning in debug mode and reset to empty.
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                error_log( 'Better Payment: Invalid Stripe Price ID format (should start with "price_"): ' . esc_html( $stripe_price_id ) );
+                error_log( 'Better Payment: Invalid Stripe Price ID format (should start with "price_"): ' . esc_html( $stripe_price_id ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Records a real misconfiguration, WP_DEBUG only.
             }
             $stripe_price_id = '';
         }
@@ -657,6 +657,7 @@ class BlockManager {
         $site_url_parsed = wp_parse_url( get_site_url() );
         $site_domain     = ! empty( $site_url_parsed['host'] ) ? esc_html( $site_url_parsed['host'] ) : 'example.com';
         $default_from_email = 'wordpress@' . $site_domain;
+        /* translators: %s: site name. */
         $default_email_subject = sprintf( __( 'Better Payment transaction on %s', 'better-payment' ), esc_html( get_option( 'blogname' ) ) );
 
         // Admin email settings from block attributes with fallback to global settings.
@@ -1621,8 +1622,10 @@ class BlockManager {
              * @return string Empty string for blocks.
              */
             public function render_campaign_id_hidden_field( $settings ) {
-                $campaign_id       = ! empty( $_GET['campaign_id'] ) ? sanitize_text_field( $_GET['campaign_id'] ) : '';
-                $campaign_currency = ! empty( $_GET['campaign_currency'] ) ? sanitize_text_field( $_GET['campaign_currency'] ) : '';
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter echoed into a hidden field; the payment handler validates it server-side.
+                $campaign_id       = ! empty( $_GET['campaign_id'] ) ? sanitize_text_field( wp_unslash( $_GET['campaign_id'] ) ) : '';
+                // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display parameter echoed into a hidden field; the payment handler validates it server-side.
+                $campaign_currency = ! empty( $_GET['campaign_currency'] ) ? sanitize_text_field( wp_unslash( $_GET['campaign_currency'] ) ) : '';
 
                 return '
                     <input type="hidden" name="campaign_id" value="' . esc_attr( $campaign_id ) . '">
@@ -1648,7 +1651,7 @@ class BlockManager {
         $editor_type = false;
         if ( $pagenow === 'post-new.php' || $pagenow === 'post.php' ) {
             $editor_type = 'edit-post';
-        } elseif ( $pagenow === 'site-editor.php' || ( $pagenow === 'themes.php' && isset( $_GET[ 'page' ] ) && sanitize_text_field( wp_unslash( $_GET[ 'page' ] ) ) === 'gutenberg-edit-site' ) ) {
+        } elseif ( $pagenow === 'site-editor.php' || ( $pagenow === 'themes.php' && isset( $_GET[ 'page' ] ) && sanitize_text_field( wp_unslash( $_GET[ 'page' ] ) ) === 'gutenberg-edit-site' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin screen detection.
             $editor_type = 'edit-site';
         } elseif ( $pagenow === 'widgets.php' ) {
             $editor_type = 'edit-widgets';
@@ -1753,10 +1756,18 @@ class BlockManager {
      * that the editor UI actually reads (email defaults, gateway enable flags,
      * public keys) are kept — secrets never leave the server.
      *
+     * Read through `DB::get_settings()`, defaults merged, exactly as the
+     * Settings screen and the frontend render read it. This used to be the raw
+     * option, so on a site that had never saved its settings the Settings screen
+     * showed PayPal and Stripe on (their defaults) while the editor saw no
+     * gateway at all: the block said "No payment gateway enabled", and a block
+     * inserted then stored all three gateway toggles as `false`, so the form
+     * stayed off on the live page too, even after the admin saved Settings.
+     *
      * @return array
      */
     private function get_safe_settings_for_editor() {
-        $settings = get_option( 'better_payment_settings', array() );
+        $settings = DB::get_settings();
         if ( ! is_array( $settings ) ) {
             return array();
         }
@@ -1825,6 +1836,31 @@ class BlockManager {
             'settingsUrl'           => admin_url( 'admin.php?page=better-payment-admin&tab=settings&section=general' ),
             'canManageSettings'     => current_user_can( 'manage_options' ),
         );
+    }
+
+    /**
+     * The avatar URL for the block editor's User Dashboard preview, or '' when
+     * the site has avatars switched off.
+     *
+     * get_avatar_url() points at Gravatar (a third-party service) and, unlike
+     * get_avatar(), ignores Settings → Discussion → Show Avatars. Honouring
+     * that setting keeps the preview from contacting Gravatar on a site that
+     * turned avatars off (issue #147). With no URL the preview draws a local
+     * placeholder (src/blocks/user-dashboard/src/components/defaultAvatar.js).
+     *
+     * @since 2.4.2
+     *
+     * @param string $email User email.
+     * @return string
+     */
+    public static function editor_avatar_url( $email ) {
+        if ( ! get_option( 'show_avatars' ) ) {
+            return '';
+        }
+
+        $url = get_avatar_url( $email, array( 'size' => 32 ) );
+
+        return is_string( $url ) ? $url : '';
     }
 
     /**
@@ -1984,10 +2020,10 @@ class BlockManager {
                 'id'             => $current_user->ID,
                 'user_email'     => $current_user->user_email,
                 'user_login'     => $current_user->user_login,
-                'user_avatar_url'=> get_avatar_url( $current_user->user_email, array( 'size' => 32 ) ),
+                'user_avatar_url'=> self::editor_avatar_url( $current_user->user_email ),
                 'email'          => $current_user->user_email,
                 'login'          => $current_user->user_login,
-                'avatar'         => get_avatar_url( $current_user->user_email, array( 'size' => 32 ) ),
+                'avatar'         => self::editor_avatar_url( $current_user->user_email ),
             ),
             'userTransactions'      => $user_transactions,
             'userTransactionsMeta'  => $user_transactions_meta,
@@ -2172,7 +2208,7 @@ class BlockManager {
         if ( false === $result ) {
             // Log error in debug mode
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                error_log( 'Better Payment: Failed to register block ' . $block_config['name'] );
+                error_log( 'Better Payment: Failed to register block ' . $block_config['name'] ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Records a real failure (block registration), WP_DEBUG only.
             }
         }
     }

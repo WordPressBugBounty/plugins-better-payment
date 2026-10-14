@@ -8,6 +8,7 @@ if ( root ) {
     const restUrl      = root.dataset.restUrl || '';
     const nonce        = root.dataset.nonce || '';
     const adminUrl     = root.dataset.adminUrl || '';
+    const start        = root.dataset.start || '';
     const campaignsUrl = root.dataset.campaignsUrl || `${ adminUrl }admin.php?page=better-payment-admin&tab=campaigns`;
 
     render(
@@ -17,6 +18,7 @@ if ( root ) {
             nonce={ nonce }
             adminUrl={ adminUrl }
             campaignsUrl={ campaignsUrl }
+            start={ start }
         />,
         root
     );

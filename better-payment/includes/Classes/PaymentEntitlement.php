@@ -365,6 +365,7 @@ final class PaymentEntitlement {
      * @return mixed
      */
     private static function answer( $hook, array $args ) {
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- $hook is always one of this class's own better_payment/... hook names.
         return apply_filters_ref_array( $hook, $args );
     }
 }

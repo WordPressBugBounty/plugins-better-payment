@@ -47,6 +47,9 @@ class Actions {
 
         check_admin_referer( 'better-payment-paypal', 'security' );
 
+        // redirect_previous_page() exits; the default only tells static analysis so.
+        $widget_id = '';
+
         $page_id = ! empty( $_POST[ 'better_payment_page_id' ] ) ? intval( $_POST[ 'better_payment_page_id' ], 10 ) : 0;
 
         if ( ! $page_id ) {
@@ -54,7 +57,7 @@ class Actions {
         }
 
         if ( !empty( $_POST[ 'better_payment_widget_id' ] ) ) {
-            $widget_id = sanitize_text_field( $_POST[ 'better_payment_widget_id' ] );
+            $widget_id = sanitize_text_field( wp_unslash( $_POST[ 'better_payment_widget_id' ] ) );
         } else {
             $this->redirect_previous_page();
         }
@@ -103,15 +106,26 @@ class Actions {
         $primary_payment_amount          = $guarded['amount'];
         $primary_payment_amount_quantity = $guarded['quantity'];
 
-        $order_id     = Handler::new_order_id( 'paypal' );
+        $order_id = Handler::new_order_id( 'paypal' );
+
+        // PayPal sends the payer back to these URLs, and they arrive in the request. Only a
+        // URL on this site is accepted; anything else falls back to the form's page, with the
+        // same status arguments Handler::paypal_button() posts, so the thank-you / error
+        // message still shows (a multilingual site on several domains can hit the fallback).
+        $site_url          = get_permalink( $page_id );
+        $return_fallback   = Handler::paypal_return_fallback( $site_url, $widget_id, 'success' );
+        $cancel_fallback   = Handler::paypal_return_fallback( $site_url, $widget_id, 'error' );
+        $return_url        = ! empty( $_POST['return'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['return'] ) ), $return_fallback ) : '';
+        $cancel_return_url = ! empty( $_POST['cancel_return'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['cancel_return'] ) ), $cancel_fallback ) : '';
+
         $request_data = [
             'business'      => $el_settings[ 'better_payment_paypal_business_email' ],
             'currency_code' => $el_settings_currency,
             'rm'            => '2',
-            'return'        => esc_url_raw( $_POST[ 'return' ] ),
-            'cancel_return' => add_query_arg( 'better_payment_paypal_id', $order_id, esc_url_raw( $_POST[ 'cancel_return' ] ) ),
+            'return'        => $return_url,
+            'cancel_return' => add_query_arg( 'better_payment_paypal_id', $order_id, $cancel_return_url ),
             'item_number'   => $order_id,
-            'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__('Better Payment', 'better-payment'),
+            'item_name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__('Better Payment', 'better-payment'),
             'amount'        => $primary_payment_amount,
             'cmd'           => $el_settings[ 'better_payment_paypal_button_type' ],
             'notify_url'    => admin_url( 'admin-post.php?action=better_payment_paypal_ipn' ),
@@ -170,7 +184,7 @@ class Actions {
             [
                 'amount'       => floatval( $primary_payment_amount ),
                 'order_id'     => $order_id,
-                'payment_date' => date( 'Y-m-d H:i:s' ),
+                'payment_date' => gmdate( 'Y-m-d H:i:s' ),
                 'source'       => 'paypal',
                 'form_fields_info'     => maybe_serialize( $better_form_fields ),
                 'currency'     => sanitize_text_field($el_settings_currency),
@@ -180,6 +194,7 @@ class Actions {
         );
         $paypal_url = "https://www.$path.com/cgi-bin/webscr?";
         $paypal_url .= http_build_query( $request_data );
+        // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Redirect to the PayPal gateway (paypal.com / sandbox.paypal.com), an external host by design.
         wp_redirect( esc_url_raw($paypal_url) );
     }
 
@@ -194,7 +209,7 @@ class Actions {
         }
 
         $setting_data_page_id = isset($_POST[ 'setting_data' ]['page_id']) ? intval( $_POST[ 'setting_data' ]['page_id'] ) : 0;
-        $setting_data_widget_id = isset($_POST[ 'setting_data' ]['widget_id']) ? sanitize_text_field( $_POST[ 'setting_data' ]['widget_id'] ) : 0;
+        $setting_data_widget_id = isset($_POST[ 'setting_data' ]['widget_id']) ? sanitize_text_field( wp_unslash( $_POST[ 'setting_data' ]['widget_id'] ) ) : 0;
 
         if ( !empty( $setting_data_page_id ) ) {
             $page_id = $setting_data_page_id;
@@ -227,6 +242,7 @@ class Actions {
         $guard   = new PaymentRequestGuard();
         $guarded = $guard->resolve_form_payment(
             $el_settings,
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw field array handed to PaymentRequestGuard, which validates/sanitizes each field it reads; nonce checked at the top of the handler.
             isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [],
             [
                 'page_id' => $page_id,
@@ -285,13 +301,13 @@ class Actions {
                 [
                     'amount'   => (int) round( $amount * 100 ),
                     'currency' => $el_settings_currency,
-                    'name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__('Better Payment', 'better-payment'),
+                    'name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__('Better Payment', 'better-payment'),
                     'quantity' => 1
                 ]
             ],
             'payment_intent_data'        => [
                 'capture_method' => 'automatic',
-                'description'    => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html__( $el_settings['better_payment_form_title'], 'better-payment' ) : esc_html__('Better Payment', 'better-payment'),
+                'description'    => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__('Better Payment', 'better-payment'),
                 'metadata'       => [
                     'order_id' => $order_id
                 ]
@@ -338,6 +354,7 @@ class Actions {
         // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
         $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
 
         if ( !empty( $better_form_fields['primary_first_name'] ) ) {
@@ -371,6 +388,7 @@ class Actions {
                 ],
                 [
                     'settings'    => $el_settings,
+                    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw field array handed to PaymentRequestGuard, which validates/sanitizes each field it reads; nonce checked at the top of the handler.
                     'fields'      => isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [],
                     'guarded'     => $guarded,
                     'order_id'    => $order_id,
@@ -407,7 +425,7 @@ class Actions {
                 [
                     'amount'         => $amount,
                     'order_id'       => $order_id,
-                    'payment_date'   => date( 'Y-m-d H:i:s' ),
+                    'payment_date'   => gmdate( 'Y-m-d H:i:s' ),
                     'source'         => 'stripe',
                     'transaction_id' => sanitize_text_field($response_ar->payment_intent),
                     'customer_info'  => maybe_serialize( $response_ar ),
@@ -461,7 +479,7 @@ class Actions {
         }
 
         $page_id = intval( $_POST[ 'setting_data' ]['page_id'] );
-        $widget_id = sanitize_text_field( $_POST[ 'setting_data' ]['widget_id'] );
+        $widget_id = sanitize_text_field( wp_unslash( $_POST[ 'setting_data' ]['widget_id'] ) );
         $el_settings = $this->better_payment_widget_settings( $page_id, $widget_id );
 
         if ( empty( $el_settings ) ) {
@@ -476,6 +494,7 @@ class Actions {
         // from the request — see PaymentRequestGuard.
         $guarded = ( new PaymentRequestGuard() )->resolve_form_payment(
             $el_settings,
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Raw field array handed to PaymentRequestGuard, which validates/sanitizes each field it reads; nonce checked at the top of the handler.
             isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [],
             [
                 'page_id' => $page_id,
@@ -552,6 +571,7 @@ class Actions {
         // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
         $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
         $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
 
         if ( !empty( $better_form_fields['primary_email'] ) ) {
@@ -599,7 +619,7 @@ class Actions {
             [
                 'amount'         => $amount,
                 'order_id'       => $order_id,
-                'payment_date'   => date( 'Y-m-d H:i:s' ),
+                'payment_date'   => gmdate( 'Y-m-d H:i:s' ),
                 'source'         => 'paystack',
                 // Paystack's reference, so verification can bind it to this order.
                 'transaction_id' => ! empty( $response_ar->data->reference ) ? sanitize_text_field( $response_ar->data->reference ) : '',
@@ -725,7 +745,7 @@ class Actions {
      * @since 1.0.0
      */
     public function redirect_previous_page() {
-        $location = $_SERVER[ 'HTTP_REFERER' ];
+        $location = isset( $_SERVER[ 'HTTP_REFERER' ] ) ? esc_url_raw( wp_unslash( $_SERVER[ 'HTTP_REFERER' ] ) ) : '';
         wp_safe_redirect( $location );
         exit();
     }

@@ -67,12 +67,20 @@ class Migrator
         
         // $row = $wpdb->get_results(  "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '$table_name' AND column_name = '$column_name'"  );
         
-        $columns = $wpdb->get_col( "DESC $table_name", 0 );
+        $columns = $wpdb->get_col( "DESC $table_name", 0 ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- table name from $wpdb->prefix; schema introspection of the plugin custom table, no WP API.
         
         if (in_array($column_name, $columns)) {
             return;
         }
         
-        $wpdb->query($wpdb->prepare("ALTER TABLE $table_name ADD $column_name $column_type"));
+        // Identifiers cannot be placeholders, so this ran through prepare() with none, which
+        // WordPress reports as _doing_it_wrong. Both values are literals from update_tables();
+        // anything that is not a plain identifier and type is refused rather than run.
+        if ( ! preg_match( '/^[a-z_][a-z0-9_]*$/', $column_name ) || ! preg_match( '/^[a-z]+(\(\d+(,\d+)?\))?$/', $column_type ) ) {
+            return;
+        }
+
+        // Table name from $wpdb->prefix; column name and type validated above.
+        $wpdb->query( "ALTER TABLE $table_name ADD $column_name $column_type" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, PluginCheck.Security.DirectDB.UnescapedDBParameter -- see the comment above; adds a column to the plugin custom table, no WP API.
     }
 }

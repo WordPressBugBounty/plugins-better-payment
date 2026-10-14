@@ -11,6 +11,10 @@ use ElementorPro\Modules\Forms\Classes\Action_Base;
 use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
 use ElementorPro\Modules\Forms\Classes\Form_Record;
 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
+}
+
 /**
  * Stripe integration class
  *
@@ -277,7 +281,7 @@ class Stripe_Integration extends Action_Base {
                 [
                     'amount'         => $amount,
                     'order_id'       => $order_id,
-                    'payment_date'   => date( 'Y-m-d H:i:s' ),
+                    'payment_date'   => gmdate( 'Y-m-d H:i:s' ),
                     'source'         => 'stripe',
                     'transaction_id' => sanitize_text_field($response_ar->payment_intent),
                     'customer_info'  => maybe_serialize( $response_ar ),

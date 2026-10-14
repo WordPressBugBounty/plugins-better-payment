@@ -263,6 +263,7 @@ class Emails {
 
         WC()->mailer();
 
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- $hook is always one of this class's prefixed *_NOTIFICATION constants (better_payment/woocommerce/...).
         do_action( $hook, $order_id );
     }
 

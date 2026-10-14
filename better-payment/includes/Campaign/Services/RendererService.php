@@ -94,7 +94,7 @@ class RendererService {
                          style="<?php echo esc_attr( $col_style ); ?>">
                         <?php
                         foreach ( $column['elements'] as $element ) {
-                            echo self::render_element( $element, $campaign_id, $post, $meta, $stats );
+                            echo self::render_element( $element, $campaign_id, $post, $meta, $stats ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_element() returns HTML escaped where each element's markup is built.
                         }
                         ?>
                     </div>
@@ -247,6 +247,11 @@ class RendererService {
                 $allowed_sizes = [ 'thumbnail', 'medium', 'medium_large', 'large', 'full' ];
                 if ( ! in_array( $size, $allowed_sizes, true ) ) {
                     $size = 'full';
+                }
+
+                // A photo an old prebuilt template hotlinked from Unsplash renders from the shipped copy.
+                if ( ! empty( $settings['src'] ) && is_string( $settings['src'] ) ) {
+                    $settings['src'] = TemplateManager::local_photo_url( $settings['src'] );
                 }
 
                 // Fallback: resolve attachment ID from URL for elements without a stored src_id.
@@ -623,9 +628,9 @@ class RendererService {
                         <?php foreach ( $active_sharing as $key => $share_url ) : ?>
                             <a href="<?php echo esc_url( $share_url ); ?>"
                                class="bp-social-icon"
-                               <?php echo $sh_target; ?>
+                               <?php echo $sh_target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sh_target is one of two literal attribute strings set above. ?>
                                title="<?php echo esc_attr( ucfirst( $key ) ); ?>">
-                                <?php echo self::social_icon_svg( $key ); ?>
+                                <?php echo self::social_icon_svg( $key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- social_icon_svg() returns a static SVG with esc_attr()'d path data. ?>
                             </a>
                         <?php endforeach; ?>
                     </div>
@@ -664,9 +669,9 @@ class RendererService {
                         <?php foreach ( $active_links as $key => $url ) : ?>
                             <a href="<?php echo esc_url( $url ); ?>"
                                class="bp-social-icon"
-                               <?php echo $sl_target; ?>
+                               <?php echo $sl_target; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $sl_target is one of two literal attribute strings set above. ?>
                                title="<?php echo esc_attr( ucfirst( $key ) ); ?>">
-                                <?php echo self::social_icon_svg( $key ); ?>
+                                <?php echo self::social_icon_svg( $key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- social_icon_svg() returns a static SVG with esc_attr()'d path data. ?>
                             </a>
                         <?php endforeach; ?>
                     </div>
@@ -1160,10 +1165,10 @@ class RendererService {
                     }
                 ?>
                     <div class="bp-campaign-column"
-                         style="<?php echo $col_style; ?>">
+                         style="<?php echo $col_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- each part of $col_style is esc_attr()'d where it is built above. ?>">
                         <?php
                         foreach ( $column['elements'] as $element ) {
-                            echo self::render_element( $element, 0, $fake_post, $meta, $stats, true );
+                            echo self::render_element( $element, 0, $fake_post, $meta, $stats, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_element() returns HTML escaped where each element's markup is built.
                         }
                         ?>
                     </div>
@@ -1453,6 +1458,7 @@ class RendererService {
         $fundraising_css = BETTER_PAYMENT_ASSETS . '/css/fundraising-campaign.min.css';
 
         $extra_link = file_exists( BETTER_PAYMENT_ASSETS_PATH . '/css/fundraising-campaign.min.css' )
+            // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- Standalone preview document built by the plugin; no wp_head to enqueue into.
             ? '<link rel="stylesheet" href="' . esc_url( $fundraising_css ) . '?v=' . $v . '">' . "\n"
             : '';
 
@@ -1461,6 +1467,7 @@ class RendererService {
         // Pro design. See Campaign\CampaignStyles.
         $theme_links = '';
         foreach ( \Better_Payment\Lite\Campaign\CampaignStyles::preview_stylesheets() as $theme_css ) {
+            // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- Standalone preview document built by the plugin; no wp_head to enqueue into.
             $theme_links .= '<link rel="stylesheet" href="' . esc_url( $theme_css ) . '">' . "\n";
         }
 
@@ -1470,6 +1477,7 @@ class RendererService {
             . '<meta charset="utf-8">' . "\n"
             . '<meta name="viewport" content="width=device-width, initial-scale=1">' . "\n"
             . '<base href="' . esc_url( home_url( '/' ) ) . '">' . "\n"
+            // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- Standalone preview document built by the plugin; no wp_head to enqueue into.
             . '<link rel="stylesheet" href="' . esc_url( $display_css ) . '?v=' . $v . '">' . "\n"
             . $theme_links
             . $extra_link
