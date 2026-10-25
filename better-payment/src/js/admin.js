@@ -106,6 +106,8 @@
 				positionClass: 'toast-top-center',
 				showMethod: 'slideDown',
 				hideMethod: 'slideUp',
+				// Payment toasts show form text and gateway errors: never as HTML.
+				escapeHtml: true,
 			};
 		}
 		toasterOptions();

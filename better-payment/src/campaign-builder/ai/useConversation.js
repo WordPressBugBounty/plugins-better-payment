@@ -94,6 +94,85 @@ export function resolveAppliedMessage( {
 	return { operations, content };
 }
 
+/**
+ * Should a campaign id change load the stored history from the server?
+ *
+ * Not when the id appeared because the builder just saved a brand-new campaign
+ * (0 → id) and the panel already holds the conversation: the server has nothing
+ * for a post that did not exist a moment ago, and the GET racing the sync's POST
+ * could resolve last and replace the live list — dropping a pending Analyze
+ * report's suggestions, or a message sent meanwhile — with whatever the server
+ * had at that instant.
+ *
+ * @param {number} prevId     The campaign id before this change (0 = unsaved).
+ * @param {number} newId      The campaign id now.
+ * @param {number} localCount Messages already in the panel.
+ * @return {boolean} True to fetch the stored history.
+ */
+export function shouldLoadStoredHistory( prevId, newId, localCount ) {
+	if ( ! newId || newId <= 0 ) return false;
+	return ! ( ! prevId && localCount > 0 );
+}
+
+/**
+ * Combine stored history with what the panel already shows.
+ *
+ * The loaded turns are older than anything typed since the panel mounted, so
+ * they go first. Never REPLACES a non-empty local list — local messages carry
+ * state the server never stores (suggestions and whether each was applied).
+ *
+ * @param {Array} local  Messages in the panel now.
+ * @param {Array} loaded Messages from the server, already shaped for the panel.
+ * @return {Array} The merged list.
+ */
+export function mergeLoadedHistory( local, loaded ) {
+	if ( ! loaded?.length ) return local;
+	if ( ! local?.length ) return loaded;
+	return [ ...loaded, ...local ];
+}
+
+/**
+ * Mark suggestions applied on one message. Pure, so it is safe to run inside a
+ * state updater — which React may call twice — unlike the side effect of
+ * applying them.
+ *
+ * @param {Array}  messages  Message list.
+ * @param {string} messageId Message holding the suggestions.
+ * @param {Array}  indexes   Suggestion indexes to mark; null marks all.
+ * @return {Array} New message list.
+ */
+export function markSuggestionsApplied( messages, messageId, indexes = null ) {
+	return messages.map( ( m ) => {
+		if ( m.id !== messageId || ! m.suggestions?.length ) return m;
+		return {
+			...m,
+			suggestions: m.suggestions.map( ( s, i ) =>
+				indexes === null || indexes.includes( i )
+					? { ...s, applied: true }
+					: s
+			),
+		};
+	} );
+}
+
+/**
+ * The not-yet-applied suggestions of one message, with their indexes.
+ *
+ * @param {Array}       messages  Message list.
+ * @param {string}      messageId Message holding the suggestions.
+ * @param {number|null} index     One suggestion, or null for every pending one.
+ * @return {Array<{index: number, op: Object}>} Pending suggestions.
+ */
+export function pendingSuggestions( messages, messageId, index = null ) {
+	const message = ( messages ?? [] ).find( ( m ) => m.id === messageId );
+	return ( message?.suggestions ?? [] )
+		.map( ( s, i ) => ( { index: i, op: s.op, applied: s.applied } ) )
+		.filter(
+			( s ) => ! s.applied && ( index === null || s.index === index )
+		)
+		.map( ( { index: i, op } ) => ( { index: i, op } ) );
+}
+
 export function useConversation( { campaignId, getContext, onOperations } ) {
 	const [ messages, setMessages ] = useState( [] );
 	const [ sending, setSending ] = useState( false );
@@ -102,6 +181,15 @@ export function useConversation( { campaignId, getContext, onOperations } ) {
 	const [ config, setConfig ] = useState( readAiConfigSeed );
 	const mounted = useRef( true );
 	const progressRef = useRef( null );
+	// Latest message list, readable from callbacks without a stale closure and
+	// without doing side effects inside a setMessages updater.
+	const messagesRef = useRef( messages );
+	messagesRef.current = messages;
+	// The campaign id the stored history has been reconciled for. Syncing waits
+	// for it, so a reply that settles before the GET returns cannot overwrite the
+	// stored history with just the turns typed since mount.
+	const [ historyReadyFor, setHistoryReadyFor ] = useState( 0 );
+	const prevCampaignIdRef = useRef( campaignId );
 
 	useEffect( () => {
 		mounted.current = true;
@@ -123,24 +211,48 @@ export function useConversation( { campaignId, getContext, onOperations } ) {
 			} );
 	}, [] );
 
-	// Load stored history for a saved campaign (not animated).
+	// Load stored history for a saved campaign (not animated). Skipped when the id
+	// is our own first save of a new campaign — see shouldLoadStoredHistory().
 	useEffect( () => {
-		if ( ! campaignId ) return;
+		const prevId = prevCampaignIdRef.current;
+		prevCampaignIdRef.current = campaignId;
+		if ( ! campaignId || campaignId <= 0 ) return;
+		if (
+			! shouldLoadStoredHistory(
+				prevId,
+				campaignId,
+				messagesRef.current.length
+			)
+		) {
+			setHistoryReadyFor( campaignId );
+			return;
+		}
+		// A superseded request (the id changed again, or an effect re-run) must
+		// not merge its result — that would put the same history in twice.
+		let cancelled = false;
 		aiGetConversation( campaignId )
 			.then( ( res ) => {
-				if ( ! mounted.current || ! res?.messages?.length ) return;
-				setMessages(
-					res.messages.map( ( m ) => ( {
-						id: nextId(),
-						role: m.role,
-						content: m.content,
-						operations: [],
-						suggestions: [],
-						stream: false,
-					} ) )
-				);
+				if ( ! mounted.current || cancelled ) return;
+				const loaded = ( res?.messages ?? [] ).map( ( m ) => ( {
+					id: nextId(),
+					role: m.role,
+					content: m.content,
+					operations: [],
+					suggestions: [],
+					stream: false,
+				} ) );
+				setMessages( ( prev ) => mergeLoadedHistory( prev, loaded ) );
+				setHistoryReadyFor( campaignId );
 			} )
-			.catch( () => {} );
+			.catch( () => {
+				// Still allow syncing — otherwise one failed GET would stop the
+				// conversation from ever being persisted for this campaign.
+				if ( mounted.current && ! cancelled )
+					setHistoryReadyFor( campaignId );
+			} );
+		return () => {
+			cancelled = true;
+		};
 	}, [ campaignId ] );
 
 	// Persist the whole conversation to the campaign whenever it settles, so it
@@ -159,14 +271,17 @@ export function useConversation( { campaignId, getContext, onOperations } ) {
 	//     the stored history has loaded.
 	//   • Replace (not append) so a re-sync of the same list is idempotent, and the
 	//     fire-and-forget call never sets state, so it cannot loop.
+	//   • Skip until the stored history has been reconciled for this id (see
+	//     historyReadyFor), so the sync never races the initial load.
 	useEffect( () => {
 		if ( ! campaignId || campaignId <= 0 ) return;
+		if ( historyReadyFor !== campaignId ) return;
 		if ( sending || ! messages.length ) return;
 		aiSaveConversation(
 			campaignId,
 			messages.map( ( m ) => ( { role: m.role, content: m.content } ) )
 		).catch( () => {} );
-	}, [ campaignId, messages, sending ] );
+	}, [ campaignId, messages, sending, historyReadyFor ] );
 
 	const pushUser = useCallback( ( text ) => {
 		setMessages( ( prev ) => [
@@ -402,55 +517,49 @@ export function useConversation( { campaignId, getContext, onOperations } ) {
 		} );
 	}, [ sending, campaignId, getContext, pushUser, run ] );
 
-	// Accept a single analysis suggestion.
-	const applySuggestion = useCallback(
+	// Accept suggestions. The operations are applied OUTSIDE any setMessages
+	// updater: an updater must be pure (React may call it twice, as StrictMode
+	// does), and applying from inside one dispatched the edit — and generated any
+	// image — twice. `messagesRef` is updated synchronously so a fast second click
+	// before the re-render cannot apply the same suggestion again.
+	const acceptSuggestions = useCallback(
 		( messageId, index ) => {
-			setMessages( ( prev ) =>
-				prev.map( ( m ) => {
-					if ( m.id !== messageId ) return m;
-					const suggestion = m.suggestions?.[ index ];
-					if ( ! suggestion || suggestion.applied ) return m;
-					if ( typeof onOperations === 'function' )
-						onOperations( [ suggestion.op ] );
-					const suggestions = m.suggestions.map( ( s, i ) =>
-						i === index ? { ...s, applied: true } : s
-					);
-					return { ...m, suggestions };
-				} )
+			const pending = pendingSuggestions(
+				messagesRef.current,
+				messageId,
+				index
 			);
+			if ( ! pending.length ) return;
+			const indexes = pending.map( ( p ) => p.index );
+			messagesRef.current = markSuggestionsApplied(
+				messagesRef.current,
+				messageId,
+				indexes
+			);
+			setMessages( ( prev ) =>
+				markSuggestionsApplied( prev, messageId, indexes )
+			);
+			// One `onOperations` call even for "Apply all" — the panel's handler
+			// dispatches AI_APPLY_OPERATIONS, which snapshots for undo, so N calls
+			// would bury the pre-analysis state under N undo steps for what the
+			// user experienced as a single action.
+			if ( typeof onOperations === 'function' ) {
+				onOperations( pending.map( ( p ) => p.op ) );
+			}
 		},
 		[ onOperations ]
 	);
 
+	// Accept a single analysis suggestion.
+	const applySuggestion = useCallback(
+		( messageId, index ) => acceptSuggestions( messageId, index ),
+		[ acceptSuggestions ]
+	);
+
 	// Accept every outstanding suggestion in one go.
-	//
-	// One `onOperations` call, not a loop over `applySuggestion` — the panel's
-	// handler dispatches AI_APPLY_OPERATIONS, which snapshots for undo, so N
-	// calls would bury the pre-analysis state under N undo steps for what the
-	// user experienced as a single action.
 	const applyAllSuggestions = useCallback(
-		( messageId ) => {
-			setMessages( ( prev ) =>
-				prev.map( ( m ) => {
-					if ( m.id !== messageId ) return m;
-					const pending = ( m.suggestions || [] ).filter(
-						( s ) => ! s.applied
-					);
-					if ( ! pending.length ) return m;
-					if ( typeof onOperations === 'function' ) {
-						onOperations( pending.map( ( s ) => s.op ) );
-					}
-					return {
-						...m,
-						suggestions: m.suggestions.map( ( s ) => ( {
-							...s,
-							applied: true,
-						} ) ),
-					};
-				} )
-			);
-		},
-		[ onOperations ]
+		( messageId ) => acceptSuggestions( messageId, null ),
+		[ acceptSuggestions ]
 	);
 
 	const clear = useCallback( () => {

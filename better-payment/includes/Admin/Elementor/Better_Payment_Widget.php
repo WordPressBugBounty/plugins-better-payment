@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\Admin\Elementor;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Classes\GatewaySecrets;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\Helper as ClassesHelper;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
@@ -303,6 +304,8 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
+        $this->add_secret_key_fallback_controls( 'better_payment_stripe_secret_key', 'better_payment_stripe_secret_key_live' );
+
         $this->add_control( 'better_payment_form_stripe_enable_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Stripe (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
@@ -326,10 +329,7 @@ class Better_Payment_Widget extends Widget_Base {
                                 'name' => 'better_payment_stripe_public_key',
                                 'value' => '',
                             ],
-                            [
-                                'name' => 'better_payment_stripe_secret_key',
-                                'value' => '',
-                            ],
+                            GatewaySecrets::missing_secret_condition( 'better_payment_stripe_secret_key' ),
                         ],
                     ],
                 ],
@@ -358,10 +358,7 @@ class Better_Payment_Widget extends Widget_Base {
                                 'name' => 'better_payment_stripe_public_key_live',
                                 'value' => '',
                             ],
-                            [
-                                'name' => 'better_payment_stripe_secret_key_live',
-                                'value' => '',
-                            ],
+                            GatewaySecrets::missing_secret_condition( 'better_payment_stripe_secret_key_live' ),
                         ],
                     ],
                 ],
@@ -381,6 +378,8 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
+        $this->add_secret_key_fallback_controls( 'better_payment_paystack_secret_key' );
+
         $this->add_control( 'better_payment_form_paystack_enable_notice', [
             'type'            => Controls_Manager::RAW_HTML,
             'raw'             => sprintf( __( 'Whoops! It seems like you haven\'t configured <b>Paystack (Public and Secret Key) Settings</b>. Make sure to configure these settings before you publish the form.', 'better-payment' ) ),
@@ -399,10 +398,7 @@ class Better_Payment_Widget extends Widget_Base {
                                 'name' => 'better_payment_paystack_public_key',
                                 'value' => '',
                             ],
-                            [
-                                'name' => 'better_payment_paystack_secret_key',
-                                'value' => '',
-                            ],
+                            GatewaySecrets::missing_secret_condition( 'better_payment_paystack_secret_key' ),
                         ],
                     ],
                 ],
@@ -1034,7 +1030,7 @@ class Better_Payment_Widget extends Widget_Base {
 				'type' => \Elementor\Controls_Manager::REPEATER,
 				'fields' => $form_fields_repeater->get_controls(),
 				'default' => $form_fields_defaults,
-				'title_field' => '{{{ better_payment_field_name_heading }}}',
+				'title_field' => '{{ better_payment_field_name_heading }}',
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-4-pro', 'layout-5-pro', 'layout-6-pro'],
                 ],
@@ -1093,7 +1089,7 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'fields'      => $repeater->get_controls(),
-                'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{{ better_payment_amount_val }}}',
+                'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{ better_payment_amount_val }}',
                 'condition'   => $this->pro_layout_control_condition( 'better_payment_amount', [
                     'better_payment_show_amount_list' => 'yes',
                     'better_payment_form_payment_source!' => ['woocommerce', 'fluentcart'],
@@ -1322,7 +1318,9 @@ class Better_Payment_Widget extends Widget_Base {
                     'active' => true,
                 ],
                 'label_block' => true,
-                'default'     => esc_html( $this->better_payment_global_settings['better_payment_settings_payment_stripe_test_secret'] ),
+                // Never a global secret: control defaults reach every editor user (see GatewaySecrets).
+                'default'     => '',
+                'description' => __( 'Leave empty to use the key saved in Better Payment > Settings.', 'better-payment' ),
                 'ai' => [
                     'active' => false,
                 ],
@@ -1361,7 +1359,9 @@ class Better_Payment_Widget extends Widget_Base {
                     'active' => true,
                 ],
                 'label_block' => true,
-                'default'     => esc_html( $this->better_payment_global_settings['better_payment_settings_payment_stripe_live_secret'] ),
+                // Never a global secret: control defaults reach every editor user (see GatewaySecrets).
+                'default'     => '',
+                'description' => __( 'Leave empty to use the key saved in Better Payment > Settings.', 'better-payment' ),
                 'ai' => [
                     'active' => false,
                 ],
@@ -1417,9 +1417,6 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        $bp_settings_paystack_live_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] : '';
-        $bp_settings_paystack_test_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] : '';
-        
         $this->add_control(
             'better_payment_paystack_secret_key',
             [
@@ -1430,7 +1427,9 @@ class Better_Payment_Widget extends Widget_Base {
                     'active' => true,
                 ],
                 'label_block' => true,
-                'default'     => $better_payment_is_paystack_live ? esc_html( $bp_settings_paystack_live_secret ) : esc_html( $bp_settings_paystack_test_secret ),
+                // Never a global secret: control defaults reach every editor user (see GatewaySecrets).
+                'default'     => '',
+                'description' => __( 'Leave empty to use the key saved in Better Payment > Settings.', 'better-payment' ),
                 'ai' => [
                     'active' => false,
                 ],
@@ -3606,6 +3605,56 @@ class Better_Payment_Widget extends Widget_Base {
         $this->end_controls_tabs();
 
         $this->end_controls_section();
+    }
+
+    /**
+     * Hidden yes/no flags: does an empty secret-key control have a global key to fall back to?
+     *
+     * The "not configured" notices need to know, and the editor must never see the key
+     * itself (see GatewaySecrets). Built from the same global settings as the other
+     * defaults, so a non-admin in edit mode gets '' here, as before.
+     *
+     * @since 2.4.2
+     *
+     * @param string ...$settings Secret-key settings.
+     *
+     * @return void
+     */
+    private function add_secret_key_fallback_controls( ...$settings ) {
+        foreach ( $settings as $setting ) {
+            $this->add_control(
+                GatewaySecrets::fallback_control( $setting ),
+                [
+                    'type'    => Controls_Manager::HIDDEN,
+                    'default' => GatewaySecrets::widget_has_fallback( $setting, (array) $this->better_payment_global_settings ) ? 'yes' : '',
+                ]
+            );
+        }
+    }
+
+    /**
+     * Settings with an empty secret key resolved from Better Payment → Settings.
+     *
+     * The secret-key controls default to empty so the global keys never reach the
+     * editor's widget config. Every server-side reader of these settings — render(),
+     * the payment AJAX handlers through Traits\Helper::get_elementor_widget_settings(),
+     * and Pro — goes through this method, so each form still gets the global key it
+     * used before.
+     *
+     * @since 2.4.2
+     *
+     * @param string|null $setting_key A single setting, or null for all of them.
+     *
+     * @return mixed
+     */
+    public function get_settings_for_display( $setting_key = null ) {
+        $settings = GatewaySecrets::fill_widget_settings( parent::get_settings_for_display() );
+
+        if ( null === $setting_key ) {
+            return $settings;
+        }
+
+        return is_array( $settings ) && isset( $settings[ $setting_key ] ) ? $settings[ $setting_key ] : null;
     }
 
     /**

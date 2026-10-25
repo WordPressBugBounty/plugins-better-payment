@@ -19,6 +19,7 @@ import illustration from './../images/illustration.webp';
 import illustrationdark from './../images/illustrationdark.webp';
 import locale from './../utils/locale/en-US';
 import { scrollAdminToTop, useListScrollRestore } from '../utils/scroll';
+import { rowMenuAnchor, useRowMenuFlip } from '../utils/popupPosition';
 
 // Rows the list requests, and therefore rows the skeleton draws — same contract
 // as the Transactions tab (see Transactions.js).
@@ -130,6 +131,8 @@ const Subscriptions = () => {
 	// the trigger's viewport rect is measured on open and applied inline.
 	const [ openActionsMenu, setOpenActionsMenu ] = useState( null );
 	const [ menuPosition, setMenuPosition ] = useState( { top: 0, right: 0 } );
+	// Flip the open menu above its button when there is no room below.
+	useRowMenuFlip( openActionsMenu, menuPosition, setMenuPosition );
 
 	// Details view state — same swap-in-place pattern as Transactions.js's
 	// viewingTransactionId, but a subscription is identified by (id, source):
@@ -315,10 +318,7 @@ const Subscriptions = () => {
 		}
 
 		const rect = e.currentTarget.getBoundingClientRect();
-		setMenuPosition( {
-			top: rect.bottom + 4,
-			right: window.innerWidth - rect.right,
-		} );
+		setMenuPosition( rowMenuAnchor( rect ) );
 		setOpenActionsMenu( menuId );
 	};
 

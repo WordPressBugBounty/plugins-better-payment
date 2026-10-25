@@ -1,0 +1,100 @@
+.responsiveRangeControllerWrapper {
+	margin-bottom: 10px;
+
+	// Header styling
+	.eb-range-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+
+		.eb-range-title {
+			font-size: 14px;
+			font-weight: 500;
+			color: #1e1e1e;
+		}
+
+		.eb-range-auto-controls {
+			display: flex;
+			align-items: center;
+
+			.eb-auto-button {
+				height: 30px;
+				background-color: #f0f0f0;
+				color: #757575;
+				border: 1px solid #ddd;
+				border-radius: 4px 0 0 4px;
+				font-size: 13px;
+				padding: 0 12px;
+				box-shadow: none;
+
+				&:hover {
+					background-color: #e5e5e5;
+				}
+
+				&.is-active {
+					background-color: #e0e0e0;
+					color: #555;
+				}
+			}
+
+			.eb-settings-button {
+				height: 30px;
+				width: 36px;
+				background-color: white;
+				border: 1px solid #ddd;
+				border-left: none;
+				border-radius: 0 4px 4px 0;
+				padding: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				box-shadow: none;
+
+				&:hover {
+					background-color: #f5f5f5;
+				}
+
+				.dashicons {
+					font-size: 18px;
+					width: 18px;
+					height: 18px;
+					color: #555;
+				}
+			}
+		}
+	}
+
+	// Range control body
+	.eb-range-control-body {
+		display: flex;
+		flex-direction: column;
+
+		.eb-range-control-wrapper {
+			margin-bottom: 8px;
+
+			// Style the range slider
+			.components-range-control {
+				.components-range-control__slider {
+					margin-left: 0;
+					margin-right: 0;
+
+					.components-range-control__track {
+						background-color: #e0e0e0;
+					}
+
+					.components-range-control__thumb-wrapper {
+						.components-range-control__thumb {
+							background-color: #2271b1;
+							border-color: #2271b1;
+						}
+					}
+				}
+
+				.components-base-control__field {
+					margin-bottom: 0;
+				}
+			}
+		}
+	}
+}

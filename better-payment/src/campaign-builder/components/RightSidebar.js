@@ -7,9 +7,12 @@ import {
 	createPortal,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { isVisibleForMeta } from '../utils/metaCondition';
+import { customSettingsControl } from '../utils/builderHooks';
 import { useDraggable } from '@dnd-kit/core';
 import { getAllElements, getElement } from '../fields/FieldRegistry';
 import SuggestedAmountsEditor from './SuggestedAmountsEditor';
+import DonationModeLock from './DonationModeLock';
 import RepeaterControl from './RepeaterControl';
 import { openWpMedia } from '../utils/media';
 import { getGlobalCurrencySymbol } from '../utils/currency';
@@ -520,7 +523,10 @@ function CustomizationPanel( {
 								element={ selectedElement }
 								schema={ def?.settingsSchema ?? [] }
 								meta={ meta }
+								layout={ layout }
 								dispatch={ dispatch }
+								proEnabled={ proEnabled }
+								onRequestUpgrade={ onRequestUpgrade }
 							/>
 						) }
 					</>
@@ -804,7 +810,15 @@ export function isControlVisible( control, settings = {} ) {
 	} );
 }
 
-function ElementSettings( { element, schema, meta, dispatch } ) {
+function ElementSettings( {
+	element,
+	schema,
+	meta,
+	layout,
+	dispatch,
+	proEnabled = false,
+	onRequestUpgrade,
+} ) {
 	// Never rendered for a Pro-locked element — CustomizationPanel shows the
 	// upgrade banner instead. Not a security boundary either way: that lives
 	// server-side in MetaBox::enforce_pro_entitlement(), which re-checks
@@ -834,6 +848,7 @@ function ElementSettings( { element, schema, meta, dispatch } ) {
 	// resolve defaults, meta keys, and image-upload multi-changes identically.
 	const renderControl = ( control ) => {
 		if ( ! isControlVisible( control, s ) ) return null;
+		if ( ! isVisibleForMeta( control, meta ) ) return null;
 		const isMeta = !! control.metaKey;
 		const rawValue = isMeta ? meta?.[ control.metaKey ] : s[ control.key ];
 		const value =
@@ -857,6 +872,10 @@ function ElementSettings( { element, schema, meta, dispatch } ) {
 				onChange={ onChange }
 				onMultiChange={ onMultiChange }
 				elementSettings={ elementSettings }
+				meta={ meta }
+				layout={ layout }
+				proEnabled={ proEnabled }
+				onRequestUpgrade={ onRequestUpgrade }
 			/>
 		);
 	};
@@ -874,6 +893,7 @@ function ElementSettings( { element, schema, meta, dispatch } ) {
 					Array.isArray( control.children )
 				) {
 					if ( ! isControlVisible( control, s ) ) return null;
+					if ( ! isVisibleForMeta( control, meta ) ) return null;
 					return (
 						<CollapsibleSection
 							key={ control.key }
@@ -1662,6 +1682,10 @@ function SettingsControl( {
 	onChange,
 	onMultiChange,
 	elementSettings,
+	meta,
+	layout,
+	proEnabled = false,
+	onRequestUpgrade,
 } ) {
 	const {
 		key,
@@ -1688,6 +1712,42 @@ function SettingsControl( {
 
 	if ( type === 'note' ) {
 		return <p className="bp-cb-widget-note">{ label }</p>;
+	}
+
+	// An add-on's own control (better_payment.campaign_builder.settings_control).
+	// Pro draws its popup payment form controls here.
+	const custom = customSettingsControl( {
+		control,
+		value,
+		onChange,
+		meta,
+		layout,
+		proEnabled,
+		onRequestUpgrade,
+	} );
+
+	if ( custom !== null ) {
+		return (
+			<div className="bp-cb-control">
+				<label className="bp-cb-field-label">{ label }</label>
+				{ custom }
+			</div>
+		);
+	}
+
+	if ( type === 'donation_mode' ) {
+		// The choice only exists with Pro's popup form. Free: a locked choice.
+		// Pro active but not answering (an older Pro): nothing, never an upsell.
+		if ( proEnabled ) {
+			return null;
+		}
+
+		return (
+			<div className="bp-cb-control">
+				<label className="bp-cb-field-label">{ label }</label>
+				<DonationModeLock onRequestUpgrade={ onRequestUpgrade } />
+			</div>
+		);
 	}
 
 	return (

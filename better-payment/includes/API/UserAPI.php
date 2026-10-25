@@ -19,6 +19,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class UserAPI extends WP_REST_Controller {
 
+    /**
+     * Largest page a visitor may ask for. The dashboards ask for 20; an unbounded
+     * per_page let any logged-in user pull every row in one request.
+     */
+    const MAX_PER_PAGE = 100;
+
     protected $namespace = 'better-payment/v1';
 
     public function __construct() {
@@ -54,6 +60,7 @@ class UserAPI extends WP_REST_Controller {
     public function get_user_transactions( $request ) {
         $current_user = wp_get_current_user();
         $email        = $current_user->user_email;
+        $per_page     = min( self::MAX_PER_PAGE, max( 1, (int) $request->get_param( 'per_page' ) ) );
         $tab          = in_array( $request->get_param( 'tab' ), [ 'transactions', 'subscriptions' ], true )
             ? $request->get_param( 'tab' )
             : 'transactions';
@@ -66,14 +73,14 @@ class UserAPI extends WP_REST_Controller {
                 'transactions' => [],
                 'total'        => 0,
                 'page'         => max( 1, (int) $request->get_param( 'page' ) ),
-                'per_page'     => max( 1, (int) $request->get_param( 'per_page' ) ),
+                'per_page'     => $per_page,
                 'pages'        => 1,
             ] );
         }
 
         $result = DB::get_user_transactions_paginated( $email, [
             'page'     => $request->get_param( 'page' ),
-            'per_page' => $request->get_param( 'per_page' ),
+            'per_page' => $per_page,
             'type'     => $tab,
         ] );
 

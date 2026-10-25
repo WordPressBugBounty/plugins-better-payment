@@ -4,6 +4,7 @@ namespace Better_Payment\Lite\Campaign;
 
 use Better_Payment\Lite\Campaign\Support\Money;
 
+use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Controller;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,7 +36,10 @@ class CampaignListColumns extends Controller {
             $stats    = CampaignStats::get_stats( $post_id );
             $meta     = MetaBox::get_all( $post_id );
             $goal     = (float) ( $meta['bpc_goal_amount'] ?? 0 );
-            $currency = $meta['bpc_currency'] ?? 'USD';
+            // Campaigns have no currency of their own (there is no
+            // `bpc_currency` meta) — every campaign surface uses the site's
+            // general currency setting, so this column must too.
+            $currency = self::site_currency();
             $raised   = $stats['total_raised'];
             $progress = $stats['progress'];
 
@@ -60,5 +64,17 @@ class CampaignListColumns extends Controller {
                 esc_html__( 'Open Builder', 'better-payment' )
             );
         }
+    }
+
+    /**
+     * The site's general currency code (Settings → General), USD when unset —
+     * the same source RendererService and CampaignAPI use.
+     *
+     * @return string
+     */
+    public static function site_currency(): string {
+        $code = DB::get_settings( 'better_payment_settings_general_general_currency' );
+
+        return ( is_string( $code ) && '' !== $code ) ? $code : 'USD';
     }
 }

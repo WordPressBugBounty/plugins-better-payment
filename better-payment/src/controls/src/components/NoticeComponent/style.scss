@@ -1,0 +1,32 @@
+.eb_reusable_notice {
+	box-shadow: inset 0 0 0 1px #1e1e1e;
+	padding: 1em;
+	border-radius: 2px;
+	background-color: #fff;
+
+	.title {
+		font-size: 18pt;
+		font-weight: 400;
+		margin: 0 0 20px;
+		line-height: 1;
+		display: flex;
+		gap: 15px;
+		align-items: center;
+		text-transform: uppercase;
+	}
+
+	svg {
+		height: 24px;
+		width: auto;
+	}
+
+	.content {
+		font-size: 13px;
+		font-weight: 400;
+		margin: 0 0 1em;
+	}
+
+	.doc {
+		font-size: 13px;
+	}
+}

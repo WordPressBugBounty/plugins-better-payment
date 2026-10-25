@@ -533,9 +533,9 @@ trait Helper
 
         // First, check for Gutenberg block settings stored in transient.
         // This is used when the form is rendered via a Gutenberg block.
-        $transient_key    = 'bp_block_settings_' . $page_id . '_' . $widget_id;
-        $block_settings   = get_transient( $transient_key );
-        if ( ! empty( $block_settings ) && is_array( $block_settings ) ) {
+        // A stale entry (the page or the global settings changed) reads as none.
+        $block_settings = \Better_Payment\Lite\Blocks\BlockManager::get_cached_block_settings( $page_id, $widget_id );
+        if ( ! empty( $block_settings ) ) {
             return $block_settings;
         }
 

@@ -53,13 +53,8 @@ class CampaignStats extends Controller {
 
         $progress = ( $goal > 0 ) ? min( 100.0, round( ( $raised / $goal ) * 100, 1 ) ) : 0.0;
 
-        $end_date      = get_post_meta( $campaign_id, '_bpc_end_date', true );
-        $days_remaining = null;
-
-        if ( $end_date ) {
-            $diff = ( strtotime( $end_date ) - current_time( 'timestamp' ) );
-            $days_remaining = max( 0, (int) ceil( $diff / DAY_IN_SECONDS ) );
-        }
+        $end_date       = get_post_meta( $campaign_id, '_bpc_end_date', true );
+        $days_remaining = self::days_remaining( is_string( $end_date ) ? $end_date : '' );
 
         $stats = apply_filters( 'better_payment/campaign/stats', array_merge( $raw, [
             'goal'           => $goal,
@@ -70,6 +65,39 @@ class CampaignStats extends Controller {
         set_transient( $transient_key, $stats, self::$cache_ttl );
 
         return $stats;
+    }
+
+    /**
+     * Whole days left before a campaign closes, or null when it has no end date.
+     *
+     * The end date is INCLUSIVE: a campaign ending on the 31st is live through
+     * 23:59:59 that day — the same rule AI\Support\DateGuard uses when it decides
+     * whether an end date is past. Counting down to 00:00 of the end date closed
+     * every campaign a day early (0 days left all through its last day). A value
+     * that carries its own time of day is used as given.
+     *
+     * Times are compared in the site's timezone, like current_time( 'timestamp' ).
+     *
+     * @param string $end_date Stored `_bpc_end_date` (usually Y-m-d).
+     * @param int    $now      Site-local "timestamp" (current_time( 'timestamp' )); 0 = now.
+     * @return int|null Days left (0 once it has ended), or null with no/unparseable end date.
+     */
+    public static function days_remaining( string $end_date, int $now = 0 ): ?int {
+        $end_date = trim( $end_date );
+        if ( '' === $end_date ) {
+            return null;
+        }
+
+        $has_time = (bool) preg_match( '/\d{1,2}:\d{2}/', $end_date );
+        $end      = strtotime( $has_time ? $end_date : $end_date . ' 23:59:59' );
+        if ( false === $end ) {
+            return null;
+        }
+
+        $now  = $now > 0 ? $now : (int) current_time( 'timestamp' );
+        $diff = $end - $now;
+
+        return max( 0, (int) ceil( $diff / DAY_IN_SECONDS ) );
     }
 
     /**

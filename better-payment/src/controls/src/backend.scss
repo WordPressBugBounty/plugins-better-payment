@@ -1,0 +1,3101 @@
+/**
+ * The following styles get applied inside the editor only.
+ */
+
+/* Import AI Components styles */
+@import "./components/AI/style.scss";
+
+/* Common styles for all blocks */
+
+.components-accessible-toolbar,
+.block-editor-block-contextual-toolbar,
+.components-accessible-toolbar.block-editor-block-contextual-toolbar {
+	z-index: 999999;
+}
+
+.eb-row-wrapper>.eb-row-inner>.block-editor-inner-blocks>.block-editor-block-list__layout {
+	display: flex;
+	flex-wrap: nowrap;
+}
+
+.eb-panel-control .components-button-group.eb-unit-control-btn-group .components-button .eb-category-icon {
+	margin-left: 8px;
+}
+
+.components-base-control .components-base-control__label {
+	margin-right: 60px;
+}
+
+.eb-inspector-btn-group {
+	display: flex;
+	padding-bottom: 5px;
+}
+
+.eb-inspector-btn-group button {
+	flex: 1;
+	padding-left: 40px !important;
+}
+
+/* Image upload button styles */
+.eb-image-upload-button,
+.eb-image-wrapper-button,
+.eb-wrapper-upload-button {
+	height: 100px;
+	width: 100%;
+	background: #e3e3e3;
+	color: #666666;
+	display: inline-block;
+}
+
+.component-color-indicator {
+	border-radius: 50%;
+	width: 22px;
+	height: 22px;
+}
+
+.eb-typography-icon {
+	fill: #5e5e5e;
+}
+
+.eb-panel-control .components-base-control__label,
+.eb-panel-control .components-input-control__label,
+.eb-panel-control .components-panel__row {
+	display: inline-block;
+	color: #5f5f5f !important;
+	font-size: 12px !important;
+	line-height: 16px !important;
+	font-weight: 500 !important;
+	text-transform: capitalize !important;
+	margin-bottom: 5px !important;
+	margin-top: 5px !important;
+	min-height: auto;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+		Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.eb-panel-control .components-panel__row.note {
+	color: #818181 !important;
+	font-size: 11.5px !important;
+}
+
+.eb-panel-control .components-panel__row.negative-margin-top {
+	margin-top: -8px !important;
+}
+
+.eb-panel-control .components-panel__row.separator {
+	display: block;
+	font-size: 13px !important;
+	color: #000 !important;
+	border-bottom: 1px solid #d5d1d1;
+	padding: 7px 0;
+	margin-bottom: 10px !important;
+}
+
+.eb-panel-control .components-flex.components-select-control {
+	gap: 0;
+}
+
+.eb-panel-control button.components-panel__body-toggle:focus {
+	// box-shadow: inset 0 0 0 1.5px #551ef7;
+	// box-shadow: inset 0 0 0 var(--wp-admin-border-width-focus) #551ef7;
+	box-shadow: inset 0 0 0 2px #551ef7;
+}
+
+/* Unit control styles */
+.eb-panel-control .eb-unit-control-btn:hover {
+	color: #551ef7;
+}
+
+.eb-panel-control .eb-unit-control-btn:focus {
+	box-shadow: 0 0 0 1px #551ef7;
+}
+
+.eb-panel-control .input-wrapper input:focus {
+	box-shadow: 0 0 0 1px #551ef7;
+}
+
+/* Toggle button style */
+.eb-panel-control .is-checked .components-form-toggle__track {
+	background-color: #551ef7 !important;
+}
+
+.eb-panel-control input[type="checkbox"]:focus {
+	box-shadow: 0 0 0 1px #551ef7;
+}
+
+/* Radio button style */
+.eb-panel-control .components-radio-control__input[type="radio"]:checked {
+	background-color: #551ef7;
+}
+
+/* Select control style */
+.wp-core-ui .eb-panel-control select.components-select-control__input {
+	line-height: 1.4;
+}
+
+.wp-core-ui .eb-panel-control select.components-select-control__input option:hover {
+	color: white;
+	background: #551ef7 !important;
+}
+
+/* Avatar icon style */
+.eb-avatar-icon-btn {
+	height: 36px !important;
+	width: 36px !important;
+	margin: 0px 8px;
+	border: 1px solid #b7b7b7;
+	box-shadow: none !important;
+}
+
+/* Icon Select style */
+.rfipbtn {
+	min-height: 36px !important;
+	width: 150px !important;
+	border-radius: 6px;
+	border: 1px solid #b4b4cb;
+}
+
+.eb-gradient-control .eb-gradient-toggle-label .components-base-control__field {
+	display: inline-flex;
+	align-items: center;
+}
+
+.eb-gradient-control .components-base-control__label {
+	margin-right: 11px;
+	margin-bottom: 8px;
+}
+
+/* Button Group Style */
+.eb-btngrp-align {
+	display: flex;
+	align-items: center;
+}
+
+.eb-btngrp-align button {
+	box-shadow: none !important;
+}
+
+.eb-btngrp-align svg {
+	width: 20px;
+}
+
+.eb-panel-control .components-base-control {
+	margin-bottom: 10px !important;
+}
+
+.eb-panel-control .components-base-control__help {
+	margin: 0px !important;
+}
+
+.eb-panel-control .components-toggle-control.components-base-control {
+	margin: 10px 0;
+}
+
+.eb-panel-control .components-toggle-control.components-base-control .components-base-control__help {
+	margin-top: 10px !important;
+}
+
+.eb-panel-control .components-base-control .components-form-toggle .components-form-toggle__track {
+	box-shadow: none !important;
+}
+
+.eb-panel-control .components-base-control .components-form-toggle:not(.is-checked) .components-form-toggle__track {
+	border-color: #ebebeb !important;
+}
+
+.eb-panel-control .components-base-control .components-form-toggle:not(.is-checked) .components-form-toggle__thumb {
+	border-color: #a6a6bf;
+	background-color: #a6a6bf;
+}
+
+.eb-panel-control .components-base-control__field .components-button-group {
+	display: flex;
+}
+
+.eb-panel-control .components-base-control__field .components-button-group .components-button {
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding-top: 6px;
+	padding-bottom: 6px;
+}
+
+.eb-panel-control .components-button-group .components-button:first-child {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.eb-panel-control .components-button-group .components-button:last-child {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.eb-panel-control .is-secondary {
+	color: #b4b4cb;
+	box-shadow: inset 0 0 0 1px #ebebeb !important;
+	background: transparent;
+}
+
+.eb-panel-control .is-primary {
+	color: #551ef7;
+	box-shadow: inset 0 0 0 1px #b299ff !important;
+	background: #cebeff;
+}
+
+.eb-panel-control .is-secondary:hover:not(:disabled),
+.eb-panel-control .is-secondary:focus:not(:disabled),
+.eb-panel-control .is-tertiary:hover:not(:disabled),
+.eb-panel-control .is-tertiary:focus:not(:disabled),
+.eb-panel-control .is-primary:hover:not(:disabled),
+.eb-panel-control .is-primary:focus:not(:disabled) {
+	background-color: #551ef7;
+	color: #fff;
+	box-shadow: inset 0 0 0 1px #551ef7 !important;
+}
+
+.eb-panel-control .components-button-group.eb-unit-control-btn-group {
+	height: 20px;
+}
+
+.eb-panel-control .components-button-group.eb-unit-control-btn-group .components-button {
+	height: 20px !important;
+	padding: 0 0 0 6px;
+	text-transform: uppercase;
+	color: #5f5f5f;
+	position: relative;
+	z-index: 999999;
+}
+
+.eb-panel-control .components-button-group.eb-unit-control-btn-group .components-button.is-primary {
+	box-shadow: none !important;
+}
+
+.eb-panel-control .responsiveRangeControllerWrapper .eb-unit-control-btn-group {
+	display: block;
+}
+
+.eb-panel-control .responsiveRangeControllerWrapper .eb-unit-control-btn-group .eb-unit-control-btn {
+	display: inline-block;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .dimention-label {
+	height: 20px;
+	margin-bottom: 0 !important;
+	color: #5f5f5f;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper-group {
+	display: flex;
+	flex: 1;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper-group .input-wrapper {
+	width: 25% !important;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper input {
+	color: #1e1e1e;
+	height: 30px !important;
+	border-color: #ebebeb !important;
+	line-height: 1.2;
+	font-size: 13px;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper input:focus {
+	box-shadow: none;
+	color: #000;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper:first-child input {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper:last-child input {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .components-button.linked-btn {
+	height: 30px !important;
+	width: 20px !important;
+	padding: 0 !important;
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	margin-left: 0;
+}
+
+.eb-panel-control .linked-btn:hover:not(:disabled),
+.eb-panel-control .linked-btn:focus:not(:disabled) {
+	color: #551ef7;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.eb-panel-control .linked-btn.is-primary {
+	color: #551ef7;
+	background: transparent !important;
+	box-shadow: none !important;
+	font-size: 14px !important;
+}
+
+/* Custom range control styles */
+.eb-panel-control .eb-range-controller-container {
+	display: flex;
+	align-items: flex-start;
+	overflow: hidden;
+}
+
+.eb-panel-control .eb-range-controller-container .components-range-control {
+	flex: 1;
+	margin-bottom: 8px;
+}
+
+.eb-panel-control .components-range-control {
+	margin-bottom: 8px;
+}
+
+.eb-panel-control .eb-range-controller-container .components-range-control .components-base-control__field {
+	margin-bottom: 0 !important;
+}
+
+.eb-panel-control .eb-range-controller-container .eb-range-reset-button {
+	height: 26px;
+	margin-top: 20px;
+	width: 20px;
+	background: transparent;
+	border: none;
+	outline: none;
+	box-shadow: none;
+	padding: 0;
+	margin-left: 2px;
+	cursor: pointer;
+}
+
+.eb-panel-control.eb-typography-component-panel .eb-range-controller-container .eb-range-reset-button {
+	padding-top: 8px;
+}
+
+.eb-panel-control .eb-reset-button-margin-fix .eb-range-controller-container .eb-range-reset-button {
+	margin-top: 26px;
+}
+
+.eb-panel-control .dashicons {
+	font-family: "dashicons";
+}
+
+.eb-panel-control .eb-range-controller-container .eb-range-reset-button .dashicon {
+	font-size: 14px;
+	color: #62626f;
+	width: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform: scaleX(-1) rotate(90deg);
+}
+
+.eb-panel-control .components-range-control__reset {
+	color: #6b6b6b;
+}
+
+.eb-panel-control .components-range-control__wrapper {
+	color: #e5e5ed;
+	outline: none;
+}
+
+.eb-panel-control .components-range-control__slider+span {
+	background-color: #e5e5ed;
+	border: none;
+	outline: none;
+	box-shadow: none;
+}
+
+.eb-panel-control .components-range-control__root {
+	z-index: 1000;
+}
+
+.eb-panel-control .components-range-control__track {
+	margin-left: 0px;
+	background-color: #b4b4cb;
+}
+
+.eb-panel-control .components-range-control__track+span {
+	margin-top: 9px;
+	height: 12px;
+	width: 12px;
+}
+
+.eb-panel-control .components-range-control__track+span>span {
+	background-color: #b4b4cb;
+	border: none;
+	outline: none;
+	box-shadow: none;
+}
+
+.eb-panel-control .components-range-control__root .components-input-control {
+	margin-left: 8px !important;
+	width: 70px !important;
+}
+
+.eb-panel-control .components-input-control__input {
+	color: #1e1e1e !important;
+	padding-right: 0 !important;
+}
+
+.eb-panel-control .components-input-control__backdrop {
+	border-color: #ebebeb !important;
+}
+
+.eb-panel-control .components-range-control__root .components-input-control input,
+.eb-panel-control .components-range-control__root .components-input-control .components-input-control__backdrop,
+.eb-panel-control .components-range-control__root .components-button {
+	height: 26px !important;
+	min-height: 26px !important;
+	line-height: 26px;
+	text-align: center !important;
+	padding: 0 0 0 10px !important;
+	width: 100% !important;
+	max-width: 100%;
+}
+
+.components-popover .eb-panel-control .components-range-control__wrapper .components-range-control__tooltip {
+	bottom: -60%;
+}
+
+/* Color undo button style */
+.eb-panel-control .components-button.eb-color-undo .dashicon {
+	font-size: 14px;
+	color: #62626f;
+}
+
+.eb-color-undo {
+	margin-right: -8px;
+}
+
+/* Style focus style */
+.eb-panel-control .components-select-control__input:hover,
+.eb-panel-control .components-select-control__input:focus {
+	color: black;
+	box-shadow: none;
+	border-color: #ebebeb;
+}
+
+/* Gradient control style */
+.eb-gradient-control .eb-switch-control {
+	width: 150px !important;
+}
+
+.eb-panel-control .eb-gradient-control .eb-gradient-toggle-label .components-base-control__field {
+	display: flex;
+	align-items: center;
+}
+
+.eb-panel-control .eb-gradient-control .eb-switch-control {
+	width: 100px !important;
+	font-size: 11px !important;
+	margin-bottom: 0 !important;
+	margin-left: auto !important;
+}
+
+.eb-panel-control .eb-gradient-control .eb-switch-control>label {
+	padding: 1px;
+}
+
+/* color picker */
+.eb-panel-control .eb-color-ball {
+	padding: 0 !important;
+	border-radius: 20px !important;
+	border-color: #ebebeb !important;
+	cursor: pointer;
+}
+
+.eb-panel-control .eb-color-ball>div {
+	border-radius: 20px !important;
+	height: 25px !important;
+	width: 25px !important;
+}
+
+.eb-userinfo-container>p {
+	margin: 0 !important;
+}
+
+.eb-resButtons {
+	display: flex;
+	justify-content: space-between;
+	padding: 5px 0;
+	margin-bottom: 10px;
+	gap: 5px;
+}
+
+button.eb-res-btn {
+	background: #551ef733;
+	border: 1px solid #551ef733;
+	border-radius: 3px;
+	padding: 5px 0;
+	flex: 1;
+	color: #551ef7;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	cursor: pointer;
+	transition: 0.3s;
+}
+
+button.eb-res-btn:hover,
+button.eb-res-btn.active {
+	box-shadow: #551ef799 0px 0px 5px 0px;
+}
+
+button.eb-res-btn.active {
+	background: #551ef7;
+	border: 1px solid #551ef7;
+	color: #fff;
+}
+
+button.eb-res-btn:focus {
+	outline: none;
+}
+
+// making typography component width bigger
+.eb-typography-component-panel {
+	min-width: 220px;
+	padding: 1rem;
+}
+
+//
+// typography component styles
+.typoResButton {
+	cursor: pointer;
+	font-size: 11px;
+	line-height: 18px;
+	width: 18px;
+	height: 18px;
+	position: relative;
+	z-index: 999;
+	background-color: #e8e8e8;
+	color: #5f5f5f;
+	margin: 0px 8px 5px 0px;
+	text-align: center;
+	border-radius: 3px;
+}
+
+.typoResButton.active {
+	color: #551ef7;
+}
+
+.wrap_res {
+	position: relative;
+}
+
+.resIcons {
+	position: absolute;
+	left: 80px;
+}
+
+.eb-typography-component-panel .wrap_res.forFontSize .resIcons {
+	left: 70px;
+}
+
+.eb-typography-component-panel .wrap_res.forLetterSpacing .resIcons,
+.eb-typography-control-wrapper .global-letter-spacing .resIcons {
+	left: 100px;
+}
+
+.eb-typography-component-panel .wrap_res.forLineHeight .resIcons {
+	left: 83px;
+}
+
+.eb-panel-control {
+	.components-button {
+		&:not(.eb-unit-control-btn-group) {
+			position: relative;
+			z-index: 0;
+		}
+
+		&.eb-color-undo {
+			margin-right: -8px;
+
+			.dashicon {
+				font-size: 14px;
+				color: #62626f;
+			}
+
+			&.eb-disable-reset {
+				cursor: default;
+				opacity: 1;
+
+				.dashicon {
+					color: #d6d6d6;
+				}
+			}
+		}
+	}
+}
+
+.eb-panel-control .components-button.has-icon {
+	display: flex;
+}
+
+// Typography style
+.eb-panel-control .eb-typography-base {
+	>div {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.eb-typography-options {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+	}
+
+	.components-button {
+		background-color: transparent;
+	}
+
+	.eb-typography-dropdown {
+		button {
+			padding: 0;
+		}
+
+		&.active {
+			.dashicon {
+				color: #7731ff;
+			}
+
+			svg path {
+				fill: #7731ff;
+			}
+		}
+	}
+
+	.eb-typography-global-panel {
+		padding: 10px;
+
+		.eb-typography-global-options {
+			margin-bottom: 10px;
+
+			input {
+				border: 0;
+				background-color: transparent;
+				box-shadow: unset;
+				position: relative;
+
+				&:checked:before {
+					content: "\f147";
+					font-family: "dashicons";
+					margin: 0;
+					font-size: 28px;
+					height: auto;
+					width: auto;
+					float: unset;
+					position: absolute;
+					left: -8px;
+					top: 8px;
+				}
+
+				&:focus {
+					box-shadow: unset;
+				}
+			}
+
+			label:hover {
+				cursor: pointer;
+			}
+
+			label.checked {
+				font-weight: 700;
+				font-size: 1.02em;
+				cursor: pointer;
+			}
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+	}
+}
+
+// Popover Toggle style
+.eb-panel-control .eb-popover-toggle-base {
+	>div {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.eb-popover-toggle-options {
+		display: flex;
+		justify-content: flex-end;
+		gap: 10px;
+	}
+
+	.eb-popover-toggle-dropdown {
+		display: flex;
+		gap: 0px;
+
+		.components-button {
+			padding: 0;
+			background-color: transparent;
+		}
+
+		.dashicon {
+			font-size: 14px;
+		}
+	}
+}
+
+.eb-popover-content-classname {
+	.components-popover__content {
+		background-color: #f7f7f7;
+	}
+}
+
+.components-base-control.eb-fontpicker-fontfamily {
+	z-index: 99999;
+	position: relative;
+}
+
+.components-base-control.eb-fontpicker-fontfamily input {
+	box-shadow: unset;
+}
+
+// fix image placeholder design
+.components-button.has-icon .dashicon.dashicons-format-image {
+	margin: 0;
+}
+
+// head img height and width resIcons
+
+.eb-panel-control .wrap_res.for-icon-size .resIcons {
+	left: 60px;
+}
+
+.eb-panel-control .wrap_res.for-head-img-height .resIcons,
+.eb-panel-control .wrap_res.for-head-img-width .resIcons,
+.eb-panel-control .wrap_res.for-number-size .resIcons {
+	left: 85px;
+}
+
+// color control reset icon show little top fix start
+.eb-panel-control .eb-color-undo .dashicon {
+	margin: 0;
+}
+
+// color control reset icon show little top fix end
+
+// image upload button in inspector panel styles start
+
+.eb-background-control-inspector-panel-img-btn {
+	height: 100px;
+	width: 100%;
+	background-color: #e3e3e3;
+}
+
+// image upload button in inspector panel styles end
+
+// fix of this: https://trello-attachments.s3.amazonaws.com/5bab5a557340da52ebeb1a8f/6088feddc428ea4aaa2cd868/ec403aa51d713bdbac25764d1752db8e/Capitalized.png
+.eb-panel-control .components-button {
+	text-transform: capitalize;
+}
+
+// fix end
+
+// new with res btns style start
+
+.eb-panel-control .newWithResWrapper .eb-range-controller-container .eb-range-reset-button {
+	margin-top: 0;
+}
+
+.resLabel {
+	padding-right: 5px;
+}
+
+.resBtns {
+	padding-bottom: 5px;
+}
+
+// new with res btns style end
+
+/*
+unit (px,em,%) anchors not grabbing on hover fix start
+*/
+
+.eb-panel-control .components-button-group.eb-unit-control-btn-group .components-button {
+	position: relative;
+	z-index: 1111;
+	font-size: 10px;
+}
+
+/*
+unit (px,em,%) anchors not grabbing on hover fix end
+*/
+
+/*
+fixing typography control showing smaller width  start
+*/
+
+.eb-panel-control {
+	min-width: 230px;
+}
+
+/*
+fixing typography control showing smaller width  end
+*/
+
+/*
+color-control submodules css start
+*/
+.eb-color-base>div {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.eb-color-base .components-base-control__label {
+	flex: 10;
+	margin-right: 0px !important;
+	/* There was no other way */
+}
+
+.eb-color-base .components-dropdown {
+	flex: 1;
+}
+
+.eb-color-ball {
+	background-image: linear-gradient(45deg, #ddd 25%, transparent 0),
+		linear-gradient(-45deg, #ddd 25%, transparent 0),
+		linear-gradient(45deg, transparent 75%, #ddd 0),
+		linear-gradient(-45deg, transparent 75%, #ddd 0);
+	background-size: 10px 10px;
+	background-position:
+		0 0,
+		0 5px,
+		5px -5px,
+		-5px 0;
+	border-radius: 50%;
+}
+
+.eb-color-undo {
+	flex: 1;
+	color: gray;
+}
+
+.eb-color-undo :focus,
+.eb-color-undo :hover {
+	box-shadow: none;
+}
+
+/*
+color-control submodules css end
+*/
+
+/*
+dimensions-control submodules css start
+*/
+.input-wrapper {
+	width: 25%;
+	display: flex;
+	flex-direction: column;
+}
+
+.linked-btn {
+	width: 40px;
+	height: 30px;
+	border-radius: 5px;
+	margin-left: 8px;
+	padding-left: 12px;
+}
+
+.dimention-container {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 1em;
+}
+
+.dimention-label {
+	margin-bottom: 4px;
+	margin-right: 10px;
+	display: inline-block;
+}
+
+.dimentions-input-label {
+	font-size: 0.75em;
+	text-align: center;
+}
+
+.input-container.left-right-disabled {
+	justify-content: flex-start;
+}
+
+.input-container {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+.input-container .input-wrapper:first-child input {
+	border-width: 1px;
+	border-radius: 4px 0px 0px 4px;
+}
+
+.input-container .input-wrapper input {
+	min-height: 24px;
+	height: 24px;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	border-width: 1px 1px 1px 0px;
+	border-color: #8d96a0;
+	border-style: solid;
+	border-radius: 0;
+	width: 100%;
+}
+
+.input-container .input-wrapper:nth-child(5) input {
+	border-radius: 0px 4px 4px 0px;
+}
+
+.input-container .input-wrapper button {
+	margin-left: 0px;
+	border-radius: 0px 4px 4px 0px;
+	border: 1px solid #8d96a0;
+	border-left: none;
+}
+
+.eb-panel-control .components-panel__body .dimention-container .input-container .input-wrapper input:disabled {
+	background-color: #e6e9ec;
+	color: #6d7882;
+	cursor: not-allowed;
+}
+
+/*
+dimensions-control submodules css end
+*/
+
+/*
+image-avatar submodule's css start
+*/
+
+.image-avatar {
+	position: relative;
+	height: 200px;
+	width: 100%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	margin-bottom: 8px;
+	padding: 2px;
+}
+
+.image-avatar-delete {
+	background-color: blue;
+}
+
+.image-avatar-delete:hover {
+	background-color: red;
+}
+
+/*
+image-avatar submodule's css end
+*/
+
+/*
+social-profiles css start
+*/
+.profile-wrapper {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border: 1px solid;
+	line-height: 2.5em;
+}
+
+.profile-icon-container {
+	font-size: 14px;
+	padding-right: 10px;
+	padding-left: 10px;
+	cursor: pointer;
+	width: 90%;
+	flex: 10;
+}
+
+.selected-profile-icon {
+	margin-left: 5px;
+}
+
+.link-form-wrapper {
+	margin-top: 10px;
+}
+
+.social-link-input {
+	margin-bottom: 10px;
+}
+
+.profile-icon-wrapper {
+	height: 1em;
+	width: 1em;
+	padding: 1em;
+	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+}
+
+.drag-helper {
+	z-index: 100;
+	list-style: none;
+}
+
+.profile-wrapper .drag-handle {
+	flex: 2 1 0% !important;
+	background: darkgrey;
+	border-right: 1px solid;
+	cursor: move;
+	color: #ffffff;
+	align-items: center;
+	display: flex !important;
+	justify-content: center;
+}
+
+.eb-social-delete-icon:hover {
+	cursor: pointer;
+}
+
+/*
+social-profiles css end
+*/
+
+/*
+toggle-button submodule's css start
+*/
+
+.eb-switch-control {
+	display: flex;
+	border: 1px solid #ededed;
+	padding: 2px;
+	border-radius: 30px;
+	position: relative;
+	font-family: sans-serif;
+	text-align: center;
+	margin-bottom: 8px;
+	margin-top: 8px;
+}
+
+.eb-switch-control input {
+	visibility: hidden;
+	position: absolute;
+	padding: 10px;
+}
+
+.eb-switch-control input:checked+label {
+	color: #fff;
+}
+
+.eb-switch-control .individual:checked~span,
+.eb-switch-control .business:checked~span {
+	color: white;
+}
+
+.eb-switch-control .individual:checked~.slideBg {
+	transform: translateX(100%);
+}
+
+.eb-switch-control .business:checked~.slideBg {
+	transform: translateX(0);
+}
+
+.eb-switch-control label {
+	display: block;
+	padding: 4px;
+	width: 50%;
+	z-index: 1;
+}
+
+.slideBg {
+	position: absolute;
+	background-color: #551ef7;
+	color: white;
+	border-radius: 30px;
+	height: 100%;
+	width: 50%;
+	top: 0;
+	left: 0;
+	transition: transform 0.3s ease;
+}
+
+/*
+toggle-button submodule's css end
+*/
+/*
+typography-control submodule's css start
+*/
+
+.eb-typography-wrapper {
+	padding: 15px;
+}
+
+.components-eb-typography-dropdown {
+	padding: 0 !important;
+}
+
+/*
+typography-control submodule's css end
+*/
+
+/*
+unit-control submodule's css start
+*/
+
+.eb-unit-control-btn-group {
+	margin: 0px 0px -20px 0px;
+	text-align: right;
+	display: flex !important;
+	justify-content: right;
+	align-items: center;
+}
+
+.eb-unit-control-btn {
+	color: black;
+	background: transparent !important;
+	outline: none !important;
+	box-shadow: none !important;
+	border: none !important;
+	text-shadow: none !important;
+}
+
+.eb-unit-custom-btn .dashicons,
+.eb-unit-custom-btn .dashicons-before:before {
+	height: 10px;
+	width: 10px;
+	font-size: 10px;
+}
+
+.eb-unit-custom-btn .dashicon::before {
+	font-size: 10px;
+}
+
+.eb-unit-active {
+	color: #551ef7 !important;
+	font-weight: bold;
+}
+
+/*
+unit-control submodule's css end
+*/
+
+/* responsive-range-control submodule's css start */
+
+.eb-component-wrapper {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.eb-responsive-text-controler .eb-component-wrapper {
+	flex-wrap: nowrap;
+}
+
+.eb-component-wrapper .eb-help-text.components-base-control__help {
+	flex-basis: 100%;
+}
+
+.eb-component-wrapper .components-base-control.components-range-control {
+	flex-grow: 1;
+}
+
+.eb-component-wrapper .eb-range-reset-button {
+	height: 26px;
+	width: 20px;
+	background: transparent;
+	border: none;
+	outline: none;
+	box-shadow: none;
+	padding: 0;
+	margin-left: 2px;
+	cursor: pointer;
+}
+
+.eb-component-wrapper .eb-range-reset-button .dashicon {
+	font-size: 14px;
+	color: #62626f;
+	width: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform: scaleX(-1) rotate(90deg);
+}
+
+.responsive-btn-label {
+	margin-right: 8px;
+}
+
+/* responsive-range-control submodule's css end */
+
+/* EB Settings Tab Panel Control */
+.eb-panel-control {
+	background-color: #f7f7f7;
+
+	.eb-parent-tab-panel {
+		.components-tab-panel__tabs {
+			background-color: #fff;
+
+			.eb-tab {
+				font-size: 1.1em;
+				background-color: #fff;
+				border-right: 1px solid #fff;
+				border-top: 3px solid transparent;
+
+				&.active-tab {
+					background-color: #f7f7f7;
+					border-color: #cebeff !important;
+				}
+
+				&:not(:first-child) {
+					border-left: 1px solid #fff;
+				}
+
+				&:hover {
+					color: #551ef7;
+				}
+
+				&:focus {
+					box-shadow: unset;
+				}
+			}
+		}
+
+		.components-panel__body.eb-subpanel {
+			border: 0;
+			padding-left: 0;
+			padding-right: 0;
+		}
+
+		.components-panel__body-title {
+			background-color: #e8e8e8;
+		}
+
+		.eb-subpanel .components-panel__body-title {
+			margin-left: 0;
+			margin-right: 0;
+		}
+	}
+}
+
+/* EB Slider Content Settings */
+.eb-panel-control {
+	.eb-parent-tab-panel {
+		.eb-slider-item-single-panel {
+			margin-bottom: 10px;
+			border-top: 0;
+
+			&.is-opened {
+				background-color: #efefef;
+				border: 1px solid #e0e0e0;
+				border-radius: 4px;
+
+				.components-panel__body-title {
+					background-color: #e0e0e0;
+					border: 0;
+					border-bottom-left-radius: 0;
+					border-bottom-right-radius: 0;
+				}
+			}
+
+			.components-panel__body-title {
+				background-color: #eaeaea;
+				border: 1px solid #d8d8d8;
+				border-radius: 4px;
+
+				button {
+					padding: 12px;
+
+					&:focus {
+						outline: 0;
+						box-shadow: unset;
+					}
+				}
+			}
+
+			textarea {
+				border-color: #ebebeb;
+			}
+
+			.error {
+				color: red;
+				margin-top: -10px;
+				margin-bottom: 15px;
+				display: block;
+			}
+		}
+	}
+}
+
+// Accordion Backend Css starts
+
+// Hide summery arrow
+summary::-webkit-details-marker {
+	display: none;
+}
+
+// Sortable Styles
+
+/* Accordion sortable style */
+.drag-helper .profile-wrapper,
+.eb-pricebox-sortable-item,
+.eb-typed-sortable-item {
+	border: 1px solid #b4b4cb;
+}
+
+.profile-wrapper .drag-handle,
+.eb-accordion-sortable-item .drag-handle,
+.eb-pricebox-sortable-item .drag-handle,
+.eb-typed-sortable-item .drag-handle {
+	background: transparent !important;
+	flex: 2 1 0% !important;
+	border-left: 1px solid #b4b4cb;
+}
+
+.eb-panel-control .components-base-control .components-text-control__input,
+.eb-panel-control .components-base-control .drag-helper .eb-accordion-sortable-item .eb-social-delete-icon,
+.eb-panel-control .components-base-control .drag-helper .eb-accordion-sortable-item .drag-handle,
+.eb-panel-control .components-base-control .drag-helper .eb-accordion-sortable-item {
+	border-color: #ebebeb !important;
+	padding: 5px 0;
+}
+
+.eb-panel-control .components-base-control .drag-helper .eb-accordion-sortable-item .drag-handle {
+	border-right: none;
+}
+
+.eb-accordion-sortable-item {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border: 1px solid;
+	line-height: 2.5em;
+}
+
+.eb-accordion-sortable-title {
+	flex: 10;
+	padding-left: 5px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.eb-accordion-sortable-trash {
+	font-size: 16px;
+	border-left: 1px solid gray;
+	line-height: 2.5em;
+	flex: 1;
+	text-align: center;
+	padding: 8px;
+}
+
+.eb-accordion-sortable-trash:hover {
+	background: #f44336;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+.eb-pricebox-sortable-item {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	line-height: 2.5em;
+}
+
+.eb-pricebox-sortable-title {
+	flex: 12;
+	padding-left: 5px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 200px;
+	white-space: nowrap;
+}
+
+.eb-pricebox-sortable-trash {
+	font-size: 16px;
+	border-left: 1px solid gray;
+	line-height: 2.5em;
+	flex: 1;
+	text-align: center;
+	padding: 8px;
+}
+
+.eb-pricebox-sortable-trash:hover {
+	background: #f44336;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+.eb-pricebox-sortable-title:hover {
+	cursor: pointer;
+}
+
+//React Select 2 Style
+.eb-panel-control .eb-fontpicker-fontfamily {
+	z-index: 99999;
+	position: relative;
+}
+
+// Accordion Backend Css ends
+
+//Common Class Styles
+.eb-control-item-wrapper {
+	margin-bottom: 10px;
+}
+
+.eb-panel-control .components-base-control__field .components-text-control__input {
+	padding: 10px;
+}
+
+.eb-margin-bottom-10 {
+	margin-bottom: 10px;
+}
+
+.eb-margin-bottom-20 {
+	margin-bottom: 20px;
+}
+
+.eb-margin-bottom-30 {
+	margin-bottom: 30px;
+}
+
+// Backend Css for Row/Columns and also column's innerblocks
+
+.eb-row-wrapper .eb-guten-block-main-parent-wrapper.eb-column-editor-wrap.wp-block,
+.eb-row-wrapper .eb-guten-block-main-parent-wrapper.eb-column-editor-wrap.wp-block .wp-block {
+	max-width: none;
+}
+
+body.eb-mimmik-added {
+	.eb-guten-block-main-parent-wrapper.eb-row-editor-wrap .eb-row-root-container {
+		overflow-x: hidden;
+	}
+
+	.marginPaddingNaai.wp-block,
+	// .block-editor-block-list__block.wp-block,
+	// .wp-block,
+	// .eb-guten-block-main-parent-wrapper,
+	// .eb-guten-block-main-parent-wrapper.eb-column-editor-wrap,
+	// .eb-guten-block-main-parent-wrapper.eb-row-editor-wrap,
+	.eb-guten-block-main-parent-wrapper.eb-row-editor-wrap .wp-block,
+	.eb-guten-block-main-parent-wrapper.eb-row-editor-wrap .block-editor-block-list__block.wp-block {
+		margin-top: 0;
+		margin-bottom: 0;
+		padding-top: 0;
+		padding-bottom: 0;
+	}
+}
+
+.eb-row-wrapper>.eb-row-inner>.block-editor-inner-blocks {
+	margin-left: auto !important;
+	margin-right: auto !important;
+
+	&>.block-editor-block-list__layout {
+		max-width: none !important;
+		width: auto !important;
+	}
+}
+
+.eb-guten-block-main-parent-wrapper.eb-column-editor-wrap {
+	position: relative !important;
+
+	.eb-column-inner .block-list-appender {
+		margin: 0 !important;
+		padding: 0 !important;
+	}
+
+	.width-dragger-change {
+		display: none;
+		position: absolute;
+		z-index: 8;
+		right: -5px;
+		top: 0;
+		bottom: 0;
+		width: 12px;
+		cursor: col-resize;
+
+		&>.dragger-inner {
+			margin: 0 5px;
+			height: 100%;
+
+			// background-color: #000;
+			.circle {
+				position: absolute;
+				width: 10px;
+				height: 10px;
+				border: 1px solid #000;
+				border-radius: 50%;
+				top: 50%;
+				left: 2px;
+				transform: translateY(-50%);
+			}
+
+			&>.dashicons {
+				position: absolute;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				background: #fff;
+				width: 30px;
+				height: 30px;
+				border: 1px solid #a3a5c0;
+				border-radius: 50%;
+				top: 50%;
+				left: -8px;
+				transform: translateY(-50%);
+				color: #a3a5c0;
+			}
+		}
+
+		&:hover>.dragger-inner {
+			background-color: #000;
+		}
+	}
+
+	.cols-width-tooltip {
+		width: 170px;
+		position: absolute;
+		top: 50%;
+		background: no-repeat;
+		color: #fff;
+		padding: 0;
+		transform: translateY(-50%);
+		left: -77px;
+		// background: #fff;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		user-select: none;
+		z-index: 9999;
+
+		i.ovl_shapes {
+			position: absolute;
+			background: #fff;
+			height: 30px;
+			width: 30px;
+			border-radius: 50%;
+		}
+
+		i.ovl_circle1 {
+			left: 55px;
+		}
+
+		i.ovl_circle2 {
+			right: 55px;
+		}
+
+		&>span {
+			height: 30px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		&>span.dashicons {
+			color: #a3a5c0;
+			border: 1px solid #a3a5c0;
+			border-radius: 50%;
+			width: 30px;
+			font-size: 26px;
+			background: #fff;
+			z-index: 333;
+		}
+
+		&>span:not(.dashicons) {
+			background: #a3a5c0;
+			color: #fff;
+			width: 65px;
+		}
+
+		&> :not(.dashicons):first-child {
+			padding-right: 10px;
+			clip-path: polygon(100% 0, 90% 50%, 100% 100%, 0% 100%, 0 50%, 0% 0%);
+		}
+
+		&> :not(.dashicons):nth-child(3) {
+			padding-left: 10px;
+			clip-path: polygon(100% 0, 100% 50%, 100% 100%, 0% 100%, 10% 50%, 0% 0%);
+		}
+	}
+}
+
+body.eb-responsive-preview-option-Desktop .eb-guten-block-main-parent-wrapper.eb-column-editor-wrap .width-dragger-change,
+.wp-embed-responsive .eb-guten-block-main-parent-wrapper.eb-column-editor-wrap .width-dragger-change {
+	display: block;
+}
+
+body.eb-mimmik-added .edit-post-visual-editor .eb-column-wrapper>.eb-column-inner .components-button {
+	padding-top: 13px;
+	padding-bottom: 13px;
+}
+
+body.eb-mimmik-added .edit-post-visual-editor .block-editor-block-toolbar {
+	position: relative;
+	z-index: 999;
+}
+
+body.eb-mimmik-added .edit-post-visual-editor .components-popover.block-editor-block-list__block-popover {
+	z-index: 999;
+}
+
+body.eb-mimmik-added .edit-post-visual-editor .wp-block.editor-post-title.editor-post-title__block {
+	padding-bottom: 40px;
+}
+
+.eb-image-comparison-wrapper .eb-image-comparison-placeholder {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.eb-image-comparison-wrapper .eb-image-comparison-upload {
+	height: 200px;
+	width: 200px;
+	margin-right: 10px;
+	background: #e3e3e3;
+	display: inline;
+}
+
+.eb-image-comparison-wrapper .eb-image-comparison-image {
+	height: 200px;
+	width: 200px;
+	object-fit: cover;
+}
+
+//
+// image comparison backend css end
+//
+
+// Sortable Styles.drag-handle {
+.drag-handle {
+	flex: 1;
+	background: transparent;
+	border-right: 1px solid #b4b4cb;
+	cursor: move;
+	color: #fff;
+	align-items: center;
+	display: flex !important;
+	justify-content: center;
+	flex: 2 1 0% !important;
+	border-left: 1px solid #b4b4cb;
+}
+
+.eb-sortable-item {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border: 1px solid #b4b4cb;
+	line-height: 2.5em;
+}
+
+.eb-sortable-title {
+	flex: 12;
+	padding-left: 5px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 200px;
+	white-space: nowrap;
+}
+
+.eb-sortable-trash {
+	font-size: 16px;
+	border-left: 1px solid gray;
+	line-height: 2.5em;
+	flex: 1;
+	text-align: center;
+	padding: 8px;
+}
+
+.eb-sortable-trash:hover {
+	background: #f44336;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+.eb-sortable-title:hover {
+	cursor: pointer;
+}
+
+// ResponsiveSelectController
+
+.block-editor-block-inspector .eb-panel-control .responsiveSelectControl .components-base-control {
+	flex: 1;
+}
+
+.block-editor-block-inspector .eb-panel-control .responsiveSelectControl.jhapsha .components-base-control select {
+	color: #0007;
+}
+
+.eb-sortable-accordion-list .drag-helper {
+	border: 1px solid #ebebeb;
+	padding: 0 10px;
+	margin-top: 0;
+}
+
+.eb-sortable-accordion-list .eb-accordion-sortable-item {
+	padding: 0 !important;
+	border: none;
+}
+
+.eb-sortable-accordion-list .eb-accordion-sortable-title {
+	cursor: pointer;
+}
+
+// disable form submit btn for edit page
+.eb-guten-block-main-parent-wrapper .eb-form button[type="submit"],
+.eb-guten-block-main-parent-wrapper .eb-form input[type="submit"] {
+	pointer-events: none;
+}
+
+.eb-html-tag-buttongroup .components-button {
+	padding: 6px;
+	margin-left: 0 !important;
+}
+
+body:not(.eb-responsive-preview-option-Desktop) .eb_animation {
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.eb-support-panel {
+	padding: 30px 5px 20px;
+	text-align: center;
+	border-top: 1px solid #ddd;
+
+	.eb-block-support {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+
+		img {
+			width: 25px;
+		}
+
+		a {
+			font-size: 16px;
+			color: #211c70;
+			text-decoration: none;
+			font-weight: 500;
+
+			&:hover {
+				text-decoration: none;
+			}
+		}
+	}
+
+	.eb-block-links {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0px;
+		margin-top: 12px;
+	}
+
+	a {
+		font-size: 12px;
+		font-weight: 500;
+		color: #2673ff;
+
+		&:hover {
+			color: #481ec2;
+			text-decoration: underline;
+		}
+
+		img {
+			margin-right: 5px;
+			width: 14px;
+		}
+	}
+}
+
+.eb-multi-btn-wrp {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+}
+
+// Dynamic field style
+.eb-dynamic-input-control {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	position: relative;
+
+	.components-base-control {
+		width: calc(100% - 25px);
+	}
+
+	.dashicon {
+		font-size: 20px;
+		position: absolute;
+		right: 0;
+		top: 33px;
+
+		&:hover {
+			color: #7531ff;
+			cursor: pointer;
+		}
+	}
+}
+
+.eb-dynamic-field-popover {
+	width: 250px;
+
+	.components-popover__content {
+		width: 100%;
+		padding: 10px;
+
+		.eb-dynamic-popover-heading {
+			font-size: 1.05em;
+			font-weight: 700;
+			background-color: #e6e6e6;
+			padding: 5px 10px;
+			margin-bottom: 15px;
+		}
+	}
+}
+
+.eb-panel-control .components-panel__row.eb-is-pro-message {
+	color: red !important;
+	font-size: 1.01em !important;
+	margin-bottom: 15px !important;
+}
+
+.eb-dataTable-row-settings-wrap {
+	position: relative;
+	cursor: pointer;
+	text-align: center;
+}
+
+.eb-dataTable-row-settings.eb-dataTable-row-settings-visible {
+	opacity: 1 !important;
+	visibility: visible !important;
+}
+
+.eb-dataTable-row-settings {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+	box-shadow:
+		0px 5px 5px -3px rgba(0, 0, 0, 0.2),
+		0px 8px 10px 1px rgba(0, 0, 0, 0.14),
+		0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+	background: #ffffff;
+	padding: 10px 0;
+	border-radius: 4px;
+	min-width: 150px;
+	position: absolute;
+	top: 100%;
+	right: 0;
+	z-index: 1;
+}
+
+.eb-dataTable-row-settings li button {
+	border: 0;
+	background: #ffffff;
+	padding: 10px 15px;
+	transition: all 0.3s;
+	width: 100%;
+	text-transform: capitalize;
+	cursor: pointer;
+}
+
+.eb-dataTable-row-settings li button:hover {
+	background: #ccc;
+}
+
+.rdt_TableBody .rdt_TableCell div {
+	width: 100%;
+}
+
+.eb-is-pro-message {
+	background: #fffaeb;
+	border: 1px solid #fef0c7;
+	border-radius: 2px;
+	padding: 3px;
+	font-size: 11px;
+	line-height: 1.5rem;
+	display: flex;
+	gap: 5px;
+	align-items: center;
+	color: #000;
+	margin: 10px 0;
+
+	.dashicons {
+		color: #fec84b;
+	}
+
+	a {
+		text-decoration: none;
+		color: #2673ff;
+		text-transform: capitalize;
+	}
+}
+
+.eb-panel-control {
+	.eb-instruction-row {
+		display: block;
+	}
+
+	.eb-instruction {
+		padding: 10px !important;
+		line-height: 1.5;
+		text-transform: none;
+		margin: 0 !important;
+		background-color: #eaeaea;
+
+		strong {
+			margin: 0px 2px;
+			font-style: italic;
+			color: #222;
+			font-weight: 700;
+		}
+	}
+}
+
+// responsive align control
+.eb-panel-control .responsiveAlignControlWrapper .components-base-control__label {
+	margin: 0 10px 5px 0 !important;
+}
+
+.eb-panel-control .responsiveAlignControlWrapper .components-base-control {
+	flex-grow: 1;
+}
+
+.eb-color-control-indecator {
+	height: 22px;
+	width: 22px;
+}
+
+.eb-color-picker {
+	width: auto;
+	min-width: 270px;
+	top: 0px !important;
+	left: auto !important;
+	right: 0 !important;
+	transform: translateX(-285px) translateY(20px) translateY(0em) scale(1) translateZ(0px) !important;
+
+	.components-popover__content {
+		padding: 15px;
+		min-width: 270px;
+		min-height: 400px;
+		max-height: 100% !important;
+
+		.eb-colorpicker-tab-panel {
+			.components-tab-panel__tabs {
+				margin-bottom: 20px;
+				// border-bottom: 1px solid #ddd;
+
+				.components-tab-panel__tabs-item {
+					padding: 0;
+					margin-right: 15px;
+					min-width: 50px;
+					border-bottom: 2px solid transparent;
+
+					&.active-tab {
+						border-bottom: 2px solid #000;
+					}
+				}
+			}
+		}
+
+		.eb-color-picker-content {
+			&.eb-gradient-picker-disabled {
+				.components-tab-panel__tabs {
+					display: none;
+				}
+			}
+
+			.components-panel__row {
+				font-weight: 600;
+				text-transform: uppercase;
+				font-size: 13px;
+				margin: 10px 0 0px;
+			}
+
+			&>* {
+				min-width: 270px;
+
+				.react-colorful {
+					min-width: 270px;
+
+					.react-colorful__hue,
+					.react-colorful__alpha {
+						min-width: 260px;
+					}
+				}
+
+				.components-flex {
+					padding: 0px;
+					padding-bottom: 0;
+				}
+			}
+
+			.eb-colorpicker-gradient-color-list__global {
+				display: flex;
+				gap: 10px;
+
+				.eb-colorpicker-gradient-color {
+					height: 26px;
+					width: 26px;
+
+					&.current:before {
+						content: "\f15e";
+						font-family: dashicons;
+						position: relative;
+						font-size: 18px;
+						color: #fff;
+						top: 4px;
+						left: 4px;
+					}
+				}
+			}
+		}
+	}
+}
+
+.eb-loading {
+	min-height: 200px;
+	text-align: center;
+	width: 100%;
+}
+
+.eb-dynamic-select-control {
+	position: relative;
+}
+
+.eb-dynamic-field-loader {
+	position: absolute;
+	height: calc(100% + 20px);
+	width: calc(100% + 20px);
+	top: -10px;
+	left: -10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 11;
+	background: rgba(0, 0, 0, 0.1);
+}
+
+.eb-css-error-messages-wrapper {
+	margin: 10px 0;
+
+	.eb-css-error-item {
+		margin-bottom: 5px;
+		font-size: 12px;
+	}
+
+	span.eb-error-tag {
+		background-color: #ff0000;
+		padding: 3px 5px;
+		color: #ffffff;
+		border-radius: 5px;
+	}
+
+	span.eb-error-text {
+		color: #000;
+		font-style: italic;
+	}
+}
+
+.eb-panel-control {
+	.input-container {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-start;
+		gap: 0;
+		width: 100%;
+
+		.text-input-wrapper {
+			width: 100%;
+
+			input {
+				width: calc(100% - 8px);
+				border-color: #ebebeb !important;
+				min-height: 36px;
+			}
+		}
+	}
+}
+
+.eb-panel-control .responsiveRangeControllerWrapper .components-base-control {
+	margin-bottom: 0px !important;
+}
+
+// use to show the interface sidebar when use position for visibility options
+.wp-admin .interface-navigable-region.interface-interface-skeleton__sidebar {
+	z-index: 9999999;
+}
+
+.eb-help-text,
+.eb-panel-control .eb-help-text {
+	margin: 8px 0 !important;
+	font-size: 12px !important;
+	font-style: italic !important;
+	color: rgb(117, 117, 117) !important;
+	font-weight: 400 !important;
+}
+
+.monaco-editor {
+	direction: ltr !important;
+}
+
+.monaco-editor .editor-widget.suggest-widget {
+	width: 100% !important;
+	left: 0 !important;
+	height: 150px !important;
+	overflow-y: scroll !important;
+}
+
+.block-editor-block-inspector img {
+	height: auto;
+	max-width: 100%;
+}
+
+.eb-product-image-editor .eb-product-image_slider-footer-item img {
+	height: 130px;
+	object-fit: cover;
+	object-position: center;
+}
+
+// toggle space issue
+.eb-panel-control .components-toggle-control .components-base-control__field .components-form-toggle {
+	margin-right: 0;
+}
+
+// image component
+.eb-image-component {
+	position: relative;
+
+	.eb-image-component-button-wrap.eb-no-image {
+		.eb-dynamic-input-control {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			background: #cad2df;
+			padding: 5px;
+			border-radius: 5px;
+
+			.dashicon {
+				position: relative;
+				top: 0px;
+			}
+		}
+	}
+
+	.eb-image-upload-button {
+		display: block !important;
+	}
+
+	.eb-image-preview {
+		position: relative;
+		display: block;
+		margin-bottom: 10px;
+		min-height: 20px;
+
+		.eb-dynamic-input-control {
+			background: #cad2df;
+			padding: 5px;
+			border-radius: 5px;
+
+			.dashicon {
+				position: relative;
+				top: 0px;
+			}
+		}
+
+		img,
+		svg {
+			display: flex;
+			width: 100%;
+			height: auto;
+		}
+
+		.eb-image-component-button-wrap {
+			display: flex;
+			gap: 10px;
+			position: absolute !important;
+			top: 10px;
+			right: 10px;
+			opacity: 0;
+			transition: all 0.3s;
+
+			.eb-replace-img-button {
+				position: unset !important;
+				background-color: #cad2df;
+				color: #000000;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+				opacity: 1 !important;
+			}
+
+			.eb-remove-img-button {
+				position: unset !important;
+				background-color: #de3730;
+				color: #ffffff;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+			}
+
+			.eb-ai-img-button {
+				position: unset !important;
+				background-color: #cad2df;
+				color: #ffffff;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+
+				svg,
+				svg * {
+					fill: #000 !important;
+				}
+			}
+		}
+
+		&:hover {
+			.eb-image-component-button-wrap {
+				opacity: 1;
+			}
+		}
+	}
+}
+
+.eb-panel-control {
+
+	// CSS for EB range control
+	.range-controller-wrapper {
+		.range-controller-input-wrapper {
+			display: flex;
+			align-items: center;
+			width: 100%;
+
+			.range-control-inputs {
+				width: 100%;
+			}
+
+			.eb-range-reset-button {
+				background: transparent;
+				font-size: 12px;
+				border: none;
+
+				span {
+					font-size: inherit;
+					width: auto;
+					height: auto;
+				}
+			}
+		}
+
+		.eb-help-text {
+			margin-top: 0px !important;
+		}
+	}
+
+	// CSS for EB Flex Container for controls
+	.eb-flex-control-wrapper {
+		.eb-flex-control-items {
+			display: flex;
+			gap: 10px;
+		}
+
+		.eb-flex-control-title {
+			font-size: 13px !important;
+			text-transform: capitalize !important;
+			margin: 20px 0px 10px !important;
+		}
+
+		.eb-flex-control-help {
+			font-size: 12px !important;
+			font-style: normal;
+			color: rgb(117, 117, 117) !important;
+			font-weight: 400 !important;
+		}
+	}
+
+	//CSS for Interactive Animation Pro
+	.eb_ie {
+		display: flex;
+		flex-flow: column;
+		align-items: center;
+		gap: 12px;
+		text-align: center;
+		padding: 20px 10px 10px;
+
+		h3 {
+			margin-bottom: 0px;
+
+			a {
+				color: #211c70;
+				text-transform: capitalize;
+				font-size: 18px;
+				margin: 0;
+				text-decoration: none;
+				transition: ease-in 0.3s;
+
+				.dashicons {
+					transition: 0.3s;
+					opacity: 0;
+					visibility: hidden;
+				}
+			}
+
+			&:hover {
+				.dashicons {
+					opacity: 1;
+					visibility: visible;
+					margin-left: 5px;
+				}
+			}
+		}
+
+		p {
+			color: #1b1b50;
+			font-size: 13px;
+			margin: 0;
+		}
+
+		a.eb_upgrade_button {
+			background-color: #ff9437;
+			color: #fff;
+			font-size: 13px;
+			padding: 10px 12px;
+			border-radius: 4px;
+			text-decoration: none;
+			display: flex;
+			gap: 5px;
+
+			&:hover {
+				background-color: #f7811a;
+			}
+		}
+	}
+
+	.eb-group-control-panelbody svg {
+		margin-left: 5px;
+	}
+}
+
+// icon picker style
+.eb-icon-picker-base {
+	display: block;
+	position: relative;
+
+	.eb-icon-picker-undo {
+		position: absolute !important;
+		top: 5px;
+		right: 10px;
+
+		span {
+			font-size: 15px;
+		}
+	}
+}
+
+// box shadow control
+.eb-control-boxshadow-wrap {
+	.components-base-control__label {
+		margin-right: auto;
+	}
+
+	.eb-range-controller-container .eb-range-reset-button {
+		margin-top: 0;
+	}
+}
+
+// EB Pro Notice CSS
+.eb-pro-notice {
+	background: #ffffff;
+	border: 1px solid #1e1e1e;
+	border-radius: 8px;
+	padding: 32px;
+	box-shadow: 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+
+	.eb-pro-notice-title {
+		font-size: 24px;
+		color: #000000;
+	}
+
+	.eb-pro-notice-description {
+		font-size: 16px;
+		color: #475467;
+	}
+
+	a.eb-pro-upgrade-button {
+		background-color: #ff9437;
+		color: #fff;
+		font-size: 13px;
+		padding: 10px 12px;
+		border-radius: 4px;
+		text-decoration: none;
+		display: inline-flex;
+		gap: 5px;
+		align-items: center;
+
+		&::hover {
+			background-color: #f7811a;
+		}
+	}
+}
+
+.block-editor-block-types-list__item-icon {
+	position: relative;
+}
+
+.eb-pro-badge {
+	position: absolute;
+	top: -4px;
+	right: -4px;
+	background: #f2a80b;
+	color: #ffffff;
+	font-size: 8px;
+	padding: 2px 4px;
+	border-radius: 3px;
+	font-weight: bold;
+	line-height: 1;
+	z-index: 1;
+}
+
+.eb-pro-badge svg {
+	min-width: 15px !important;
+	min-height: 15px !important;
+}
+
+.eb-pro-notice-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 0;
+}
+
+.eb-pro-notice-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.eb-pro-notice-icon svg {
+	width: 20px;
+	height: 20px;
+}
+
+.eb-pro-title-icon {
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.eb-pro-title-icon svg {
+	width: 20px;
+	height: 20px;
+}
+
+.block-editor-block-inspector {
+	.block-editor-block-card {
+		.eb-pro-badge {
+			display: none !important;
+		}
+	}
+}
+
+.block-editor-list-view-block__contents-container {
+	.eb-pro-icon-wrapper {
+		.eb-pro-badge {
+			top: 5px !important;
+			right: 5px !important;
+		}
+	}
+}
+
+.eb-conditional-display-datetime {
+	.react-datepicker-wrapper {
+		display: block;
+	}
+
+	.eb-cd-datefield {
+		border: 1px solid #ebebeb;
+		border-radius: 2px;
+		box-shadow: 0 0 0 #0000;
+		font-size: 13px;
+		height: 32px;
+		line-height: normal;
+		margin: 0;
+		padding: 6px 8px;
+		transition: box-shadow 0.1s linear;
+		width: 100%;
+	}
+}
+
+.eb-sortable-items-empty {
+	font-size: 16px;
+	color: #9ca3af;
+	font-style: italic;
+	background-color: #f9fafb;
+	border: 1px dashed #d1d5db;
+	border-radius: 0.5rem;
+	padding: 1rem;
+	text-align: center;
+	margin-bottom: 8px;
+	text-transform: capitalize;
+}
+
+// EB Text Control
+.eb-enhanced-text-control {
+	position: relative;
+	width: 100%;
+}
+
+.eb-enhanced-text-control-wrapper {
+	position: relative;
+}
+
+.eb-enhanced-text-control-input {
+	flex-grow: 1;
+}
+
+/* Override WordPress styles to make room for the button */
+.eb-enhanced-text-control-wrapper .components-text-control__input {
+	padding-right: 40px !important;
+}
+
+.eb-enhanced-text-control-menu-button {
+	background-color: #f2f2f2;
+	position: absolute !important;
+	right: 5px !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
+	min-width: auto !important;
+	padding: 4px !important;
+	height: auto !important;
+	z-index: 2 !important;
+	border-radius: 3px;
+
+	svg {
+		width: 14px !important;
+		height: 14px !important;
+		fill: #000000 !important;
+	}
+}
+
+.eb-enhanced-text-control-menu {
+	min-width: 160px;
+	max-width: 240px;
+	overflow: hidden;
+}
+
+.eb-enhanced-text-control-menu ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.eb-enhanced-text-control-menu li {
+	margin: 0;
+	border-bottom: 1px solid #f1f1f1;
+}
+
+.eb-enhanced-text-control-menu li button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	padding: 8px 12px;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	font-size: 13px;
+	color: #1e1e1e;
+}
+
+.eb-enhanced-text-control-menu li button:hover {
+	background-color: #f0f0f0;
+}
+
+.eb-enhanced-text-control-popover .components-popover__content {
+	padding: 0;
+}
+
+
+/*
+============ Text Control CSS ============
+*/
+.eb-text-control-wrapper {
+	position: relative;
+	width: 100%;
+
+	&--has-prefix,
+	&--has-suffix {
+		.eb-text-control-input {
+			input {
+				border-top-left-radius: 0;
+				border-bottom-left-radius: 0;
+			}
+		}
+	}
+
+	&--has-suffix {
+		.eb-text-control-input {
+			input {
+				border-top-right-radius: 0;
+				border-bottom-right-radius: 0;
+			}
+		}
+	}
+
+	&--disabled {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
+	&--invalid {
+		.eb-text-control-input input {
+			border-color: #d94f4f;
+			box-shadow: 0 0 0 1px #d94f4f;
+		}
+
+		.eb-text-control-prefix,
+		.eb-text-control-suffix {
+			border-color: #d94f4f;
+			background-color: #ffeaea;
+		}
+	}
+
+	.eb-text-control-ai {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	.eb-text-control-ai-popover-wrapper {
+		padding: 15px;
+		min-width: 250px;
+		background-color: #fff;
+		border-radius: 4px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		font-size: 14px;
+		color: #333;
+		line-height: 1.4;
+		text-align: left;
+	}
+}
+
+.components-toolbar-group {
+	.eb-hoc-ai-button {
+		&.is-pressed {
+
+			svg,
+			path {
+				fill: #fff !important;
+			}
+		}
+	}
+}
+
+.eb-controls-ai-popover {
+	.eb-ai-popover-content {
+		padding: 20px;
+		min-width: 400px;
+		max-width: 500px;
+	}
+
+	.eb-ai-header {
+		display: flex;
+		gap: 10px;
+		position: relative;
+		border-bottom: 1px solid #E0E0E0;
+		margin-bottom: 15px;
+
+		.eb-ai-close-button {
+			position: absolute;
+			right: -10px;
+			top: -10px;
+			background-color: #f5f5f5;
+			color: #B3B3B3;
+			padding: 0;
+			line-height: 1;
+			border: 1px solid #B3B3B3;
+			width: 22px;
+			height: 22px;
+			outline: none !important;
+
+			&:focus {
+				outline: none;
+			}
+		}
+	}
+
+	.eb-ai-form {
+		&>* {
+			margin-bottom: 20px !important;
+		}
+
+		textarea,
+		input {
+			width: 100%;
+			border: 1px solid #B3B3B3;
+			border-radius: 8px;
+			padding: 10px;
+			font-size: 14px;
+			color: #000000;
+			font-weight: 400;
+		}
+
+		.eb-ai-generated-content-label {
+			display: block;
+			font-size: 11px;
+			font-weight: 500;
+			line-height: 1.4;
+			text-transform: uppercase;
+			box-sizing: border-box;
+			padding-top: 0px;
+			padding-bottom: 0px;
+			max-width: 100%;
+			margin-bottom: 5px !important;
+		}
+
+		.components-input-control__container {
+			select {
+				border: 1px solid #B3B3B3 !important;
+				border-radius: 8px;
+				padding: 10px !important;
+				font-size: 13px !important;
+				color: #555 !important;
+				font-weight: 400;
+				height: auto !important;
+				line-height: 1.4 !important;
+
+				&:focus {
+					outline: none;
+				}
+			}
+
+			.components-input-control__backdrop {
+				border: 0px transparent !important;
+				box-shadow: none !important;
+			}
+		}
+
+		.eb-ai-form-group {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 12px;
+
+			.components-base-control {
+				width: 100%;
+			}
+		}
+
+		.eb-ai-generate-again-button {
+			color: #000;
+			background: #fff;
+			box-shadow: 0 0 0 1px #898989;
+
+			&:hover {
+				box-shadow: 0 0 0 1px #5632d1;
+			}
+		}
+	}
+
+	.eb-ai-generate-button {
+		background: #202020;
+		color: #fff;
+		width: 100%;
+
+		svg,
+		path {
+			fill: #fff !important;
+		}
+
+		&:hover {
+			background: #5632d1;
+		}
+
+		&:disabled {
+			background-color: #D6D6D6;
+		}
+	}
+
+	.eb-ai-action-button {
+		font-size: 14px;
+		font-style: normal;
+		font-weight: 500;
+		line-height: 1.4em;
+		padding: 12px 15px;
+		text-decoration: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		height: auto;
+		border-radius: 8px;
+	}
+}
+
+.eb-text-control-input-wrapper {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	width: 100%;
+}
+
+.eb-text-control-prefix,
+.eb-text-control-suffix {
+	display: flex;
+	align-items: center;
+	padding: 6px 8px;
+	background-color: #f0f0f0;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	font-size: 13px;
+	color: #555;
+	white-space: nowrap;
+}
+
+.eb-text-control-wrapper--has-prefix {
+	.eb-text-control-prefix {
+		border-right: none;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+	}
+}
+
+.eb-text-control-wrapper--has-suffix {
+	.eb-text-control-suffix {
+		border-left: none;
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+}
+
+.eb-text-control-validation-message {
+	margin-top: 4px;
+	font-size: 12px;
+	color: #d94f4f;
+	font-style: italic;
+}
+
+.eb-text-control-wrapper--has-prefix .eb-text-control-input input:focus~.eb-text-control-prefix,
+.eb-text-control-wrapper--has-suffix .eb-text-control-input input:focus~.eb-text-control-suffix {
+	border-color: #007cba;
+}
+
+
+
+/*
+============ Textarea Control CSS ============
+*/
+.eb-textarea-control-wrapper {
+	position: relative;
+	width: 100%;
+
+	&--has-prefix,
+	&--has-suffix {
+		.eb-textarea-control-input {
+			input {
+				border-top-left-radius: 0;
+				border-bottom-left-radius: 0;
+			}
+		}
+	}
+
+	&--has-suffix {
+		.eb-textarea-control-input {
+			input {
+				border-top-right-radius: 0;
+				border-bottom-right-radius: 0;
+			}
+		}
+	}
+
+	&--disabled {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
+	&--invalid {
+		.eb-textarea-control-input input {
+			border-color: #d94f4f;
+			box-shadow: 0 0 0 1px #d94f4f;
+		}
+
+		.eb-textarea-control-prefix,
+		.eb-textarea-control-suffix {
+			border-color: #d94f4f;
+			background-color: #ffeaea;
+		}
+	}
+
+	.eb-textarea-control-ai {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	.eb-textarea-control-ai-popover-wrapper {
+		padding: 15px;
+		min-width: 250px;
+		background-color: #fff;
+		border-radius: 4px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		font-size: 14px;
+		color: #333;
+		line-height: 1.4;
+		text-align: left;
+	}
+}
+
+.eb-textarea-control-input-wrapper {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	width: 100%;
+}
+
+.eb-textarea-control-prefix,
+.eb-textarea-control-suffix {
+	display: flex;
+	align-items: center;
+	padding: 6px 8px;
+	background-color: #f0f0f0;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	font-size: 13px;
+	color: #555;
+	white-space: nowrap;
+}
+
+.eb-textarea-control-wrapper--has-prefix {
+	.eb-textarea-control-prefix {
+		border-right: none;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+	}
+}
+
+.eb-textarea-control-wrapper--has-suffix {
+	.eb-textarea-control-suffix {
+		border-left: none;
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+}
+
+.eb-textarea-control-validation-message {
+	margin-top: 4px;
+	font-size: 12px;
+	color: #d94f4f;
+	font-style: italic;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+	.eb-textarea-control-input-wrapper {
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.eb-textarea-control-prefix,
+	.eb-textarea-control-suffix {
+		width: 100%;
+		justify-content: center;
+		border-radius: 2px !important;
+	}
+
+	.eb-textarea-control-wrapper--has-prefix .eb-textarea-control-input input,
+	.eb-textarea-control-wrapper--has-suffix .eb-textarea-control-input input {
+		border-radius: 2px !important;
+	}
+}
+
+// Focus states
+.eb-textarea-control-input input:focus {
+	outline: none;
+	border-color: #007cba;
+	box-shadow: 0 0 0 1px #007cba;
+}
+
+.eb-textarea-control-wrapper--has-prefix .eb-textarea-control-input input:focus~.eb-textarea-control-prefix,
+.eb-textarea-control-wrapper--has-suffix .eb-textarea-control-input input:focus~.eb-textarea-control-suffix {
+	border-color: #007cba;
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+
+	.eb-textarea-control-prefix,
+	.eb-textarea-control-suffix {
+		background-color: #2c2c2c;
+		border-color: #555;
+		color: #ccc;
+	}
+
+	.eb-textarea-control-wrapper--invalid {
+
+		.eb-textarea-control-prefix,
+		.eb-textarea-control-suffix {
+			background-color: #4a2c2c;
+			border-color: #d94f4f;
+		}
+	}
+}
+
+.components-popover__content .components-button {
+	position: relative;
+
+	.eb-pro-badge {
+		right: 5px !important;
+		top: 50% !important;
+		transform: translate(0, -50%);
+	}
+}
+
+.eb-liquid-glass-effect-helper {
+	background: #eaeaea;
+	border-radius: 2px;
+	color: #6b6b6b;
+	padding: 10px;
+	text-transform: none !important;
+	font-size: 12px;
+	font-weight: 400;
+	margin-top: 15px;
+}
+
+.eb-pro-control-wrapper {
+	opacity: 0.6;
+	pointer-events: none;
+	label {
+		display: flex !important;
+		align-items: center;
+	}
+	.eb-pro-title-icon {
+		margin-left: 3px;
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
+		svg {
+			width: 16px;
+			height: 16px;
+		}
+	}
+}

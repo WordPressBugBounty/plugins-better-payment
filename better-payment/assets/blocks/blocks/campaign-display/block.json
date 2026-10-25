@@ -26,5 +26,5 @@
     "anchor": true,
     "className": true
   },
-  "editorScript": "file:./index.js"
+  "editorScript": "better-payment-campaign-display-editor"
 }

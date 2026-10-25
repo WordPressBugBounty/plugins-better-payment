@@ -5,7 +5,7 @@ Tags: donation, fundraising, recurring donations, payments, stripe paypal paysta
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.4.2
+Stable tag: 2.4.3
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -255,8 +255,18 @@ The JavaScript and CSS files in `assets/` are compiled with `@wordpress/scripts`
 * `src/campaign-builder/` and `src/campaign-list/` — the Campaign Builder
 * `src/blocks/` — the Gutenberg blocks
 * `src/js/` and `src/css/` — the front-end scripts and styles
+* `src/controls/` — the shared block editor controls, compiled into `assets/blocks/`
 
 == Changelog ==
+
+= 2.4.3 - 25/10/2026 =
+- Added: Campaign Donate Button popup payment option (Pro), payment amount limits, and secret key rotation notices.
+- Fixed: Stripe, PayPal, and Paystack payment processing, verification, currency handling, decimal precision, and error handling.
+- Fixed: Payment receipts, duplicate orders, payer validation, settings persistence, email templates, and subscription routing.
+- Fixed: Campaign visibility, dates, goals, layouts, Donate Button behavior, builder editing, drag-and-drop, and AI actions.
+- Improved: Campaign access control, CSV export safety, PayPal IPN validation, dashboard transaction matching, and AI history permissions.
+- Security: Protected gateway secret keys, escaped payment-related output, rate-limited payment attempts, and rejected donations below 1.
+- Improved: Minor bug fixes and overall stability improvements.
 
 = 2.4.2 - 14/10/2026 =
 - Fixed: PayPal return URL validation, CSV imports, transaction filters, subscription role fallback, and Payment Form block issues

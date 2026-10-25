@@ -209,7 +209,7 @@ class DB {
     }
     /**
      * Update settings 
-     * @param array $value
+     * @param mixed $value The settings array (anything else is refused), or the value for $key
      * @return boolean
      * @since 0.0.1
      */
@@ -218,6 +218,12 @@ class DB {
         if (!empty($key)) {
             return update_option($key, $value);
         }
+
+        // The settings option is always an array; anything else would wipe it.
+        if (!is_array($value)) {
+            return false;
+        }
+
         return update_option('better_payment_settings', $value);
     }
 
@@ -575,7 +581,7 @@ class DB {
         global $wpdb;
         $table    = self::get_table_name();
         $email    = sanitize_text_field( $email );
-        $ffi_like = '%' . $wpdb->esc_like( '"' . $email . '"' ) . '%';
+        list( $email_where, $email_params ) = self::user_email_condition( $email );
 
         // Helper constants only: no request data, and no `%` for prepare() to misread.
         $countable_amount = 'CAST(' . Helper::COUNTABLE_AMOUNT_SQL . ' AS DECIMAL(10,2))';
@@ -583,9 +589,11 @@ class DB {
         $counted_row      = Helper::COUNTED_ROW_SQL;
 
         // Table name from $wpdb->prefix; the other interpolations are the Helper-constant fragments built above.
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the comment above.
+        // The %s placeholders live in $email_where (user_email_condition()) and their values arrive
+        // spread from $email_params, which the placeholder sniff can neither see nor count.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see the comments above.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table, no WP API, uncached on purpose; $countable_amount is built from Helper constants above.
-        $row = $wpdb->get_row(
+        $row = '' === $email ? null : $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT
                     COUNT(*) AS total_count,
@@ -601,12 +609,11 @@ class DB {
                     SUM(CASE WHEN status = 'refunded' THEN 1 ELSE 0 END) AS refunded_count,
                     SUM(CASE WHEN status = 'refunded'
                         THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS refunded_amount
-                FROM $table WHERE ( email = %s OR form_fields_info LIKE %s ) AND {$counted_row}",
-                $email,
-                $ffi_like
+                FROM $table WHERE {$email_where} AND {$counted_row}",
+                ...$email_params
             )
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
         if ( ! $row ) {
             $row = (object) array_fill_keys(
@@ -650,9 +657,9 @@ class DB {
         $offset   = ( $page - 1 ) * $per_page;
 
         $type_where = self::user_transactions_type_where( (string) $args['type'] );
-        if ( null === $type_where ) {
-            // Nothing defines this row type (e.g. 'subscriptions' without Pro): answer
-            // with no rows, never with every row the user owns.
+        if ( null === $type_where || '' === $email ) {
+            // Nothing defines this row type (e.g. 'subscriptions' without Pro), or there
+            // is no email to match: answer with no rows, never with every row.
             return [
                 'transactions' => [],
                 'total'        => 0,
@@ -662,32 +669,24 @@ class DB {
             ];
         }
 
-        // Match rows where the email column is set directly OR where the email
-        // appears as a quoted value inside the serialized form_fields_info blob.
-        // The initial payment_create() insert never writes the email column —
-        // only the payment-confirmed callback does — so many rows have the user's
-        // email exclusively inside form_fields_info.
-        $ffi_like = '%' . $wpdb->esc_like( '"' . $email . '"' ) . '%';
+        list( $email_where, $email_params ) = self::user_email_condition( $email );
 
         // Table name from $wpdb->prefix. $type_where is '' or the SQL fragment answered by the
         // better_payment/db/user_transactions_type_where filter (Better Payment Pro), never request data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
         $total = (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(id) FROM $table WHERE ( email = %s OR form_fields_info LIKE %s )" . $type_where, // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- see the comment above.
-                $email,
-                $ffi_like
+                "SELECT COUNT(id) FROM $table WHERE $email_where" . $type_where, // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see the comment above; the %s placeholders are in $email_where (user_email_condition()).
+                ...$email_params
             )
         );
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
         $transactions = $wpdb->get_results(
+            // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $email_where carries its own %s placeholders, filled from the spread $email_params ahead of the two LIMIT values.
             $wpdb->prepare(
-                "SELECT * FROM $table WHERE ( email = %s OR form_fields_info LIKE %s )" . $type_where . " ORDER BY payment_date DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- see the comment above $total.
-                $email,
-                $ffi_like,
-                $per_page,
-                $offset
+                "SELECT * FROM $table WHERE $email_where" . $type_where . " ORDER BY payment_date DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- see the comment above $total.
+                ...array_merge( $email_params, [ $per_page, $offset ] )
             )
         );
 
@@ -697,6 +696,41 @@ class DB {
             'pages'        => $total > 0 ? (int) ceil( $total / $per_page ) : 1,
             'page'         => $page,
             'per_page'     => $per_page,
+        ];
+    }
+
+    /**
+     * The SQL condition matching the rows a user paid, by email.
+     *
+     * A row is the user's when its `email` column is theirs, or when its serialized
+     * `form_fields_info` holds their email under the PAYER's key: `primary_email`
+     * (widget, block, campaign popup, WooCommerce) or `email` (Elementor Pro Forms).
+     * The initial payment_create() insert never writes the `email` column — only the
+     * confirmation does — so many rows carry the email only inside form_fields_info.
+     *
+     * The blob also stores merchant values (`paypal_business_email`, the admin
+     * addresses in `email_settings`), so matching the email as any quoted value
+     * showed a merchant every row their address appeared in. Only the exact
+     * serialized key/value pair is matched now.
+     *
+     * @since 2.4.2
+     *
+     * @param string $email Sanitized, non-empty email.
+     * @return array{0: string, 1: array} SQL fragment with %s placeholders, and its values.
+     */
+    private static function user_email_condition( $email ) {
+        global $wpdb;
+
+        // serialize() writes s:<byte length>:"<value>";
+        $value = '";s:' . strlen( $email ) . ':"' . $email . '";';
+
+        return [
+            '( email = %s OR form_fields_info LIKE %s OR form_fields_info LIKE %s )',
+            [
+                $email,
+                '%' . $wpdb->esc_like( 's:13:"primary_email' . $value ) . '%',
+                '%' . $wpdb->esc_like( 's:5:"email' . $value ) . '%',
+            ],
         ];
     }
 

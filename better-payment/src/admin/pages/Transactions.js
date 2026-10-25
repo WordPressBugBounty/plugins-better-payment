@@ -25,6 +25,7 @@ import illustration from './../images/illustration.webp';
 import illustrationdark from './../images/illustrationdark.webp';
 import locale from './../utils/locale/en-US';
 import { scrollAdminToTop, useListScrollRestore } from '../utils/scroll';
+import { rowMenuAnchor, useRowMenuFlip } from '../utils/popupPosition';
 
 // Rows the list requests, and therefore rows the skeleton draws. One constant so
 // the placeholder can't promise more rows than the request can return.
@@ -109,6 +110,8 @@ const Transactions = () => {
 	// Transaction row menu state
 	const [ openTransactionMenu, setOpenTransactionMenu ] = useState( null );
 	const [ menuPosition, setMenuPosition ] = useState( { top: 0, right: 0 } );
+	// Flip the open menu above its button when there is no room below.
+	useRowMenuFlip( openTransactionMenu, menuPosition, setMenuPosition );
 
 	// Delete confirmation modal state
 	const [ isDeleteModalOpen, setIsDeleteModalOpen ] = useState( false );
@@ -353,10 +356,7 @@ const Transactions = () => {
 		}
 
 		const rect = e.currentTarget.getBoundingClientRect();
-		setMenuPosition( {
-			top: rect.bottom + 4,
-			right: window.innerWidth - rect.right,
-		} );
+		setMenuPosition( rowMenuAnchor( rect ) );
 		setOpenTransactionMenu( transactionId );
 	};
 
@@ -468,8 +468,15 @@ const Transactions = () => {
 
 		setIsDeleting( true );
 		try {
-			// Call REST API to delete transaction
-			await transactionsAPI.deleteTransaction( transactionToDelete );
+			// Call REST API to delete transaction. A failure rejects (apiMutation),
+			// so the catch below reports it instead of a false success.
+			const response =
+				await transactionsAPI.deleteTransaction( transactionToDelete );
+			if ( ! response?.success ) {
+				throw new Error(
+					__( 'Failed to delete transaction', 'better-payment' )
+				);
+			}
 
 			// Close modal
 			setIsDeleteModalOpen( false );
@@ -500,7 +507,7 @@ const Transactions = () => {
 
 			// Show error message using react-toastify
 			const errorMessage =
-				error.message ||
+				error?.message ||
 				__( 'Failed to delete transaction', 'better-payment' );
 			toast.error( errorMessage );
 		} finally {

@@ -55,13 +55,10 @@ trait ElementorHelper {
                     'order'      => 'ASC',
                     'search'     => $search,
                     'number'     => '5',
+                    'taxonomy'   => $this->select2_taxonomies( $post_type ),
                 ];
-    
-                if ( $post_type !== 'all' ) {
-                    $args['taxonomy'] = $post_type;
-                }
-    
-                $post_list = wp_list_pluck( get_terms( $args ), 'name', 'term_id' );
+
+                $post_list = empty( $args['taxonomy'] ) ? [] : wp_list_pluck( get_terms( $args ), 'name', 'term_id' );
                 break;
             case 'user':
                 if ( ! current_user_can( 'list_users' ) ) {
@@ -82,7 +79,7 @@ trait ElementorHelper {
             default:
                 if ( $post_type === 'fluent-products' && function_exists('fluentCart') ) {
                     $post_list = $this->get_fluentcart_products( $search );
-                } else {
+                } elseif ( $this->select2_post_type_allowed( $post_type ) ) {
                     $post_list = $this->get_query_post_list( $post_type, 10, $search );
                 }
         }
@@ -95,6 +92,46 @@ trait ElementorHelper {
         wp_send_json( [ 'results' => $results ] );
     }
     
+    /**
+     * Whether a select2 lookup may read this post type.
+     *
+     * The type is request data, and the lookup only needs `edit_posts`, so a
+     * Contributor could otherwise read the titles of another plugin's non-public
+     * post type (one that stores form entries as published posts, say). Only public
+     * types are searchable, plus FluentCart's products, which the product picker uses.
+     *
+     * @since 2.4.2
+     *
+     * @param string $post_type Requested post type.
+     * @return bool
+     */
+    private function select2_post_type_allowed( $post_type ) {
+        if ( 'fluent-products' === $post_type ) {
+            return true;
+        }
+
+        return in_array( $post_type, get_post_types( [ 'public' => true ] ), true );
+    }
+
+    /**
+     * The taxonomies a select2 lookup may read: the requested one if it is public,
+     * every public one for `all`, otherwise none.
+     *
+     * @since 2.4.2
+     *
+     * @param string $taxonomy Requested taxonomy, or `all`.
+     * @return string[]
+     */
+    private function select2_taxonomies( $taxonomy ) {
+        $public = get_taxonomies( [ 'public' => true ] );
+
+        if ( 'all' === $taxonomy ) {
+            return array_values( $public );
+        }
+
+        return isset( $public[ $taxonomy ] ) ? [ $taxonomy ] : [];
+    }
+
     /**
 	 * Select2 Ajax Get Posts Value Titles
 	 * get selected value to show elementor editor panel in select2 ajax search box
@@ -129,15 +166,19 @@ trait ElementorHelper {
                     'orderby'    => 'name',
                     'order'      => 'ASC',
                     'include'    => implode( ',', $ids ),
+                    'taxonomy'   => $this->select2_taxonomies( $post_type ),
                 ];
-    
-                if ( $post_type !== 'all' ) {
-                    $args['taxonomy'] = $post_type;
-                }
-    
-                $response = wp_list_pluck( get_terms( $args ), 'name', 'term_id' );
+
+                $response = empty( $args['taxonomy'] ) ? [] : wp_list_pluck( get_terms( $args ), 'name', 'term_id' );
                 break;
             case 'user':
+                // Same gate as the search branch: an author (edit_posts) must not
+                // read display names by id when they cannot list users.
+                if ( ! current_user_can( 'list_users' ) ) {
+                    $response = [];
+                    break;
+                }
+
                 $users = [];
 
                 foreach ( get_users( [ 'include' => $ids ] ) as $user ) {
@@ -149,6 +190,11 @@ trait ElementorHelper {
                 $response = $users;
                 break;
             default:
+                if ( ! $this->select2_post_type_allowed( $post_type ) ) {
+                    $response = [];
+                    break;
+                }
+
                 $post_info = get_posts( [ 'post_type' => $post_type, 'include' => implode( ',', $ids ) ] );
                 $response  = wp_list_pluck( $post_info, 'post_title', 'ID' );
         }

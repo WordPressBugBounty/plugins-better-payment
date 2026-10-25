@@ -532,7 +532,7 @@ class CampaignElements {
                 ],
                 [
                     'key'   => 'summary_note',
-                    'label' => __( 'Note: All enabled items are always shown. Amount Donated and Number of Donors update as donations come in. Percent Raised shows 0% until a campaign goal is set, and Time Remaining shows 0 days left until an end date is set. Save and refresh the builder to see updated values.', 'better-payment' ),
+                    'label' => __( 'Note: Amount Donated and Number of Donors update as donations come in. Percent Raised is shown only once a campaign goal is set, and Time Remaining only once an end date is set. Save and refresh the builder to see updated values.', 'better-payment' ),
                     'type'  => 'note',
                 ],
                 [
@@ -596,13 +596,25 @@ class CampaignElements {
                     'type'  => 'color',
                     'info'  => __( 'Leave empty to use the campaign primary color.', 'better-payment' ),
                 ],
+                // How donors pay. The popup payment form is Pro's: on a free install
+                // the builder draws this control as a locked choice (page link
+                // selected, popup form behind an upgrade prompt), and Pro's builder
+                // script renders the real control in its place. Campaign meta
+                // (metaKey), so every Donate Button shares it. The '_' keeps it out of
+                // CampaignSchema::allowed_settings_keys(), i.e. away from the AI.
+                [
+                    'key'     => '_donation_mode',
+                    'label'   => __( 'How donors pay', 'better-payment' ),
+                    'type'    => 'donation_mode',
+                    'metaKey' => 'bpc_donation_mode',
+                ],
                 [
                     'key'          => 'url',
                     'label'        => __( 'Payment Form Page URL', 'better-payment' ),
                     'type'         => 'url',
                     'placeholder'  => 'https://',
                     'defaultValue' => '#',
-                    'info'        => __( 'Link to the page containing your donation form. Overrides the Donation Page set in General Settings.', 'better-payment' ),
+                    'info'        => __( 'Link to the page that holds your Payment Form widget or block.', 'better-payment' ),
                 ],
                 [
                     'key'          => 'open_new_tab',

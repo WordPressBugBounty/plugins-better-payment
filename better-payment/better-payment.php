@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.4.2
+ * Version: 2.4.3
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -36,7 +36,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.4.2';
+    const version = '2.4.3';
 
     /**
      * Class construcotr
@@ -108,6 +108,12 @@ final class Better_Payment {
         ( new Better_Payment\Lite\Campaign\CPT() )->register();
         flush_rewrite_rules();
         update_option( 'better_payment_campaign_rewrite_version', BETTER_PAYMENT_CAMPAIGN_REWRITE_VERSION );
+
+        // That flush ran before the WooCommerce module registered its My Account
+        // endpoints (it loads on plugins_loaded, which this request is past), so
+        // it dropped them. Clear the module's flush marker: the next normal
+        // request flushes again with them registered.
+        Better_Payment\Lite\WooCommerce\MyAccount::reset_rewrite_flag();
 
         if (get_option('better_payment_plugin_installed_fresh') !== 'yes' && get_option('better_payment_plugin_installed_time_fresh') === false) {
             update_option('better_payment_plugin_installed_fresh', 'yes');
@@ -339,6 +345,12 @@ add_action('wp_loaded', function () {
 
     // Once per site: revoke the tracking consent 2.3.2 – 2.4.1 recorded without asking.
     Better_Payment\Lite\Classes\TrackingConsentRepair::maybe_run();
+
+    // Once per site: move e-mail settings saved under keys nothing read onto the keys the mailer reads, and drop numeric keys.
+    Better_Payment\Lite\Classes\SettingsKeyRepair::maybe_run();
+
+    // Once per site: ask owners whose secret keys 2.4.1 and earlier exposed in the Elementor editor to rotate them.
+    Better_Payment\Lite\Classes\SecretKeyRotationNotice::maybe_flag();
 
     $setup_wizard = get_option('better_payment_setup_wizard');
 

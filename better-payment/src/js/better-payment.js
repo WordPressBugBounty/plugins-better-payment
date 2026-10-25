@@ -6,6 +6,15 @@ import {
 	redirectToStripeCheckout,
 	showRedirecting,
 } from './_checkout-lock';
+import { escapeHtml } from './_escape-html';
+import {
+	clearInvalidMark,
+	fieldDisplayName,
+	findAmountOutOfBounds,
+	findInvalidEmailField,
+	isFieldRequired,
+	markInvalidField,
+} from './_form-validation';
 
 ( function ( $ ) {
 	'use strict';
@@ -34,8 +43,30 @@ import {
 		custom_texts?.minimum_amount_is_one || 'Minimum amount is 1';
 	let somethingWentWrongText =
 		custom_texts?.something_went_wrong || 'Something went wrong';
+	const invalidEmailText =
+		custom_texts?.invalid_email || 'Please enter a valid email address';
+	const minimumAmountIsText =
+		custom_texts?.minimum_amount_is || 'Minimum amount is %s';
+	const maximumAmountIsText =
+		custom_texts?.maximum_amount_is || 'Maximum amount is %s';
+
+	// A field the form refused stays marked until the donor edits it.
+	$( document ).on(
+		'input change',
+		'form [aria-invalid="true"]',
+		function ( event ) {
+			clearInvalidMark( event );
+		}
+	);
 
 	$( document ).on( 'click', '.better-payment-paypal-bt', function ( e ) {
+		// Already submitted: a second click (or a second Enter in the donate
+		// popup) posted the form again and recorded a second `unpaid` order.
+		if ( isCheckoutLocked( this ) ) {
+			e.preventDefault();
+			return false;
+		}
+
 		const id = $( '#' + this.form.id ),
 			$form = $( id ),
 			paymentInfo = $( this ).data( 'paypal-info' ),
@@ -58,12 +89,20 @@ import {
 			return false;
 		}
 
-		// $(this).html('Proceed to Payment');
-		$( this ).attr( 'disabled', false );
+		// PayPal is a native form post, so the button must stay enabled until the
+		// browser has started it: a disabled submitter cancels the submission. The
+		// lock attribute refuses further clicks now; the button is disabled after
+		// this tick, and the back/forward-cache restore unlocks it like Stripe's.
+		lockCheckoutButton( this );
+		this.disabled = false;
+		showRedirecting( this, redirectingHtml );
 
-		$( this ).html(
-			`${ redirectingText } <span class="elementor-control-spinner">&nbsp;<i class="eicon-spinner eicon-animation-spin"></i>&nbsp;</span>`
-		);
+		const button = this;
+		window.setTimeout( function () {
+			if ( isCheckoutLocked( button ) ) {
+				button.disabled = true;
+			}
+		}, 0 );
 	} );
 
 	$( document ).on( 'click', '.better-payment-stripe-bt', function ( e ) {
@@ -137,7 +176,9 @@ import {
 				} );
 			},
 			error: function () {
-				console.log( 'Something went wrong!' );
+				// A network error, a 500 or an expired nonce on a cached page: say
+				// so, or the click looks like it did nothing.
+				toastr.error( `${ somethingWentWrongText }!` );
 				releaseCheckoutButton( button );
 			},
 		} );
@@ -203,7 +244,9 @@ import {
 				window.location.href = response.data.authorization_url;
 			},
 			error: function () {
-				console.log( 'Something went wrong!' );
+				// A network error, a 500 or an expired nonce on a cached page: say
+				// so, or the click looks like it did nothing.
+				toastr.error( `${ somethingWentWrongText }!` );
 				releaseCheckoutButton( button );
 			},
 		} );
@@ -233,6 +276,19 @@ import {
 				? data.errors.concat( validatedData.errors )
 				: data.errors;
 
+		// A typed email must be an address. Checked after the required fields, so
+		// an empty required email still reports as missing. Stripe used to get a
+		// Checkout Session (and the ledger an `unpaid` row with no email) for
+		// `not-an-email`: sanitize_email() emptied it on the server.
+		const invalidEmailField = data.status
+			? findInvalidEmailField( thisForm )
+			: null;
+		if ( invalidEmailField ) {
+			data.errors.push( `${ invalidEmailText }!` );
+			data.status = false;
+			markInvalidField( invalidEmailField );
+		}
+
 		if ( isPaypal && ! paymentInfo.business_email ) {
 			data.errors.push( `${ businessEmailIsRequiredText }!` );
 			data.status = false;
@@ -257,6 +313,22 @@ import {
 		) {
 			data.errors.push( `${ minimumAmountIsOneText }!` );
 			data.status = false;
+		}
+
+		// The amount field's own min/max: the bounds the server enforces.
+		const outOfBounds = data.status
+			? findAmountOutOfBounds( thisForm )
+			: null;
+		if ( outOfBounds ) {
+			const template =
+				'min' === outOfBounds.bound
+					? minimumAmountIsText
+					: maximumAmountIsText;
+			data.errors.push(
+				`${ template.replace( '%s', String( outOfBounds.limit ) ) }!`
+			);
+			data.status = false;
+			markInvalidField( outOfBounds.field );
 		}
 
 		return data;
@@ -526,10 +598,12 @@ import {
 		let currency = getFormsCurrency( settings );
 		let currencySymbol = getCurrencySymbols( currency );
 		let currencyAlignment = getFormsCurrencyAlignment( settings );
+		// The editor preview of an Elementor Pro form: every value below is a widget
+		// setting a Contributor controls, so each one is escaped into the markup.
 		let currencySymbolLeft =
-			'left' === currencyAlignment ? currencySymbol : '';
+			'left' === currencyAlignment ? escapeHtml( currencySymbol ) : '';
 		let currencySymbolRight =
-			'right' === currencyAlignment ? currencySymbol : '';
+			'right' === currencyAlignment ? escapeHtml( currencySymbol ) : '';
 		let bpFormsAmountListMarkup = '';
 		let bpFormsAmountListItemMarkup = '';
 
@@ -540,11 +614,12 @@ import {
 
 			amountList.forEach( ( amountListItem ) => {
 				uniqueId = uniqid();
-				itemValue =
+				itemValue = escapeHtml(
 					typeof amountListItem.better_payment_amount_val !==
-					'undefined'
+						'undefined'
 						? parseFloat( amountListItem.better_payment_amount_val )
-						: '';
+						: ''
+				);
 
 				bpFormsAmountListItemMarkup += `
                         <div class="bp-form__group pb-3">
@@ -570,14 +645,15 @@ import {
 
 	function getFormsInputFieldMarkup( settings, item ) {
 		let currency = getFormsCurrency( settings );
-		let currencySymbol = getCurrencySymbols( currency );
+		let currencySymbol = escapeHtml( getCurrencySymbols( currency ) );
 
-		let bpPlaceholder =
-			typeof item.bp_placeholder !== 'undefined'
-				? item.bp_placeholder
-				: '';
+		// Placeholder, min and max are the field's settings, which a Contributor sets:
+		// escaped, or a `"` closes the attribute and the rest becomes markup.
+		let bpPlaceholder = escapeHtml( item.bp_placeholder );
+		let bpFieldMin = escapeHtml( item.bp_field_min );
+		let bpFieldMax = escapeHtml( item.bp_field_max );
 
-		let bpPaymentAmountInput = `<input id="form-field-${ formsFieldTypeBPName }" class="input is-medium required bp-custom-payment-amount bp-custom-payment-amount-el-integration" type="number" placeholder="${ bpPlaceholder }" name="form_fields[${ formsFieldTypeBPName }]" required="required" min="${ item.bp_field_min }" max="${ item.bp_field_max }" value="">`;
+		let bpPaymentAmountInput = `<input id="form-field-${ formsFieldTypeBPName }" class="input is-medium required bp-custom-payment-amount bp-custom-payment-amount-el-integration" type="number" placeholder="${ bpPlaceholder }" name="form_fields[${ formsFieldTypeBPName }]" required="required" min="${ bpFieldMin }" max="${ bpFieldMax }" value="">`;
 
 		let paymentAmountInputGroup = `  <div class="better-payment-field-advanced-layout field-primary_payment_amount elementor-repeater-item-form-field-payment_amount">
                                             <div class="control has-icons-left">
@@ -598,7 +674,9 @@ import {
 		let bpFormsFieldsMarkup = '';
 
 		if ( showAmountList || showInputField ) {
-			let bpPaymentAmountLabel = `<label for="form-field-${ formsFieldTypeBPName }" class="elementor-field-label">${ item.field_label }</label>`;
+			let bpPaymentAmountLabel = `<label for="form-field-${ formsFieldTypeBPName }" class="elementor-field-label">${ escapeHtml(
+				item.field_label
+			) }</label>`;
 			bpFormsFieldsMarkup += bpPaymentAmountLabel;
 			bpFormsFieldsMarkup += `<div class ="better-payment is-full-width">`;
 		}
@@ -652,10 +730,6 @@ import {
 	//Better Payment Functions Ends
 
 	//Helper Functions Starts
-	function validateEmail( email ) {
-		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( email );
-	}
-
 	function validateForm( formSelector, fields, fieldsToExclude ) {
 		let data = {};
 
@@ -670,6 +744,7 @@ import {
 						fields[ key ]
 					);
 					if ( ! validatedData.status ) {
+						markInvalidField( formSelector[ key ] );
 						data.errors.push(
 							typeof validatedData.error !== 'undefined'
 								? validatedData.error
@@ -692,22 +767,14 @@ import {
 		data.error = '';
 		data.status = true;
 
-		if ( fieldSelector.length > 1 ) {
-			// Multiple Fields/Nodes
+		if ( ! fieldSelector || fieldSelector.length > 1 ) {
+			// Not a single control, or multiple Fields/Nodes
 			return data;
 		}
 
 		if ( fieldRequired ) {
-			let itemPlaceholder = fieldSelector.placeholder;
-			itemPlaceholder = itemPlaceholder.replace( ' *', '' );
-
-			if ( ! itemPlaceholder ) {
-				itemPlaceholder = fieldSelector.name;
-				itemPlaceholder = itemPlaceholder
-					.replace( 'primary', '' )
-					.replace( '_', ' ' )
-					.replace( /\b\w/g, ( char ) => char.toUpperCase() ); // primary_first_name => First Name
-			}
+			// Placeholder, else label, else name (a <select> has no placeholder).
+			const itemPlaceholder = fieldDisplayName( fieldSelector );
 
 			let error = errorMessage
 				? errorMessage
@@ -721,27 +788,14 @@ import {
 		return data;
 	}
 
-	function isFieldRequired( fieldSelector ) {
-		let fieldRequired = false;
-
-		if ( fieldSelector.length > 1 ) {
-			//Multiple Fields/Nodes
-			return true;
-		}
-
-		//if required attribute has value rather than null or ''
-		fieldRequired = ! (
-			fieldSelector.getAttribute( 'required' ) === null ||
-			fieldSelector.getAttribute( 'required' ) === ''
-		);
-		return fieldRequired;
-	}
-
 	function toasterOptions() {
 		toastr.options = {
 			timeOut: '2000',
 			toastClass: 'font-size-md',
 			maxOpened: 1,
+			// Messages carry form text (a field's placeholder in fieldRequired()) and
+			// gateway errors; toastr renders them as HTML unless this is set.
+			escapeHtml: true,
 		};
 	}
 	toasterOptions();

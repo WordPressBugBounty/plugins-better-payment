@@ -1,6 +1,12 @@
-import { useRef, useEffect, useState } from '@wordpress/element';
+import {
+	useRef,
+	useEffect,
+	useLayoutEffect,
+	useState,
+} from '@wordpress/element';
 import { DateRangePicker } from 'react-date-range';
 import { toIsoDate, parseIsoDate } from './../utils/helper';
+import { horizontalPopupOffset, contentBounds } from './../utils/popupPosition';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
@@ -45,6 +51,37 @@ const DateRangeFilter = ( {
 	useEffect( () => {
 		setState( [ selectionFrom( dateFrom, dateTo ) ] );
 	}, [ dateFrom, dateTo ] );
+
+	// Where the popup sits, measured once it is open: right-aligned to the
+	// trigger when that fits, otherwise moved right so it never slides under the
+	// wp-admin menu (see horizontalPopupOffset). `null` = not measured yet.
+	const [ popupLeft, setPopupLeft ] = useState( null );
+
+	useLayoutEffect( () => {
+		if ( ! isOpen ) {
+			setPopupLeft( null );
+			return;
+		}
+		const place = () => {
+			const trigger = dropdownRef.current;
+			const popup = popupRef.current;
+			if ( ! trigger || ! popup ) {
+				return;
+			}
+			const rect = trigger.getBoundingClientRect();
+			setPopupLeft(
+				horizontalPopupOffset( {
+					triggerLeft: rect.left,
+					triggerRight: rect.right,
+					popupWidth: popup.offsetWidth,
+					...contentBounds(),
+				} )
+			);
+		};
+		place();
+		window.addEventListener( 'resize', place );
+		return () => window.removeEventListener( 'resize', place );
+	}, [ isOpen ] );
 
 	// Handle click outside to close dropdown
 	useEffect( () => {
@@ -129,7 +166,9 @@ const DateRangeFilter = ( {
 					style={ {
 						position: 'absolute',
 						top: '100%',
-						right: 0,
+						...( popupLeft === null
+							? { right: 0 }
+							: { left: popupLeft, right: 'auto' } ),
 						zIndex: 1000,
 						marginTop: '8px',
 						backgroundColor: '#fff',

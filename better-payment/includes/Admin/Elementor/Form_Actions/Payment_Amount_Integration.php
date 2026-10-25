@@ -160,7 +160,7 @@ class Payment_Amount_Integration extends Action_Base {
                     ],
                 ],
                 'fields'      => $repeater->get_controls(),
-                'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{{ better_payment_amount_val }}}',
+                'title_field' => '<i class="{{ better_payment_amount_val }}" aria-hidden="true"></i> {{ better_payment_amount_val }}',
                 'condition'   => [
                     'better_payment_payment_amount_enable' => 'yes',
                     'better_payment_show_amount_list_enable' => 'yes',

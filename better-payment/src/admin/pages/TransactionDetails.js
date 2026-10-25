@@ -97,8 +97,8 @@ const TransactionDetails = ( { transactionId, onBack } ) => {
 					await transactionsAPI.getTransactionReferer(
 						transactionId
 					);
-				if ( response.success && response.data ) {
-					setRefererData( response.data );
+				if ( response?.success && response?.data ) {
+					setRefererData( response?.data );
 				}
 			} catch ( err ) {
 				// Silently fail - referer data is optional
@@ -120,7 +120,7 @@ const TransactionDetails = ( { transactionId, onBack } ) => {
 			const response =
 				await transactionsAPI.markTransactionComplete( transactionId );
 
-			if ( response.success ) {
+			if ( response?.success ) {
 				// Show success message
 				toast.success(
 					__( 'Transaction marked as completed', 'better-payment' )
@@ -132,10 +132,17 @@ const TransactionDetails = ( { transactionId, onBack } ) => {
 					method: 'GET',
 				} );
 				setTransaction( updatedTransaction );
+			} else {
+				toast.error(
+					__(
+						'Failed to mark transaction as completed',
+						'better-payment'
+					)
+				);
 			}
 		} catch ( err ) {
 			toast.error(
-				err.message ||
+				err?.message ||
 					__(
 						'Failed to mark transaction as completed',
 						'better-payment'

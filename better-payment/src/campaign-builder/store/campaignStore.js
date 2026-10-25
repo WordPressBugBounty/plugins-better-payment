@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { arrayMove } from '@dnd-kit/sortable';
+import { filterInitialMeta } from '../utils/builderHooks';
 import { getDefaultSettings } from '../fields/FieldRegistry';
 import { applyOperations } from '../ai/operationExecutor';
 
@@ -17,6 +18,7 @@ import { applyOperations } from '../ai/operationExecutor';
  *   selectedColumnId:  null | string,
  *   templateModalOpen: boolean,     // true on new campaign with no layout
  *   isDirty:  boolean,
+ *   revision: number,          // bumped by every edit to layout/meta (save race guard)
  *   isSaving: boolean,
  *   saveError: null | string,
  *   postStatus: 'publish' | 'draft',
@@ -24,26 +26,34 @@ import { applyOperations } from '../ai/operationExecutor';
  * }
  */
 
+/**
+ * Lite's own defaults for a new campaign. `initialState.meta` is this plus whatever
+ * an add-on adds through `better_payment.campaign_builder.initial_meta` (Pro: its
+ * popup payment form). An existing campaign whose load fails goes back to THIS,
+ * never to the add-on defaults — those are for new campaigns only.
+ */
+export const BASE_META = {
+	title: '',
+	bpc_goal_amount: '',
+	bpc_end_date: '',
+	bpc_status: 'active',
+	bpc_allow_custom_amount: 1,
+	bpc_minimum_amount: '',
+	bpc_form_page_id: 0,
+	bpc_color_primary: '#6b63f6',
+	bpc_color_background: '',
+	bpc_css_class: '',
+	bpc_template_key: '',
+	bpc_suggested_amounts: [
+		{ id: 'sa_1', amount: '5', description: '', is_default: false },
+		{ id: 'sa_2', amount: '10', description: '', is_default: false },
+		{ id: 'sa_3', amount: '15', description: '', is_default: true },
+		{ id: 'sa_4', amount: '20', description: '', is_default: false },
+	],
+};
+
 export const initialState = {
-	meta: {
-		title: '',
-		bpc_goal_amount: '',
-		bpc_end_date: '',
-		bpc_status: 'active',
-		bpc_allow_custom_amount: 1,
-		bpc_minimum_amount: '',
-		bpc_form_page_id: 0,
-		bpc_color_primary: '#6b63f6',
-		bpc_color_background: '',
-		bpc_css_class: '',
-		bpc_template_key: '',
-		bpc_suggested_amounts: [
-			{ id: 'sa_1', amount: '5', description: '', is_default: false },
-			{ id: 'sa_2', amount: '10', description: '', is_default: false },
-			{ id: 'sa_3', amount: '15', description: '', is_default: true },
-			{ id: 'sa_4', amount: '20', description: '', is_default: false },
-		],
-	},
+	meta: filterInitialMeta( BASE_META ),
 	layout: {
 		layout: '1-column',
 		columns: [],
@@ -54,6 +64,11 @@ export const initialState = {
 	templateChosen: false,
 	appliedTemplateKey: null,
 	isDirty: false,
+	// Bumped by every action that changes `layout` or `meta` (see reducer()).
+	// A save captures the revision it sent, and SAVE_SUCCESS clears `isDirty` only
+	// when nothing changed since — an edit made while the request was in flight
+	// must stay dirty, or Exit would discard it without asking.
+	revision: 0,
 	isSaving: false,
 	saveError: null,
 	postStatus: 'draft',
@@ -239,10 +254,44 @@ function updateColumn( columns, columnId, updater ) {
 
 // ── Reducer ───────────────────────────────────────────────────────────────────
 
+/**
+ * The campaign reducer.
+ *
+ * Wraps `baseReducer` to keep `revision` honest: any action that produces a new
+ * `layout` or `meta` and leaves the campaign dirty is an edit, and bumps it.
+ * Deriving this here rather than in every case means a new editing action cannot
+ * forget it — and forgetting it is exactly the bug it closes (an edit made during
+ * an in-flight save being marked clean by that save's SAVE_SUCCESS).
+ *
+ * @param {Object} state  Current state.
+ * @param {Object} action Reducer action.
+ * @return {Object} Next state.
+ */
 export function reducer( state, action ) {
+	const next = baseReducer( state, action );
+	if (
+		next !== state &&
+		next.isDirty &&
+		( next.layout !== state.layout || next.meta !== state.meta )
+	) {
+		return { ...next, revision: ( state.revision ?? 0 ) + 1 };
+	}
+	return next;
+}
+
+function baseReducer( state, action ) {
 	switch ( action.type ) {
 		case 'SET_INITIALIZING':
 			return { ...state, isInitializing: action.value };
+
+		// An existing campaign whose data failed to load. The add-on defaults in
+		// initialState are for NEW campaigns (Pro starts them on its popup form);
+		// drop them so a save after the failure cannot write them onto this one.
+		case 'LOAD_CAMPAIGN_FAILED':
+			return {
+				...state,
+				meta: { ...BASE_META },
+			};
 
 		case 'LOAD_CAMPAIGN': {
 			const layout = migrateLegacyLayout( action.layout );
@@ -264,13 +313,18 @@ export function reducer( state, action ) {
 					} )
 				);
 			} else if ( ! Array.isArray( sa ) || sa.length === 0 ) {
+				// BASE_META, not initialState.meta: the latter went through the
+				// initial_meta filter, so an add-on's new-campaign amounts would
+				// fill an existing campaign that has none.
 				loadedMeta.bpc_suggested_amounts =
-					initialState.meta.bpc_suggested_amounts;
+					BASE_META.bpc_suggested_amounts;
 			}
 
 			return {
 				...state,
-				meta: { ...state.meta, ...loadedMeta },
+				// Over BASE_META, not state.meta: an add-on's new-campaign defaults
+				// (initial_meta) must never fill a key an existing campaign lacks.
+				meta: { ...BASE_META, ...loadedMeta },
 				layout,
 				templateModalOpen: false,
 				templateChosen: !! loadedMeta.bpc_template_key,
@@ -583,11 +637,20 @@ export function reducer( state, action ) {
 				);
 			}
 
-			const snapshot = { layout: state.layout, meta: state.meta };
-			const aiUndoStack = [
-				...( state.aiUndoStack || [] ),
-				snapshot,
-			].slice( -AI_UNDO_LIMIT );
+			// `mergeUndo` folds this batch into the AI turn that is already on
+			// top of the undo stack instead of opening a new step. The panel sets
+			// it for the second dispatch of one turn — the generated image, which
+			// arrives after a network round-trip — so one AI turn is always one
+			// Undo. With nothing on the stack (e.g. the user undid mid-turn) it
+			// snapshots normally, so the change is never unreachable.
+			const undoStack = state.aiUndoStack || [];
+			const aiUndoStack =
+				action.mergeUndo && undoStack.length
+					? undoStack
+					: [
+							...undoStack,
+							{ layout: state.layout, meta: state.meta },
+					  ].slice( -AI_UNDO_LIMIT );
 
 			return {
 				...next,
@@ -675,11 +738,23 @@ export function reducer( state, action ) {
 		case 'SAVE_SUCCESS':
 			return {
 				...state,
-				isDirty: false,
+				// Only clean when the saved revision is still the current one. An
+				// edit made while the request was in flight bumped `revision`, and
+				// that edit is not in what the server stored.
+				isDirty:
+					action.revision !== undefined &&
+					action.revision !== null &&
+					action.revision !== ( state.revision ?? 0 )
+						? state.isDirty
+						: false,
 				isSaving: false,
 				saveError: null,
 				postStatus: action.postStatus || state.postStatus,
-				viewUrl: action.viewUrl || state.viewUrl,
+				// The server answers '' for a draft. That is a real value, not a
+				// missing one: publish → draft must drop the old permalink, or the
+				// View Live button keeps linking to a page that no longer exists.
+				viewUrl:
+					'viewUrl' in action ? action.viewUrl ?? '' : state.viewUrl,
 			};
 
 		case 'SAVE_ERROR':

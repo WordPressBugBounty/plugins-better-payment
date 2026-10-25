@@ -325,107 +325,6 @@
 			.join( '' );
 	}
 
-	function buildSubscriptionRows( txns, s ) {
-		if ( ! txns.length ) return noItemsRow( s.no_items_label );
-
-		return txns
-			.map( function ( t, i ) {
-				var c = i + 1;
-				var isActive =
-					t.subscription_status === 'active' ||
-					t.subscription_status === 'complete';
-				var stLabel = isActive
-					? s.status_active_label
-					: s.status_inactive_label;
-				var row =
-					'<div class="better-payment-user-dashboard-table-body bp--table-body flex items-center justify-between gap-3">';
-
-				if ( s.subscription_id_show ) {
-					row +=
-						'<div class="td details flex items-center gap-3 min-w-300 max-w-300">' +
-						'<div class="bp-flexbox-container">' +
-						'<h5 class="bp-shortend-text"><span id="bp_copy_clipboard_input_' +
-						c +
-						'">' +
-						esc( t.subscription_id ) +
-						'</span></h5>' +
-						'<p><span id="bp_copy_clipboard_' +
-						c +
-						'" class="bp-icon bp-copy-square bp-copy-clipboard" data-bp_txn_counter="' +
-						c +
-						'"></span></p>' +
-						'</div></div>';
-				}
-				row +=
-					'<div class="td details d-none"><p>' +
-					esc( t.subscription_customer_id || '' ) +
-					'</p></div>';
-				if ( s.plan_id_show ) {
-					row +=
-						'<div class="td details flex items-center gap-3 min-w-300 max-w-300"><p>' +
-						esc( t.subscription_plan_id || '' ) +
-						'</p></div>';
-				}
-				if ( s.status_show ) {
-					row +=
-						'<div class="td details flex justify-center bp-user-dashboard-subscription-status">' +
-						'<button class="' +
-						esc( t.subscription_status || '' ) +
-						' ' +
-						( isActive ? 'active' : 'inactive' ) +
-						'">' +
-						esc( stLabel ) +
-						'</button>' +
-						'</div>';
-				}
-				if ( s.amount_show ) {
-					row +=
-						'<div class="td details"><p class="flex items-center">' +
-						esc( t.currency ) +
-						' ' +
-						esc( t.amount ) +
-						'<span class="price">/' +
-						esc( t.subscription_interval || '' ) +
-						'</span>' +
-						'</p></div>';
-				}
-				if ( s.created_date_show ) {
-					row +=
-						'<div class="td details"><p>' +
-						esc( formatDate( t.subscription_created_date ) ) +
-						'</p></div>';
-				}
-				if ( s.current_period_show ) {
-					row +=
-						'<div class="td details"><p>' +
-						esc( formatDate( t.subscription_current_period_end ) ) +
-						'</p></div>';
-				}
-				if ( s.action_show ) {
-					var showCancel =
-						isActive && ! t.is_payment_split_payment
-							? ''
-							: 'is-hidden';
-					row +=
-						'<div class="td details flex justify-center">' +
-						'<button class="cancel bp-user-dashboard-subscription-cancel ' +
-						esc( t.subscription_status || '' ) +
-						' ' +
-						( isActive ? 'active' : 'inactive' ) +
-						' ' +
-						showCancel +
-						'" data-subscriptionid="' +
-						esc( t.subscription_id || '' ) +
-						'">' +
-						esc( s.action_cancel_label ) +
-						'</button></div>';
-				}
-				row += '</div>';
-				return row;
-			} )
-			.join( '' );
-	}
-
 	/* ── Per-table init ──────────────────────────────────────────────────── */
 	function initTable( wrapper ) {
 		// Guard against double-init (Elementor can fire element_ready multiple times)
@@ -451,13 +350,9 @@
 				return buildTransactionRows( txns, settings );
 			}
 
-			// Subscriptions are Pro-only, and only Pro's REST rows carry them. Pro registers
-			// its own row builder on window.betterPaymentUserDashRows; buildSubscriptionRows()
-			// is the fallback when that script is not on the page. Pro 1.4.4 loads it only
-			// where has_block() sees the dashboard block (not in a template part, widget
-			// area or synced pattern); Pro 1.4.5 also enqueues it when the tab renders
-			// (UserDashboard::subscriptions_tab()). Delete this fallback in the first Lite
-			// release that raises ProCompatibility::MIN_PRO_VERSION to 1.4.5.
+			// Subscriptions are Pro-only, and Pro builds their rows: it registers its row
+			// builder on window.betterPaymentUserDashRows. Lite ships no copy of it, so
+			// without one there is nothing to draw and the current page stays as it is.
 			var proRows =
 				window.betterPaymentUserDashRows &&
 				window.betterPaymentUserDashRows.subscriptions;
@@ -469,7 +364,7 @@
 				} );
 			}
 
-			return buildSubscriptionRows( txns, settings );
+			return null;
 		}
 
 		function renderPagination() {
@@ -505,7 +400,12 @@
 					return r.json();
 				} )
 				.then( function ( data ) {
-					tbody.innerHTML = buildRows( data.transactions || [] );
+					var rows = buildRows( data.transactions || [] );
+					if ( rows === null ) {
+						tbody.style.opacity = '';
+						return;
+					}
+					tbody.innerHTML = rows;
 					curPage = data.page || page;
 					totalPages = data.pages || totalPages;
 					renderPagination();

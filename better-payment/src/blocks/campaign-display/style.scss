@@ -1974,8 +1974,7 @@ $white: #fff;
 // section). A campaign built from one keeps its theme class after a Pro licence
 // lapses, and without tokens every shared rule below would read undefined custom
 // properties. These give that page a plain, readable v2 look instead. `:where()`
-// has zero specificity, so a real token block — Pro's, or Lite's transitional copy —
-// always wins.
+// has zero specificity, so Pro's real token block always wins.
 :where(
 		.bp-campaign.bp-v2-water,
 		.bp-campaign.bp-v2-fooddrive,

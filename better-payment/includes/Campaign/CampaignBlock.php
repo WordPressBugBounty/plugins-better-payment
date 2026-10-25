@@ -16,10 +16,28 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class CampaignBlock extends Controller {
 
+    /**
+     * REST route prefix the block editor's ServerSideRender preview calls.
+     */
+    const EDITOR_RENDER_ROUTE = '/wp/v2/block-renderer/';
+
+    /**
+     * One entry per REST request whose callback is running, innermost last: true for
+     * a block-editor preview. A stack, not one flag, because a callback can dispatch
+     * another request (`rest_do_request()`); a single flag was cleared when that inner
+     * request ended, and the rest of the preview rendered live.
+     *
+     * @var bool[]
+     */
+    private static $editor_render = [];
+
     public function register() {
         if ( ! function_exists( 'register_block_type' ) ) {
             return;
         }
+
+        add_filter( 'rest_request_before_callbacks', [ self::class, 'track_editor_render' ], 10, 3 );
+        add_filter( 'rest_request_after_callbacks', [ self::class, 'end_editor_render' ] );
 
         $root       = BETTER_PAYMENT_PATH;
         $assets_dir = $root . '/assets/blocks/campaign-display/';
@@ -58,9 +76,10 @@ class CampaignBlock extends Controller {
             );
         }
 
-        // Use the assets/ copy of block.json, because src/ is excluded from the
-        // release zip and from `git archive` (.distignore / .gitattributes). Reading
-        // it only from src/ meant this block never registered in a distributed build.
+        // Use the assets/ copy of block.json (copied there by `npm run build:blocks`).
+        // src/ ships in the release zip only as plain, uncompiled source (WordPress.org
+        // Guideline 4) and no runtime code may depend on it; reading block.json only
+        // from src/ once meant this block never registered in a distributed build.
         // Same resolution order as BlockManager::register_single_block().
         $block_json = $root . '/assets/blocks/blocks/campaign-display/';
 
@@ -72,6 +91,12 @@ class CampaignBlock extends Controller {
         if ( ! file_exists( $block_json . 'block.json' ) ) {
             return;
         }
+
+        // Remember when the current REST request is the block editor's
+        // ServerSideRender preview, so render() can show an unpublished campaign
+        // to the user editing it — and only there.
+        add_filter( 'rest_request_before_callbacks', [ $this, 'track_block_renderer_request' ], 10, 3 );
+        add_filter( 'rest_request_after_callbacks', [ $this, 'end_block_renderer_request' ] );
 
         register_block_type(
             $block_json,
@@ -100,6 +125,10 @@ class CampaignBlock extends Controller {
             return '';
         }
 
+        if ( ! self::can_render( $post ) ) {
+            return '';
+        }
+
         if ( ! wp_script_is( 'fundraising-campaign-script', 'enqueued' ) ) {
             wp_enqueue_script( 'fundraising-campaign-script' );
         }
@@ -107,6 +136,100 @@ class CampaignBlock extends Controller {
         // WordPress enqueues the block's own `style` handle; theme CSS goes on top.
         CampaignStyles::enqueue_theme_styles( 'frontend' );
 
-        return RendererService::render_campaign( $campaign_id );
+        // In the block editor this is a preview: an add-on must not print a live
+        // payment form or confirm a returning payment inside the editor.
+        return RendererService::render_campaign( $campaign_id, self::is_editor_render() );
+    }
+
+    /**
+     * `rest_request_before_callbacks`: note when the request is the block editor's
+     * server-side preview, so `render()` renders it as a preview.
+     *
+     * @param mixed            $response Earlier response (passed through).
+     * @param mixed            $handler  Route handler.
+     * @param \WP_REST_Request $request  Request.
+     * @return mixed
+     */
+    public static function track_editor_render( $response, $handler = [], $request = null ) {
+        self::$editor_render[] = $request instanceof \WP_REST_Request
+            && 0 === strpos( (string) $request->get_route(), self::EDITOR_RENDER_ROUTE );
+
+        return $response;
+    }
+
+    /**
+     * Whether a block-editor preview request is running — the request itself, or one
+     * it dispatched.
+     */
+    public static function is_editor_render(): bool {
+        return in_array( true, self::$editor_render, true );
+    }
+
+    /**
+     * `rest_request_after_callbacks`: the innermost running request is over.
+     *
+     * @param mixed $response Response (passed through).
+     * @return mixed
+     */
+    public static function end_editor_render( $response ) {
+        array_pop( self::$editor_render );
+
+        return $response;
+    }
+
+    /**
+     * Whether this campaign may be rendered for the current request.
+     *
+     * Same line the shortcode and the CPT page draw: visitors see only a
+     * published campaign that is not password-locked. The one exception is the
+     * block editor's own ServerSideRender preview (`/wp/v2/block-renderer/`),
+     * where a user who can edit the campaign may preview it unpublished or locked.
+     *
+     * @param \WP_Post $post Campaign post.
+     * @return bool
+     */
+    private static function can_render( \WP_Post $post ): bool {
+        if ( self::$is_block_renderer_request && current_user_can( 'edit_post', $post->ID ) ) {
+            return true;
+        }
+
+        return 'publish' === $post->post_status && ! post_password_required( $post );
+    }
+
+    /**
+     * True while the current REST request is the block editor's
+     * ServerSideRender endpoint.
+     *
+     * @var bool
+     */
+    private static $is_block_renderer_request = false;
+
+    /**
+     * `rest_request_before_callbacks` listener — records whether this REST
+     * request is a block-renderer preview. Returns $response untouched.
+     *
+     * @param mixed            $response Response so far (passed through).
+     * @param array            $handler  Route handler.
+     * @param mixed            $request  The request (a WP_REST_Request).
+     * @return mixed
+     */
+    public function track_block_renderer_request( $response, $handler, $request ) {
+        self::$is_block_renderer_request = $request instanceof \WP_REST_Request
+            && 0 === strpos( (string) $request->get_route(), '/wp/v2/block-renderer/' );
+
+        return $response;
+    }
+
+    /**
+     * `rest_request_after_callbacks` listener — the preview flag never outlives
+     * the request that set it. Returns $response untouched.
+     *
+     * @param mixed $response Response (passed through).
+     * @return mixed
+     */
+    public function end_block_renderer_request( $response ) {
+        self::$is_block_renderer_request = false;
+
+        return $response;
     }
 }

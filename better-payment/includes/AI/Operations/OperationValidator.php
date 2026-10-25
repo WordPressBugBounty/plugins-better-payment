@@ -45,6 +45,25 @@ class OperationValidator {
     const MAX_ID_LENGTH = 64;
 
     /**
+     * Column width bounds (percent) for an AI `set_layout`. A width outside them
+     * is clamped — see {@see self::sanitize_width()}.
+     *
+     * @var int
+     */
+    const MIN_COLUMN_WIDTH = 10;
+
+    /** @var int */
+    const MAX_COLUMN_WIDTH = 100;
+
+    /**
+     * Control types whose value is a single scalar. A non-scalar sent for one
+     * of these is dropped by {@see self::sanitize_setting_value()}.
+     *
+     * @var string[]
+     */
+    const SCALAR_CONTROL_TYPES = [ 'text', 'textarea', 'rich_text', 'url', 'color', 'select', 'align', 'number', 'range', 'currency', 'toggle', 'switch' ];
+
+    /**
      * Validate a batch of operations, returning only the sanitised, valid ones.
      *
      * @param mixed $operations Raw operations from the model.
@@ -666,6 +685,18 @@ class OperationValidator {
         $control = CampaignSchema::find_control( $type, $key );
         $ctype   = $control['type'] ?? 'text';
 
+        // A control the schema declares as a single value never takes an array
+        // or object. Kept, it reached the renderer's `(string)` cast and printed
+        // "Array" on the live page (a text key), or became `http://Array` (a
+        // url). Dropped instead, so the element's own value / default stands.
+        // Keys with no declared control (e.g. a photo's `src_sizes`) still keep
+        // arrays below.
+        if ( null !== $control
+            && ( is_array( $value ) || is_object( $value ) )
+            && in_array( $ctype, self::SCALAR_CONTROL_TYPES, true ) ) {
+            return null;
+        }
+
         switch ( $ctype ) {
             case 'color':
                 $hex = sanitize_hex_color( (string) $value );
@@ -771,15 +802,31 @@ class OperationValidator {
         return preg_replace( '/[^A-Za-z0-9_\-]/', '', (string) $id );
     }
 
+    /**
+     * A column width as a `%` string within [MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH].
+     *
+     * Out-of-range values are clamped, not passed through: `'250'` used to come
+     * back as `'250%'`, a column two and a half times the page wide, and `'0'` as
+     * a column that cannot be seen or selected. Anything non-numeric falls back
+     * to full width, as before.
+     *
+     * @param mixed $width Raw width (`'50%'`, `'50'`, `50`).
+     */
     private static function sanitize_width( $width ): string {
-        $width = (string) $width;
-        if ( preg_match( '/^\d{1,3}(\.\d+)?%$/', $width ) ) {
-            return $width;
+        if ( ! is_scalar( $width ) ) {
+            return '100%';
         }
-        if ( is_numeric( $width ) ) {
-            return ( 0 + $width ) . '%';
+        $width = trim( (string) $width );
+        if ( '%' === substr( $width, -1 ) ) {
+            $width = rtrim( substr( $width, 0, -1 ) );
         }
-        return '100%';
+        if ( ! is_numeric( $width ) ) {
+            return '100%';
+        }
+        $number = (float) $width;
+        $number = max( self::MIN_COLUMN_WIDTH, min( self::MAX_COLUMN_WIDTH, $number ) );
+        // Keep the author's precision ('33.33%'), without a trailing '.0'.
+        return ( 0 + round( $number, 2 ) ) . '%';
     }
 
     /**

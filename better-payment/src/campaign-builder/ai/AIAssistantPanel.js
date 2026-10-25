@@ -18,7 +18,14 @@ import {
 import { __ } from '@wordpress/i18n';
 import { useConversation } from './useConversation';
 import { buildContext } from './contextSelector';
-import { describeOperation, operationName } from './operationExecutor';
+import {
+	applyOperations,
+	describeOperation,
+	imageResultOperations,
+	imageTargetMissing,
+	operationName,
+} from './operationExecutor';
+import { reducer } from '../store/campaignStore';
 import { parseReport } from './reportFormat';
 import ReportActions from './ReportActions';
 import PromptList from './PromptList';
@@ -203,45 +210,43 @@ export default function AIAssistantPanel( {
 				} );
 			}
 
+			// The state the images will land in: the current state with this
+			// turn's synchronous ops folded in (a `set_layout` keeps echoed ids, so
+			// an image may target an element that only exists after it). Used to
+			// skip an image whose target is missing BEFORE paying for it.
+			const projected = syncOps.length
+				? applyOperations( stateRef.current, syncOps, reducer )
+				: stateRef.current;
+
+			// One AI turn is one Undo step. The sync ops above opened it; each
+			// image arriving afterwards folds into it (`mergeUndo`). A turn of
+			// images alone opens the step with its first image.
+			let stepOpen = syncOps.length > 0;
+
 			// Report how the (slow) image ops fared so the caller can wait on them
 			// and confirm honestly — a "Generated an image" checkmark is only true
 			// once the attachment exists.
 			let imagesOk = 0;
 			let imagesFailed = 0;
 			for ( const op of imageOps ) {
+				if ( imageTargetMissing( op, projected ) ) {
+					// Nowhere to put it — generating would only leave an orphan
+					// attachment in the Media Library. Counted as failed so the
+					// reply does not claim an image that is not there.
+					imagesFailed += 1;
+					continue;
+				}
 				try {
 					const img = await aiGenerateImage( {
 						campaignId,
 						prompt: op.prompt,
 					} );
-					const applied = op.element_id
-						? [
-								{
-									op: 'replace_image',
-									element_id: op.element_id,
-									src: img.url,
-									src_id: img.id,
-									src_sizes: img.sizes,
-									alt: img.alt,
-								},
-						  ]
-						: [
-								{
-									op: 'insert_block',
-									type: 'photo',
-									column_id: op.column_id,
-									settings: {
-										src: img.url,
-										src_id: img.id,
-										src_sizes: img.sizes,
-										alt: img.alt,
-									},
-								},
-						  ];
 					dispatch( {
 						type: 'AI_APPLY_OPERATIONS',
-						operations: applied,
+						operations: imageResultOperations( op, img ),
+						mergeUndo: stepOpen,
 					} );
+					stepOpen = true;
 					imagesOk += 1;
 				} catch ( err ) {
 					// Image generation failed — leave the rest of the turn applied.

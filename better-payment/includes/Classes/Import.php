@@ -147,6 +147,8 @@ class Import extends Controller{
             $data = array();
 
             foreach ( $records as $record ) {
+                // Export prefixes formula-like cells with a quote; take it back off.
+                $record             = array_map( array( Export::class, 'restore_csv_cell' ), $record );
                 $better_form_fields = $this->build_form_fields( $record );
 
                 $amount_currency_array = explode(' ', $record['amount']);

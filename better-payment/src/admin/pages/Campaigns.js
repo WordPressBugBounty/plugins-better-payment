@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, createPortal } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { toast } from 'react-toastify';
 import { campaignsAPI } from '../utils/api';
+import { rowMenuAnchor, useRowMenuFlip } from '../utils/popupPosition';
 import DeleteConfirm from './DeleteConfirm';
 import FooterCards from '../components/settings/FooterCards';
 import FilterDropdown from '../components/FilterDropdown';
@@ -201,6 +202,8 @@ const Campaigns = () => {
 
 	const [ openActionMenu, setOpenActionMenu ] = useState( null );
 	const [ menuPosition, setMenuPosition ] = useState( { top: 0, right: 0 } );
+	// Flip the open menu above its button when there is no room below.
+	useRowMenuFlip( openActionMenu, menuPosition, setMenuPosition );
 	const [ openDropdown, setOpenDropdown ] = useState( null );
 
 	const [ filters, setFilters ] = useState( {
@@ -287,10 +290,7 @@ const Campaigns = () => {
 			setOpenActionMenu( null );
 		} else {
 			const rect = e.currentTarget.getBoundingClientRect();
-			setMenuPosition( {
-				top: rect.bottom + 4,
-				right: window.innerWidth - rect.right,
-			} );
+			setMenuPosition( rowMenuAnchor( rect ) );
 			setOpenActionMenu( id );
 		}
 	};
@@ -327,28 +327,36 @@ const Campaigns = () => {
 
 	const handleBulkApply = async () => {
 		if ( ! bulkAction || selectedIds.length === 0 ) return;
-		if ( bulkAction === 'trash' ) {
-			await Promise.all(
-				selectedIds.map( ( id ) =>
-					campaignsAPI.deleteCampaign( id, false )
+		const runs = {
+			trash: {
+				call: ( id ) => campaignsAPI.deleteCampaign( id, false ),
+				done: __( 'Campaigns moved to trash.', 'better-payment' ),
+			},
+			restore: {
+				call: ( id ) => campaignsAPI.restoreCampaign( id ),
+				done: __( 'Campaigns restored.', 'better-payment' ),
+			},
+			delete: {
+				call: ( id ) => campaignsAPI.deleteCampaign( id, true ),
+				done: __( 'Campaigns permanently deleted.', 'better-payment' ),
+			},
+		};
+		const run = runs[ bulkAction ];
+		if ( ! run ) return;
+		// allSettled: one failed campaign must not hide which ones succeeded, and
+		// a failure must never be reported as a success.
+		const results = await Promise.allSettled( selectedIds.map( run.call ) );
+		const failed = results.filter(
+			( result ) => result.status === 'rejected'
+		).length;
+		if ( failed === 0 ) {
+			toast.success( run.done );
+		} else {
+			toast.error(
+				__(
+					'Some campaigns could not be updated. Please try again.',
+					'better-payment'
 				)
-			);
-			toast.success(
-				__( 'Campaigns moved to trash.', 'better-payment' )
-			);
-		} else if ( bulkAction === 'restore' ) {
-			await Promise.all(
-				selectedIds.map( ( id ) => campaignsAPI.restoreCampaign( id ) )
-			);
-			toast.success( __( 'Campaigns restored.', 'better-payment' ) );
-		} else if ( bulkAction === 'delete' ) {
-			await Promise.all(
-				selectedIds.map( ( id ) =>
-					campaignsAPI.deleteCampaign( id, true )
-				)
-			);
-			toast.success(
-				__( 'Campaigns permanently deleted.', 'better-payment' )
 			);
 		}
 		setBulkAction( '' );

@@ -1,0 +1,150 @@
+.eb-image-wrapper {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	figcaption {
+		text-align: center;
+	}
+
+	.eb-image-wrapper-inner {
+		position: relative;
+		max-width: 100%;
+		height: 100%;
+		overflow: hidden;
+
+		div,
+		img {
+			transition: transform 0.3s;
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	.eb-image-link {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 999;
+	}
+
+	.eb-image-wrapper-inner.eb-img-style-triangle {
+		clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+	}
+
+	.eb-image-wrapper-inner.eb-img-style-rhombus {
+		clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+	}
+
+	.eb-image-wrapper-inner.eb-img-style-octagon {
+		clip-path: polygon(30% 0%,
+				70% 0%,
+				100% 30%,
+				100% 70%,
+				70% 100%,
+				30% 100%,
+				0% 70%,
+				0% 30%);
+	}
+
+	.eb-image-wrapper-inner.eb-img-style-circle {
+		border-radius: 50%;
+	}
+
+	.eb-image-wrapper-inner.eb-img-style-square {
+		border-radius: 0px;
+	}
+
+	.eb-image-wrapper-inner.eb-img-style-rounded {
+		border-radius: 15px;
+	}
+
+	.eb-image-wrapper-inner.eb-img-caption-style-1 {
+		&.eb-caption-horizontal-left {
+			&.eb-caption-vertical-top figcaption {
+				left: 0px;
+				top: 0px;
+				bottom: auto;
+			}
+
+			&.eb-caption-vertical-middle figcaption {
+				left: 0px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			&.eb-caption-vertical-bottom figcaption {
+				left: 0px;
+				bottom: 0px;
+			}
+		}
+
+		&.eb-caption-horizontal-center {
+			&.eb-caption-vertical-top figcaption {
+				left: 50%;
+				top: 0px;
+				transform: translateX(-50%);
+				bottom: auto;
+			}
+
+			&.eb-caption-vertical-middle figcaption {
+				left: 50%;
+				top: 50%;
+				bottom: auto !important;
+				transform: translate(-50%, -50%);
+			}
+
+			&.eb-caption-vertical-bottom figcaption {
+				left: 50%;
+				bottom: 0px;
+				transform: translateX(-50%);
+			}
+		}
+
+		&.eb-caption-horizontal-right {
+			&.eb-caption-vertical-top figcaption {
+				right: 0px;
+				top: 0px;
+				bottom: auto;
+			}
+
+			&.eb-caption-vertical-middle figcaption {
+				right: 0px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			&.eb-caption-vertical-bottom figcaption {
+				right: 0px;
+				bottom: 0px;
+			}
+		}
+
+		figcaption {
+			background: #f9fafb;
+			color: #101828;
+			bottom: 0;
+			box-sizing: border-box;
+			position: absolute;
+			width: 100%;
+			transition: max-height 0.3s ease-out;
+			overflow: hidden;
+		}
+	}
+
+	.eb-image-wrapper-inner.eb-img-caption-style-2 {
+		display: flex;
+		flex-direction: column;
+		margin: 0 auto;
+
+		&.top {
+			flex-direction: column-reverse;
+		}
+	}
+}

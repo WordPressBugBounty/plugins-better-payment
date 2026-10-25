@@ -6,6 +6,8 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { toast } from 'react-toastify';
 import { aiChat, aiGenerateImage } from './aiClient';
 import { buildContext } from './contextSelector';
 import { operationName } from './operationExecutor';
@@ -82,6 +84,33 @@ export function buildActionMessage( element, actionKey, label ) {
 	return `${ build( name ) }${ focus }`;
 }
 
+/**
+ * The message shown when a quick edit fails.
+ *
+ * These used to be swallowed: the button went back to its label and nothing
+ * changed, which reads as "the AI did nothing" rather than "the request failed".
+ * The server's own message (AI disabled, no API key, provider error) is what the
+ * user can act on, so it is preferred over the generic fallback.
+ *
+ * @param {*}      err      What the request rejected with (apiFetch: { message, code }).
+ * @param {string} fallback Message when the error carries none.
+ * @return {string} Text for the notice.
+ */
+export function quickEditErrorMessage( err, fallback ) {
+	const message = typeof err?.message === 'string' ? err.message.trim() : '';
+	return message || fallback;
+}
+
+/**
+ * A quick edit asked for a change and got back nothing it may apply.
+ *
+ * @param {Array} scopedOps Operations left after scopeOperations().
+ * @return {boolean} True when the turn changed nothing.
+ */
+export function quickEditChangedNothing( scopedOps ) {
+	return ! scopedOps?.length;
+}
+
 export function useElementAI( { campaignId, state, dispatch } ) {
 	const [ busyKey, setBusyKey ] = useState( null ); // `${elementId}:${action}` while in flight
 	const stateRef = useRef( state );
@@ -102,22 +131,47 @@ export function useElementAI( { campaignId, state, dispatch } ) {
 			try {
 				const context = buildContext( stateRef.current );
 				const message = buildActionMessage( element, actionKey, label );
+				// A quick edit is not a conversation turn. It is sent WITHOUT the
+				// campaign id so the server does not append it to the stored AI
+				// history (the server also skips persisting any scoped turn): the
+				// panel never shows these turns, so they used to surface only after
+				// a reload — and the panel's next sync, a replace, wiped them again.
+				// The context layout still travels; resolve_target() needs it.
 				const res = await aiChat( {
-					campaignId,
+					campaignId: 0,
 					message,
 					context,
 					history: [],
 					targetElementId: element.id,
 				} );
 				const ops = scopeOperations( res?.operations, element.id );
-				if ( ops.length ) {
+				if ( quickEditChangedNothing( ops ) ) {
+					toast.info(
+						__(
+							'The AI did not suggest a change for this element. Try another action.',
+							'better-payment'
+						),
+						{ autoClose: 4000 }
+					);
+				} else {
 					dispatch( {
 						type: 'AI_APPLY_OPERATIONS',
 						operations: ops,
 					} );
 				}
 			} catch ( err ) {
-				// Swallow — the element simply stays unchanged.
+				// The element stays unchanged — say why, rather than leaving the
+				// user to guess whether anything happened.
+				toast.error(
+					quickEditErrorMessage(
+						err,
+						__(
+							'The AI quick edit failed. Please try again.',
+							'better-payment'
+						)
+					),
+					{ autoClose: 5000 }
+				);
 			} finally {
 				if ( mounted.current ) setBusyKey( null );
 			}
@@ -149,7 +203,16 @@ export function useElementAI( { campaignId, state, dispatch } ) {
 					],
 				} );
 			} catch ( err ) {
-				// Swallow.
+				toast.error(
+					quickEditErrorMessage(
+						err,
+						__(
+							'The image could not be generated. Check the AI image provider in Settings → AI and try again.',
+							'better-payment'
+						)
+					),
+					{ autoClose: 5000 }
+				);
 			} finally {
 				if ( mounted.current ) setBusyKey( null );
 			}

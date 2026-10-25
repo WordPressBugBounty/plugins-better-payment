@@ -51,6 +51,9 @@ class Admin extends Controller{
             $this->admin_notice();
         }
 
+        // Security notice, shown with or without Pro.
+        \Better_Payment\Lite\Classes\SecretKeyRotationNotice::register();
+
         // Usage tracking is NOT registered here any more. It is wired from
         // Better_Payment::init_plugin() for admin *and* cron requests, because
         // WP-Cron runs as a non-admin request and this gate hid the tracker's

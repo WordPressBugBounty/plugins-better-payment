@@ -69,7 +69,11 @@ class MetaBox extends Controller {
                 $value = self::enforce_pro_entitlement( $post_id, $value );
             }
 
-            update_post_meta( $post_id, $key, $value );
+            // update_post_meta() unslashes its value, which strips the backslashes
+            // inside a JSON string (`\"` → `"`) and leaves undecodable layout JSON.
+            // Pre-slash so the stored value is exactly the sanitized one — the
+            // same thing save_from_array() does.
+            update_post_meta( $post_id, $key, wp_slash( $value ) );
         }
     }
 
@@ -150,7 +154,20 @@ class MetaBox extends Controller {
             $result['bpc_suggested_amounts'] = [];
         }
 
-        return $result;
+        /**
+         * Filters a campaign's meta as every reader gets it (renderer, REST, builder,
+         * payment guard). An add-on that registers its own keys through
+         * `better_payment/campaign/meta_fields` normalises them here — Pro's popup
+         * payment form does.
+         *
+         * @param array $result  Meta keyed without the leading underscore.
+         * @param int   $post_id Campaign id.
+         *
+         * @var mixed $filtered A listener may return anything; checked below.
+         */
+        $filtered = apply_filters( 'better_payment/campaign/meta', $result, $post_id );
+
+        return is_array( $filtered ) ? $filtered : $result;
     }
 
     // ------------------------------------------------------------------ helpers

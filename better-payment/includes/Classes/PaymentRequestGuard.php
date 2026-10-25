@@ -35,8 +35,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Better Payment Pro's payment forms — Payment Form layouts 4/5/6 and the recurring,
  * split-payment and mixed payment types — are not resolved by the rules in this class.
- * PaymentEntitlement refuses them outright without Pro and otherwise asks Pro (or, for
- * an older Pro, Lite's transitional copy of Pro's code) to resolve them. Those resolvers use
+ * PaymentEntitlement refuses them outright without Pro and otherwise asks Pro to resolve
+ * them (Lite ships no copy of Pro's payment code). Those resolvers use
  * the public checks below (resolve_amount(), coupon_code(), stripe_price(),
  * product_price(), …), so a Pro form is held to exactly the same amount, price and coupon
  * rules as a free one.
@@ -119,7 +119,19 @@ class PaymentRequestGuard {
             return self::invalid_price();
         }
 
-        $campaign = $this->resolve_campaign( self::field( $fields, 'campaign_id' ), $page_id );
+        // A campaign's own form posts the campaign as its page, so the page decides the
+        // campaign. Taking it from the request would let a forged one drop `campaign_id`
+        // and skip the campaign's minimum and fixed amounts.
+        $is_campaign_page = $page_id > 0 && 'bp_campaign' === get_post_type( $page_id );
+        $campaign_ref     = $is_campaign_page ? (string) $page_id : self::field( $fields, 'campaign_id' );
+        $campaign         = $this->resolve_campaign( $campaign_ref, $page_id );
+
+        // A campaign posted as the page whose rules do not resolve (not published, or
+        // no add-on calls it its own form) is refused, never charged by the form's own
+        // amount rules: those would skip the campaign's minimum and suggested amounts.
+        if ( $is_campaign_page && null === $campaign ) {
+            return self::form_unavailable();
+        }
 
         $resolved = [
             'amount'               => 0.0,
@@ -484,7 +496,23 @@ class PaymentRequestGuard {
         $layout = RendererService::normalize_layout( isset( $meta['bpc_fields_layout'] ) ? $meta['bpc_fields_layout'] : [] );
 
         $targets_page = (int) ( isset( $meta['bpc_form_page_id'] ) ? $meta['bpc_form_page_id'] : 0 ) === $page_id;
+
+        /**
+         * Filters whether a campaign is its own form page: its form posts the campaign
+         * itself as `page_id`. False by default — a campaign has no form of its own
+         * unless an add-on gives it one (Pro's popup payment form, in popup mode only).
+         * Only asked when the posted page IS the campaign; the campaign's minimum and
+         * suggested-amounts rule apply either way.
+         *
+         * @param bool  $is_own_form Default false.
+         * @param int   $campaign_id Campaign id.
+         * @param array $meta        Campaign meta.
+         */
+        if ( $post_id === $page_id && true === apply_filters( 'better_payment/payment_guard/campaign_is_own_form', false, $post_id, $meta ) ) {
+            $targets_page = true;
+        }
         $presets      = [];
+        $has_picker   = false;
 
         foreach ( (array) ( isset( $layout['columns'] ) ? $layout['columns'] : [] ) as $column ) {
             foreach ( (array) ( is_array( $column ) && isset( $column['elements'] ) ? $column['elements'] : [] ) as $element ) {
@@ -496,6 +524,7 @@ class PaymentRequestGuard {
                 }
 
                 if ( 'donate_amount' === $type ) {
+                    $has_picker = true;
                     $fallback = ! empty( $settings['preset_amounts'] ) ? $settings['preset_amounts'] : '10,25,50,100';
                     foreach ( array_filter( array_map( 'trim', explode( ',', (string) $fallback ) ) ) as $preset ) {
                         $presets[] = floatval( $preset );
@@ -511,8 +540,11 @@ class PaymentRequestGuard {
         $amounts = null;
 
         // Same reading as RendererService's donate_amount element: without a custom
-        // amount input, the donor can only pick one of the rendered amounts.
-        if ( ! (bool) ( isset( $meta['bpc_allow_custom_amount'] ) ? $meta['bpc_allow_custom_amount'] : 1 ) ) {
+        // amount input, the donor can only pick one of the rendered amounts. With no
+        // Donate Amount widget nothing is rendered, so the suggested list (still in
+        // meta, edited only on that widget) is no rule the donor could follow; the
+        // minimum still applies.
+        if ( $has_picker && ! (bool) ( isset( $meta['bpc_allow_custom_amount'] ) ? $meta['bpc_allow_custom_amount'] : 1 ) ) {
             $amounts = [];
             foreach ( (array) ( isset( $meta['bpc_suggested_amounts'] ) ? $meta['bpc_suggested_amounts'] : [] ) as $item ) {
                 $amounts[] = floatval( is_array( $item ) && isset( $item['amount'] ) ? $item['amount'] : 0 );
@@ -528,7 +560,10 @@ class PaymentRequestGuard {
         return [
             'id'       => (string) $post_id,
             'currency' => is_string( $currency ) && '' !== $currency ? sanitize_text_field( $currency ) : 'USD',
-            'minimum'  => isset( $meta['bpc_minimum_amount'] ) && '' !== $meta['bpc_minimum_amount'] ? (float) $meta['bpc_minimum_amount'] : 0.0,
+            // Never below 1: every form's browser check refuses an amount under 1 ("Minimum
+            // amount is 1") and the popup prints min="1", so a lower floor here only let a
+            // forged request through (0.01 "donations" padding the donor count).
+            'minimum'  => max( 1.0, isset( $meta['bpc_minimum_amount'] ) && '' !== $meta['bpc_minimum_amount'] ? (float) $meta['bpc_minimum_amount'] : 0.0 ),
             'amounts'  => $amounts,
         ];
     }
@@ -726,8 +761,9 @@ class PaymentRequestGuard {
         if ( ! array_key_exists( $price_id, $this->stripe_prices ) ) {
             $details = $this->helper()->get_stripe_price_details( $price_id, $secret_key );
 
+            // A price's unit_amount is in the minor units of its own currency (¥1,000 is 1000).
             $this->stripe_prices[ $price_id ] = isset( $details['unit_amount'] ) && is_numeric( $details['unit_amount'] )
-                ? floatval( $details['unit_amount'] ) / 100
+                ? Handler::stripe_major_amount( $details['unit_amount'], isset( $details['currency'] ) ? $details['currency'] : '' )
                 : null;
         }
 
@@ -741,9 +777,8 @@ class PaymentRequestGuard {
      * @return string
      */
     private static function stripe_secret_key( array $settings ) {
-        $is_live = 'yes' === self::setting( $settings, 'better_payment_stripe_live_mode', '' );
-
-        return self::setting( $settings, $is_live ? 'better_payment_stripe_secret_key_live' : 'better_payment_stripe_secret_key', '' );
+        // One rule for every reader: the handlers, this guard and the return page.
+        return Handler::stripe_secret_key( $settings );
     }
 
     // ------------------------------------------------------------------ form configuration

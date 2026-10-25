@@ -1,0 +1,220 @@
+.eb-text-control-wrapper {
+	position: relative;
+	width: 100%;
+
+	&--has-prefix,
+	&--has-suffix {
+		.eb-text-control-input {
+			input {
+				border-top-left-radius: 0;
+				border-bottom-left-radius: 0;
+			}
+		}
+	}
+
+	&--has-suffix {
+		.eb-text-control-input {
+			input {
+				border-top-right-radius: 0;
+				border-bottom-right-radius: 0;
+			}
+		}
+	}
+
+	&--disabled {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+
+	&--invalid {
+		.eb-text-control-input input {
+			border-color: #d94f4f;
+			box-shadow: 0 0 0 1px #d94f4f;
+		}
+
+		.eb-text-control-prefix,
+		.eb-text-control-suffix {
+			border-color: #d94f4f;
+			background-color: #ffeaea;
+		}
+	}
+
+	&--valid {
+		.eb-text-control-input input {
+			border-color: #46b450;
+			box-shadow: 0 0 0 1px #46b450;
+		}
+
+		.eb-text-control-prefix,
+		.eb-text-control-suffix {
+			border-color: #46b450;
+			background-color: #eafaea;
+		}
+	}
+
+	&--typing {
+		.eb-text-control-input input {
+			border-color: #007cba;
+			box-shadow: 0 0 0 1px #007cba;
+		}
+	}
+
+	&--url {
+		.eb-text-control-input input {
+			border-left: 3px solid #007cba;
+		}
+	}
+
+	&--secure {
+		.eb-text-control-input input {
+			border-left: 3px solid #46b450;
+		}
+	}
+
+	.eb-text-control-ai {
+		position: absolute;
+		top: 0px;
+		right: 0px;
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	.eb-text-control-ai-popover-wrapper {
+		padding: 15px;
+		min-width: 250px;
+		background-color: #fff;
+		border-radius: 4px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		font-size: 14px;
+		color: #333;
+		line-height: 1.4;
+		text-align: left;
+	}
+}
+
+
+
+.eb-text-control-input-wrapper {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	width: 100%;
+}
+
+.eb-text-control-prefix,
+.eb-text-control-suffix {
+	display: flex;
+	align-items: center;
+	padding: 6px 8px;
+	background-color: #f0f0f0;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	font-size: 13px;
+	color: #555;
+	white-space: nowrap;
+}
+
+.eb-text-control-wrapper--has-prefix {
+	.eb-text-control-prefix {
+		border-right: none;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+	}
+}
+
+.eb-text-control-wrapper--has-suffix {
+	.eb-text-control-suffix {
+		border-left: none;
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+}
+
+.eb-text-control-validation-message {
+	margin-top: 4px;
+	font-size: 12px;
+	font-style: italic;
+	transition: color 0.2s ease;
+
+	&--error {
+		color: #d94f4f;
+	}
+
+	&--success {
+		color: #46b450;
+	}
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+	.eb-text-control-input-wrapper {
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.eb-text-control-prefix,
+	.eb-text-control-suffix {
+		width: 100%;
+		justify-content: center;
+		border-radius: 2px !important;
+	}
+
+	.eb-text-control-wrapper--has-prefix .eb-text-control-input input,
+	.eb-text-control-wrapper--has-suffix .eb-text-control-input input {
+		border-radius: 2px !important;
+	}
+}
+
+// Focus states
+.eb-text-control-input input:focus {
+	outline: none;
+	border-color: #007cba;
+	box-shadow: 0 0 0 1px #007cba;
+}
+
+.eb-text-control-wrapper--has-prefix .eb-text-control-input input:focus~.eb-text-control-prefix,
+.eb-text-control-wrapper--has-suffix .eb-text-control-input input:focus~.eb-text-control-suffix {
+	border-color: #007cba;
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+
+	.eb-text-control-prefix,
+	.eb-text-control-suffix {
+		background-color: #2c2c2c;
+		border-color: #555;
+		color: #ccc;
+	}
+
+	.eb-text-control-wrapper--invalid {
+
+		.eb-text-control-prefix,
+		.eb-text-control-suffix {
+			background-color: #4a2c2c;
+			border-color: #d94f4f;
+		}
+	}
+
+	.eb-text-control-wrapper--valid {
+
+		.eb-text-control-prefix,
+		.eb-text-control-suffix {
+			background-color: #2c4a2c;
+			border-color: #46b450;
+		}
+	}
+
+	.eb-text-control-validation-message {
+		&--error {
+			color: #ff6b6b;
+		}
+
+		&--success {
+			color: #51cf66;
+		}
+	}
+}

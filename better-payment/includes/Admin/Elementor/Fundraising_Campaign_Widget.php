@@ -615,7 +615,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
                         'better_payment_campaign_form_amount_list_val_layout_1' => 100
                     ],
                 ],
-                'title_field' => '<i class="{{ better_payment_campaign_form_amount_list_val_layout_1 }}" aria-hidden="true"></i> {{{ better_payment_campaign_form_amount_list_val_layout_1 }}}',
+                'title_field' => '<i class="{{ better_payment_campaign_form_amount_list_val_layout_1 }}" aria-hidden="true"></i> {{ better_payment_campaign_form_amount_list_val_layout_1 }}',
                 'condition'   => [
                     'better_payment_campaign_layout' => [ 'layout-1' ],
                 ],
@@ -654,7 +654,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
                         'better_payment_campaign_form_amount_list_val_layout_3' => 80
                     ],
                 ],
-                'title_field' => '<i class="{{ better_payment_campaign_form_amount_list_val_layout_3 }}" aria-hidden="true"></i> {{{ better_payment_campaign_form_amount_list_val_layout_3 }}}',
+                'title_field' => '<i class="{{ better_payment_campaign_form_amount_list_val_layout_3 }}" aria-hidden="true"></i> {{ better_payment_campaign_form_amount_list_val_layout_3 }}',
                 'condition'   => [
                     'better_payment_campaign_layout' => [ 'layout-3' ],
                 ],
@@ -1120,7 +1120,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
                         'better_payment_campaign_overview_our_mission_item' => 'Promote awareness and advocacy for child rights',
                     ],
                 ],
-                'title_field' => '{{{ better_payment_campaign_overview_our_mission_item }}}',
+                'title_field' => '{{ better_payment_campaign_overview_our_mission_item }}',
                 'condition' => [
                     'better_payment_campaign_general_overview_mossion_enable' => 'yes',
                     'better_payment_campaign_layout' => [ 'layout-1' ],
@@ -1369,7 +1369,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
                         ],
                     ],
                 ],
-                'title_field' => '{{{ better_payment_campaign_team_member_name }}}',
+                'title_field' => '{{ better_payment_campaign_team_member_name }}',
                 'condition' => [
                     'better_payment_campaign_general_footer_team_enable_layout_1' => 'yes',
                     'better_payment_campaign_layout' => [ 'layout-1' ],
@@ -1443,7 +1443,7 @@ class Fundraising_Campaign_Widget extends Widget_Base {
                         'better_payment_campaign_related_campaign_id' => '',
                     ],
                 ],
-                'title_field' => '{{{ better_payment_campaign_related_campaign_id }}}',
+                'title_field' => '{{ better_payment_campaign_related_campaign_id }}',
                 'condition' => [
                     'better_payment_campaign_general_footer_related_campaign_enable_layout_2' => 'yes',
                     'better_payment_campaign_layout' => [ 'layout-2' ],

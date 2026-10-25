@@ -140,8 +140,12 @@ class AIAPI extends WP_REST_Controller {
             return $this->error_response( $result );
         }
 
-        // Persist the turn when we have a saved campaign to attach it to.
-        if ( $campaign_id > 0 ) {
+        // Persist the turn when we have a saved campaign to attach it to — but
+        // never a per-element quick edit (a scoped turn). The assistant panel
+        // never shows those turns, so storing them surfaced unexplained messages
+        // on the next reload, which the panel's next replace() then wiped. Only
+        // a real campaign the user can edit gets history written to it.
+        if ( $campaign_id > 0 && '' === $target_element_id && null === $this->campaign_guard( $campaign_id ) ) {
             ConversationManager::append( $campaign_id, $message, $result['assistant_message'] );
         }
 
@@ -252,7 +256,11 @@ class AIAPI extends WP_REST_Controller {
     }
 
     public function get_conversation( WP_REST_Request $request ): WP_REST_Response {
-        $id = (int) $request->get_param( 'id' );
+        $id    = (int) $request->get_param( 'id' );
+        $guard = $this->campaign_guard( $id );
+        if ( null !== $guard ) {
+            return $guard;
+        }
         return new WP_REST_Response( [ 'messages' => ConversationManager::get( $id ) ], 200 );
     }
 
@@ -271,7 +279,11 @@ class AIAPI extends WP_REST_Controller {
         if ( null !== $nonce ) {
             return $nonce;
         }
-        $id       = (int) $request->get_param( 'id' );
+        $id    = (int) $request->get_param( 'id' );
+        $guard = $this->campaign_guard( $id );
+        if ( null !== $guard ) {
+            return $guard;
+        }
         $messages = ConversationManager::replace( $id, (array) $request->get_param( 'messages' ) );
         return new WP_REST_Response( [ 'messages' => $messages ], 200 );
     }
@@ -281,7 +293,12 @@ class AIAPI extends WP_REST_Controller {
         if ( null !== $nonce ) {
             return $nonce;
         }
-        ConversationManager::clear( (int) $request->get_param( 'id' ) );
+        $id    = (int) $request->get_param( 'id' );
+        $guard = $this->campaign_guard( $id );
+        if ( null !== $guard ) {
+            return $guard;
+        }
+        ConversationManager::clear( $id );
         return new WP_REST_Response( [ 'ok' => true ], 200 );
     }
 
@@ -310,6 +327,26 @@ class AIAPI extends WP_REST_Controller {
             'layout' => is_array( $context['layout'] ?? null ) ? $context['layout'] : [],
             'meta'   => is_array( $context['meta'] ?? null ) ? $context['meta'] : [],
         ];
+    }
+
+    /**
+     * The conversation routes act on one campaign's `_bpc_ai_history` meta. The
+     * id is request data, so it must name a `bp_campaign` the current user may
+     * edit — otherwise any post's meta could be read, written or deleted
+     * through them. 404 for anything that is not a campaign, 403 for a campaign
+     * this user cannot edit. Returns null when the id is acceptable.
+     *
+     * @return WP_REST_Response|null
+     */
+    private function campaign_guard( int $id ) {
+        $post = $id > 0 ? get_post( $id ) : null;
+        if ( ! $post || 'bp_campaign' !== $post->post_type ) {
+            return new WP_REST_Response( [ 'message' => __( 'Campaign not found.', 'better-payment' ) ], 404 );
+        }
+        if ( ! current_user_can( 'edit_post', $id ) ) {
+            return new WP_REST_Response( [ 'message' => __( 'You are not allowed to edit this campaign.', 'better-payment' ) ], 403 );
+        }
+        return null;
     }
 
     /**

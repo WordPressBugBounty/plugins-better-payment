@@ -1,0 +1,388 @@
+#wipIcon {
+  margin-bottom: 20px;
+  max-width: 30px;
+
+  .dashicon,
+  i {
+    font-size: 30px;
+
+    &:hover {
+      cursor: pointer;
+      color: #3175d5;
+    }
+  }
+}
+
+.wip-iconpicker-popup {
+  width: 350px;
+  top: 10px !important;
+
+  .components-search-control__input-wrapper {
+    margin: 10px 15px;
+
+    input {
+      border: 1px solid #d0d5dd !important;
+      background-color: #fff !important;
+      border-radius: 8px !important;
+    }
+  }
+
+  .components-popover__content {
+    width: 100%;
+  }
+}
+
+.wip-parent-tab-panel {
+  .components-tab-panel__tabs {
+    border-bottom: 1px solid #eaecf0;
+  }
+
+  .wip-icon-tab {
+    height: 30px;
+    color: #9f9d9d;
+  }
+
+  .wip-icon-tab,
+  .wip-tab {
+    &.active-tab {
+      border-bottom: 2px solid #3c434a;
+      color: #3c434a;
+    }
+  }
+}
+
+.wip-icon-area {
+  display: flex;
+  flex-wrap: wrap;
+  width: calc(100% - 20px);
+  gap: 5px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-height: 225px;
+  margin: 10px 15px;
+
+  .wip-icon-box {
+    text-align: center;
+    width: calc(20% - 4px);
+    height: 50px;
+    position: relative;
+    transition: 0.3s;
+    order: 2;
+
+    &.active {
+      background-color: #f2f4f7;
+      border-radius: 8px;
+      order: 1;
+    }
+
+    &:hover {
+      background-color: #f2f4f7;
+      border-radius: 8px;
+      cursor: pointer;
+
+      // .components-panel__row {
+      // 	display: block;
+      // }
+    }
+
+    .wip-icon-content {
+      height: 100%;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dashicon,
+    i {
+      font-size: 22px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .components-panel__row {
+      display: none !important;
+      font-size: 11px;
+      line-height: 1.4;
+      border-radius: 8px;
+      display: block;
+      text-transform: capitalize;
+      background-color: #101828;
+      color: #ffffff;
+      height: auto !important;
+      min-height: auto !important;
+      padding: 10px 5px;
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      width: 130%;
+      z-index: 999;
+
+      &:before {
+        content: "";
+        position: absolute;
+        left: calc(50% - 5px);
+        top: -6px;
+        border-top: none;
+        border-right: 6px solid transparent;
+        border-left: 6px solid transparent;
+        border-bottom: 6px solid black;
+      }
+    }
+  }
+}
+
+.wip-social-profile {
+  #wipIcon {
+    margin-bottom: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    min-width: 30px;
+
+    .dashicon,
+    i {
+      font-size: 18px;
+    }
+  }
+}
+
+// Essential Blocks Icon Picker wrapper styles
+.eb-icon-picker-base {
+  .ebip__wrap {
+    border: 1px solid #d0d5dd;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative; // needed for hover overlay bar positioning
+  }
+
+  // Checkerboard preview area
+  .ebip__preview {
+    position: relative;
+    height: 120px;
+    cursor: pointer;
+    background-color: #bbb;
+    background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.35) 25%,
+        transparent 25%
+      ),
+      linear-gradient(-45deg, rgba(255, 255, 255, 0.35) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.35) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.35) 75%);
+    background-size: 20px 20px;
+    background-position:
+      0 0,
+      0 10px,
+      10px -10px,
+      -10px 0px;
+
+    .components-panel__row {
+      display: none !important;
+    }
+
+    // Center the trigger icon shown by wordpress-icon-picker
+    #wipIcon {
+      margin: 0;
+      max-width: none;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        object-fit: contain;
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      .dashicon,
+      i {
+        font-size: 48px;
+        color: #2f3a40;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    .ebip__preview__svg_wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: 0;
+      max-width: none;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+
+      svg {
+        object-fit: contain;
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+
+    &.ebip__preview--svg {
+      // Hide the IconPicker component completely when SVG is displayed
+      > .wip-iconpicker,
+      > div:not(.ebip__preview__svg_wrap) {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      // Completely disable wipIcon clicks when SVG is displayed
+      #wipIcon {
+        pointer-events: none !important;
+        cursor: default !important;
+      }
+
+      // Ensure clear button is clickable
+      .ebip__clear {
+        z-index: 3;
+        pointer-events: auto;
+      }
+    }
+
+    // Disable wipIcon clicks when no icon is selected (after deletion/clear)
+    &:not(.ebip__preview--svg):not(.ebip__preview--icon) {
+      #wipIcon {
+        pointer-events: none !important;
+        cursor: default !important;
+      }
+    }
+
+    .ebip__clear {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      min-width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      opacity: 0; // hidden by default
+      transform: translateY(-6px);
+      transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+      pointer-events: none; // no click when hidden
+    }
+  }
+
+  // Bottom dark action bar (hidden until hover)
+  .ebip__actions {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    background: #101828;
+    color: #fff;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    // transform: translateY(100%);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+    pointer-events: none; // prevent clicks when hidden
+    z-index: 999;
+    .ebip__action {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      box-shadow: none;
+      border-radius: 0;
+      justify-content: center;
+    }
+
+    .ebip__divider {
+      width: 1px;
+      height: 60%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  // Reveal actions bar on hover
+  .ebip__wrap:hover {
+    .ebip__actions,
+    .ebip__preview .ebip__clear {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+  }
+}
+
+// SVG Warning Modal Styles
+.eb-svg-warning-modal {
+  .components-modal__content {
+    max-width: 500px;
+    padding: 0;
+  }
+
+  .components-modal__header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 0;
+
+    .components-modal__header-heading {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e1e1e;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      svg {
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .components-modal__content > div {
+    padding: 20px;
+  }
+
+  // Custom styling for the "Got it" button
+  .components-button.is-primary {
+    &[style*="background-color: rgb(206, 190, 255)"] {
+      background-color: #cebeff !important;
+      color: #551ef7 !important;
+      border-color: #cebeff !important;
+
+      &:hover:not(:disabled) {
+        background-color: #b8a8ff !important;
+        border-color: #b8a8ff !important;
+        color: #551ef7 !important;
+      }
+
+      &:focus:not(:disabled) {
+        background-color: #cebeff !important;
+        border-color: #551ef7 !important;
+        color: #551ef7 !important;
+        box-shadow: 0 0 0 1px #551ef7 !important;
+      }
+    }
+  }
+}

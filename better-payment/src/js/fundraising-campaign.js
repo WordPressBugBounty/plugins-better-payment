@@ -1,3 +1,5 @@
+import { blocksDonation, hasAmountPicker } from './_campaign-minimum';
+
 ( function ( $ ) {
 	// Function to initialize the slider
 	function bpFundraisingCampaignSlider() {
@@ -126,7 +128,10 @@
 			'.better-payment .bp-payment_form .other_amount',
 			function () {
 				resetDonateButtonHref();
-				$( '.bp-option-amount' ).prop( 'checked', false );
+				// Every chip but a campaign's: a campaign's amount is its own.
+				$( '.bp-option-amount' )
+					.not( '.bp-campaign .bp-option-amount' )
+					.prop( 'checked', false );
 				$( 'label[for^="amount_"]' ).removeClass( 'active_border' );
 			}
 		);
@@ -143,6 +148,13 @@
 			'change',
 			'.better-payment .bp-donate_amounts .bp-option-amount',
 			function () {
+				// A builder campaign's chips are handled below, scoped to that campaign.
+				// This handler is the old Elementor widget's: it clears every custom
+				// amount on the page, which emptied another campaign's typed amount.
+				if ( $( this ).closest( '.bp-campaign' ).length ) {
+					return;
+				}
+
 				resetDonateButtonHref();
 
 				// Remove active class from all labels
@@ -165,6 +177,11 @@
 			'focus',
 			'.better-payment .campaign-custom-amount',
 			function () {
+				// A builder campaign's input is handled below, scoped to that campaign.
+				if ( $( this ).closest( '.bp-campaign' ).length ) {
+					return;
+				}
+
 				resetDonateButtonHref();
 
 				// Uncheck all radio buttons
@@ -213,6 +230,14 @@
 				var minAmount = parseFloat( $notice.data( 'min' ) ) || 0;
 				if ( minAmount <= 0 ) return;
 
+				// No amount picker on this campaign copy: the amount is entered in the
+				// popup or on the form page, which show and enforce the minimum.
+				var hasPicker = hasAmountPicker( $campaign.get( 0 ) );
+				if ( ! hasPicker ) {
+					$notice.removeClass( 'is-error' );
+					return;
+				}
+
 				var customVal = parseFloat(
 					$campaign.find( '.campaign-custom-amount' ).val()
 				);
@@ -226,7 +251,13 @@
 						? radioVal
 						: 0;
 
-				if ( enteredAmount < minAmount ) {
+				if (
+					blocksDonation( {
+						minimum: minAmount,
+						amount: enteredAmount,
+						hasPicker: hasPicker,
+					} )
+				) {
 					e.preventDefault();
 					$notice.addClass( 'is-error' );
 				} else {
@@ -238,7 +269,7 @@
 		// Clear error state when user changes amount selection
 		$( document ).on(
 			'change',
-			'.bp-campaign .bp-option-amount, input.bp-campaign .campaign-custom-amount',
+			'.bp-campaign .bp-option-amount, .bp-campaign .campaign-custom-amount',
 			function () {
 				$( this )
 					.closest( '.bp-campaign' )
@@ -262,17 +293,42 @@
 			'.better-payment .bp-donate_btn',
 			function ( e ) {
 				var $button = $( this );
-				var selectedRadio = $(
+
+				// A button an add-on turned into a popup trigger (Pro's popup payment
+				// form sets data-bp-donate-open): there is no page to link to.
+				if ( $button.is( '[data-bp-donate-open]' ) ) {
+					return;
+				}
+
+				// Read this campaign's amount, id and currency, not the page's first:
+				// with two campaigns on a page the second linked with the first's.
+				var $scope = $button.closest( '.bp-campaign, .better-payment' );
+				// Falls back to the old page-wide lookup when the button sits outside
+				// the markup that holds them.
+				var scoped = function ( selector, pageWide ) {
+					var $found = $scope.find( selector );
+					return $found.length ? $found : $( pageWide );
+				};
+
+				var selectedRadio = scoped(
+					'.bp-option-amount:checked',
 					'.better-payment .bp-option-amount:checked'
 				).val();
-				var customAmount = $(
+				var customAmount = scoped(
+					'.campaign-custom-amount',
 					'.better-payment .campaign-custom-amount'
 				).val();
 				var amount = '';
 				var bp_campaign_id =
-					$( '.better_payment_campaign_id' ).val() || '';
+					scoped(
+						'.better_payment_campaign_id',
+						'.better_payment_campaign_id'
+					).val() || '';
 				var bp_campaign_currency =
-					$( '.better_payment_campaign_currency' ).val() || '';
+					scoped(
+						'.better_payment_campaign_currency',
+						'.better_payment_campaign_currency'
+					).val() || '';
 
 				// Use custom input if provided, else fallback to radio
 				if ( customAmount ) {

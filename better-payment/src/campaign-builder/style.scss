@@ -2394,6 +2394,13 @@ label.bp-cb-field-label {
 		background-position: right 8px center;
 		background-size: 12px 12px;
 		cursor: pointer;
+		// wp-admin sizes a select for its own 14px font (`line-height: 2.714`, a 38px
+		// line box). At the builder's 12px plus this padding that came out 46.5px —
+		// taller than every text input beside it (40px, wp-admin's min-height). Take
+		// the line height from the font, and keep the inputs' 40px as the floor so a
+		// select and an input in one panel are the same height.
+		line-height: 1.4;
+		min-height: 40px;
 
 		// Hide the legacy IE/Edge native arrow.
 		&::-ms-expand {
@@ -7307,5 +7314,78 @@ $sa-del-w: 32px;
 	.bp-tpl-skel__chip {
 		animation: none;
 		background: #e8eaf0;
+	}
+}
+
+// ── Donate Button → "How donors pay" on a free install (DonationModeLock.js) ──
+// The popup form is Pro's; its real control and styles ship in Pro.
+.bp-cb-mode-lock {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+
+	&__option {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 8px 6px;
+		border: 1px solid $border;
+		border-radius: 6px;
+		background: $white;
+		font-size: 12px;
+		font-weight: 600;
+		color: $text;
+		text-align: center;
+		cursor: pointer;
+
+		input[type="radio"] {
+			margin: 0;
+
+			// wp-admin draws a ring on any focused radio (`:focus`, so a mouse
+			// click shows it too). The option card already says which one is
+			// chosen; the ring moves to the card, for the keyboard only.
+			&:focus {
+				box-shadow: none !important;
+				outline: none !important;
+			}
+		}
+
+		&:has(input[type="radio"]:focus-visible) {
+			outline: 2px solid $primary;
+			outline-offset: 2px;
+		}
+
+		&.is-active {
+			border-color: $primary;
+			box-shadow: 0 0 0 1px $primary;
+			color: $primary;
+		}
+	}
+
+	&__option--pro {
+		border-style: dashed;
+		color: $muted;
+		font-family: inherit;
+
+		&:hover,
+		&:focus-visible {
+			border-color: #ec6a2b;
+			color: #ec6a2b;
+		}
+
+		// The crown's own rule is scoped to the palette cards; size it here.
+		.bp-cb-pro-crown {
+			display: inline-flex;
+			width: 12px;
+			height: 12px;
+			color: #ec6a2b;
+
+			svg {
+				width: 12px;
+				height: 12px;
+				display: block;
+			}
+		}
 	}
 }

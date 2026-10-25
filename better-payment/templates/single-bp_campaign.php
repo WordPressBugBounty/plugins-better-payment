@@ -14,6 +14,30 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// Access check BEFORE any output. A campaign that is not published is visible
+// only to a user who can edit it (an admin checking a draft before publishing);
+// everyone else gets a real 404. This must run before render_header(): once the
+// theme header is printed, status_header( 404 ) can no longer be sent.
+$better_payment_post = get_queried_object();
+if (
+    $better_payment_post instanceof WP_Post
+    && 'publish' !== $better_payment_post->post_status
+    && ! current_user_can( 'edit_post', $better_payment_post->ID )
+) {
+    global $wp_query;
+    $wp_query->set_404();
+    status_header( 404 );
+    nocache_headers();
+    $better_payment_404 = get_404_template();
+    if ( $better_payment_404 ) {
+        include $better_payment_404;
+        return;
+    }
+    Helper::render_header( '' );
+    Helper::render_footer( '' );
+    return;
+}
+
 // For block themes, pre-render header/footer template parts so they display
 // correctly on this CPT page (which bypasses the theme's block templates).
 $better_payment_header = '';
@@ -30,13 +54,16 @@ if ( have_posts() ) :
     the_post();
     $better_payment_campaign_id = get_the_ID();
 
-    if ( get_post_status( $better_payment_campaign_id ) !== 'publish' ) {
-        global $wp_query;
-        $wp_query->set_404();
-        status_header( 404 );
-        nocache_headers();
+    // A password-protected campaign shows WordPress's password form until the
+    // visitor has entered it — never the campaign, its figures or its Donate button.
+    if ( post_password_required( $better_payment_campaign_id ) ) {
+        ?>
+        <main id="bp-campaign-main" class="bp-campaign-page-wrap" role="main">
+            <?php echo get_the_password_form( $better_payment_campaign_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core markup; get_the_password_form() escapes its own values. ?>
+        </main>
+        <?php
         Helper::render_footer( $better_payment_footer );
-        exit;
+        return;
     }
 
     // Enqueue frontend styles.
@@ -59,7 +86,14 @@ if ( have_posts() ) :
 
     ?>
     <main id="bp-campaign-main" class="bp-campaign-page-wrap" role="main">
-        <?php echo RendererService::render_campaign( $better_payment_campaign_id, is_preview() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- RendererService escapes every value as it builds the campaign markup. ?>
+        <?php
+        // Always a live render, even under `?preview=true`: any visitor can add that
+        // query arg, and WordPress only lets an editor see a draft through it, so the
+        // page is a real one either way. Treated as a preview, empty elements became
+        // builder placeholders and the Donate Button opened a popup that a preview
+        // never prints.
+        echo RendererService::render_campaign( $better_payment_campaign_id, false ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- RendererService escapes every value as it builds the campaign markup.
+        ?>
     </main>
     <?php
 endif;

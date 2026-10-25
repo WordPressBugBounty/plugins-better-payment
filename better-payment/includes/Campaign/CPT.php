@@ -46,9 +46,45 @@ class CPT extends Controller {
             'supports'            => [ 'title', 'thumbnail' ],
             'has_archive'         => false,
             'menu_icon'           => 'dashicons-heart',
+            // Campaigns are managed only through the builder and the campaigns
+            // screen, both `manage_options`. Without its own capabilities the CPT
+            // inherited the `post` ones, so with `show_in_rest` an Editor (or an
+            // Author, for their own) could publish, edit or delete any campaign
+            // through /wp/v2/bp_campaign. Every primitive maps to manage_options;
+            // `read` stays `read`, so a published campaign stays publicly readable.
+            'capability_type'     => 'post',
+            'map_meta_cap'        => true,
+            'capabilities'        => self::capabilities(),
         ] );
 
         register_post_type( 'bp_campaign', $args );
+    }
+
+    /**
+     * Primitive capabilities for bp_campaign — all mapped to manage_options,
+     * matching the builder page and the campaign REST API.
+     *
+     * The meta capabilities (edit_post, read_post, delete_post) keep their core
+     * names and are resolved by map_meta_cap() onto these primitives.
+     *
+     * @return array<string, string>
+     */
+    public static function capabilities(): array {
+        $cap = 'manage_options';
+
+        return [
+            'edit_posts'             => $cap,
+            'edit_others_posts'      => $cap,
+            'edit_private_posts'     => $cap,
+            'edit_published_posts'   => $cap,
+            'publish_posts'          => $cap,
+            'read_private_posts'     => $cap,
+            'delete_posts'           => $cap,
+            'delete_others_posts'    => $cap,
+            'delete_private_posts'   => $cap,
+            'delete_published_posts' => $cap,
+            'create_posts'           => $cap,
+        ];
     }
 
     /**
@@ -149,17 +185,24 @@ class CPT extends Controller {
      * Rewrite the edit link for bp_campaign posts to point to the builder.
      * Covers row-action "Edit", title links, and any get_edit_post_link() call.
      *
+     * Respects `$context` like core's get_edit_post_link(): only 'display' is
+     * HTML-escaped (`&` → `&#038;`). Any other context ('raw', used for
+     * redirects and JS) gets the plain URL — escaping it there broke the
+     * `&campaign_id=` query arg.
+     *
      * @param string $url
      * @param int    $post_id
-     * @param string $_context
+     * @param string $context
      * @return string
      */
-    public function filter_edit_link( string $url, int $post_id, string $_context ): string {
+    public function filter_edit_link( string $url, int $post_id, string $context ): string {
         if ( get_post_type( $post_id ) !== 'bp_campaign' ) {
             return $url;
         }
 
-        return esc_url( admin_url( 'admin.php?page=bp-campaign-builder&campaign_id=' . $post_id ) );
+        $builder = admin_url( 'admin.php?page=bp-campaign-builder&campaign_id=' . $post_id );
+
+        return 'display' === $context ? esc_url( $builder ) : esc_url_raw( $builder );
     }
 
     /**
@@ -302,10 +345,25 @@ class CPT extends Controller {
             return;
         }
 
+        /**
+         * Filters the builder script's dependencies. An add-on that extends the
+         * builder (through the `better_payment.campaign_builder.*` JS filters on
+         * `wp.hooks`) registers its script and adds the handle here, so it runs
+         * BEFORE the builder reads those filters. Pro's popup payment form does.
+         *
+         * @param string[] $deps Script handles.
+         *
+         * @var mixed $deps A listener may return anything; checked below.
+         */
+        $deps = apply_filters(
+            'better_payment/campaign/builder_script_dependencies',
+            [ 'react', 'react-dom', 'wp-element', 'wp-api-fetch', 'wp-i18n', 'wp-hooks' ]
+        );
+
         wp_register_script(
             'bp-campaign-builder',
             BETTER_PAYMENT_ASSETS . '/admin/campaign-builder/campaign-builder.min.js',
-            [ 'react', 'react-dom', 'wp-element', 'wp-api-fetch', 'wp-i18n' ],
+            is_array( $deps ) ? array_values( array_unique( array_filter( $deps, 'is_string' ) ) ) : [ 'react', 'react-dom', 'wp-element', 'wp-api-fetch', 'wp-i18n', 'wp-hooks' ],
             self::asset_version( '/assets/admin/campaign-builder/campaign-builder.min.js' ),
             true
         );
@@ -405,6 +463,18 @@ class CPT extends Controller {
             // mount; this only pre-answers the two flags the notice reads.
             'aiConfig'       => self::ai_config_seed(),
         ];
+
+        /**
+         * Filters the builder payload (`window.betterPaymentCampaignData`). Add-ons
+         * seed what their builder controls need; Pro adds its popup payment form's
+         * gateway status.
+         *
+         * @param array $data Builder payload.
+         *
+         * @var mixed $filtered A listener may return anything; checked below.
+         */
+        $filtered = apply_filters( 'better_payment/campaign/builder_data', $data );
+        $data     = is_array( $filtered ) ? $filtered : $data;
 
         /*
          * NOT wp_localize_script(). That function was built for L10n strings and

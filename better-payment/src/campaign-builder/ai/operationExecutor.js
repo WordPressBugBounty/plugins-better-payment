@@ -240,6 +240,51 @@ export function operationToActions( op, state ) {
 	}
 }
 
+/**
+ * Would a `generate_image` op have nowhere to land?
+ *
+ * An op naming an `element_id` replaces that photo; if the element is not in the
+ * layout (the model named a stale or invented id), `replace_image` is a no-op in
+ * the reducer — but by then the image has been generated and saved to the Media
+ * Library, an orphan attachment the user paid a provider call for. Checked
+ * BEFORE generating. Without an `element_id` the op inserts a new photo, which
+ * always lands (insert_block falls back to the first column, or seeds one).
+ *
+ * @param {Object} op    A `generate_image` operation.
+ * @param {Object} state Builder state the image would be applied to.
+ * @return {boolean} True when the targeted element does not exist.
+ */
+export function imageTargetMissing( op, state ) {
+	return !! op?.element_id && ! findElement( state, op.element_id );
+}
+
+/**
+ * The operations that apply a generated image: replace the targeted photo, or
+ * insert a new one into the requested column.
+ *
+ * @param {Object} op  The `generate_image` operation.
+ * @param {Object} img The `/ai/image` result ({ url, id, sizes, alt }).
+ * @return {Array<Object>} Operations to apply.
+ */
+export function imageResultOperations( op, img ) {
+	const image = {
+		src: img?.url,
+		src_id: img?.id,
+		src_sizes: img?.sizes,
+		alt: img?.alt,
+	};
+	return op?.element_id
+		? [ { op: 'replace_image', element_id: op.element_id, ...image } ]
+		: [
+				{
+					op: 'insert_block',
+					type: 'photo',
+					column_id: op?.column_id,
+					settings: image,
+				},
+		  ];
+}
+
 /** The operation name in wire form, tolerant of aliases. */
 export function operationName( op ) {
 	return op && ( op.op || op.operation || op.type );

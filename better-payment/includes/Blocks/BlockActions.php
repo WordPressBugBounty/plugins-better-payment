@@ -12,9 +12,11 @@
 namespace Better_Payment\Lite\Blocks;
 
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentEntitlement;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
+use Better_Payment\Lite\Classes\PaymentRateLimiter;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -65,11 +67,32 @@ class BlockActions {
             return false;
         }
 
-        // First, try to get from transient (fastest).
-        $transient_key = 'bp_block_settings_' . $page_id . '_' . $widget_id;
-        $settings      = get_transient( $transient_key );
+        // A campaign has no payment-form block in its content. Only an add-on that
+        // gives campaigns their own form answers for one (Pro's popup payment form);
+        // anything else posting a campaign as its page is refused. Never cached: the
+        // settings live in campaign meta and are cheap to rebuild.
+        if ( 'bp_campaign' === get_post_type( $page_id ) ) {
+            /**
+             * Filters the payment-form settings of a campaign's own form.
+             *
+             * Return the settings array the handlers read, or anything else to refuse.
+             * The page has already passed `is_payable_form_page()`, and the request
+             * still goes through `PaymentRequestGuard` afterwards.
+             *
+             * @param array|null $settings    Null by default (refused).
+             * @param int        $campaign_id Campaign id posted as the page.
+             * @param string     $widget_id   Posted widget id.
+             */
+            $settings = apply_filters( 'better_payment/block_actions/campaign_form_settings', null, (int) $page_id, (string) $widget_id );
 
-        if ( ! empty( $settings ) && is_array( $settings ) ) {
+            return is_array( $settings ) ? $settings : false;
+        }
+
+        // First, try the cache (fastest). A stale entry — the page or the global settings
+        // changed since it was cached — is discarded, never charged from.
+        $settings = BlockManager::get_cached_block_settings( $page_id, $widget_id );
+
+        if ( ! empty( $settings ) ) {
             return $settings;
         }
 
@@ -78,8 +101,8 @@ class BlockActions {
         $settings = $this->parse_block_settings_from_post( $page_id, $widget_id );
 
         if ( ! empty( $settings ) && is_array( $settings ) ) {
-            // Cache in transient for future requests.
-            set_transient( $transient_key, $settings, HOUR_IN_SECONDS );
+            // Cache for future requests, under the fingerprint of what it was built from.
+            BlockManager::cache_block_settings( $page_id, $widget_id, $settings );
             return $settings;
         }
 
@@ -154,6 +177,55 @@ class BlockActions {
     }
 
     /**
+     * Where Stripe and Paystack send the donor back to.
+     *
+     * The form's page — except for a campaign's own form (Pro's popup payment form),
+     * which can be embedded anywhere (CPT page, shortcode, block): the donor goes back to the page they
+     * donated from, which the form passes as `setting_data[return_url]`. It is only
+     * honoured when it is on this site (`wp_validate_redirect`, as PayPal's `return`
+     * already is), and the payment is confirmed there by the campaign's own render.
+     *
+     * @param int $page_id The form's page id.
+     * @return string
+     */
+    private function return_base_url( $page_id ) {
+        $permalink = get_permalink( $page_id );
+
+        if ( 'bp_campaign' !== get_post_type( $page_id ) ) {
+            return $permalink;
+        }
+
+        // Sanitized in the same expression that reads it, so Plugin Check sees it.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- the handlers verified the nonce.
+        $posted = isset( $_POST['setting_data']['return_url'] ) && is_string( $_POST['setting_data']['return_url'] ) ? esc_url_raw( wp_unslash( $_POST['setting_data']['return_url'] ) ) : '';
+
+        if ( '' === $posted ) {
+            return $permalink;
+        }
+
+        return wp_validate_redirect( $posted, $permalink );
+    }
+
+    /**
+     * Whether the form offers this gateway.
+     *
+     * A form prints a button only for the gateways it enables, but the handlers are
+     * `nopriv` and the nonce is printed on the page, so a forged request could name
+     * any gateway whose keys happen to be saved. Pro's popup payment form enables only
+     * the gateways that are ready, and a block only the ones its settings turn on.
+     * Settings that carry no flag at all (older ones) keep the old behaviour.
+     *
+     * @param array  $settings Form settings.
+     * @param string $gateway  `paypal`, `stripe` or `paystack`.
+     * @return bool
+     */
+    private static function gateway_enabled( array $settings, $gateway ) {
+        $key = 'better_payment_form_' . $gateway . '_enable';
+
+        return ! array_key_exists( $key, $settings ) || 'yes' === $settings[ $key ];
+    }
+
+    /**
      * Check if this is a block form submission.
      *
      * @param int    $page_id   The page ID.
@@ -219,7 +291,11 @@ class BlockActions {
             return;
         }
 
-        if ( empty( $el_settings['better_payment_paypal_business_email'] ) ) {
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            wp_die( esc_html( PaymentRateLimiter::message() ), esc_html__( 'Too many payment attempts', 'better-payment' ), array( 'response' => 429, 'back_link' => true ) );
+        }
+
+        if ( empty( $el_settings['better_payment_paypal_business_email'] ) || ! self::gateway_enabled( $el_settings, 'paypal' ) ) {
             $this->redirect_previous_page();
             return;
         }
@@ -253,10 +329,18 @@ class BlockActions {
             return;
         }
 
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        $invalid_email = PayerEmail::check( wp_unslash( $_POST ) );
+        if ( null !== $invalid_email ) {
+            PaymentRequestGuard::reject_form_post( $invalid_email );
+            return;
+        }
+
         $el_settings_currency        = $guarded['currency'];
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
 
-        $primary_payment_amount          = $guarded['amount'];
+        // Rounded the way PayPal takes it, and stored as sent (the IPN compares mc_gross to it).
+        $primary_payment_amount          = Handler::paypal_amount( $guarded['amount'], $el_settings_currency );
         $primary_payment_amount_quantity = $guarded['quantity'];
 
         $order_id            = Handler::new_order_id( 'paypal' );
@@ -300,7 +384,7 @@ class BlockActions {
             'source'               => 'paypal',
             'amount_quantity'      => ! empty( $primary_payment_amount_quantity ) ? intval( $primary_payment_amount_quantity ) : '',
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
-            'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
+            'paypal_business_email' => Handler::paypal_business_identifier( $el_settings['better_payment_paypal_business_email'] ),
             // The PayPal environment the order was sent to; the IPN must come from the same one.
             'paypal_mode'           => 'yes' === $el_settings['better_payment_paypal_live_mode'] ? 'live' : 'sandbox',
             // Persisted so the async PayPal IPN can rebuild the e-mail body + on/off toggle.
@@ -310,7 +394,11 @@ class BlockActions {
         // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
         $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
-        $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST ) );
+        // Fields the form set win over what the visitor posts: a custom field the admin
+
+        // named like one of them ("Paypal Mode", "Amount") must not overwrite it.
+
+        $better_form_fields = $better_form_fields + $this->fetch_better_form_fields( $el_settings, $_POST );
 
         if ( ! empty( $better_form_fields['primary_first_name'] ) ) {
             $request_data['primary_first_name'] = sanitize_text_field( $better_form_fields['primary_first_name'] );
@@ -438,9 +526,17 @@ class BlockActions {
             wp_send_json_error( esc_html__( 'Setting Data is missing', 'better-payment' ) );
         }
 
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            wp_send_json_error( esc_html( PaymentRateLimiter::message() ) );
+        }
+
+        if ( ! self::gateway_enabled( $el_settings, 'stripe' ) ) {
+            wp_send_json_error( esc_html__( 'This payment method is not available.', 'better-payment' ) );
+        }
+
         $better_payment_keys = array(
             'public_key' => 'yes' === sanitize_text_field( $el_settings['better_payment_stripe_live_mode'] ) ? sanitize_text_field( $el_settings['better_payment_stripe_public_key_live'] ) : sanitize_text_field( $el_settings['better_payment_stripe_public_key'] ),
-            'secret_key' => 'yes' === sanitize_text_field( $el_settings['better_payment_stripe_live_mode'] ) ? sanitize_text_field( $el_settings['better_payment_stripe_secret_key_live'] ) : sanitize_text_field( $el_settings['better_payment_stripe_secret_key'] ),
+            'secret_key' => Handler::stripe_secret_key( $el_settings ),
         );
 
         if ( empty( $better_payment_keys['public_key'] ) || empty( $better_payment_keys['secret_key'] ) ) {
@@ -465,6 +561,13 @@ class BlockActions {
             return;
         }
 
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- PayerEmail only validates; nonce checked at the top of the handler.
+        $invalid_email = PayerEmail::check( isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array() );
+        if ( null !== $invalid_email ) {
+            wp_send_json_error( esc_html( $invalid_email->get_error_message() ) );
+        }
+
         $amount          = $guarded['amount'];
         $amount_quantity = $guarded['quantity'];
 
@@ -478,8 +581,8 @@ class BlockActions {
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
 
-        $redirection_url_success = get_permalink( $page_id );
-        $redirection_url_error   = get_permalink( $page_id );
+        $redirection_url_success = $this->return_base_url( $page_id );
+        $redirection_url_error   = $redirection_url_success;
 
         $redirection_url_success = add_query_arg(
             array(
@@ -523,8 +626,10 @@ class BlockActions {
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         );
 
+        // Fields the form set win over what the visitor posts: a custom field the admin
+        // named like one of them ("Paypal Mode", "Amount") must not overwrite it.
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
-        $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST['fields'] ) );
+        $better_form_fields = $better_form_fields + $this->fetch_better_form_fields( $el_settings, isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? $_POST['fields'] : array() );
 
         $item_name = ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__( 'Better Payment', 'better-payment' );
 
@@ -535,7 +640,8 @@ class BlockActions {
         $line_item = array(
             'price_data' => array(
                 'currency'     => sanitize_text_field( $el_settings_currency ),
-                'unit_amount'  => intval( $amount * 100 ),
+                // Minor units for the currency, rounded: intval( 19.99 * 100 ) is 1998.
+                'unit_amount'  => Handler::stripe_minor_amount( $amount, $el_settings_currency ),
                 'product_data' => array(
                     'name' => $item_name,
                 ),
@@ -641,7 +747,7 @@ class BlockActions {
         } else {
             $error_message = 'Something went wrong!';
 
-            if ( isset( $response_ar->error ) ) {
+            if ( isset( $response_ar->error->message ) ) {
                 $error_message = sanitize_text_field( $response_ar->error->message );
             }
 
@@ -661,6 +767,14 @@ class BlockActions {
 
         if ( empty( $el_settings ) ) {
             wp_send_json_error( esc_html__( 'Setting Data is missing', 'better-payment' ) );
+        }
+
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            wp_send_json_error( esc_html( PaymentRateLimiter::message() ) );
+        }
+
+        if ( ! self::gateway_enabled( $el_settings, 'paystack' ) ) {
+            wp_send_json_error( esc_html__( 'This payment method is not available.', 'better-payment' ) );
         }
 
         if ( empty( $el_settings['better_payment_paystack_public_key'] ) || empty( $el_settings['better_payment_paystack_secret_key'] ) ) {
@@ -685,6 +799,13 @@ class BlockActions {
             return;
         }
 
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- PayerEmail only validates; nonce checked at the top of the handler.
+        $invalid_email = PayerEmail::check( isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : array() );
+        if ( null !== $invalid_email ) {
+            wp_send_json_error( esc_html( $invalid_email->get_error_message() ) );
+        }
+
         $amount          = $guarded['amount'];
         $amount_quantity = $guarded['quantity'];
 
@@ -698,8 +819,8 @@ class BlockActions {
 
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html( $el_settings_currency ) );
 
-        $redirection_url_success = get_permalink( $page_id );
-        $redirection_url_error   = get_permalink( $page_id );
+        $redirection_url_success = $this->return_base_url( $page_id );
+        $redirection_url_error   = $redirection_url_success;
 
         $redirection_url_success = add_query_arg(
             array(
@@ -743,13 +864,16 @@ class BlockActions {
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         );
 
+        // Fields the form set win over what the visitor posts: a custom field the admin
+        // named like one of them ("Paypal Mode", "Amount") must not overwrite it.
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
-        $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields( $el_settings, $_POST['fields'] ) );
+        $better_form_fields = $better_form_fields + $this->fetch_better_form_fields( $el_settings, isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? $_POST['fields'] : array() );
 
         $primary_email = ! empty( $better_form_fields['primary_email'] ) ? sanitize_email( $better_form_fields['primary_email'] ) : '';
 
         $request_body = array(
-            'amount'       => intval( $amount * 100 ),
+            // Rounded: intval( 19.99 * 100 ) is 1998, and verification then refused the payment.
+            'amount'       => Handler::paystack_minor_amount( $amount ),
             'currency'     => sanitize_text_field( $el_settings_currency ),
             'email'        => $primary_email,
             'callback_url' => esc_url_raw( $redirection_url_success ) . '&better_payment_paystack_id=' . $order_id,
@@ -786,7 +910,7 @@ class BlockActions {
         if ( empty( $response_ar->status ) || empty( $response_ar->data ) ) {
             $error_message = ! empty( $response_ar->message ) ? sanitize_text_field( $response_ar->message ) : 'Something went wrong!';
 
-            if ( isset( $response_ar->error ) ) {
+            if ( isset( $response_ar->error->message ) ) {
                 $error_message = sanitize_text_field( $response_ar->error->message );
             }
 

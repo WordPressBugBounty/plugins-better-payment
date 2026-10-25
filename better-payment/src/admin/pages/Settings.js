@@ -10,6 +10,7 @@ import General from '../svg/General';
 import Admin from '../svg/Admin';
 import Customer from '../svg/Customer';
 import { settingsAPI } from '../utils/api';
+import { saveSettings } from '../utils/saveSettings';
 import {
 	readSavedSettings,
 	rememberSavedSettings,
@@ -108,21 +109,20 @@ const Settings = () => {
 		} ) );
 	};
 
-	const handleSaveSettings = async () => {
-		setSaving( true );
-
-		const response = await settingsAPI.updateSettings( settings );
-		if ( response.success ) {
-			setSavedSettings( settings );
-			rememberSavedSettings( settings );
-			toast.success(
-				__( 'Settings saved successfully.', 'better-payment' )
-			);
-		} else {
-			toast.error( __( 'Error saving settings.', 'better-payment' ) );
-		}
-		setSaving( false );
-	};
+	const handleSaveSettings = () =>
+		saveSettings( settings, {
+			update: settingsAPI.updateSettings,
+			onSuccess: ( saved ) => {
+				setSavedSettings( saved );
+				rememberSavedSettings( saved );
+				toast.success(
+					__( 'Settings saved successfully.', 'better-payment' )
+				);
+			},
+			onError: () =>
+				toast.error( __( 'Error saving settings.', 'better-payment' ) ),
+			setSaving,
+		} );
 
 	// The PayPal refund credentials (client ID + secret) are Pro's: only Pro's refunds
 	// read them. Pro fills the slot, and a free install renders no fields.
@@ -1626,7 +1626,7 @@ const Settings = () => {
 													) }
 												</label>
 												<input
-													type="email"
+													type="text"
 													className=" bp-font_ibm fx-4 bp-form_control"
 													placeholder="Subject"
 													value={
@@ -1659,11 +1659,11 @@ const Settings = () => {
 													className=" bp-font_ibm fx-4 bp-form_control bp-message_box"
 													placeholder="Your message"
 													value={
-														settings?.better_payment_settings_general_email_message
+														settings?.better_payment_settings_general_email_message_admin
 													}
 													onChange={ ( e ) =>
 														handleSettingChange(
-															'better_payment_settings_general_email_message',
+															'better_payment_settings_general_email_message_admin',
 															e.target.value
 														)
 													}
@@ -1724,7 +1724,7 @@ const Settings = () => {
 															) }
 														</label>
 														<input
-															type="email"
+															type="text"
 															className=" bp-font_ibm fx-4 bp-form_control"
 															placeholder="Enter Name"
 															value={
@@ -1941,15 +1941,15 @@ const Settings = () => {
 													) }
 												</label>
 												<input
-													type="email"
+													type="text"
 													className=" bp-font_ibm fx-4 bp-form_control"
 													placeholder="Subject"
 													value={
-														settings?.better_payment_settings_general_email_customer_subject
+														settings?.better_payment_settings_general_email_subject_customer
 													}
 													onChange={ ( e ) =>
 														handleSettingChange(
-															'better_payment_settings_general_email_customer_subject',
+															'better_payment_settings_general_email_subject_customer',
 															e.target.value
 														)
 													}
@@ -1974,11 +1974,11 @@ const Settings = () => {
 													className=" bp-font_ibm fx-4 bp-form_control bp-message_box"
 													placeholder="Your message"
 													value={
-														settings?.better_payment_settings_general_email_customer_message
+														settings?.better_payment_settings_general_email_message_customer
 													}
 													onChange={ ( e ) =>
 														handleSettingChange(
-															'better_payment_settings_general_email_customer_message',
+															'better_payment_settings_general_email_message_customer',
 															e.target.value
 														)
 													}
@@ -2038,15 +2038,15 @@ const Settings = () => {
 															) }
 														</label>
 														<input
-															type="email"
+															type="text"
 															className=" bp-font_ibm fx-4 bp-form_control"
 															placeholder="Enter Name"
 															value={
-																settings?.better_payment_settings_general_email_customer_from_name
+																settings?.better_payment_settings_general_email_from_name_customer
 															}
 															onChange={ ( e ) =>
 																handleSettingChange(
-																	'better_payment_settings_general_email_customer_from_name',
+																	'better_payment_settings_general_email_from_name_customer',
 																	e.target
 																		.value
 																)
@@ -2071,11 +2071,11 @@ const Settings = () => {
 															className=" bp-font_ibm fx-4 bp-form_control"
 															placeholder="Email Address"
 															value={
-																settings?.better_payment_settings_general_email_customer_from_email
+																settings?.better_payment_settings_general_email_from_email_customer
 															}
 															onChange={ ( e ) =>
 																handleSettingChange(
-																	'better_payment_settings_general_email_customer_from_email',
+																	'better_payment_settings_general_email_from_email_customer',
 																	e.target
 																		.value
 																)
@@ -2100,11 +2100,11 @@ const Settings = () => {
 															className=" bp-font_ibm fx-4 bp-form_control"
 															placeholder="Email Address"
 															value={
-																settings?.better_payment_settings_general_email_customer_reply_to
+																settings?.better_payment_settings_general_email_reply_to_customer
 															}
 															onChange={ ( e ) =>
 																handleSettingChange(
-																	'better_payment_settings_general_email_customer_reply_to',
+																	'better_payment_settings_general_email_reply_to_customer',
 																	e.target
 																		.value
 																)
@@ -2129,11 +2129,11 @@ const Settings = () => {
 															className=" bp-font_ibm fx-4 bp-form_control"
 															placeholder="Email Address"
 															value={
-																settings?.better_payment_settings_general_email_customer_cc
+																settings?.better_payment_settings_general_email_cc_customer
 															}
 															onChange={ ( e ) =>
 																handleSettingChange(
-																	'better_payment_settings_general_email_customer_cc',
+																	'better_payment_settings_general_email_cc_customer',
 																	e.target
 																		.value
 																)
@@ -2158,11 +2158,11 @@ const Settings = () => {
 															className=" bp-font_ibm fx-4 bp-form_control"
 															placeholder="Email Address"
 															value={
-																settings?.better_payment_settings_general_email_customer_bcc
+																settings?.better_payment_settings_general_email_bcc_customer
 															}
 															onChange={ ( e ) =>
 																handleSettingChange(
-																	'better_payment_settings_general_email_customer_bcc',
+																	'better_payment_settings_general_email_bcc_customer',
 																	e.target
 																		.value
 																)

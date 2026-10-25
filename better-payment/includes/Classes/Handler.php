@@ -33,6 +33,18 @@ class Handler extends Controller{
     const STRIPE_CONFIRMED_STATUS = 'paid';
 
     /**
+     * Currencies Stripe takes in whole units: an amount is sent as-is, never multiplied by 100.
+     *
+     * Stripe's published zero-decimal list. ¥1,000 is `amount=1000`; sending `100000` charged 100x.
+     */
+    const STRIPE_ZERO_DECIMAL_CURRENCIES = array( 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' );
+
+    /**
+     * Currencies PayPal Standard accepts no decimals for.
+     */
+    const PAYPAL_ZERO_DECIMAL_CURRENCIES = array( 'HUF', 'JPY', 'TWD' );
+
+    /**
      * PayPal button
      * 
      * @since 0.0.1
@@ -46,8 +58,16 @@ class Handler extends Controller{
 
         $paypal_button_text             = ! empty( $settings["better_payment_form_form_buttons_paypal_button_text"] ) ? sanitize_text_field( $settings["better_payment_form_form_buttons_paypal_button_text"] ) : self::default_button_text( $args['button_text_default'] );
 
-        $return_url = add_query_arg( $wp->query_vars, get_the_permalink() . '?better_payment_paypal_status=success&better_payment_widget_id=' . $widget_id );
-        $cancel_url = add_query_arg( $wp->query_vars, get_the_permalink() . '?better_payment_error_status=error&better_payment_widget_id=' . $widget_id );
+        // `return_base` is the page the donor is on (the campaign popup passes it, since
+        // a shortcode may render outside the loop, where get_the_permalink() names some
+        // other post). Arguments are added with add_query_arg(): a plain permalink
+        // already carries a `?`, and appending a second one broke the return URL.
+        $return_base = ! empty( $args['return_base'] ) ? (string) $args['return_base'] : '';
+        $query_vars  = '' !== $return_base ? [] : $wp->query_vars;
+        $return_base = '' !== $return_base ? $return_base : (string) get_the_permalink();
+
+        $return_url = add_query_arg( $query_vars, add_query_arg( [ 'better_payment_paypal_status' => 'success', 'better_payment_widget_id' => $widget_id ], $return_base ) );
+        $cancel_url = add_query_arg( $query_vars, add_query_arg( [ 'better_payment_error_status' => 'error', 'better_payment_widget_id' => $widget_id ], $return_base ) );
 
         ob_start();
         $error_info = [
@@ -175,6 +195,26 @@ class Handler extends Controller{
      * @param string $text Default button text, already sanitized.
      * @return string
      */
+    /**
+     * The URL of the current request, built on home_url() so a forged Host header has no effect.
+     *
+     * REQUEST_URI already carries a subdirectory install's path (`/sub/page/`), and home_url()
+     * adds it again: `home_url( '/sub/page/' )` is `https://site/sub/sub/page/`, a 404. The
+     * PayPal pending poll redirected there once IPN confirmed the order.
+     *
+     * @return string
+     */
+    public static function current_request_url() {
+        $uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
+
+        $home_path = rtrim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+        if ( '' !== $home_path && ( $uri === $home_path || 0 === strpos( $uri, $home_path . '/' ) || 0 === strpos( $uri, $home_path . '?' ) ) ) {
+            $uri = (string) substr( $uri, strlen( $home_path ) );
+        }
+
+        return home_url( '' === $uri ? '/' : $uri );
+    }
+
     private static function default_button_text( $text ) {
         if ( 'Proceed to Payment' === $text ) {
             return __( 'Proceed to Payment', 'better-payment' );
@@ -299,6 +339,157 @@ class Handler extends Controller{
     }
 
     /**
+     * How many of Stripe's minor units make one unit of a currency: 1 for a zero-decimal
+     * currency (JPY, KRW, …), 100 otherwise.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $currency ISO code, any case.
+     * @return int
+     */
+    public static function stripe_currency_factor( $currency ) {
+        $currency = is_scalar( $currency ) ? strtoupper( trim( (string) $currency ) ) : '';
+
+        return in_array( $currency, self::STRIPE_ZERO_DECIMAL_CURRENCIES, true ) ? 1 : 100;
+    }
+
+    /**
+     * An amount in the integer minor units Stripe charges (`unit_amount`, `amount`).
+     *
+     * Rounded, never truncated: 19.99 * 100 is 1998.9999999999998 in floating point, and
+     * intval() made it 1998 — a cent short of what the form asked for.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $amount   Amount in major units.
+     * @param mixed $currency ISO code.
+     * @return int
+     */
+    public static function stripe_minor_amount( $amount, $currency ) {
+        return (int) round( (float) $amount * self::stripe_currency_factor( $currency ) );
+    }
+
+    /**
+     * A Stripe minor-unit amount (`amount_total`, a price's `unit_amount`) in major units.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $minor    Amount in Stripe's minor units.
+     * @param mixed $currency ISO code.
+     * @return float
+     */
+    public static function stripe_major_amount( $minor, $currency ) {
+        return (float) $minor / self::stripe_currency_factor( $currency );
+    }
+
+    /**
+     * An amount in the integer kobo / pesewas / cents Paystack takes (every currency it
+     * supports has two decimals). Rounded for the same reason as stripe_minor_amount().
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $amount Amount in major units.
+     * @return int
+     */
+    public static function paystack_minor_amount( $amount ) {
+        return (int) round( 100 * (float) $amount );
+    }
+
+    /**
+     * An amount as PayPal Standard accepts it: two decimals, none for HUF, JPY and TWD.
+     *
+     * A quantity multiplied in floating point (0.1 * 3 = 0.30000000000000004) used to reach
+     * PayPal as that string. The same value must be stored on the order, since the IPN's
+     * `mc_gross >= amount` check compares against it.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $amount   Amount in major units.
+     * @param mixed $currency ISO code.
+     * @return float
+     */
+    public static function paypal_amount( $amount, $currency ) {
+        $currency = is_scalar( $currency ) ? strtoupper( trim( (string) $currency ) ) : '';
+
+        return round( (float) $amount, in_array( $currency, self::PAYPAL_ZERO_DECIMAL_CURRENCIES, true ) ? 0 : 2 );
+    }
+
+    /**
+     * The Stripe secret key a form's settings select.
+     *
+     * Live mode reads `better_payment_stripe_secret_key_live` — the Elementor widget hides the
+     * test key's control in live mode, so its display settings carry no test key at all, and
+     * the return page that read only the test key could never confirm a live payment. A form
+     * with a single key control (Elementor Pro Forms, WooCommerce) keeps it in
+     * `better_payment_stripe_secret_key` whatever the mode, so that key is the fallback.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $settings Form settings.
+     * @return string
+     */
+    public static function stripe_secret_key( $settings ) {
+        $settings = is_array( $settings ) ? $settings : [];
+        $read     = static function ( $key ) use ( $settings ) {
+            return isset( $settings[ $key ] ) && is_scalar( $settings[ $key ] ) ? sanitize_text_field( trim( (string) $settings[ $key ] ) ) : '';
+        };
+
+        $key = 'yes' === $read( 'better_payment_stripe_live_mode' ) ? $read( 'better_payment_stripe_secret_key_live' ) : '';
+
+        return '' !== $key ? $key : $read( 'better_payment_stripe_secret_key' );
+    }
+
+    /**
+     * The PayPal account a form pays, as stored on the order for the IPN to check.
+     *
+     * PayPal accepts either the account's e-mail or its merchant id as `business`.
+     * sanitize_email() turned a merchant id into '', and the IPN then skipped the receiver
+     * check entirely, so a merchant id is kept as text.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $value The configured business e-mail or merchant id.
+     * @return string
+     */
+    public static function paypal_business_identifier( $value ) {
+        $value = is_scalar( $value ) ? trim( (string) $value ) : '';
+
+        return is_email( $value ) ? sanitize_email( $value ) : sanitize_text_field( $value );
+    }
+
+    /**
+     * Whether a verified PayPal IPN paid the account the order was sent to.
+     *
+     * An e-mail is matched against `receiver_email` (the account's primary address) or
+     * `business` (the address the button used, which may be a secondary one); a merchant id
+     * against `receiver_id` or `business`. Case-insensitive. Nothing configured matches
+     * nothing: the check is never skipped.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $expected The order's paypal_business_identifier().
+     * @param array $data     The notification's fields.
+     * @return bool
+     */
+    public static function paypal_receiver_matches( $expected, array $data ) {
+        $expected = is_scalar( $expected ) ? strtolower( trim( (string) $expected ) ) : '';
+
+        if ( '' === $expected ) {
+            return false;
+        }
+
+        $fields = is_email( $expected ) ? array( 'receiver_email', 'business' ) : array( 'receiver_id', 'business' );
+
+        foreach ( $fields as $field ) {
+            if ( isset( $data[ $field ] ) && is_scalar( $data[ $field ] ) && strtolower( trim( (string) $data[ $field ] ) ) === $expected ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Mamage response
      * 
      * @since 0.0.1
@@ -331,6 +522,11 @@ class Handler extends Controller{
             }
             
             self::render_failed_response( $settings, $order_id );
+
+            // The failure is shown once. Left in the URL, its arguments rendered it
+            // again on every reload — for the campaign popup, the popup reopened each
+            // time (and a block or widget repeated the failure notice).
+            self::remove_arg();
 
             return $status;
         }
@@ -367,10 +563,12 @@ class Handler extends Controller{
             }
         } elseif ( ! empty( $status['pending'] ) ) {
             // Use home_url() instead of HTTP_HOST to avoid open-redirect via forged Host headers.
-            $return_url = home_url( isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '' );
+            $return_url = self::current_request_url();
             // PayPal uses rm=2 (POST redirect), so item_number arrives in $_POST and is absent from the URL.
-            // Add it explicitly so the poll-complete redirect (a plain GET) still carries item_number.
-            if ( ! empty( $status['order_id'] ) && strpos( $return_url, 'item_number=' ) === false ) {
+            // Set it explicitly so the poll-complete redirect (a plain GET) still carries item_number.
+            // Always set, never only when absent: a page the donor returned to can already carry an
+            // earlier donation's item_number, and the poll would then report that order's status.
+            if ( ! empty( $status['order_id'] ) ) {
                 $return_url = add_query_arg( 'item_number', $status['order_id'], $return_url );
             }
             ?>
@@ -661,12 +859,17 @@ class Handler extends Controller{
             return 'unmatched';
         }
 
-        // Validate receiver_email matches the merchant's configured PayPal email.
-        $form_info      = maybe_unserialize( $results->form_fields_info );
-        $expected_email = ! empty( $form_info['paypal_business_email'] ) ? strtolower( $form_info['paypal_business_email'] ) : '';
-        $receiver       = ! empty( $data['receiver_email'] ) ? strtolower( $data['receiver_email'] ) : ( ! empty( $data['business'] ) ? strtolower( $data['business'] ) : '' );
+        // The payment must have gone to the merchant's account (its e-mail or merchant id). An
+        // order stored before 2.4.3 with a merchant id holds '' here (sanitize_email() blanked
+        // it), so the site's PayPal account is checked instead — the check is never skipped.
+        $form_info = maybe_unserialize( $results->form_fields_info );
+        $expected  = is_array( $form_info ) && ! empty( $form_info['paypal_business_email'] ) ? $form_info['paypal_business_email'] : '';
 
-        if ( $expected_email && $receiver && $expected_email !== $receiver ) {
+        if ( '' === $expected ) {
+            $expected = self::paypal_business_identifier( DB::get_settings( 'better_payment_settings_payment_paypal_email' ) );
+        }
+
+        if ( ! self::paypal_receiver_matches( $expected, $data ) ) {
             return 'refused';
         }
 
@@ -745,7 +948,7 @@ class Handler extends Controller{
             ( isset( $email_settings['better_payment_form_email_enable'] ) && 'yes' === $email_settings['better_payment_form_email_enable'] )
             || $is_elementor_form
         ) {
-            self::better_email_notification( $txn_id, $payer_email, $email_settings, 'PayPal', $results->form_fields_info, $is_elementor_form );
+            self::better_email_notification( $txn_id, $payer_email, $email_settings, 'PayPal', $results->form_fields_info, $is_elementor_form, (int) $results->id );
         }
 
         return 'confirmed';
@@ -769,7 +972,7 @@ class Handler extends Controller{
      *
      * @since 0.0.1
      *
-     * @param array $settings Form settings; `better_payment_stripe_secret_key` is required to verify.
+     * @param array $settings Form settings; the secret key for their mode (stripe_secret_key()) is required to verify.
      * @return array|false|\WP_Error Success data, false for no order to show, or why nothing was confirmed.
      */
     public static function stripe_payment_success( $settings = [] ) {
@@ -796,12 +999,15 @@ class Handler extends Controller{
             return self::stripe_settled_return( $row, $order_id );
         }
 
-        if ( empty( $row->obj_id ) || empty( $settings[ 'better_payment_stripe_secret_key' ] ) ) {
+        // The key for the form's mode: the widget's live settings carry no test key at all.
+        $secret_key = self::stripe_secret_key( $settings );
+
+        if ( empty( $row->obj_id ) || '' === $secret_key ) {
             return false;
         }
 
-        // Subscription and split-payment orders are Pro's: Pro (or, for an older Pro, Lite's
-        // transitional copy) adds the subscription expansion and the recurring / split flags.
+        // Subscription and split-payment orders are Pro's: Pro adds the subscription expansion
+        // and the recurring / split flags.
         $verification = self::stripe_verification_for( $row );
 
         $response = wp_safe_remote_post(
@@ -809,7 +1015,7 @@ class Handler extends Controller{
             array(
                 'method'  => 'GET',
                 'headers' => array(
-                    'Authorization'  => 'Basic ' . base64_encode( sanitize_text_field( $settings[ 'better_payment_stripe_secret_key' ] ) . ':' ),
+                    'Authorization'  => 'Basic ' . base64_encode( $secret_key . ':' ),
                     'Stripe-Version' => '2019-05-16',
                 ),
                 'timeout' => 70,
@@ -819,11 +1025,11 @@ class Handler extends Controller{
             )
         );
 
-        if ( is_wp_error( $response ) || empty( $response[ 'body' ] ) ) {
+        if ( is_wp_error( $response ) || '' === wp_remote_retrieve_body( $response ) ) {
             return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
         }
 
-        $session = json_decode( $response[ 'body' ] );
+        $session = json_decode( wp_remote_retrieve_body( $response ) );
 
         if ( ! is_object( $session ) || isset( $session->error ) ) {
             return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
@@ -843,7 +1049,7 @@ class Handler extends Controller{
      *    abandoned checkout, or a completed one whose delayed payment has not cleared (a later
      *    return confirms it once it has).
      * 2. Pro's verified-session step, the customer e-mail and the charged amount are computed. The
-     *    amount is `amount_total / 100` whenever Stripe reports one — 0 for a 100%-off promotion
+     *    amount is `amount_total` (in major units) whenever Stripe reports one — 0 for a 100%-off promotion
      *    code or a trial — and the form's amount is kept as `original_amount` when they differ.
      *    Pro's step must stay free of side effects: a request that loses the claim has asked it too.
      * 3. The row is claimed with ONE update, `WHERE id = … AND status = 'unpaid'`, which writes the
@@ -922,7 +1128,7 @@ class Handler extends Controller{
         $confirmed_fields = is_array( $verified['form_fields_info'] ) ? $verified['form_fields_info'] : $form_fields_info;
         $transaction_id   = $verified['transaction_id'];
         $customer_email   = $verified['email'];
-        $amounts          = self::stripe_paid_amounts( $session, isset( $row->amount ) ? $row->amount : 0, $confirmed_fields );
+        $amounts          = self::stripe_paid_amounts( $session, isset( $row->amount ) ? $row->amount : 0, $confirmed_fields, isset( $row->currency ) ? $row->currency : '' );
         $paid_amount      = $amounts['amount'];
         $confirmed_fields = $amounts['form_fields_info'];
 
@@ -973,7 +1179,7 @@ class Handler extends Controller{
         ) {
             $is_elementor_form = isset( $row->referer ) && 'elementor-form' === $row->referer ? 1 : 0;
 
-            self::better_email_notification( $transaction_id, $customer_email, $settings, 'Stripe', $row->form_fields_info, $is_elementor_form );
+            self::better_email_notification( $transaction_id, $customer_email, $settings, 'Stripe', $row->form_fields_info, $is_elementor_form, (int) $row->id );
         }
 
         return $frontend_data;
@@ -1028,7 +1234,7 @@ class Handler extends Controller{
     /**
      * What a verified Checkout Session charged, and what the transaction's fields record about it.
      *
-     * The charged amount is `amount_total / 100` whenever Stripe reports a numeric total — 0
+     * The charged amount is `amount_total` (in major units) whenever Stripe reports a numeric total — 0
      * included: a 100%-off promotion code or a trial charges nothing, and a row claiming otherwise
      * would add money nobody paid to a campaign's total. It used to fall back to the form's amount
      * whenever the total was 0. Only a session with no total at all keeps the row's amount.
@@ -1040,21 +1246,29 @@ class Handler extends Controller{
      *
      * @since 2.4.0
      *
-     * @param mixed $session          Decoded Checkout Session.
-     * @param mixed $row_amount       The row's amount (what the order was created for).
-     * @param array $form_fields_info The fields to record into.
+     * The total is in Stripe's minor units for the session's currency (the row's when the
+     * session names none): ¥1,000 is `amount_total = 1000`, not 100000.
+     *
+     * @param mixed  $session          Decoded Checkout Session.
+     * @param mixed  $row_amount       The row's amount (what the order was created for).
+     * @param array  $form_fields_info The fields to record into.
+     * @param string $currency         The order's currency (since 2.4.3).
      * @return array `amount` (float) and `form_fields_info`.
      */
-    public static function stripe_paid_amounts( $session, $row_amount, array $form_fields_info ) {
+    public static function stripe_paid_amounts( $session, $row_amount, array $form_fields_info, $currency = '' ) {
+        if ( is_object( $session ) && ! empty( $session->currency ) && is_string( $session->currency ) ) {
+            $currency = $session->currency;
+        }
+
         $original = is_numeric( $row_amount ) ? (float) $row_amount : 0.0;
         $total    = is_object( $session ) && isset( $session->amount_total ) && is_numeric( $session->amount_total ) ? (float) $session->amount_total : null;
-        $paid     = null === $total ? $original : $total / 100;
+        $paid     = null === $total ? $original : self::stripe_major_amount( $total, $currency );
 
         $form_fields_info['is_coupon_applied'] = 0;
         $form_fields_info['exact_paid_amount'] = $paid;
         unset( $form_fields_info['original_amount'], $form_fields_info['paid_amount_diff'] );
 
-        if ( (int) round( $paid * 100 ) !== (int) round( $original * 100 ) ) {
+        if ( self::stripe_minor_amount( $paid, $currency ) !== self::stripe_minor_amount( $original, $currency ) ) {
             $form_fields_info['original_amount'] = $original;
 
             $discounted = ( is_object( $session ) && isset( $session->total_details->amount_discount ) && is_numeric( $session->total_details->amount_discount ) && (float) $session->total_details->amount_discount > 0 )
@@ -1267,6 +1481,12 @@ class Handler extends Controller{
      * @return void
      */
     private static function render_failed_response( $settings, $order_id ) {
+        // The cancel / error return URL is the visitor's to replay. An order that was paid did
+        // not fail, so it never gets a "Payment of … failed" page; the form renders as usual.
+        if ( self::order_is_confirmed( $order_id ) ) {
+            return;
+        }
+
         self::failed_message_template( $settings, self::get_failed_transaction_data( $order_id ) );
 
         $redirection_url_error = ! empty( $settings['better_payment_form_error_page_url']['url'] ) ? esc_url( $settings['better_payment_form_error_page_url']['url'] ) : '';
@@ -1401,7 +1621,7 @@ class Handler extends Controller{
             )
         ) {
             $is_elementor_form = ! empty( $results->referer ) && $results->referer === 'elementor-form'  ? 1 : 0;
-            self::better_email_notification($transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form);
+            self::better_email_notification( $transaction_id, $better_customer_email, $settings, 'Paystack', $results->form_fields_info, $is_elementor_form, (int) $results->id );
         }
 
         do_action( 'better_payment/payment/success', $order_id, (int) $results->id, 'paystack' );
@@ -1948,8 +2168,13 @@ class Handler extends Controller{
     }
 
     /**
-     * Remove args from url
-     * 
+     * Remove the gateway return arguments from the address bar, so a reload does not
+     * handle the same return again.
+     *
+     * Printed after a success and after a failure. Not after a Stripe payment that is
+     * still processing: that page keeps its arguments on purpose, so a reload verifies
+     * the order again.
+     *
      * @since 0.0.1
      */
     public static function remove_arg() {
@@ -1962,23 +2187,54 @@ class Handler extends Controller{
 
             params = new URLSearchParams(location.search);
 
-            if (params.has('better_payment_paypal_status') || params.has('better_payment_stripe_status') || params.has('better_payment_paystack_status')) {
+            if (params.has('better_payment_paypal_status') || params.has('better_payment_stripe_status') || params.has('better_payment_paystack_status') || params.has('better_payment_error_status')) {
                 params.delete('better_payment_paypal_status');
                 params.delete('better_payment_stripe_status');
                 params.delete('better_payment_paystack_status');
+                params.delete('better_payment_error_status');
                 params.delete('better_payment_widget_id');
                 params.delete('better_payment_stripe_id');
                 params.delete('better_payment_paystack_id');
+                params.delete('better_payment_paypal_id');
                 params.delete('item_number');
-                window.history.replaceState({}, '', `${location.pathname}?${params}`);
+                // No bare `?` when nothing is left, and the #hash is kept.
+                window.history.replaceState({}, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash);
             }
         </script>
         <?php
     }
 
     /**
+     * Whether an order is confirmed (paid / completed), by its order id.
+     *
+     * @since 2.4.3
+     *
+     * @param mixed $order_id Order id from the return URL.
+     * @return bool
+     */
+    public static function order_is_confirmed( $order_id ) {
+        if ( empty( $order_id ) || ! is_scalar( $order_id ) ) {
+            return false;
+        }
+
+        global $wpdb;
+        $table = "{$wpdb->prefix}better_payment";
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
+        $status = $wpdb->get_var(
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
+            $wpdb->prepare( "SELECT status FROM $table WHERE order_id = %s LIMIT 1", sanitize_text_field( (string) $order_id ) )
+        );
+
+        if ( ! is_string( $status ) || '' === $status ) {
+            return false;
+        }
+
+        return in_array( strtolower( $status ), array_map( 'strtolower', Helper::APPROVED_DONATION_STATUSES ), true );
+    }
+
+    /**
      * Get failed transaction data
-     * 
+     *
      * @since 1.0.0
      */
     public static function get_failed_transaction_data( $order_id = '' ) {
@@ -2055,8 +2311,16 @@ class Handler extends Controller{
      * Email template
      *
      * @since 0.0.1
+     *
+     * @param string $transaction_id    Gateway transaction id, printed on the receipt.
+     * @param string $customer_email    Customer address.
+     * @param array  $settings          Form settings.
+     * @param string $referrer          Gateway label.
+     * @param mixed  $form_fields_info  The order's form_fields_info.
+     * @param int    $is_elementor_form 1 for an Elementor Pro Forms order.
+     * @param int    $row_id            The order's row id — what the receipt is built from (since 2.4.3).
      */
-    public static function better_email_notification($transaction_id, $customer_email, $settings, $referrer='Stripe', $form_fields_info='', $is_elementor_form = 0){
+    public static function better_email_notification($transaction_id, $customer_email, $settings, $referrer='Stripe', $form_fields_info='', $is_elementor_form = 0, $row_id = 0){
         //Send Email: customer and admin
         $better_txn_id = sanitize_text_field( $transaction_id );
         $better_cus_email = sanitize_email( $customer_email );
@@ -2140,12 +2404,25 @@ class Handler extends Controller{
 		$line_break_customer = $better_payment_email_content_type_customer == 'html' ? '<br>' : "\n";
 
         global $wpdb;
-        $table   = "{$wpdb->prefix}better_payment";
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
-        $transaction_obj = $wpdb->get_row(
-            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
-            $wpdb->prepare( "SELECT * FROM $table WHERE transaction_id=%s limit 1", sanitize_text_field( $transaction_id ) )
-        );
+        $table           = "{$wpdb->prefix}better_payment";
+        $transaction_obj = null;
+
+        // The receipt is built from the confirmed order's own row. Looked up by transaction id
+        // alone, an empty id (a free Stripe checkout, a PayPal IPN without txn_id) matched the
+        // first row that had none — another donor's amount, date and receipt link.
+        if ( absint( $row_id ) > 0 ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
+            $transaction_obj = $wpdb->get_row(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
+                $wpdb->prepare( "SELECT * FROM $table WHERE id=%d limit 1", absint( $row_id ) )
+            );
+        } elseif ( '' !== $better_txn_id ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom transactions table; no WP API for it, and payment rows must never be served from a cache.
+            $transaction_obj = $wpdb->get_row(
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name from $wpdb->prefix; values go through placeholders.
+                $wpdb->prepare( "SELECT * FROM $table WHERE transaction_id=%s limit 1", $better_txn_id )
+            );
+        }
 
         if(isset($settings['better_payment_email_content'])){
             $better_payment_email_content = sanitize_text_field($settings['better_payment_email_content']);
@@ -2316,10 +2593,15 @@ class Handler extends Controller{
         $customer_name =
         $customer_first_name = 
         $customer_last_name = 
+        $status =
+        $source =
+        $currency_symbol =
+        $payment_date_only =
         $amount = '';
         $helper_obj = new Helper();
+        $has_transaction = null !== $transaction_obj && is_object( $transaction_obj );
         
-        if(null !== $transaction_obj && is_object($transaction_obj)){
+        if($has_transaction){
            $transaction_id = $transaction_obj->transaction_id;
            $amount = $transaction_obj->amount;
            $status = $transaction_obj->status;
@@ -2327,12 +2609,17 @@ class Handler extends Controller{
            $currency = $transaction_obj->currency;
            $currency_symbol    = $helper_obj->get_currency_symbol( esc_html($currency) );
            $payment_date = wp_date(get_option('date_format').' '.get_option('time_format'), strtotime($transaction_obj->payment_date));
+           $payment_date_only = wp_date(get_option('date_format'), strtotime($transaction_obj->payment_date));
         }
 
         $referer_content_page_link = '#';
 
         $form_fields_info_arr = maybe_unserialize($form_fields_info);
         $form_fields_info_arr = is_array( $form_fields_info_arr ) ? $form_fields_info_arr : [];
+
+        // The merchant's PayPal account and environment are stored for the IPN check, not
+        // filled in by the payer: they are no field of the receipt (nor of its summary).
+        unset( $form_fields_info_arr['paypal_business_email'], $form_fields_info_arr['paypal_mode'] );
 
         $email_logo_url = ! empty( $args['email_logo_url'] ) ? $args['email_logo_url'] : '';
         $email_content_greeting = ! empty( $args['email_content_greeting'] ) ? 1 : 0;
@@ -2404,9 +2691,11 @@ class Handler extends Controller{
         $source_image_url = BETTER_PAYMENT_ASSETS . '/img/stripe.png';
         $source_image_alt = 'Stripe';
         
-        if( in_array( strtolower( $transaction_obj->source ), $allowed_sources ) ){
-            $source_image_url = strtolower( $transaction_obj->source ) == 'paypal' ? BETTER_PAYMENT_ASSETS . '/img/paypal.png' : BETTER_PAYMENT_ASSETS . "/img/{$transaction_obj->source}.png";
-            $source_image_alt = strtolower( $transaction_obj->source ) == 'paypal' ? 'PayPal' : ucfirst( strtolower( $transaction_obj->source ) );
+        $source_key = strtolower( (string) $source );
+
+        if( in_array( $source_key, $allowed_sources, true ) ){
+            $source_image_url = $source_key == 'paypal' ? BETTER_PAYMENT_ASSETS . '/img/paypal.png' : BETTER_PAYMENT_ASSETS . "/img/{$source_key}.png";
+            $source_image_alt = $source_key == 'paypal' ? 'PayPal' : ucfirst( $source_key );
         }
         
         $amount_quantity = ! empty( $form_fields_info_arr['amount_quantity'] ) ? intval( $form_fields_info_arr['amount_quantity'] ) : 1;
@@ -2472,12 +2761,12 @@ class Handler extends Controller{
             'product_permalink' => $product_permalink,
             'product_image_src' => $product_image_src,
             'detailed_product_info' => $detailed_product_info,
-            'amount_single' => $amount_quantity > 0 ? floatval( $amount / $amount_quantity ) : $amount,
+            'amount_single' => $amount_quantity > 0 ? floatval( (float) $amount / $amount_quantity ) : $amount,
             'currency' => ! empty( $currency ) ? $currency : '',
             'currency_symbol' => ! empty( $currency_symbol ) ? $currency_symbol : '',
             'payment_date_time' => ! empty( $payment_date ) ? $payment_date : '',
             'transaction_id' => ! empty( $transaction_id ) ? $transaction_id : '',
-            'payment_date_only' => wp_date(get_option('date_format'), strtotime($transaction_obj->payment_date)),
+            'payment_date_only' => $payment_date_only,
             'status' => self::email_status_label( $status ),
             'form_fields_info_arr' => $form_fields_info_arr,
             // 'admin_name' => $admin_name,
@@ -2485,16 +2774,16 @@ class Handler extends Controller{
             'site_title' => get_bloginfo( 'name' ),
             'site_admin_email' => get_bloginfo( 'admin_email' ),
             'form_name' => $email_form_name,
-            'payment_method' => ucfirst( $source ),
+            'payment_method' => ucfirst( (string) $source ),
             'email_logo_url' => $email_logo_url,
             'source_image_url' => $source_image_url,
             'source_image_alt' => $source_image_alt,
-            'view_transaction_link' => Helper::transaction_view_url( (int) $transaction_obj->id ),
-            'email_content_heading_show' => intval( $args['email_content_heading_show'] ),
-            'email_content_from_section_show' => intval( $args['email_content_from_section_show'] ),
-            'email_content_to_section_show' => intval( $args['email_content_to_section_show'] ),
-            'email_content_transaction_summary_show' => intval( $args['email_content_transaction_summary_show'] ),
-            'email_content_footer_text_show' => intval( $args['email_content_footer_text_show'] ),
+            'view_transaction_link' => Helper::transaction_view_url( $has_transaction && isset( $transaction_obj->id ) ? (int) $transaction_obj->id : 0 ),
+            'email_content_heading_show' => intval( $args['email_content_heading_show'] ?? 0 ),
+            'email_content_from_section_show' => intval( $args['email_content_from_section_show'] ?? 0 ),
+            'email_content_to_section_show' => intval( $args['email_content_to_section_show'] ?? 0 ),
+            'email_content_transaction_summary_show' => intval( $args['email_content_transaction_summary_show'] ?? 0 ),
+            'email_content_footer_text_show' => intval( $args['email_content_footer_text_show'] ?? 0 ),
             // The form's messages, with `[bp-all-fields]` replaced where the author placed it.
             'email_content_customer' => self::render_email_message( $args['email_content_customer'] ?? '', $all_fields_rows, 'plain' === ( $args['email_content_type_customer'] ?? 'html' ) ),
             'email_content_admin' => self::render_email_message( $args['email_content_admin'] ?? '', $all_fields_rows, 'plain' === ( $args['email_content_type'] ?? 'html' ) ),

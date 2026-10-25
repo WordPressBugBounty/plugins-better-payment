@@ -93,7 +93,9 @@ class Setup_Wizard
                 'settings' => DB::get_settings(),
                 'is_tracking' => get_option('better_payment_settings_opt_in') === 'yes' ? 1 : 0,
                 'currencies' => $this->get_currency_list(),
-                'is_pro' => defined('BETTER_PAYMENT_PRO_VERSION') && BETTER_PAYMENT_PRO_VERSION ? true : false,
+                // The same live gate as every other Pro check (a defined Pro constant is not an
+                // active, licensed Pro). Arrives as '1' / '' like pro_enabled.
+                'is_pro' => \Better_Payment\Lite\Classes\ProCompatibility::pro_enabled(),
                 // Arrives as '1' / '' (wp_localize_script casts scalars); read it with parseProEnabled().
                 'pro_enabled' => \Better_Payment\Lite\Classes\ProCompatibility::pro_enabled(),
             ));

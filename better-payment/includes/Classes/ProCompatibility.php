@@ -13,7 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Lite release adds the hook, a Pro release takes the code over and announces it,
  * and only a later Lite release deletes Lite's copy. The first hand-off (fourteen
  * features, Pro 1.4.4) completed when MIN_PRO_VERSION reached 1.4.4 and Lite's
- * copies were deleted; the machinery stays for the next one. Two things make it
+ * copies were deleted; the machinery stays for the next one. The floor reached
+ * 1.4.5 when Lite deleted its copy of the User Dashboard's subscription row
+ * builder (Pro 1.4.5 enqueues its own wherever the Subscriptions tab renders). Two things make it
  * safe, and both live here.
  *
  * - provides(): Pro lists what it now ships itself on `better_payment/pro_provides`,
@@ -36,7 +38,7 @@ final class ProCompatibility {
     /**
      * The oldest Better Payment Pro this Lite is known to work with.
      */
-    const MIN_PRO_VERSION = '1.4.4';
+    const MIN_PRO_VERSION = '1.4.5';
 
     /**
      * Wire the admin notice.

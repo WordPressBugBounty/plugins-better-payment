@@ -8,6 +8,7 @@ use Better_Payment\Lite\Admin\Elementor\Form_Actions\Payment_Amount_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Paypal_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Stripe_Integration;
 use Better_Payment\Lite\Admin\Elementor\Form_Actions\Paystack_Integration;
+use Better_Payment\Lite\Classes\GatewaySecrets;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Traits\Helper;
 
@@ -91,6 +92,14 @@ class EL_Integration {
      */
     public function elementor_pro_form_response( $settings, $obj ) {
         wp_enqueue_style( 'better-payment-el' );
+
+        // The form's secret-key controls default to empty (see GatewaySecrets), and this is
+        // Elementor Pro's form widget, not ours, so resolve them here for the return handlers.
+        if ( is_array( $settings ) ) {
+            $settings['better_payment_stripe_secret_key']   = GatewaySecrets::stripe_form_secret( isset( $settings['better_payment_stripe_secret_key'] ) ? $settings['better_payment_stripe_secret_key'] : '' );
+            $settings['better_payment_paystack_secret_key'] = GatewaySecrets::paystack_form_secret( isset( $settings['better_payment_paystack_secret_key'] ) ? $settings['better_payment_paystack_secret_key'] : '' );
+        }
+
         $response = Handler::manage_response( $settings, $obj->get_id() );
         if ( $response ) {
 			$obj->add_render_attribute( 'form', 'style', 'display:none' );

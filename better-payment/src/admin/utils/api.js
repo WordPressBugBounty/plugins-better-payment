@@ -4,23 +4,45 @@ import apiFetch from '@wordpress/api-fetch';
 const API_NAMESPACE = 'better-payment/v1';
 
 /**
- * Generic API request wrapper
+ * Generic API request wrapper for READS.
+ *
+ * Swallows a failed request into `undefined`, so a read that fails settles on
+ * its empty state. Every caller must therefore read the result with optional
+ * chaining (`data?.transactions`), never `data.transactions`.
+ *
+ * Writes use apiMutation() instead: a write that fails must reach the caller,
+ * which shows the error (a swallowed failure used to crash Settings' save with
+ * a TypeError, leaving the spinner up and no toast, or report a delete that
+ * never happened as a success).
+ *
  * @param {string} endpoint - API endpoint
- * @param {Object} options - Request options
- * @returns {Promise} API response
+ * @param {Object} options  - Request options
+ * @return {Promise} API response, or undefined when the request failed
  */
 const apiRequest = async ( endpoint, options = {} ) => {
 	try {
-		const response = await apiFetch( {
+		return await apiFetch( {
 			path: `${ API_NAMESPACE }/${ endpoint }`,
 			...options,
 		} );
-		return response;
-	} catch ( error ) {
-		// console.error('API Request Error:', error);
-		// throw error;
+	} catch {
+		return undefined;
 	}
 };
+
+/**
+ * API wrapper for WRITES: rejects with the server's error (`{ code, message }`)
+ * when the request fails, so the caller's catch can report it.
+ *
+ * @param {string} endpoint - API endpoint
+ * @param {Object} options  - Request options
+ * @return {Promise} API response
+ */
+export const apiMutation = ( endpoint, options = {} ) =>
+	apiFetch( {
+		path: `${ API_NAMESPACE }/${ endpoint }`,
+		...options,
+	} );
 
 /**
  * Dashboard API methods
@@ -109,7 +131,7 @@ export const transactionsAPI = {
 	 * @returns {Promise} Updated transaction
 	 */
 	updateTransactionStatus: ( id, status ) =>
-		apiRequest( `transactions/${ id }/status`, {
+		apiMutation( `transactions/${ id }/status`, {
 			method: 'POST',
 			data: { status },
 		} ),
@@ -120,7 +142,7 @@ export const transactionsAPI = {
 	 * @returns {Promise} Mark complete result
 	 */
 	markTransactionComplete: ( id ) =>
-		apiRequest( `transactions/${ id }/mark-complete`, {
+		apiMutation( `transactions/${ id }/mark-complete`, {
 			method: 'POST',
 		} ),
 
@@ -138,7 +160,7 @@ export const transactionsAPI = {
 	 * @returns {Promise} Deletion result
 	 */
 	deleteTransaction: ( id ) =>
-		apiRequest( `transactions/${ id }`, {
+		apiMutation( `transactions/${ id }`, {
 			method: 'DELETE',
 		} ),
 
@@ -159,7 +181,7 @@ export const transactionsAPI = {
 	 * @returns {Promise} Import result
 	 */
 	importTransactions: ( formData ) =>
-		apiRequest( 'transactions/import', {
+		apiMutation( 'transactions/import', {
 			method: 'POST',
 			body: formData,
 		} ),
@@ -250,7 +272,7 @@ export const settingsAPI = {
 	 * @returns {Promise} Updated settings
 	 */
 	updateSettings: ( settings ) =>
-		apiRequest( 'settings', {
+		apiMutation( 'settings', {
 			method: 'POST',
 			data: settings,
 		} ),
@@ -269,7 +291,7 @@ export const settingsAPI = {
 	 * @returns {Promise} Updated setting group
 	 */
 	updateSettingGroup: ( group, data ) =>
-		apiRequest( `settings/${ group }`, {
+		apiMutation( `settings/${ group }`, {
 			method: 'POST',
 			data,
 		} ),
@@ -285,16 +307,16 @@ export const campaignsAPI = {
 	},
 
 	createCampaign: ( data = {} ) =>
-		apiRequest( 'campaigns', { method: 'POST', data } ),
+		apiMutation( 'campaigns', { method: 'POST', data } ),
 
 	deleteCampaign: ( id, force = false ) =>
-		apiRequest( `campaigns/${ id }`, {
+		apiMutation( `campaigns/${ id }`, {
 			method: 'DELETE',
 			data: { force },
 		} ),
 
 	restoreCampaign: ( id ) =>
-		apiRequest( `campaigns/${ id }/restore`, { method: 'POST' } ),
+		apiMutation( `campaigns/${ id }/restore`, { method: 'POST' } ),
 };
 
 export const optionsAPI = {

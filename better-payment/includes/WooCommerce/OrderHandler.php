@@ -104,7 +104,7 @@ class OrderHandler {
             ),
             'line_items'                 => array(
                 array(
-                    'amount'   => (int) round( (float) $data['amount'] * 100 ),
+                    'amount'   => Handler::stripe_minor_amount( $data['amount'], (string) $data['currency'] ),
                     'currency' => (string) $data['currency'],
                     'name'     => $description,
                     'quantity' => 1,

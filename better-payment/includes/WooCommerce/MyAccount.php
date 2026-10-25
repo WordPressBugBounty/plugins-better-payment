@@ -58,8 +58,15 @@ class MyAccount {
 
     /**
      * Bump to force a one-time rewrite flush after an endpoint change.
+     *
+     * '2' (2.4.2): re-flushes every install once. Activation used to flush
+     * before this module had registered its endpoints, and the stored '1'
+     * then stopped the init flush from ever adding them back, so My Account →
+     * Subscriptions was a 404 after a (re)activation. Activation now clears the
+     * option instead (see reset_rewrite_flag()), and this bump repairs sites
+     * that were already broken.
      */
-    const REWRITE_VERSION = '1';
+    const REWRITE_VERSION = '2';
 
     /**
      * Subscriptions shown per list page.
@@ -134,6 +141,21 @@ class MyAccount {
 
         flush_rewrite_rules();
         update_option( self::REWRITE_OPTION, self::REWRITE_VERSION );
+    }
+
+    /**
+     * Forget the stored flush version, so the next normal request flushes with
+     * the endpoints registered.
+     *
+     * Called from the plugin's activation hook. That request flushes rewrite
+     * rules before this module is loaded (it registers on `plugins_loaded`,
+     * which has already run), so its rule set has no Subscriptions endpoints.
+     * Deliberately WooCommerce-free: activation may run without it.
+     *
+     * @return void
+     */
+    public static function reset_rewrite_flag() {
+        delete_option( self::REWRITE_OPTION );
     }
 
     /**

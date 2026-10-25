@@ -27,10 +27,13 @@ import TemplatesTab, { AI_TEMPLATE } from './components/TemplatesTab';
 import CampaignNameModal from './components/CampaignNameModal';
 import TitleRequiredModal from './components/TitleRequiredModal';
 import DonateUrlWarningModal from './components/DonateUrlWarningModal';
+import { needsDonateUrl } from './utils/builderHooks';
 import UnsavedChangesModal from './components/UnsavedChangesModal';
 import SettingsTab from './components/SettingsTab';
 import UpgradeModal from './components/UpgradeModal';
 import { isProEnabled } from './utils/proEnabled';
+import { createBeforeUnloadHandler } from './utils/unsavedChanges';
+import { dropInsertIndex } from './utils/dropIndex';
 
 // Read once at module scope — entitlement cannot change inside a page load.
 // Do NOT re-inline this as `proEnabled === true`; see utils/proEnabled.js for the
@@ -108,6 +111,27 @@ export default function App( {
 		nonceConfigured.current = true;
 	}
 
+	// Warn before the tab is closed/reloaded with unsaved changes. The Exit button
+	// has its own modal; this covers every other way out. The listener reads the
+	// latest dirty flag through a ref, and `leavingRef` lets a deliberate
+	// navigation (Exit / Save & Exit) through without a second prompt — it is set
+	// synchronously before `window.location` changes, which a re-render is not.
+	const isDirtyRef = useRef( state.isDirty );
+	isDirtyRef.current = state.isDirty;
+	const leavingRef = useRef( false );
+	useEffect( () => {
+		const handler = createBeforeUnloadHandler(
+			() => isDirtyRef.current && ! leavingRef.current
+		);
+		window.addEventListener( 'beforeunload', handler );
+		return () => window.removeEventListener( 'beforeunload', handler );
+	}, [] );
+
+	const leaveTo = useCallback( ( url ) => {
+		leavingRef.current = true;
+		window.location.href = url;
+	}, [] );
+
 	// Load existing campaign
 	useEffect( () => {
 		if ( ! campaignId ) {
@@ -135,6 +159,7 @@ export default function App( {
 				}
 			} )
 			.catch( () => {
+				dispatch( { type: 'LOAD_CAMPAIGN_FAILED' } );
 				dispatch( { type: 'SET_INITIALIZING', value: false } );
 				dispatch( { type: 'OPEN_TEMPLATE_MODAL' } );
 			} );
@@ -206,6 +231,8 @@ export default function App( {
 	 * and the campaign has no payment page configured (bpc_form_page_id === 0).
 	 */
 	const hasMissingDonateUrl = useCallback( ( layout, meta ) => {
+		// An add-on can give the button somewhere else to go (Pro's popup form).
+		if ( ! needsDonateUrl( meta ) ) return false;
 		if ( meta?.bpc_form_page_id ) return false;
 		const columns = layout?.columns ?? [];
 		return columns.some( ( col ) =>
@@ -240,6 +267,9 @@ export default function App( {
 
 			setSavingAs( postStatus );
 			dispatch( { type: 'SET_SAVING', isSaving: true } );
+			// The revision this request carries. SAVE_SUCCESS clears the dirty flag
+			// only if no edit landed while the request was in flight.
+			const savedRevision = state.revision;
 
 			const body = {
 				title: state.meta.title,
@@ -274,7 +304,8 @@ export default function App( {
 				dispatch( {
 					type: 'SAVE_SUCCESS',
 					postStatus: data?.post_status || postStatus,
-					viewUrl: data?.view_url || '',
+					viewUrl: data?.view_url ?? '',
+					revision: savedRevision,
 				} );
 				setSavingAs( null );
 				toast.success(
@@ -343,7 +374,7 @@ export default function App( {
 			setUnsavedModalOpen( true );
 			return;
 		}
-		window.location.href = campaignsUrl;
+		leaveTo( campaignsUrl );
 	};
 
 	const handleCopyShortcode = () => {
@@ -408,18 +439,11 @@ export default function App( {
 				overData?.columnId || over.id.replace( /^col-/, '' );
 			if ( ! targetColumnId ) return;
 
-			let insertAt;
-			if ( overData?.source === 'canvas' ) {
-				const col = state.layout.columns.find(
-					( c ) => c.id === targetColumnId
-				);
-				if ( col ) {
-					const idx = col.elements.findIndex(
-						( el ) => el.id === over.id
-					);
-					if ( idx !== -1 ) insertAt = idx;
-				}
-			}
+			const insertAt = dropInsertIndex(
+				state.layout.columns,
+				targetColumnId,
+				over
+			);
 
 			dispatch( {
 				type: 'ADD_ELEMENT',
@@ -464,10 +488,13 @@ export default function App( {
 					newIndex,
 				} );
 			} else {
-				const toCol = state.layout.columns.find(
-					( c ) => c.id === toColumnId
+				// Land where it was dropped: before the hovered element, or at
+				// the end when dropped on the column's empty area.
+				const insertAt = dropInsertIndex(
+					state.layout.columns,
+					toColumnId,
+					over
 				);
-				const insertAt = toCol ? toCol.elements.length : 0;
 				dispatch( {
 					type: 'MOVE_ELEMENT',
 					fromColumnId,
@@ -639,66 +666,12 @@ export default function App( {
 								open: false,
 								pendingStatus: null,
 							} );
-							// Skip the URL check this time and save directly.
-							setSavingAs( status );
-							dispatch( { type: 'SET_SAVING', isSaving: true } );
-							const body = {
-								title: state.meta.title,
-								post_status: status,
-								...state.meta,
-								bpc_fields_layout: JSON.stringify(
-									state.layout
-								),
-							};
-							( currentCampaignId
-								? apiFetch( {
-										path: `better-payment/v1/campaigns/${ currentCampaignId }`,
-										method: 'POST',
-										data: body,
-								  } )
-								: apiFetch( {
-										path: 'better-payment/v1/campaigns',
-										method: 'POST',
-										data: body,
-								  } )
-							)
-								.then( ( data ) => {
-									if ( ! currentCampaignId && data?.id ) {
-										setCurrentCampaignId( data.id );
-										history.pushState(
-											null,
-											'',
-											`${ adminUrl }admin.php?page=bp-campaign-builder&campaign_id=${ data.id }`
-										);
-									}
-									dispatch( {
-										type: 'SAVE_SUCCESS',
-										postStatus: data?.post_status || status,
-										viewUrl: data?.view_url || '',
-									} );
-									setSavingAs( null );
-									toast.success(
-										__(
-											'Campaign published successfully.',
-											'better-payment'
-										),
-										{ autoClose: 3000 }
-									);
-								} )
-								.catch( ( err ) => {
-									dispatch( {
-										type: 'SAVE_ERROR',
-										error: err?.message || 'Save failed',
-									} );
-									setSavingAs( null );
-									toast.error(
-										__(
-											'Save failed. Please try again.',
-											'better-payment'
-										),
-										{ autoClose: 4000 }
-									);
-								} );
+							// The user has seen the warning and chosen to go
+							// ahead — run the normal save, skipping only the URL
+							// check. One save path: the title check, the
+							// status-aware toast, the save-race revision and the
+							// new-campaign id/URL handling all live there.
+							handleSave( status, { skipUrlCheck: true } );
 						} }
 					/>
 				) }
@@ -735,7 +708,7 @@ export default function App( {
 								{ skipUrlCheck: true }
 							);
 							if ( saved ) {
-								window.location.href = campaignsUrl;
+								leaveTo( campaignsUrl );
 							}
 						} }
 						onCancel={ () => setUnsavedModalOpen( false ) }

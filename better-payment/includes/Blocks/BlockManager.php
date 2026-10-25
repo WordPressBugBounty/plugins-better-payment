@@ -193,10 +193,10 @@ class BlockManager {
         do_action( 'better_payment/elementor/editor/manage_response_webhook', null, $settings );
 
         // Store settings in a transient so the AJAX handler can retrieve them.
-        // Only write when missing or expired — avoids a DB write on every page load.
-        $transient_key = 'bp_block_settings_' . get_the_ID() . '_' . $block_id;
-        if ( false === get_transient( $transient_key ) ) {
-            set_transient( $transient_key, $settings, HOUR_IN_SECONDS );
+        // Only write when missing, expired or stale (the page or the global settings changed) —
+        // avoids a DB write on every page load.
+        if ( false === self::get_cached_block_settings( get_the_ID(), $block_id ) ) {
+            self::cache_block_settings( get_the_ID(), $block_id, $settings );
         }
 
         // Create widget proxy object for layout templates.
@@ -408,31 +408,13 @@ class BlockManager {
             'transaction_table_status_label'        => isset( $attributes['transactionTableStatusLabel'] ) && ! empty( $attributes['transactionTableStatusLabel'] ) ? sanitize_text_field( $attributes['transactionTableStatusLabel'] ) : __( 'Status', 'better-payment' ),
             'transaction_table_date_label'          => isset( $attributes['transactionTableDateLabel'] ) && ! empty( $attributes['transactionTableDateLabel'] ) ? sanitize_text_field( $attributes['transactionTableDateLabel'] ) : __( 'Date', 'better-payment' ),
             'transaction_table_action_label'        => isset( $attributes['transactionTableActionLabel'] ) && ! empty( $attributes['transactionTableActionLabel'] ) ? sanitize_text_field( $attributes['transactionTableActionLabel'] ) : __( 'Action', 'better-payment' ),
-
-            // Subscription table column visibility (pro feature — consumed by template-subscriptions-tab.php)
-            'subscription_table_subscription_id_show'  => isset( $attributes['subscriptionTableSubscriptionIdShow'] ) ? (bool) $attributes['subscriptionTableSubscriptionIdShow'] : true,
-            'subscription_table_plan_id_show'          => isset( $attributes['subscriptionTablePlanIdShow'] ) ? (bool) $attributes['subscriptionTablePlanIdShow'] : true,
-            'subscription_table_status_show'           => isset( $attributes['subscriptionTableStatusShow'] ) ? (bool) $attributes['subscriptionTableStatusShow'] : true,
-            'subscription_table_amount_show'           => isset( $attributes['subscriptionTableAmountShow'] ) ? (bool) $attributes['subscriptionTableAmountShow'] : true,
-            'subscription_table_created_date_show'     => isset( $attributes['subscriptionTableCreatedDateShow'] ) ? (bool) $attributes['subscriptionTableCreatedDateShow'] : true,
-            'subscription_table_current_period_show'   => isset( $attributes['subscriptionTableCurrentPeriodShow'] ) ? (bool) $attributes['subscriptionTableCurrentPeriodShow'] : true,
-            'subscription_table_action_show'           => isset( $attributes['subscriptionTableActionShow'] ) ? (bool) $attributes['subscriptionTableActionShow'] : true,
-
-            // Subscription table column labels (pro feature)
-            'subscription_table_subscription_id_label'  => ! empty( $attributes['subscriptionTableSubscriptionIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableSubscriptionIdLabel'] ) : __( 'Subscription ID', 'better-payment' ),
-            'subscription_table_plan_id_label'          => ! empty( $attributes['subscriptionTablePlanIdLabel'] ) ? sanitize_text_field( $attributes['subscriptionTablePlanIdLabel'] ) : __( 'Product Name', 'better-payment' ),
-            'subscription_table_status_label'           => ! empty( $attributes['subscriptionTableStatusLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusLabel'] ) : __( 'Status', 'better-payment' ),
-            'subscription_table_amount_label'           => ! empty( $attributes['subscriptionTableAmountLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableAmountLabel'] ) : __( 'Amount', 'better-payment' ),
-            'subscription_table_created_date_label'     => ! empty( $attributes['subscriptionTableCreatedDateLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCreatedDateLabel'] ) : __( 'Payment Date', 'better-payment' ),
-            'subscription_table_current_period_label'   => ! empty( $attributes['subscriptionTableCurrentPeriodLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableCurrentPeriodLabel'] ) : __( 'Renewal Date', 'better-payment' ),
-            'subscription_table_action_label'           => ! empty( $attributes['subscriptionTableActionLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionLabel'] ) : __( 'Action', 'better-payment' ),
-            'subscription_table_status_active_label'    => ! empty( $attributes['subscriptionTableStatusActiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusActiveLabel'] ) : __( 'Active', 'better-payment' ),
-            'subscription_table_status_inactive_label'  => ! empty( $attributes['subscriptionTableStatusInactiveLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableStatusInactiveLabel'] ) : __( 'Inactive', 'better-payment' ),
-            'subscription_table_action_cancel_label'    => ! empty( $attributes['subscriptionTableActionCancelLabel'] ) ? sanitize_text_field( $attributes['subscriptionTableActionCancelLabel'] ) : __( 'Cancel', 'better-payment' ),
         );
 
         /**
          * Block-specific filter for merging pro $bp_settings.
+         *
+         * The Subscriptions table is Pro's, so Lite builds none of its
+         * column settings; Pro adds them here.
          *
          * Passes raw camelCase block $attributes as second arg (unlike the Elementor filter
          * which passes raw Elementor settings with better_payment_user_dashboard_* keys).
@@ -1750,19 +1732,57 @@ class BlockManager {
     }
 
     /**
-     * Return plugin settings with all gateway secret/private keys removed.
+     * The global settings the Payment Form block reads in the editor, by key.
      *
-     * Safe to expose to any block editor user regardless of role. Only the keys
-     * that the editor UI actually reads (email defaults, gateway enable flags,
-     * public keys) are kept — secrets never leave the server.
+     * Block editor data is printed for every user who can edit a post, Contributors
+     * included, so it carries an allowlist, not "everything except the known
+     * secrets": with a denylist, any key added later (by Lite or by Pro) reached
+     * Contributors by default. Add a key here only when the editor reads it
+     * (`helpers.js` settingsMap, `gatewayNotice.js`, `inspector.js` email defaults);
+     * BlockEditorSettingsRedactionTest checks both directions.
      *
-     * Read through `DB::get_settings()`, defaults merged, exactly as the
-     * Settings screen and the frontend render read it. This used to be the raw
-     * option, so on a site that had never saved its settings the Settings screen
-     * showed PayPal and Stripe on (their defaults) while the editor saw no
-     * gateway at all: the block said "No payment gateway enabled", and a block
-     * inserted then stored all three gateway toggles as `false`, so the form
-     * stayed off on the live page too, even after the admin saved Settings.
+     * @since 2.4.2
+     */
+    const EDITOR_SETTINGS_KEYS = array(
+        // Gateways (helpers.js settingsMap, gatewayNotice.js).
+        'better_payment_settings_general_general_paypal',
+        'better_payment_settings_general_general_stripe',
+        'better_payment_settings_general_general_paystack',
+        'better_payment_settings_payment_paypal_email',
+        'better_payment_settings_payment_paypal_live_mode',
+        'better_payment_settings_payment_stripe_live_mode',
+        'better_payment_settings_payment_stripe_test_public',
+        'better_payment_settings_payment_stripe_live_public',
+        'better_payment_settings_payment_paystack_live_mode',
+        'better_payment_settings_payment_paystack_test_public',
+        'better_payment_settings_payment_paystack_live_public',
+        'better_payment_settings_general_general_currency',
+        'better_payment_settings_general_general_email',
+        // Email notification defaults (inspector.js).
+        'better_payment_settings_general_email_to',
+        'better_payment_settings_general_email_subject',
+        'better_payment_settings_general_email_message_admin',
+        'better_payment_settings_general_email_from_email',
+        'better_payment_settings_general_email_from_name',
+        'better_payment_settings_general_email_reply_to',
+        'better_payment_settings_general_email_cc',
+        'better_payment_settings_general_email_bcc',
+        'better_payment_settings_general_email_send_as',
+        'better_payment_settings_general_email_subject_customer',
+        'better_payment_settings_general_email_message_customer',
+        'better_payment_settings_general_email_from_email_customer',
+        'better_payment_settings_general_email_from_name_customer',
+        'better_payment_settings_general_email_reply_to_customer',
+        'better_payment_settings_general_email_cc_customer',
+        'better_payment_settings_general_email_bcc_customer',
+        'better_payment_settings_general_email_send_as_customer',
+    );
+
+    /**
+     * Global settings for the block editor: only EDITOR_SETTINGS_KEYS.
+     *
+     * Read through DB::get_settings(), so defaults are merged in the same way as
+     * on the Settings screen and the frontend.
      *
      * @return array
      */
@@ -1772,25 +1792,7 @@ class BlockManager {
             return array();
         }
 
-        $sensitive_keys = array(
-            'better_payment_settings_payment_paypal_live_secret',
-            'better_payment_settings_payment_paypal_test_secret',
-            'better_payment_settings_payment_stripe_live_secret',
-            'better_payment_settings_payment_stripe_test_secret',
-            'better_payment_settings_payment_paystack_live_secret',
-            'better_payment_settings_payment_paystack_test_secret',
-            // AI provider API keys (Campaign Builder); the block editor never needs them.
-            'better_payment_settings_ai_api_key_openai',
-            'better_payment_settings_ai_api_key_claude',
-            'better_payment_settings_ai_api_key_gemini',
-            'better_payment_settings_ai_api_key_openrouter',
-        );
-
-        foreach ( $sensitive_keys as $key ) {
-            unset( $settings[ $key ] );
-        }
-
-        return $settings;
+        return array_intersect_key( $settings, array_flip( self::EDITOR_SETTINGS_KEYS ) );
     }
 
     /**
@@ -1818,7 +1820,7 @@ class BlockManager {
     /**
      * Return editor data specific to the payment-form block.
      *
-     * Provides the global settings (secrets stripped) so the inspector can
+     * Provides the global settings the editor reads (EDITOR_SETTINGS_KEYS) so the inspector can
      * pre-populate email defaults, and the site admin email for the To field.
      *
      * @return array
@@ -2297,5 +2299,82 @@ class BlockManager {
         if ( ! $this->is_font_awesome_provided() ) {
             wp_enqueue_style( 'bp-font-awesome' );
         }
+    }
+
+    /**
+     * Key, inside a cached block-settings array, of the fingerprint it was cached under.
+     */
+    const SETTINGS_FINGERPRINT_KEY = '_bp_settings_fingerprint';
+
+    /**
+     * Transient that caches a payment-form block's resolved settings for the payment handlers.
+     *
+     * @param int    $page_id  Page id.
+     * @param string $block_id Block id.
+     * @return string
+     */
+    public static function block_settings_transient_key( $page_id, $block_id ) {
+        return 'bp_block_settings_' . $page_id . '_' . $block_id;
+    }
+
+    /**
+     * What a block's resolved settings are built from: the page's content and the global
+     * settings (which supply the gateway keys).
+     *
+     * @param int $page_id Page id.
+     * @return string
+     */
+    public static function block_settings_fingerprint( $page_id ) {
+        $post = get_post( absint( $page_id ) );
+
+        return md5( ( $post ? $post->post_content : '' ) . '|' . wp_json_encode( DB::get_settings() ) );
+    }
+
+    /**
+     * Cache a block's resolved settings for the payment handlers, for an hour.
+     *
+     * @param int    $page_id  Page id.
+     * @param string $block_id Block id.
+     * @param array  $settings Resolved settings (build_block_settings()).
+     * @return void
+     */
+    public static function cache_block_settings( $page_id, $block_id, array $settings ) {
+        $settings[ self::SETTINGS_FINGERPRINT_KEY ] = self::block_settings_fingerprint( $page_id );
+
+        set_transient( self::block_settings_transient_key( $page_id, $block_id ), $settings, HOUR_IN_SECONDS );
+    }
+
+    /**
+     * A block's cached settings, or false when none are cached or they are stale.
+     *
+     * The payment handlers charge what these settings say, so a cache that outlived an edit
+     * kept an old price, a deleted block or a rotated gateway key payable for up to an hour.
+     * Settings cached since 2.4.3 carry the fingerprint of the page content and global settings
+     * they were built from, and are discarded the moment either changes — a page edit, a
+     * deleted block, a new key in Settings — whichever object cache stores them. An entry
+     * without one (cached by an older version, or set directly) is used as before.
+     *
+     * @param int    $page_id  Page id.
+     * @param string $block_id Block id.
+     * @return array|false
+     */
+    public static function get_cached_block_settings( $page_id, $block_id ) {
+        $key      = self::block_settings_transient_key( $page_id, $block_id );
+        $settings = get_transient( $key );
+
+        if ( empty( $settings ) || ! is_array( $settings ) ) {
+            return false;
+        }
+
+        if ( array_key_exists( self::SETTINGS_FINGERPRINT_KEY, $settings ) ) {
+            if ( ! is_string( $settings[ self::SETTINGS_FINGERPRINT_KEY ] ) || ! hash_equals( self::block_settings_fingerprint( $page_id ), $settings[ self::SETTINGS_FINGERPRINT_KEY ] ) ) {
+                delete_transient( $key );
+                return false;
+            }
+
+            unset( $settings[ self::SETTINGS_FINGERPRINT_KEY ] );
+        }
+
+        return $settings;
     }
 }

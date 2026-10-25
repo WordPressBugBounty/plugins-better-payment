@@ -3,9 +3,12 @@
 namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Classes\GatewaySecrets;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
+use Better_Payment\Lite\Classes\PaymentRateLimiter;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
@@ -86,8 +89,6 @@ class Paystack_Integration extends Action_Base {
         $better_payment_is_paystack_live = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_mode'] ) && 'yes' === $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_mode'] ? 1 : 0;
         $paystack_live_key = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_public'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_public'] : '';
         $paystack_test_key = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_public'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_public'] : '';
-        $paystack_live_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_live_secret'] : '';
-        $paystack_test_secret = ! empty( $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] ) ? $this->better_payment_global_settings['better_payment_settings_payment_paystack_test_secret'] : '';
 
         $widget->add_control(
             'better_payment_paystack_public_key',
@@ -115,7 +116,9 @@ class Paystack_Integration extends Action_Base {
                     'active' => true,
                 ],
                 'label_block' => true,
-                'default'     => $better_payment_is_paystack_live ? esc_html( $paystack_live_secret ) : esc_html( $paystack_test_secret ),
+                // Never a global secret: control defaults reach every editor user (see GatewaySecrets).
+                'default'     => '',
+                'description' => __( 'Leave empty to use the key saved in Better Payment > Settings.', 'better-payment' ),
                 'ai' => [
                     'active' => false,
                 ],
@@ -130,7 +133,8 @@ class Paystack_Integration extends Action_Base {
                 'label_on'     => __( 'Yes', 'better-payment' ),
                 'label_off'    => __( 'No', 'better-payment' ),
                 'return_value' => 'yes',
-                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
+                // Paystack's own live-mode setting, like the key defaults above (it read PayPal's).
+                'default'      => $better_payment_is_paystack_live ? 'yes' : 'no', //yes or no
             ]
         );
         $widget->end_controls_section();
@@ -156,7 +160,7 @@ class Paystack_Integration extends Action_Base {
      */
     public function run( $record, $ajax_handler ) {
 
-        $secret_key  = $record->get_form_settings( 'better_payment_paystack_secret_key' );
+        $secret_key  = GatewaySecrets::paystack_form_secret( $record->get_form_settings( 'better_payment_paystack_secret_key' ) );
         $post_data   = [];
         $header_info = array(
             'Authorization'  => 'Bearer ' . sanitize_text_field( $secret_key ),
@@ -166,8 +170,13 @@ class Paystack_Integration extends Action_Base {
         $sent_data = $record->get( 'sent_data' );
 
         $el_form_form_settings = $record->get('form_settings');
-        $page_id = $el_form_form_settings['form_post_id'] ? intval($el_form_form_settings['form_post_id']) : 0; 
-        $widget_id = $el_form_form_settings['id'] ? sanitize_text_field($el_form_form_settings['id']) : ''; 
+        $page_id = ! empty( $el_form_form_settings['form_post_id'] ) ? intval( $el_form_form_settings['form_post_id'] ) : 0;
+        $widget_id = ! empty( $el_form_form_settings['id'] ) ? sanitize_text_field( $el_form_form_settings['id'] ) : '';
+
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            $ajax_handler->add_error_message( PaymentRateLimiter::message() );
+            return false;
+        }
 
         if ( empty( $sent_data['payment_amount'] ) && empty( $sent_data['primary_payment_amount_radio'] ) ) {
             $ajax_handler->add_error_message( 'Amount field is required!' );
@@ -183,8 +192,25 @@ class Paystack_Integration extends Action_Base {
             return false;
         }
 
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        $invalid_email = PayerEmail::check( (array) $sent_data, array( 'email' ) );
+        if ( null !== $invalid_email ) {
+            $ajax_handler->add_error_message( $invalid_email->get_error_message() );
+            return false;
+        }
+
         $quantity = $guarded['quantity'];
         $amount   = $guarded['amount'];
+
+        // Before anything reaches Paystack: an unsupported currency used to be refused only
+        // after the transaction had been initialized there.
+        $paystack_supported_currencies = $this->bp_supported_currencies( 'paystack' );
+        $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paystack_currency' ) );
+
+        if ( is_array( $paystack_supported_currencies ) && ! in_array( $currency_code, $paystack_supported_currencies ) ) {
+            $ajax_handler->add_error_message( 'Currency is not supported by Paystack!' );
+            return false;
+        }
 
         $order_id = Handler::new_order_id( 'paystack' );
 
@@ -192,7 +218,10 @@ class Paystack_Integration extends Action_Base {
         $redirection_url_error      = get_permalink( $page_id );
 
         $request  = [
-            'amount'   => ( $amount * 100 ),
+            // Integer minor units, in the form's currency (without it Paystack charged the
+            // account's default currency, and verification then refused the payment).
+            'amount'   => Handler::paystack_minor_amount( $amount ),
+            'currency' => $currency_code,
             'cart_id'  => $order_id,
             'callback_url'  => add_query_arg( [
                 'better_payment_paystack_status' => 'success',
@@ -232,18 +261,20 @@ class Paystack_Integration extends Action_Base {
             )
         );
 
-        $response_ar = json_decode( $response['body'] );
-        
-        if ( ! empty( $response_ar->error ) ) {
-            $ajax_handler->add_error_message( sanitize_text_field( $response_ar->error->message ) );
+        if ( is_wp_error( $response ) ) {
+            $ajax_handler->add_error_message( esc_html__( 'Could not connect to Paystack. Please try again.', 'better-payment' ) );
             return false;
         }
 
-        $paystack_supported_currencies = $this->bp_supported_currencies( 'paystack' );
-        $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paystack_currency' ) );
-        
-        if ( is_array( $paystack_supported_currencies ) && ! in_array( $currency_code, $paystack_supported_currencies ) ) {
-            $ajax_handler->add_error_message( 'Currency is not supported by Paystack!' );
+        $response_ar = json_decode( wp_remote_retrieve_body( $response ) );
+
+        if ( ! empty( $response_ar->error ) ) {
+            $ajax_handler->add_error_message( isset( $response_ar->error->message ) ? sanitize_text_field( $response_ar->error->message ) : esc_html__( 'Something went wrong!', 'better-payment' ) );
+            return false;
+        }
+
+        if ( empty( $response_ar->status ) || empty( $response_ar->data ) ) {
+            $ajax_handler->add_error_message( ! empty( $response_ar->message ) ? sanitize_text_field( $response_ar->message ) : esc_html__( 'Something went wrong!', 'better-payment' ) );
             return false;
         }
 

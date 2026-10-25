@@ -5,7 +5,9 @@ namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
+use Better_Payment\Lite\Classes\PaymentRateLimiter;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
@@ -177,8 +179,13 @@ class Paypal_Integration extends Action_Base {
         $sent_data = $record->get( 'sent_data' );
 
         $el_form_form_settings = $record->get('form_settings');
-        $page_id = $el_form_form_settings['form_post_id'] ? $el_form_form_settings['form_post_id'] : ''; 
-        $widget_id = $el_form_form_settings['id'] ? $el_form_form_settings['id'] : ''; 
+        $page_id = ! empty( $el_form_form_settings['form_post_id'] ) ? intval( $el_form_form_settings['form_post_id'] ) : '';
+        $widget_id = ! empty( $el_form_form_settings['id'] ) ? sanitize_text_field( $el_form_form_settings['id'] ) : '';
+
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            $ajax_handler->add_error_message( PaymentRateLimiter::message() );
+            return false;
+        }
 
         if ( empty( $sent_data['payment_amount'] ) && empty( $sent_data['primary_payment_amount_radio'] ) ) {
             $ajax_handler->add_error_message( 'Amount field is required!' );
@@ -194,13 +201,12 @@ class Paypal_Integration extends Action_Base {
             return false;
         }
 
-        // PayPal takes the per-unit amount and multiplies by `quantity` itself.
-        $amount   = $guarded['unit_amount'];
-        $quantity = $guarded['quantity'];
-
-        $return_url = get_the_permalink() . '?better_payment_paypal_status=success&better_payment_widget_id=' . sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] );
-        $cancel_url = get_the_permalink() . '?better_payment_error_status=error&better_payment_widget_id=' . sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] );
-        $order_id   = Handler::new_order_id( 'paypal' );
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        $invalid_email = PayerEmail::check( (array) $sent_data, array( 'email', 'email_address' ) );
+        if ( null !== $invalid_email ) {
+            $ajax_handler->add_error_message( $invalid_email->get_error_message() );
+            return false;
+        }
 
         $paypal_unsupported_currencies = $this->bp_unsupported_currencies( 'paypal' );
         $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paypal_currency' ) );
@@ -209,17 +215,44 @@ class Paypal_Integration extends Action_Base {
             return false;
         }
 
+        // PayPal takes the per-unit amount and multiplies by `quantity` itself. Rounded the way
+        // PayPal accepts it, and the stored total is built from the same rounded unit.
+        $amount   = Handler::paypal_amount( $guarded['unit_amount'], $currency_code );
+        $quantity = $guarded['quantity'];
+
+        // add_query_arg(), not `permalink . '?…'`: with plain permalinks the page URL already
+        // carries `?page_id=`, and a second `?` broke the return to the thank-you message.
+        $return_url = add_query_arg(
+            [
+                'better_payment_paypal_status' => 'success',
+                'better_payment_widget_id'     => $widget_id,
+            ],
+            get_the_permalink()
+        );
+        $cancel_url = add_query_arg(
+            [
+                'better_payment_error_status' => 'error',
+                'better_payment_widget_id'    => $widget_id,
+            ],
+            get_the_permalink()
+        );
+        $order_id   = Handler::new_order_id( 'paypal' );
+        $form_name  = sanitize_text_field( (string) $record->get_form_settings( 'form_name' ) );
+
         $request_data = [
             'business'      => $email,
             'currency_code' => $currency_code,
             'rm'            => '2',
             'return'        => esc_url_raw( $return_url ),
-            'cancel_return' => esc_url_raw( $cancel_url ),
+            'cancel_return' => esc_url_raw( add_query_arg( 'better_payment_paypal_id', $order_id, $cancel_url ) ),
             'item_number'   => $order_id,
             'quantity'      => $quantity,
-            'item_name'     => 'Test Product',
-            'amount'        => $amount ,
+            // The form's name, as the Stripe action and the widget name their checkout.
+            'item_name'     => '' !== $form_name ? $form_name : esc_html__( 'Better Payment', 'better-payment' ),
+            'amount'        => $amount,
             'cmd'           => $button_type,
+            // The IPN is the only thing that confirms a PayPal order, as for the widget and block.
+            'notify_url'    => admin_url( 'admin-post.php?action=better_payment_paypal_ipn' ),
         ];
 
         $customer_name = ! empty( $sent_data['name'] ) ? $sent_data['name'] : '';
@@ -237,7 +270,7 @@ class Paypal_Integration extends Action_Base {
             'referer_page_id'       => $page_id,
             'referer_widget_id'     => $widget_id,
             'source'                => 'paypal',
-            'paypal_business_email' => sanitize_email( $email ),
+            'paypal_business_email' => Handler::paypal_business_identifier( $email ),
             // The PayPal environment the order was sent to; the IPN must come from the same one.
             'paypal_mode'           => 'yes' === $live_mode ? 'live' : 'sandbox',
         ];
@@ -248,7 +281,7 @@ class Paypal_Integration extends Action_Base {
         Handler::payment_create(
             [
                 // The whole order, so the IPN's `mc_gross >= amount` check also holds the quantity.
-                'amount'       => $guarded['amount'],
+                'amount'       => Handler::paypal_amount( $amount * $quantity, $currency_code ),
                 'order_id'     => $order_id,
                 'payment_date' => gmdate( 'Y-m-d H:i:s' ),
                 'source'       => 'paypal',

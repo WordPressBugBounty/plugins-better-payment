@@ -110,7 +110,54 @@ class Export extends Controller{
      * @return int|false Bytes written, or false on failure.
      */
     public static function put_csv_row($handle, array $fields, $delimiter = ";") {
+        $fields = array_map(array(__CLASS__, 'neutralize_csv_cell'), $fields);
+
         return fputcsv($handle, $fields, $delimiter, "\"", self::CSV_ESCAPE);
+    }
+
+    /**
+     * Neutralise a spreadsheet formula (CSV / formula injection, OWASP).
+     *
+     * Exported cells carry donor-typed values (name, email, form fields). A cell
+     * that starts with = + - @, a tab or a carriage return is evaluated as a
+     * formula by Excel, LibreOffice and Google Sheets when the admin opens the
+     * file, so it is prefixed with a single quote and read as text. A plain
+     * number (e.g. a negative amount) is not a formula and is left as is.
+     *
+     * @param mixed $value Cell value.
+     * @return mixed The value, prefixed with ' when it would start a formula.
+     */
+    public static function neutralize_csv_cell($value) {
+        if (!is_string($value) || '' === $value || is_numeric($value)) {
+            return $value;
+        }
+
+        if (false !== strpos("=+-@\t\r", $value[0])) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Undo neutralize_csv_cell() for a value read back from an exported file.
+     *
+     * Strips the leading quote only when it guards a formula character, so an
+     * export re-imported through Import keeps the donor's original value.
+     *
+     * @param mixed $value Cell value.
+     * @return mixed The value without the guard quote.
+     */
+    public static function restore_csv_cell($value) {
+        if (!is_string($value) || strlen($value) < 2 || "'" !== $value[0]) {
+            return $value;
+        }
+
+        if (false !== strpos("=+-@\t\r", $value[1])) {
+            return substr($value, 1);
+        }
+
+        return $value;
     }
 
     public function transactions_array_to_csv_download($array, $filename = "export.csv", $delimiter=";") {

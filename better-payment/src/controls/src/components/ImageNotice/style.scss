@@ -1,0 +1,23 @@
+/**
+ * MediaPlaceholderWrapper styles
+ */
+
+.eb-media-placeholder-wrapper {
+	.eb-placeholder-ai-img-button {
+		padding: 5px 10px !important;
+		height: auto;
+	}
+
+	.components-placeholder__label {
+		display: flex;
+		align-items: center;
+		font-size: 16px;
+		margin-bottom: 12px;
+
+		svg {
+			margin-right: 8px;
+			width: auto;
+			height: 24px;
+		}
+	}
+}

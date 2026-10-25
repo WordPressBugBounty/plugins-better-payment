@@ -1740,7 +1740,7 @@ class Subscriptions {
         $description = trim( sprintf( __( 'Subscription renewal %1$s — %2$s', 'better-payment' ), '#' . $order_number, $site_name ), " \t—" );
 
         return array(
-            'amount'         => (int) round( (float) $data['amount'] * 100 ),
+            'amount'         => Handler::stripe_minor_amount( $data['amount'], (string) $data['currency'] ),
             'currency'       => strtolower( (string) $data['currency'] ),
             'customer'       => (string) $data['customer'],
             'payment_method' => (string) $data['payment_method'],

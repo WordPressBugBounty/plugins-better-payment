@@ -31,7 +31,9 @@ class RendererService {
      * Render a full campaign.
      *
      * @param int        $campaign_id   The campaign post ID.
-     * @param bool       $is_preview    True when rendering a preview (skips publish check).
+     * @param bool       $is_preview    True for an editor preview (the REST preview route,
+     *                                  the block editor). Passed to every element and to
+     *                                  `after_columns`. Never true on a visitor-facing page.
      * @param array|null $preview_layout Override layout JSON (used by preview endpoint).
      * @return string HTML output.
      */
@@ -55,18 +57,23 @@ class RendererService {
             : '';
 
         if ( $is_preview && $preview_layout !== null ) {
-            $layout_data = $preview_layout;
+            $layout_data = self::normalize_layout( $preview_layout );
         } else {
-            $raw         = $meta['bpc_fields_layout'] ?? [];
-            $layout_data = self::normalize_layout( $raw );
+            $raw = $meta['bpc_fields_layout'] ?? [];
+            // A layout that was never saved (meta absent / '') is not a blank
+            // template: normalize_layout() would turn it into one empty column and
+            // the page would render nothing at all. Only a stored layout — even one
+            // whose columns are deliberately empty — is rendered as-is.
+            $layout_data = empty( $raw ) ? [] : self::normalize_layout( $raw );
         }
 
-        $columns = $layout_data['columns'] ?? [];
-        $layout  = $layout_data['layout']  ?? '1-column';
+        $columns = isset( $layout_data['columns'] ) && is_array( $layout_data['columns'] ) ? $layout_data['columns'] : [];
+        $layout  = isset( $layout_data['layout'] ) && is_string( $layout_data['layout'] ) ? $layout_data['layout'] : '1-column';
 
-        // Only fall back to default when there are literally no columns.
-        // Blank templates (1-col, 2-col, 3-col) have columns with empty elements arrays —
-        // that is intentional and must render as blank to match the editor and preview.
+        // Fall back to default when there are no columns at all (including a layout
+        // that was never saved). Blank templates (1-col, 2-col, 3-col) have columns
+        // with empty elements arrays — that is intentional and must render as blank
+        // to match the editor and preview.
         if ( empty( $columns ) ) {
             $layout_data = self::default_layout();
             $columns     = $layout_data['columns'];
@@ -74,10 +81,11 @@ class RendererService {
         }
 
         $color_style = self::generate_color_style( $meta, $campaign_id );
+        $extra_class = self::css_class_attr( $meta );
 
         ob_start();
         ?>
-        <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class ); ?>"
+        <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class . $extra_class ); ?>"
              data-campaign-id="<?php echo esc_attr( $campaign_id ); ?>">
             <?php echo wp_kses( $color_style, [ 'style' => [] ] ); ?>
             <input type="hidden" class="better_payment_campaign_id"
@@ -86,20 +94,36 @@ class RendererService {
                    value="<?php echo esc_attr( self::global_currency() ); ?>">
             <div class="bp-campaign-columns">
                 <?php foreach ( $columns as $column ) :
-                    $raw_width = $column['width'] ?? '100%';
-                    $col_width = preg_match( '/^\d{1,3}(\.\d+)?%$/', $raw_width ) ? $raw_width : '100%';
-                    $col_style = 'width: ' . $col_width . ';';
+                    if ( ! is_array( $column ) ) {
+                        continue;
+                    }
+                    $col_style = 'width: ' . self::column_width( $column ) . ';';
                 ?>
                     <div class="bp-campaign-column"
                          style="<?php echo esc_attr( $col_style ); ?>">
                         <?php
-                        foreach ( $column['elements'] as $element ) {
-                            echo self::render_element( $element, $campaign_id, $post, $meta, $stats ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_element() returns HTML escaped where each element's markup is built.
+                        foreach ( self::column_elements( $column ) as $element ) {
+                            // Same flag as `after_columns` below, so a Donate Button an
+                            // add-on turns into a popup trigger and the popup it opens
+                            // are both printed, or neither is.
+                            echo self::render_element( $element, $campaign_id, $post, $meta, $stats, $is_preview ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_element() returns HTML escaped where each element's markup is built.
                         }
                         ?>
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php
+            /**
+             * Fires inside the campaign wrapper, after its columns. Pro prints its
+             * popup payment form here. It also fires for previews (`$is_preview`):
+             * a listener that confirms payments or prints a live nonce must skip them.
+             *
+             * @param int   $campaign_id Campaign id.
+             * @param array $meta        Campaign meta.
+             * @param bool  $is_preview  Editor preview (builder, REST preview, block editor).
+             */
+            do_action( 'better_payment/campaign/after_columns', $campaign_id, $meta, $is_preview );
+            ?>
         </div>
         <?php
         return ob_get_clean();
@@ -136,6 +160,43 @@ class RendererService {
     }
 
     /**
+     * Donate Amount pickers printed so far in this request, per campaign.
+     *
+     * @var array<int, int>
+     */
+    private static $amount_groups = [];
+
+    /**
+     * The id part of a Donate Amount picker's radio ids and group name: the campaign
+     * id for its first picker on the page, `{id}-{n}` for every later one.
+     *
+     * @param int $campaign_id Campaign id.
+     */
+    private static function amount_group_key( int $campaign_id ): string {
+        $count = isset( self::$amount_groups[ $campaign_id ] ) ? self::$amount_groups[ $campaign_id ] + 1 : 1;
+
+        self::$amount_groups[ $campaign_id ] = $count;
+
+        return 1 === $count ? (string) $campaign_id : $campaign_id . '-' . $count;
+    }
+
+    /**
+     * Whether a `better_payment/campaign/donate_button` attribute may be printed on
+     * the button. Refuses event handlers (`on*`), which would run script, and the
+     * attributes the button prints itself (`href`, `class`, `style`): a duplicate
+     * is ignored by the browser, so it could only hide a change, never make one.
+     *
+     * @param string $name Attribute name, already reduced to `[a-z0-9_:-]`.
+     */
+    private static function is_allowed_donate_attribute( string $name ): bool {
+        if ( '' === $name || 0 === strpos( $name, 'on' ) ) {
+            return false;
+        }
+
+        return ! in_array( $name, [ 'href', 'class', 'style' ], true );
+    }
+
+    /**
      * Render a single element by type.
      *
      * @param array    $element     Element definition with type, settings.
@@ -160,9 +221,11 @@ class RendererService {
         array $stats,
         bool $is_preview = false
     ): string {
-        $type     = $element['type']     ?? '';
-        $settings = $element['settings'] ?? [];
-        $el_id    = $element['id']        ?? '';
+        // Stored layouts are data, not code: tolerate a malformed element rather
+        // than raise a TypeError/notice on a live campaign page.
+        $type     = isset( $element['type'] ) && is_string( $element['type'] ) ? $element['type'] : '';
+        $settings = isset( $element['settings'] ) && is_array( $element['settings'] ) ? $element['settings'] : [];
+        $el_id    = isset( $element['id'] ) && is_scalar( $element['id'] ) ? (string) $element['id'] : '';
 
         ob_start();
 
@@ -302,8 +365,17 @@ class RendererService {
                 $show_donated  = isset( $settings['show_donated'] ) ? (bool) $settings['show_donated'] : true;
                 $show_goal     = isset( $settings['show_goal'] ) ? (bool) $settings['show_goal'] : true;
                 $round_amounts = (bool) ( $settings['round_amounts'] ?? false );
-                $donate_label  = ! empty( $settings['donate_label'] ) ? $settings['donate_label'] : __( 'Donated:', 'better-payment' );
-                $goal_label    = ! empty( $settings['goal_label'] ) ? $settings['goal_label'] : __( 'Goal:', 'better-payment' );
+                // isset(), not ! empty(): a cleared label is an instruction ("print
+                // the figure with no prefix"), not a request for the default back.
+                // A key that was never set (or that the AI validator dropped) still
+                // falls back to the default.
+                $donate_label  = isset( $settings['donate_label'] ) ? (string) $settings['donate_label'] : __( 'Donated:', 'better-payment' );
+                $goal_label    = isset( $settings['goal_label'] ) ? (string) $settings['goal_label'] : __( 'Goal:', 'better-payment' );
+                // No goal means there is nothing to measure progress against: no
+                // "Goal: $0" and no "Donated: 0%" — the figures are omitted, not zeroed.
+                $has_goal      = $goal > 0;
+                $show_donated  = $show_donated && $has_goal;
+                $show_goal     = $show_goal && $has_goal;
                 $width         = self::resolve_element_width( $settings );
                 $align         = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
                 $currency_sym  = self::currency_symbol( $currency );
@@ -343,12 +415,12 @@ class RendererService {
                         <div class="bp-progress-labels">
                             <?php if ( $show_donated ) : ?>
                                 <span class="bp-progress-donated">
-                                    <?php echo esc_html( $donate_label . ' ' . $display_progress . '%' ); ?>
+                                    <?php echo esc_html( trim( $donate_label . ' ' . $display_progress . '%' ) ); ?>
                                 </span>
                             <?php endif; ?>
                             <?php if ( $show_goal ) : ?>
                                 <span class="bp-progress-goal">
-                                    <?php echo esc_html( $goal_label . ' ' . $currency_sym . $goal_fmt ); ?>
+                                    <?php echo esc_html( trim( $goal_label . ' ' . $currency_sym . $goal_fmt ) ); ?>
                                 </span>
                             <?php endif; ?>
                         </div>
@@ -367,6 +439,11 @@ class RendererService {
                 $sm_align      = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true ) ? $settings['align'] : 'left';
                 $goal          = (float) ( $meta['bpc_goal_amount'] ?? 0 );
                 $percent       = $goal > 0 ? min( 100, round( ( (float) $stats['total_raised'] / $goal ) * 100, 1 ) ) : 0;
+                // A figure the campaign cannot support is omitted, never shown as 0:
+                // no goal → no percentage; no end date → no "Days Left" (it used to
+                // read "0 Days Left", i.e. tell every visitor the appeal was over).
+                $show_percent  = $show_percent && $goal > 0;
+                $show_days     = $show_days && isset( $stats['days_remaining'] );
                 $sm_currency     = self::global_currency();
                 $sm_currency_sym = self::currency_symbol( $sm_currency );
 
@@ -399,7 +476,7 @@ class RendererService {
                         <?php endif; ?>
                         <?php if ( $show_days ) : ?>
                             <div class="bp-summary-item">
-                                <strong><?php echo esc_html( is_null( $stats['days_remaining'] ) ? 0 : $stats['days_remaining'] ); ?></strong>
+                                <strong><?php echo esc_html( (string) (int) $stats['days_remaining'] ); ?></strong>
                                 <span><?php esc_html_e( 'Days Left', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
@@ -434,14 +511,61 @@ class RendererService {
                     $donate_url = esc_url( $settings['url'] );
                 } else {
                     $page_id = absint( $meta['bpc_form_page_id'] ?? 0 );
-                    if ( $page_id ) {
-                        $donate_url = esc_url( add_query_arg( 'campaign_id', $campaign_id, get_permalink( $page_id ) ) );
+                    // get_permalink() is false for a deleted/missing page, and
+                    // add_query_arg( …, false ) falls back to the CURRENT request
+                    // URI — the Donate button then linked the campaign page to itself.
+                    $page_link = $page_id ? get_permalink( $page_id ) : false;
+                    if ( $page_link ) {
+                        $donate_url = esc_url( add_query_arg( 'campaign_id', $campaign_id, $page_link ) );
                     }
                 }
                 // Default the Payment Form Page URL to '#' so the button renders as a normal link.
                 $url_missing = false;
                 if ( ! $donate_url ) {
                     $donate_url = '#';
+                }
+
+                $donate_button = [
+                    'show'       => true,
+                    'url'        => $donate_url,
+                    'attributes' => $open_new_tab ? [ 'target' => '_blank', 'rel' => 'noopener noreferrer' ] : [],
+                ];
+
+                /**
+                 * Filters where the Donate Button goes. Pro's popup payment form points
+                 * it at the popup (`url` + `attributes`), and hides it (`show` false)
+                 * from visitors when the popup cannot take a payment. `attributes`
+                 * replaces the link's extra attributes (the new-tab pair by default);
+                 * Lite reduces names to `[a-z0-9_:-]`, escapes values, and drops event
+                 * handlers (`on*`) and the attributes it prints itself (`href`,
+                 * `class`, `style`). `$is_preview` is the flag `after_columns` gets,
+                 * so a listener can tell whether its popup will be printed.
+                 *
+                 * @param array  $donate_button { show: bool, url: string, attributes: array<string, string> }
+                 * @param int    $campaign_id   Campaign id.
+                 * @param array  $meta          Campaign meta.
+                 * @param array  $settings      The element's settings.
+                 * @param bool   $is_preview    Editor preview (builder, REST preview, block editor).
+                 *
+                 * @var mixed $filtered_button A listener may return anything; checked below.
+                 */
+                $filtered_button = apply_filters( 'better_payment/campaign/donate_button', $donate_button, $campaign_id, $meta, $settings, $is_preview );
+                if ( is_array( $filtered_button ) ) {
+                    $donate_button = array_merge( $donate_button, $filtered_button );
+                }
+
+                if ( empty( $donate_button['show'] ) ) {
+                    break;
+                }
+
+                $donate_url = is_string( $donate_button['url'] ) && '' !== $donate_button['url'] ? $donate_button['url'] : '#';
+                $donate_attributes = '';
+                foreach ( (array) $donate_button['attributes'] as $attr_name => $attr_value ) {
+                    $attr_name = strtolower( (string) preg_replace( '/[^a-z0-9_:-]/i', '', (string) $attr_name ) );
+                    if ( ! self::is_allowed_donate_attribute( $attr_name ) || ! is_scalar( $attr_value ) ) {
+                        continue;
+                    }
+                    $donate_attributes .= ' ' . $attr_name . '="' . esc_attr( (string) $attr_value ) . '"';
                 }
 
                 if ( $donate_url ) :
@@ -480,7 +604,7 @@ class RendererService {
                                aria-disabled="true"
                                title="<?php esc_attr_e( 'Payment page not configured', 'better-payment' ); ?>"
                                <?php else : ?>
-                               <?php echo $open_new_tab ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>
+                               <?php echo $donate_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- names filtered, values esc_attr() above. ?>
                                <?php endif; ?>
                             >
                                 <?php echo esc_html( $button_label ); ?>
@@ -495,7 +619,8 @@ class RendererService {
                 $creator_user_id = ! empty( $settings['creator_user_id'] )
                     ? (int) $settings['creator_user_id']
                     : (int) $post->post_author;
-                $role_title  = ! empty( $settings['role_title'] ) ? $settings['role_title'] : __( 'Organizer', 'better-payment' );
+                // isset(), not ! empty(): an emptied role stays empty (emptied means empty).
+                $role_title  = isset( $settings['role_title'] ) ? (string) $settings['role_title'] : __( 'Organizer', 'better-payment' );
                 $description = ! empty( $settings['description'] ) ? $settings['description'] : '';
                 $width       = self::resolve_element_width( $settings );
                 $align       = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true )
@@ -517,7 +642,9 @@ class RendererService {
                     </div>
                     <div class="bp-organizer-info">
                         <span class="bp-organizer-name"><?php echo esc_html( $creator->display_name ); ?></span>
-                        <span class="bp-organizer-role"><?php echo esc_html( $role_title ); ?></span>
+                        <?php if ( '' !== $role_title ) : ?>
+                            <span class="bp-organizer-role"><?php echo esc_html( $role_title ); ?></span>
+                        <?php endif; ?>
                         <?php if ( $description ) : ?>
                             <div class="bp-organizer-description"><?php echo wp_kses_post( self::scale_inline_font_sizes( $description ) ); ?></div>
                         <?php endif; ?>
@@ -552,6 +679,18 @@ class RendererService {
                     }
                 }
                 ?>
+                <?php
+                // The radios carry no `hidden` attribute: style.scss hides them visually
+                // (input.bp-option-amount) and keeps them in the tab order. `hidden` is
+                // display:none, which took every amount out of keyboard reach and
+                // defeated that rule.
+                //
+                // The radios' ids and group name must be unique on the page. A campaign
+                // shown twice (a shortcode and a block, say) used to print the same ones
+                // twice: both copies formed one radio group, and every label pointed at
+                // the first copy's radios. The first picker keeps the old names.
+                $da_group = self::amount_group_key( $campaign_id );
+                ?>
                 <div class="bp-campaign-donate" style="<?php echo esc_attr( $da_wrap_style ); ?>">
                     <?php if ( $da_headline ) : ?>
                         <h3 class="bp-donate-headline"><?php echo esc_html( $da_headline ); ?></h3>
@@ -559,17 +698,16 @@ class RendererService {
                     <div class="bp-donate_amounts">
                         <?php foreach ( $amounts_meta as $i => $item ) :
                             $amt        = floatval( $item['amount'] ?? 0 );
-                            $uid        = 'bp_camt_' . $campaign_id . '_' . $i;
+                            $uid        = 'bp_camt_' . $da_group . '_' . $i;
                             $is_default = ! empty( $item['is_default'] );
                         ?>
                             <input
                                 type="radio"
                                 class="bp-option-amount"
                                 id="<?php echo esc_attr( $uid ); ?>"
-                                name="option_amount_<?php echo esc_attr( $campaign_id ); ?>"
+                                name="option_amount_<?php echo esc_attr( $da_group ); ?>"
                                 value="<?php echo esc_attr( $amt ); ?>"
                                 <?php checked( $is_default ); ?>
-                                hidden
                             />
                             <label for="<?php echo esc_attr( $uid ); ?>" class="bp-amount-label">
                                 <?php echo esc_html( Money::with_symbol( $currency_symbol, $amt ) ); ?>
@@ -823,10 +961,61 @@ class RendererService {
     }
 
     /**
-     * Default layout used when no layout is saved (campaign has no fields yet).
+     * A column's validated CSS width.
      *
-     * @return array
+     * Stored layouts are user/AI data and may be malformed: a non-string width
+     * (int, null, array) must never reach preg_match() — on PHP 8 an array there
+     * is a TypeError — and anything that is not a plain percentage renders 100%.
+     *
+     * @param array $column Column from the stored layout.
+     * @return string e.g. '62%'.
      */
+    private static function column_width( array $column ): string {
+        $raw = $column['width'] ?? '100%';
+        if ( ! is_string( $raw ) ) {
+            return '100%';
+        }
+        return preg_match( '/^\d{1,3}(\.\d+)?%$/', $raw ) ? $raw : '100%';
+    }
+
+    /**
+     * A column's elements, tolerating a malformed stored layout: a missing or
+     * non-array `elements` key yields none, and non-array entries are skipped
+     * (render_element() is typed `array`).
+     *
+     * @param array $column Column from the stored layout.
+     * @return array[]
+     */
+    private static function column_elements( array $column ): array {
+        $elements = $column['elements'] ?? [];
+        if ( ! is_array( $elements ) ) {
+            return [];
+        }
+        return array_values( array_filter( $elements, 'is_array' ) );
+    }
+
+    /**
+     * The campaign's own CSS class(es) from Settings (`bpc_css_class`), as a
+     * leading-space string ready to append to the wrapper's class list.
+     *
+     * Each whitespace-separated class is sanitized on its own, so a value
+     * stored before sanitisation can never break out of the attribute.
+     *
+     * @param array $meta Campaign meta.
+     * @return string '' or ' class-a class-b'.
+     */
+    private static function css_class_attr( array $meta ): string {
+        $raw = isset( $meta['bpc_css_class'] ) && is_string( $meta['bpc_css_class'] ) ? $meta['bpc_css_class'] : '';
+        $out = [];
+        foreach ( preg_split( '/\s+/', trim( $raw ) ) as $class ) {
+            $class = sanitize_html_class( $class );
+            if ( '' !== $class ) {
+                $out[] = $class;
+            }
+        }
+        return $out ? ' ' . implode( ' ', array_unique( $out ) ) : '';
+    }
+
     private static function social_icon_svg( string $network ): string {
         $paths = [
             'twitter'   => 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z',
@@ -1167,7 +1356,7 @@ class RendererService {
                     <div class="bp-campaign-column"
                          style="<?php echo $col_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- each part of $col_style is esc_attr()'d where it is built above. ?>">
                         <?php
-                        foreach ( $column['elements'] as $element ) {
+                        foreach ( self::column_elements( $column ) as $element ) {
                             echo self::render_element( $element, 0, $fake_post, $meta, $stats, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_element() returns HTML escaped where each element's markup is built.
                         }
                         ?>
@@ -1320,13 +1509,10 @@ class RendererService {
 
         // Override stats fields that depend on unsaved builder meta so the preview
         // reflects the current editor values without requiring a save first.
-        $preview_end_date = $meta_input['bpc_end_date'] ?? '';
-        if ( $preview_end_date !== '' ) {
-            $diff = strtotime( $preview_end_date ) - current_time( 'timestamp' );
-            $stats['days_remaining'] = max( 0, (int) ceil( $diff / DAY_IN_SECONDS ) );
-        } else {
-            $stats['days_remaining'] = null;
-        }
+        // Same rule as the frontend (CampaignStats::days_remaining): the end date
+        // is inclusive, and no end date means no countdown at all.
+        $preview_end_date        = $meta_input['bpc_end_date'] ?? '';
+        $stats['days_remaining'] = CampaignStats::days_remaining( is_string( $preview_end_date ) ? $preview_end_date : '' );
 
         $preview_goal = (float) ( $meta_input['bpc_goal_amount'] ?? 0 );
         if ( $preview_goal > 0 ) {
@@ -1351,15 +1537,18 @@ class RendererService {
             'bpc_css_class'           => '',
         ];
 
+        // Defaults first, then saved meta, then the unsaved builder input — the
+        // defaults must never mask a value the campaign actually has saved.
         if ( $campaign_id > 0 ) {
-            $meta = array_merge( MetaBox::get_all( $campaign_id ), $meta_defaults, $meta_input );
+            $meta = array_merge( $meta_defaults, MetaBox::get_all( $campaign_id ), $meta_input );
         } else {
             $meta = array_merge( $meta_defaults, $meta_input );
         }
 
         // ── Layout ───────────────────────────────────────────────────────────
-        $columns = $layout_data['columns'] ?? [];
-        $layout  = $layout_data['layout']  ?? '1-column';
+        $layout_data = self::normalize_layout( $layout_data );
+        $columns     = is_array( $layout_data['columns'] ) ? $layout_data['columns'] : [];
+        $layout      = isset( $layout_data['layout'] ) && is_string( $layout_data['layout'] ) ? $layout_data['layout'] : '1-column';
 
         if ( empty( $columns ) ) {
             $default = self::default_layout();
@@ -1376,10 +1565,11 @@ class RendererService {
 
         // ── Campaign HTML with element-id wrappers ────────────────────────────
         $color_style = self::generate_color_style( $meta, $campaign_id );
+        $extra_class = self::css_class_attr( $meta );
 
         ob_start();
         ?>
-        <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class ); ?>"
+        <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class . $extra_class ); ?>"
              data-campaign-id="<?php echo esc_attr( $campaign_id ); ?>">
             <?php echo wp_kses( $color_style, [ 'style' => [] ] ); ?>
             <input type="hidden" class="better_payment_campaign_id"
@@ -1388,22 +1578,24 @@ class RendererService {
                    value="<?php echo esc_attr( self::global_currency() ); ?>">
             <div class="bp-campaign-columns">
                 <?php foreach ( $columns as $column ) :
-                    $is_empty  = empty( $column['elements'] );
-                    $col_class = 'bp-campaign-column' . ( $is_empty ? ' bp-col-empty' : '' );
-                    $raw_width = $column['width'] ?? '100%';
-                    $col_width = preg_match( '/^\d{1,3}(\.\d+)?%$/', $raw_width ) ? $raw_width : '100%';
-                    $col_style = 'width: ' . $col_width . ';';
+                    if ( ! is_array( $column ) ) {
+                        continue;
+                    }
+                    $col_elements = self::column_elements( $column );
+                    $col_id       = isset( $column['id'] ) && is_scalar( $column['id'] ) ? (string) $column['id'] : '';
+                    $col_class    = 'bp-campaign-column' . ( empty( $col_elements ) ? ' bp-col-empty' : '' );
+                    $col_style    = 'width: ' . self::column_width( $column ) . ';';
                 ?>
                     <div class="<?php echo esc_attr( $col_class ); ?>"
-                         data-bp-column-id="<?php echo esc_attr( $column['id'] ); ?>"
+                         data-bp-column-id="<?php echo esc_attr( $col_id ); ?>"
                          style="<?php echo esc_attr( $col_style ); ?>">
                         <?php
                         $locked_types = self::pro_locked_types();
-                        foreach ( $column['elements'] as $element ) :
-                            $el_type = $element['type'] ?? '';
+                        foreach ( $col_elements as $element ) :
+                            $el_type = isset( $element['type'] ) && is_string( $element['type'] ) ? $element['type'] : '';
                         ?>
-                            <div data-bp-element-id="<?php echo esc_attr( $element['id'] ?? '' ); ?>"
-                                 data-bp-column-id="<?php echo esc_attr( $column['id'] ); ?>"
+                            <div data-bp-element-id="<?php echo esc_attr( isset( $element['id'] ) && is_scalar( $element['id'] ) ? (string) $element['id'] : '' ); ?>"
+                                 data-bp-column-id="<?php echo esc_attr( $col_id ); ?>"
                                  class="bp-builder-el-wrap">
                                 <?php
                                 // Pro elements — either dropped from the palette by a free

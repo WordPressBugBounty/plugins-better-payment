@@ -29,8 +29,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *    `facebook.com/<something>` is not a harmless placeholder; it is a link from
  *    a fundraising page to an account the campaign does not control, and it may
  *    well belong to a real unrelated person.
- *  - **`donors_wall` must never contain donor names.** It renders live
- *    transaction data. A model writing example donors into it would be
+ *  - **`donors_wall` must never contain donor names.** Its guide is Pro's
+ *    (`AI\ProWidgetGuidance`, added on `better_payment/ai/element_content_guides`),
+ *    so it is not in guides() below; the rule is recorded here because it
+ *    renders live transaction data. A model writing example donors into it would be
  *    fabricating a record of who gave money — the same reason Lite's
  *    {@see \Better_Payment\Lite\Campaign\Elements\ProElementPreview} keeps its
  *    sample donors obviously fictional and builder-only.

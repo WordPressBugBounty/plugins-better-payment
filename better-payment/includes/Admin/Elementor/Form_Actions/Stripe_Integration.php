@@ -3,9 +3,12 @@
 namespace Better_Payment\Lite\Admin\Elementor\Form_Actions;
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Classes\GatewaySecrets;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
+use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
+use Better_Payment\Lite\Classes\PaymentRateLimiter;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
 use ElementorPro\Modules\Forms\Classes\Ajax_Handler;
@@ -114,7 +117,9 @@ class Stripe_Integration extends Action_Base {
                     'active' => true,
                 ],
                 'label_block' => true,
-                'default'     => $better_payment_is_stripe_live ? esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_live_secret']) : esc_html($this->better_payment_global_settings['better_payment_settings_payment_stripe_test_secret']),
+                // Never a global secret: control defaults reach every editor user (see GatewaySecrets).
+                'default'     => '',
+                'description' => __( 'Leave empty to use the key saved in Better Payment > Settings.', 'better-payment' ),
                 'ai' => [
                     'active' => false,
                 ],
@@ -129,7 +134,8 @@ class Stripe_Integration extends Action_Base {
                 'label_on'     => __( 'Yes', 'better-payment' ),
                 'label_off'    => __( 'No', 'better-payment' ),
                 'return_value' => 'yes',
-                'default'      => esc_html($this->better_payment_global_settings['better_payment_settings_payment_paypal_live_mode']), //yes or no
+                // Stripe's own live-mode setting, like the key defaults above (it read PayPal's).
+                'default'      => ! empty( $this->better_payment_global_settings['better_payment_settings_payment_stripe_live_mode'] ) ? esc_html( $this->better_payment_global_settings['better_payment_settings_payment_stripe_live_mode'] ) : 'no', //yes or no
             ]
         );
         $widget->end_controls_section();
@@ -155,7 +161,7 @@ class Stripe_Integration extends Action_Base {
      */
     public function run( $record, $ajax_handler ) {
 		// $settings = $record->get( 'form_settings' );
-        $secret_key  = $record->get_form_settings( 'better_payment_stripe_secret_key' );
+        $secret_key  = GatewaySecrets::stripe_form_secret( $record->get_form_settings( 'better_payment_stripe_secret_key' ) );
         $post_data   = [];
         $header_info = array(
             'Authorization'  => 'Basic ' . base64_encode( $secret_key . ':' ),
@@ -164,8 +170,13 @@ class Stripe_Integration extends Action_Base {
 
         $sent_data = $record->get( 'sent_data' );
         $el_form_form_settings = $record->get('form_settings');
-        $page_id = $el_form_form_settings['form_post_id'] ? intval($el_form_form_settings['form_post_id']) : 0; 
-        $widget_id = $el_form_form_settings['id'] ? sanitize_text_field($el_form_form_settings['id']) : ''; 
+        $page_id = ! empty( $el_form_form_settings['form_post_id'] ) ? intval( $el_form_form_settings['form_post_id'] ) : 0;
+        $widget_id = ! empty( $el_form_form_settings['id'] ) ? sanitize_text_field( $el_form_form_settings['id'] ) : '';
+
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            $ajax_handler->add_error_message( PaymentRateLimiter::message() );
+            return false;
+        }
 
         if ( empty( $sent_data['payment_amount'] ) && empty( $sent_data['primary_payment_amount_radio'] ) ) {
             $ajax_handler->add_error_message( 'Amount field is required!' );
@@ -181,21 +192,29 @@ class Stripe_Integration extends Action_Base {
             return false;
         }
 
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        $invalid_email = PayerEmail::check( (array) $sent_data, array( 'email' ) );
+        if ( null !== $invalid_email ) {
+            $ajax_handler->add_error_message( $invalid_email->get_error_message() );
+            return false;
+        }
+
         $unit_amount = $guarded['unit_amount'];
         $quantity    = $guarded['quantity'];
         $amount      = $guarded['amount'];
 
         $order_id = Handler::new_order_id( 'stripe' );
+        $currency = sanitize_text_field( $record->get_form_settings( 'better_payment_form_stripe_currency' ) );
         $request  = [
             'success_url'                => add_query_arg( [
                 'better_payment_stripe_status' => 'success',
                 'better_payment_stripe_id'     => $order_id,
-                'better_payment_widget_id'     => sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] )
+                'better_payment_widget_id'     => $widget_id
             ], get_permalink() ),
             'cancel_url'                 => add_query_arg( [
                 'better_payment_error_status' => 'error',
                 'better_payment_stripe_id'    => $order_id,
-                'better_payment_widget_id'    => sanitize_text_field( $record->get( 'form_settings' )[ 'id' ] )
+                'better_payment_widget_id'    => $widget_id
             ], get_permalink() ),
             'locale'                     => 'auto',
             'payment_method_types'       => [ 'card' ],
@@ -207,9 +226,10 @@ class Stripe_Integration extends Action_Base {
             'line_items'                 => [
                 [
                     // Per unit: Stripe multiplies by `quantity` itself. Sending the
-                    // quantity-multiplied total here charged quantity² units.
-                    'amount'   => (int) round( $unit_amount * 100 ),
-                    'currency' => sanitize_text_field($record->get_form_settings( 'better_payment_form_stripe_currency' )),
+                    // quantity-multiplied total here charged quantity² units. Minor units for
+                    // the currency: a zero-decimal one (JPY, …) is not multiplied by 100.
+                    'amount'   => Handler::stripe_minor_amount( $unit_amount, $currency ),
+                    'currency' => $currency,
                     'name'     => sanitize_text_field( $record->get_form_settings( 'form_name' ) ),
                     'quantity' => $quantity
                 ]
@@ -254,10 +274,20 @@ class Stripe_Integration extends Action_Base {
             )
         );
 
-        $response_ar = json_decode( $response[ 'body' ] );
+        if ( is_wp_error( $response ) ) {
+            $ajax_handler->add_error_message( esc_html__( 'Could not connect to Stripe. Please try again.', 'better-payment' ) );
+            return false;
+        }
+
+        $response_ar = json_decode( wp_remote_retrieve_body( $response ) );
 
         if ( ! empty( $response_ar->error ) ) {
-            $ajax_handler->add_error_message( sanitize_text_field( $response_ar->error->message ) );
+            $ajax_handler->add_error_message( isset( $response_ar->error->message ) ? sanitize_text_field( $response_ar->error->message ) : esc_html__( 'Something went wrong!', 'better-payment' ) );
+            return false;
+        }
+
+        if ( empty( $response_ar->payment_intent ) ) {
+            $ajax_handler->add_error_message( esc_html__( 'Something went wrong!', 'better-payment' ) );
             return false;
         }
 

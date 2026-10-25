@@ -166,7 +166,7 @@ class CampaignAPI extends WP_REST_Controller {
         }
 
         $title       = sanitize_text_field( $request->get_param( 'title' ) ?: __( 'New Campaign', 'better-payment' ) );
-        $post_status = sanitize_text_field( $request->get_param( 'post_status' ) ?: 'draft' );
+        $post_status = self::sanitize_post_status( $request->get_param( 'post_status' ) ) ?: 'draft';
 
         $post_id = wp_insert_post( [
             'post_type'   => 'bp_campaign',
@@ -178,7 +178,20 @@ class CampaignAPI extends WP_REST_Controller {
             return new WP_REST_Response( [ 'message' => $post_id->get_error_message() ], 500 );
         }
 
-        MetaBox::save_from_array( $post_id, $request->get_params() );
+        /**
+         * Filters the meta a NEW campaign is created with. Runs on create only, never
+         * on update, so an add-on can give new campaigns a default without ever
+         * writing it onto an existing one. Pro starts new campaigns on its popup
+         * payment form this way.
+         *
+         * @param array           $params  Request params.
+         * @param WP_REST_Request $request The create request.
+         *
+         * @var mixed $params A listener may return anything; checked below.
+         */
+        $params = apply_filters( 'better_payment/campaign/create_params', $request->get_params(), $request );
+
+        MetaBox::save_from_array( $post_id, is_array( $params ) ? $params : $request->get_params() );
 
         return new WP_REST_Response( $this->prepare_campaign_response( get_post( $post_id ) ), 201 );
     }
@@ -211,8 +224,10 @@ class CampaignAPI extends WP_REST_Controller {
             $update['post_title'] = sanitize_text_field( $request->get_param( 'title' ) );
         }
 
-        if ( $request->get_param( 'post_status' ) ) {
-            $update['post_status'] = sanitize_text_field( $request->get_param( 'post_status' ) );
+        // An unknown status is ignored (the current one is kept), never stored.
+        $post_status = self::sanitize_post_status( $request->get_param( 'post_status' ) );
+        if ( '' !== $post_status ) {
+            $update['post_status'] = $post_status;
         }
 
         if ( count( $update ) > 1 ) {
@@ -276,6 +291,12 @@ class CampaignAPI extends WP_REST_Controller {
         }
 
         if ( $post->post_status !== 'publish' && ! current_user_can( 'manage_options' ) ) {
+            return $not_found;
+        }
+
+        // A password-protected campaign's figures are as locked as its page:
+        // only a visitor who has entered the password (or an admin) may read them.
+        if ( post_password_required( $post ) && ! current_user_can( 'manage_options' ) ) {
             return $not_found;
         }
 
@@ -354,6 +375,25 @@ class CampaignAPI extends WP_REST_Controller {
             return new WP_Error( 'unauthorized', 'Unauthorized', [ 'status' => 401 ] );
         }
         return true;
+    }
+
+    /**
+     * The post statuses the builder and the campaign list may set.
+     *
+     * The builder saves `publish` or `draft`, and "Save & exit" re-saves the
+     * campaign's current status, which may also be `pending` or `private`.
+     * Anything else (`future` needs a date, `trash` has its own route, and a
+     * typo or unregistered status would strand the campaign) is refused.
+     *
+     * @param mixed $value Raw `post_status` request param.
+     * @return string An allowed status, or '' when the value is not one.
+     */
+    public static function sanitize_post_status( $value ): string {
+        if ( ! is_string( $value ) ) {
+            return '';
+        }
+        $value = sanitize_key( $value );
+        return in_array( $value, [ 'publish', 'draft', 'pending', 'private' ], true ) ? $value : '';
     }
 
     private function valid_nonce( WP_REST_Request $request ): bool {

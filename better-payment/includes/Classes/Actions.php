@@ -68,6 +68,10 @@ class Actions {
             $this->redirect_previous_page();
         }
 
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            wp_die( esc_html( PaymentRateLimiter::message() ), esc_html__( 'Too many payment attempts', 'better-payment' ), array( 'response' => 429, 'back_link' => true ) );
+        }
+
         if ( empty( $el_settings[ 'better_payment_paypal_business_email' ] ) ) {
             $this->redirect_previous_page();
         }
@@ -100,10 +104,19 @@ class Actions {
             return;
         }
 
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        $invalid_email = PayerEmail::check( wp_unslash( $_POST ) );
+        if ( null !== $invalid_email ) {
+            PaymentRequestGuard::reject_form_post( $invalid_email );
+            return;
+        }
+
         $el_settings_currency        = $guarded['currency'];
         $el_settings_currency_symbol = $this->get_currency_symbol( esc_html($el_settings_currency) );
 
-        $primary_payment_amount          = $guarded['amount'];
+        // Rounded the way PayPal takes it (a quantity can multiply 0.1 into 0.30000000000000004),
+        // and stored as sent, since the IPN compares mc_gross against the stored amount.
+        $primary_payment_amount          = Handler::paypal_amount( $guarded['amount'], $el_settings_currency );
         $primary_payment_amount_quantity = $guarded['quantity'];
 
         $order_id = Handler::new_order_id( 'paypal' );
@@ -150,7 +163,7 @@ class Actions {
             'source' => 'paypal',
             'amount_quantity' => ! empty( $primary_payment_amount_quantity ) ? intval( $primary_payment_amount_quantity ) : '',
             'detailed_product_info' => maybe_serialize( $detailed_product_info ),
-            'paypal_business_email' => sanitize_email( $el_settings['better_payment_paypal_business_email'] ),
+            'paypal_business_email' => Handler::paypal_business_identifier( $el_settings['better_payment_paypal_business_email'] ),
             // The PayPal environment the order was sent to; the IPN must come from the same one.
             'paypal_mode'           => 'yes' === $el_settings['better_payment_paypal_live_mode'] ? 'live' : 'sandbox',
             // Persisted so the async PayPal IPN can rebuild the e-mail body + on/off toggle.
@@ -160,7 +173,11 @@ class Actions {
         // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
         $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
-        $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST) );
+        // Fields the form set win over what the visitor posts: a custom field the admin
+
+        // named like one of them ("Paypal Mode", "Amount") must not overwrite it.
+
+        $better_form_fields = $better_form_fields + $this->fetch_better_form_fields($el_settings, $_POST);
 
         if ( !empty( $better_form_fields[ 'primary_first_name' ] ) ) {
             $request_data[ 'primary_first_name' ] = sanitize_text_field( $better_form_fields[ 'primary_first_name' ] );
@@ -232,9 +249,13 @@ class Actions {
             wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
         }
 
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            wp_send_json_error( esc_html( PaymentRateLimiter::message() ) );
+        }
+
         $better_payment_keys = [
             'public_key' => 'yes' === sanitize_text_field( $el_settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $el_settings[ 'better_payment_stripe_public_key_live' ] ) : sanitize_text_field( $el_settings[ 'better_payment_stripe_public_key' ] ),
-            'secret_key' => 'yes' === sanitize_text_field( $el_settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $el_settings[ 'better_payment_stripe_secret_key_live' ] ) : sanitize_text_field( $el_settings[ 'better_payment_stripe_secret_key' ] ),
+            'secret_key' => Handler::stripe_secret_key( $el_settings ),
         ];
 
         // Amount, quantity, currency, price ids, coupon and campaign come from the stored
@@ -252,6 +273,13 @@ class Actions {
 
         if ( is_wp_error( $guarded ) ) {
             wp_send_json_error( esc_html( $guarded->get_error_message() ) );
+        }
+
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- PayerEmail only validates; nonce checked at the top of the handler.
+        $invalid_email = PayerEmail::check( isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [] );
+        if ( null !== $invalid_email ) {
+            wp_send_json_error( esc_html( $invalid_email->get_error_message() ) );
         }
 
         $amount             = $guarded['amount'];
@@ -299,7 +327,7 @@ class Actions {
             ],
             'line_items'                 => [
                 [
-                    'amount'   => (int) round( $amount * 100 ),
+                    'amount'   => Handler::stripe_minor_amount( $amount, $el_settings_currency ),
                     'currency' => $el_settings_currency,
                     'name'     => ! empty( $el_settings['better_payment_form_title'] ) ? esc_html( $el_settings['better_payment_form_title'] ) : esc_html__('Better Payment', 'better-payment'),
                     'quantity' => 1
@@ -354,8 +382,10 @@ class Actions {
         // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
         $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
+        // Fields the form set win over what the visitor posts: a custom field the admin
+        // named like one of them ("Paypal Mode", "Amount") must not overwrite it.
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
-        $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
+        $better_form_fields = $better_form_fields + $this->fetch_better_form_fields( $el_settings, isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? $_POST['fields'] : [] );
 
         if ( !empty( $better_form_fields['primary_first_name'] ) ) {
             $request[ 'customer_name' ] = $better_form_fields['primary_first_name'];
@@ -379,7 +409,7 @@ class Actions {
         }
 
         // Recurring, split-payment and mixed checkouts are Pro's: refused without Pro, built by
-        // Pro (or, for an older Pro, by Lite's transitional copy) — see PaymentEntitlement.
+        // Pro — see PaymentEntitlement.
         if ( PaymentEntitlement::is_pro_form( $el_settings ) ) {
             $checkout = PaymentEntitlement::stripe_checkout(
                 [
@@ -416,7 +446,11 @@ class Actions {
             )
         );
 
-        $response_ar = json_decode( $response[ 'body' ] );
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( esc_html__( 'Could not connect to Stripe. Please try again.', 'better-payment' ) );
+        }
+
+        $response_ar = json_decode( wp_remote_retrieve_body( $response ) );
 
         if ( ! empty( $response_ar->payment_intent ) || ( ! empty( $response_ar->mode ) && 'subscription' === $response_ar->mode ) ) {
             $campaign_id = $guarded['campaign_id'];
@@ -446,8 +480,8 @@ class Actions {
         } else {
             $error_message = 'Something went wrong!';
 
-            if (isset($response_ar->error)){
-                $error_message = sanitize_text_field($response_ar->error->message);
+            if ( isset( $response_ar->error->message ) ) {
+                $error_message = sanitize_text_field( $response_ar->error->message );
             }
 
             wp_send_json_error( $error_message );
@@ -486,6 +520,10 @@ class Actions {
             wp_send_json_error( esc_html(__( 'Setting Data is missing', 'better-payment' )) );
         }
 
+        if ( ! PaymentRateLimiter::allow( $page_id, $widget_id ) ) {
+            wp_send_json_error( esc_html( PaymentRateLimiter::message() ) );
+        }
+
         if ( empty( $el_settings[ 'better_payment_paystack_public_key' ] ) || empty( $el_settings[ 'better_payment_paystack_secret_key' ] ) ) {
             wp_send_json_error( esc_html(__( 'Paystack Key missing', 'better-payment' )) );
         }
@@ -504,6 +542,13 @@ class Actions {
 
         if ( is_wp_error( $guarded ) ) {
             wp_send_json_error( esc_html( $guarded->get_error_message() ) );
+        }
+
+        // A payer email that is not an address is refused, not stored as '' — see PayerEmail.
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- PayerEmail only validates; nonce checked at the top of the handler.
+        $invalid_email = PayerEmail::check( isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? wp_unslash( $_POST['fields'] ) : [] );
+        if ( null !== $invalid_email ) {
+            wp_send_json_error( esc_html( $invalid_email->get_error_message() ) );
         }
 
         $amount          = $guarded['amount'];
@@ -530,7 +575,7 @@ class Actions {
         $redirection_url_error      = get_permalink( $page_id );
 
         $request  = [
-            'amount'   => ( $amount * 100 ),
+            'amount'   => Handler::paystack_minor_amount( $amount ),
             'currency' => $el_settings_currency,
             'cart_id'  => $order_id,
             'callback_url'  => add_query_arg( [
@@ -571,8 +616,10 @@ class Actions {
         // Fields only Pro's forms store (layout 6's platform flags) — see PaymentEntitlement.
         $better_form_fields = PaymentEntitlement::transaction_fields( $better_form_fields, $el_settings );
 
+        // Fields the form set win over what the visitor posts: a custom field the admin
+        // named like one of them ("Paypal Mode", "Amount") must not overwrite it.
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- fetch_better_form_fields() sanitizes each field it keeps; not unslashed here to keep the stored values byte-identical. Nonce checked at the top of the handler.
-        $better_form_fields = array_merge( $better_form_fields, $this->fetch_better_form_fields($el_settings, $_POST['fields']) );
+        $better_form_fields = $better_form_fields + $this->fetch_better_form_fields( $el_settings, isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? $_POST['fields'] : [] );
 
         if ( !empty( $better_form_fields['primary_email'] ) ) {
             $request[ 'email' ] = $better_form_fields['primary_email'];
@@ -601,13 +648,17 @@ class Actions {
             )
         );
 
-        $response_ar = json_decode( $response[ 'body' ] );
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( esc_html__( 'Could not connect to Paystack. Please try again.', 'better-payment' ) );
+        }
+
+        $response_ar = json_decode( wp_remote_retrieve_body( $response ) );
 
         if( empty( $response_ar->status ) || empty( $response_ar->data ) ){
-            $error_message = $response_ar->message ? sanitize_text_field($response_ar->message) : 'Something went wrong!';
+            $error_message = ! empty( $response_ar->message ) ? sanitize_text_field( $response_ar->message ) : 'Something went wrong!';
 
-            if (isset($response_ar->error)){
-                $error_message = sanitize_text_field($response_ar->error->message);
+            if ( isset( $response_ar->error->message ) ) {
+                $error_message = sanitize_text_field( $response_ar->error->message );
             }
 
             wp_send_json_error( $error_message );

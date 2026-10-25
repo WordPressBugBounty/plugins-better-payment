@@ -1,3 +1,5 @@
+import { buildPrintDocument } from './_print-document';
+
 ( function ( $ ) {
 	$( document ).on(
 		'change',
@@ -186,22 +188,11 @@
 			.filter( Boolean )
 			.join( '\n' );
 
-		// Write to iframeElement document
+		// Write to iframeElement document. DOM APIs only: see _print-document.js.
 		const doc =
 			iframeElement.contentDocument ||
 			iframeElement.contentWindow.document;
-		doc.write( `
-            <html>
-                <head>
-                    <title>${ document.title }</title>
-                    <style>${ styles }</style>
-                </head>
-                <body>
-                    ${ element.outerHTML }
-                </body>
-            </html>
-        ` );
-		doc.close();
+		buildPrintDocument( doc, element, document.title, styles );
 
 		// Print and remove iframeElement
 		iframeElement.contentWindow.focus();

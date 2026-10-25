@@ -119,6 +119,6 @@ if ( $is_payment_type_stripe ) {
     $stripe_price_details = $bp_helper_obj->get_stripe_price_details( $payment_source_stripe_price_id, $stripe_secret_key );
 
     if ( ! empty( $stripe_price_details ) ) {
-        $product_price = ! empty( $stripe_price_details['unit_amount'] ) ? floatval( $stripe_price_details['unit_amount'] ) / 100 : '';
+        $product_price = ! empty( $stripe_price_details['unit_amount'] ) ? \Better_Payment\Lite\Classes\Handler::stripe_major_amount( $stripe_price_details['unit_amount'], $stripe_price_details['currency'] ?? '' ) : '';
     }
 }

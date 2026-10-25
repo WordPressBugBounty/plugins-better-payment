@@ -273,6 +273,11 @@ class Assets extends Controller
                 'business_email_is_required' => __('Business Email is required', 'better-payment'),
                 'payment_amount_field_is_required' => __('Payment Amount field is required', 'better-payment'),
                 'minimum_amount_is_one' => __('Minimum amount is 1', 'better-payment'),
+                /* translators: %s: The smallest amount the form accepts. */
+                'minimum_amount_is' => __('Minimum amount is %s', 'better-payment'),
+                /* translators: %s: The largest amount the form accepts. */
+                'maximum_amount_is' => __('Maximum amount is %s', 'better-payment'),
+                'invalid_email' => __('Please enter a valid email address', 'better-payment'),
                 'something_went_wrong' => __('Something went wrong', 'better-payment'),
                 'paypal_payment_timeout' => __('Payment verification timed out. Please contact support if your payment was charged.', 'better-payment'),
             ],

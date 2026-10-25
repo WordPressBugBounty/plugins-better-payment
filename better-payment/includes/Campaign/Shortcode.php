@@ -33,6 +33,13 @@ class Shortcode extends Controller {
             return '';
         }
 
+        // A password-protected campaign is locked everywhere it is embedded. The
+        // password form belongs on the campaign's own page (single-bp_campaign.php);
+        // an embed renders nothing until the visitor has unlocked it there.
+        if ( post_password_required( $post ) ) {
+            return '';
+        }
+
         $this->enqueue_frontend_styles();
         $this->enqueue_frontend_scripts();
 

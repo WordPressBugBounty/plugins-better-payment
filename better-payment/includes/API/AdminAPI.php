@@ -1125,7 +1125,9 @@ class AdminAPI extends WP_REST_Controller
             if (!empty($referer_page_id)) {
                 $referer_data['page_title'] = get_the_title($referer_page_id);
                 $referer_data['page_link'] = get_permalink($referer_page_id);
-                $referer_data['site_logo'] = wp_get_attachment_image_src(get_theme_mod('custom_logo'), 'full')[0];
+                // false without a custom logo; indexing it raised a warning in the REST response.
+                $site_logo = wp_get_attachment_image_src((int) get_theme_mod('custom_logo'), 'full');
+                $referer_data['site_logo'] = is_array($site_logo) ? $site_logo[0] : '';
                 $referer_data['site_name'] = get_bloginfo('name');;
             }
 
@@ -1212,9 +1214,33 @@ class AdminAPI extends WP_REST_Controller
             return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
         }
 
+        /** @var mixed $settings null for a non-JSON body, a scalar for a JSON scalar. */
+        $settings = $request->get_json_params();
+
+        // A body that is not a JSON object (no body, form-encoded, a bare string) used
+        // to reach update_option() as null and wipe every setting.
+        if (!is_array($settings)) {
+            return new WP_Error('invalid_settings', __('Settings must be sent as a JSON object.', 'better-payment'), ['status' => 400]);
+        }
+
+        // A JSON list (`["a","b"]`) decodes to an array too, and its numeric keys used
+        // to be merged into the option as settings named 0, 1, … No setting key is
+        // numeric, so any integer key refuses the whole body and nothing is written.
+        // (SettingsKeyRepair strips numeric keys an older request already stored.)
+        foreach (array_keys($settings) as $key) {
+            if (is_int($key)) {
+                return new WP_Error('invalid_settings', __('Settings must be sent as a JSON object.', 'better-payment'), ['status' => 400]);
+            }
+        }
+
         try {
-            $settings = $request->get_json_params();
             $settings = $this->sanitize_settings($settings);
+
+            // Merge onto what is stored, so a partial body updates only the keys it
+            // names instead of replacing the whole option.
+            $stored = get_option('better_payment_settings', []);
+            $settings = array_merge(is_array($stored) ? $stored : [], $settings);
+
             $result = DB::update_settings($settings);
 
             return rest_ensure_response([
@@ -1363,7 +1389,7 @@ class AdminAPI extends WP_REST_Controller
         }
 
         // Extract price amount and currency
-        $amount = isset($price_details['unit_amount']) ? floatval($price_details['unit_amount']) / 100 : 0;
+        $amount = isset($price_details['unit_amount']) ? \Better_Payment\Lite\Classes\Handler::stripe_major_amount($price_details['unit_amount'], $price_details['currency'] ?? '') : 0;
         $currency = isset($price_details['currency']) ? strtoupper($price_details['currency']) : 'USD';
 
         return rest_ensure_response([
@@ -1424,14 +1450,16 @@ class AdminAPI extends WP_REST_Controller
         // would collapse them. The AI system prompt is multi-line free text.
         $multiline_keys = apply_filters('better_payment_settings_multiline_keys', array(
             'better_payment_settings_ai_system_prompt',
+            // E-mail bodies are written in a textarea; keep their line breaks.
+            'better_payment_settings_general_email_message_admin',
+            'better_payment_settings_general_email_message_customer',
         ));
 
         foreach ($settings as $key => $value) {
-            if (in_array($key, $multiline_keys, true)) {
-                $settings[$key] = sanitize_textarea_field($value);
-                continue;
-            }
-            $settings[$key] = sanitize_text_field($value);
+            $callback = in_array($key, $multiline_keys, true) ? 'sanitize_textarea_field' : 'sanitize_text_field';
+
+            // sanitize_text_field() turns an array into '' — sanitize each leaf instead.
+            $settings[$key] = is_array($value) ? map_deep($value, $callback) : call_user_func($callback, $value);
         }
         return $settings;
     }

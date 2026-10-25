@@ -72,6 +72,36 @@ const PRO_CONTENT = {
 			__( 'Increase engagement and time on page', 'better-payment' ),
 		],
 	},
+	// The Donate Button's "Payment Form" choice (DonationModeLock.js).
+	popup_form: {
+		label: __( 'Popup Payment Form', 'better-payment' ),
+		tagline: __(
+			'Let donors give without leaving the campaign.',
+			'better-payment'
+		),
+		description: __(
+			'The Donate button opens a payment form right on the campaign page. No separate donation page to build, and one step less for every donor.',
+			'better-payment'
+		),
+		benefits: [
+			__(
+				'Build the form in the Donate Button settings — no extra page',
+				'better-payment'
+			),
+			__(
+				'Choose and reorder the fields donors fill in',
+				'better-payment'
+			),
+			__(
+				'Stripe, PayPal and Paystack from your Better Payment settings',
+				'better-payment'
+			),
+			__(
+				'Donors return to the campaign and see their receipt there',
+				'better-payment'
+			),
+		],
+	},
 };
 
 const GENERIC = {
