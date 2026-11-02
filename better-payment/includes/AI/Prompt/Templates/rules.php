@@ -18,6 +18,7 @@ $today = current_time( 'Y-m-d' );
 
 return '## Rules
 - Only use the element types and setting keys listed above. Never invent new types or keys.
+- **Widget style settings are not yours.** Colours, hover colours, borders, corner radius, shadows, padding and margin on a widget are set by the user in the builder\'s Style tab and are not in the key lists above. Never invent a key for them, and never say you changed one. Only the keys listed above (including typography, where listed) and `set_colors` change appearance, and `set_colors` repaints the whole page, so it is never a way to style one widget.
 - **Each element\'s `Content:` line is binding.** It says what that widget\'s content is for, and
   content written for the wrong widget is wrong even when the key accepts it. Two elements sharing
   a key name (several have a `headline`) do not share a purpose — write each one for its own job.

@@ -21,14 +21,6 @@ if (!defined('ABSPATH')) {
 class DB {
 
     /**
-     * Helper's counting rule (an unconfirmed pre-2.4.0 `no_payment_required` row is not counted; a
-     * confirmed one adds 0), aliased so the two deprecated queries below spell it `self::…` exactly
-     * as Pro's AnalyticsModel copies do (AnalyticsModelParityTest compares the bodies).
-     */
-    private const COUNTED_ROW_SQL      = Helper::COUNTED_ROW_SQL;
-    private const COUNTABLE_AMOUNT_SQL = Helper::COUNTABLE_AMOUNT_SQL;
-
-    /**
      * The settings key of E-commerce > Subscription > Role After Subscription Ends.
      */
     const INACTIVE_ROLE_KEY = 'better_payment_settings_ecommerce_subscription_inactive_role';
@@ -137,10 +129,8 @@ class DB {
             'better_payment_settings_payment_paypal_live_mode' => 'no',
             'better_payment_settings_payment_paypal_email' => '',            
             'better_payment_settings_opt_in' => '',
-            'better_payment_settings_payment_paypal_live_client_id' => '',
-            'better_payment_settings_payment_paypal_test_client_id' => '',
-            'better_payment_settings_payment_paypal_live_secret' => '',
-            'better_payment_settings_payment_paypal_test_secret' => '',
+            // The PayPal refund credentials are Pro's (only Pro's refunds read them): Pro adds
+            // the four keys on this filter, and Lite's transitional copy adds them for Pro 1.4.6 and older.
             'better_payment_settings_payment_stripe_live_mode' => 'no',
             'better_payment_settings_payment_stripe_live_public' => '',
             'better_payment_settings_payment_stripe_live_secret' => '',
@@ -187,10 +177,13 @@ class DB {
      */
     public static function get_settings($name = '')
     {
-        $settings = get_option('better_payment_settings', true);
+        $settings = get_option('better_payment_settings', []);
         $default = self::default_settings();
 
-        $settings = wp_parse_args($settings, $default);
+        // Never hand wp_parse_args() a non-array: it parses a scalar as a query string,
+        // so `true` became a numeric key, the Settings page posted that key back, and
+        // POST /settings refused every save on a site that never saved settings.
+        $settings = wp_parse_args(is_array($settings) ? $settings : [], $default);
         $settings = self::resolve_legacy_inactive_role($settings);
 
         if (!empty($name) && isset($settings[$name])) {
@@ -804,97 +797,44 @@ class DB {
     }
 
     /**
-     * Get transactions amount
+     * A fatal guard for Better Payment Pro 1.4.3 and older, whose AnalyticsModel called it.
      *
-     * Lite never calls this; Better Payment Pro <= 1.4.3's AnalyticsModel does, and
-     * tests/Unit/ProCouplingContractTest.php pins it. Pro 1.4.4 carries its own copy
-     * (better-payment-pro/includes/Models/AnalyticsModel.php).
+     * Holds no analytics query: that is Pro's (Pro 1.4.4+ runs its own, in
+     * better-payment-pro/includes/Models/AnalyticsModel.php). It only keeps the method a Pro
+     * 1.4.3 still names, so a site that updated Lite first gets an empty Analytics screen — Pro
+     * 1.4.3 is unsupported and the update notice says so — instead of a fatal error.
+     * tests/Unit/ProCouplingContractTest.php pins it.
      *
-     * @deprecated 2.4.0 A fatal guard only: Pro 1.4.3 is unsupported since
-     *             ProCompatibility::MIN_PRO_VERSION 1.4.4, but a site that updates Lite
-     *             first must not fatal on Pro's Analytics screen. Delete once no
-     *             supported site can run Pro 1.4.3.
+     * @deprecated 2.4.0 Delete once no supported site can run Pro 1.4.3.
      *
-     * @return array
+     * @return array Always [].
      * @since 0.0.1
      */
-    public function get_transactions_by_statuses($statuses = array(), $payment_date_from = '', $payment_date_to = '', $fetchNull=0) {
-        global $wpdb;
-
-        $table = DB::get_table_name();
-        $allowed_statuses = $this->allowed_statuses('all', 'v2');
-        
-        $nullDataQuery = $fetchNull ? " OR status IS NULL " : '';
-
-        $statuses = is_array($statuses) && count($statuses) ? $statuses : $allowed_statuses;
-
-        #ToDo: Consider currency while calculating total amount
-        $statuses = array_map(function($status) use ($allowed_statuses) {
-            if(!in_array($status, $allowed_statuses)) {
-                return false;
-            }
-
-            return "'" . esc_sql($status) . "'";
-        }, $statuses);
-
-        $statuses = implode(',', $statuses);
-
-        if(!empty($payment_date_from) && !empty($payment_date_to)){
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
-            $amount = $wpdb->get_results(
-                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
-            );
-        } else if(!empty($payment_date_from) && empty($payment_date_to)){
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
-            $amount = $wpdb->get_results(
-                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date >= '" . esc_sql($payment_date_from) . "'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
-            );
-        } else {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
-            $amount = $wpdb->get_results(
-                "SELECT " . self::COUNTABLE_AMOUNT_SQL . " AS amount, payment_date, email FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
-            );
-        }
-
-        return $amount;
+    public function get_transactions_by_statuses($statuses = array(), $payment_date_from = '', $payment_date_to = '', $fetchNull=0) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- the signature Pro 1.4.3 calls.
+        return array();
     }
 
     /**
      * Get transactions amount
      *
      * Lite's caller, get_transactions_analytics_dashboard(), always passes
-     * $filtered_transactions and is answered from that array. Without it the answer
-     * comes from SQL, which only Better Payment Pro <= 1.4.3's AnalyticsModel asks
-     * for — see transactions_amount_by_statuses_query().
+     * $filtered_transactions and is answered from that array. Without it the answer is
+     * 0 — the call shape only Better Payment Pro <= 1.4.3's AnalyticsModel used, kept as
+     * a fatal guard (ProCouplingContractTest).
      *
      * @return mixed
      * @since 0.0.1
      */
     public function get_transactions_amount_by_statuses($statuses = array(), $payment_date_from = '', $payment_date_to = '', $count_or_amount = 'amount', $fetchNull=0, $filtered_transactions = array() ) {
-        $allowed_statuses = $this->allowed_statuses('all', 'v2');
-        
-        $nullDataQuery = $fetchNull ? " OR status IS NULL " : '';
-        
-        $statuses = is_array($statuses) && count($statuses) ? $statuses : $allowed_statuses;
-        $statuses_original = $statuses;
-
-        #ToDo: Consider currency while calculating total amount
-        $statuses = array_map(function($status) use ($allowed_statuses) {
-            if(!in_array($status, $allowed_statuses)) {
-                return false;
-            }
-
-            return "'" . esc_sql($status) . "'";
-        }, $statuses);
-
-        $statuses = implode(',', $statuses);
+        $allowed_statuses  = $this->allowed_statuses('all', 'v2');
+        $statuses_original = is_array($statuses) && count($statuses) ? $statuses : $allowed_statuses;
 
         if( is_array($filtered_transactions) && count($filtered_transactions) ){
             $filtered_transactions_by_statuses = array();
             $filtered_transactions_amount = 0;
             
             foreach($filtered_transactions as $filtered_transaction) {
-                // Helper's counting rule, as the SQL copies below apply it: an unconfirmed pre-2.4.0
+                // Helper's counting rule: an unconfirmed pre-2.4.0
                 // free checkout is no transaction to count, and a confirmed one adds 0.
                 if ( Helper::is_unconfirmed_legacy_free_checkout( $filtered_transaction ) ) {
                     continue;
@@ -916,52 +856,9 @@ class DB {
             }
         }
 
-        return $this->transactions_amount_by_statuses_query( $statuses, $nullDataQuery, $payment_date_from, $payment_date_to, $count_or_amount );
-    }
-
-    /**
-     * The SQL count or sum behind get_transactions_amount_by_statuses() when no
-     * filtered transactions are passed.
-     *
-     * @deprecated 2.4.0 A fatal guard only, for Better Payment Pro <= 1.4.3 (see
-     *             get_transactions_by_statuses()). Pro 1.4.4 carries its own copy in
-     *             better-payment-pro/includes/Models/AnalyticsModel.php.
-     *
-     * @param string $statuses          Quoted, comma-separated statuses for IN().
-     * @param string $nullDataQuery     " OR status IS NULL " or ''.
-     * @param string $payment_date_from Lower payment_date bound.
-     * @param string $payment_date_to   Upper payment_date bound.
-     * @param string $count_or_amount   'count' or 'amount'.
-     * @return mixed
-     */
-    private function transactions_amount_by_statuses_query( $statuses, $nullDataQuery, $payment_date_from, $payment_date_to, $count_or_amount ) {
-        global $wpdb;
-
-        $table = DB::get_table_name();
-
-        if($count_or_amount == 'count') {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
-            $count = (int) $wpdb->get_var(
-                "SELECT count(id) FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . " ) AND " . self::COUNTED_ROW_SQL // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
-            );
-
-            return $count;
-        }
-
-        if(!empty($payment_date_from) && !empty($payment_date_to)){
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
-            $amount = $wpdb->get_var(
-                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL . " AND payment_date BETWEEN '" . esc_sql($payment_date_from) . "' AND '" . esc_sql($payment_date_to) . "'" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
-            );
-        }else {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
-            $amount = $wpdb->get_var(
-                // #TODO Amount based on filtered transactions
-                "SELECT sum(" . self::COUNTABLE_AMOUNT_SQL . ") FROM $table WHERE ( status IN (" . $statuses . ") " . esc_sql($nullDataQuery) . ") AND " . self::COUNTED_ROW_SQL // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared -- table name from $wpdb->prefix; $statuses whitelisted and esc_sql()-quoted, dates esc_sql()-escaped, the rest Helper constants.
-            );
-        }
-
-        return $amount;
+        // Without a list there is nothing to count. Only Better Payment Pro 1.4.3 and older asked
+        // that (its AnalyticsModel, answered from SQL until 2.4.4); Pro 1.4.4+ runs its own query.
+        return 0;
     }
 
     public static function mark_as_completed($id)

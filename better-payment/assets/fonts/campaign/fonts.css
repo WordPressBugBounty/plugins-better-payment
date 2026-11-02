@@ -1,0 +1,46 @@
+/*
+ * Better Payment — campaign template typefaces.
+ *
+ * Self-hosted on purpose: a font request to a third-party host would send every
+ * visitor's IP address to it, and WordPress.org does not allow a plugin to load
+ * one without consent. All three faces are variable (one file covers every weight),
+ * Latin subset only; any other script falls back to the system stack named in
+ * the theme's font token.
+ *
+ * The family names carry a "BP" prefix so they can never collide with, or be
+ * replaced by, a same-named font a site theme registers.
+ *
+ * Inter — SIL Open Font License 1.1, LICENSE-Inter.txt.
+ * Fraunces — SIL Open Font License 1.1, LICENSE-Fraunces.txt.
+ * Plus Jakarta Sans — SIL Open Font License 1.1, LICENSE-PlusJakartaSans.txt.
+ *
+ * Loaded by Campaign\CampaignStyles. @font-face downloads nothing until a rule
+ * uses the family, so a campaign on a theme that does not pays for one small
+ * stylesheet and no font file.
+ */
+@font-face {
+	font-family: "BP Inter";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url(inter-latin-wght.woff2) format("woff2-variations"), url(inter-latin-wght.woff2) format("woff2");
+	unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: "BP Fraunces";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url(fraunces-latin-wght.woff2) format("woff2-variations"), url(fraunces-latin-wght.woff2) format("woff2");
+	unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: "BP Jakarta";
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url(jakarta-latin-wght.woff2) format("woff2-variations"), url(jakarta-latin-wght.woff2) format("woff2");
+	unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}

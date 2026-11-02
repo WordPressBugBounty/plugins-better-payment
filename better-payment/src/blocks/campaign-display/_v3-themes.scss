@@ -1,0 +1,1765 @@
+// ══ v3 template themes ════════════════════════════════════════════════════════
+//
+// The third generation of prebuilt campaign designs. Imported at the end of
+// style.scss, so it shares its cascade position with the v2 section and wins
+// over the base rules by specificity alone (every rule here is scoped to a
+// `.bp-campaign.bp-v3-*` class).
+//
+// Why a new generation instead of polishing v2: a theme class is LIVE FOREVER.
+// RendererService resolves `theme_class` from the template registry on every
+// page view, by the key stored on the campaign, so editing a `bp-v2-*` block
+// would restyle every campaign ever built from that template, on live pages,
+// with nothing to roll back to. The v2 templates are therefore frozen and
+// `hidden`, and the new designs ship under new keys (`*-v3`) with new classes.
+// The same rule now applies to these: once a `bp-v3-*` design is released, add a
+// `-v4` rather than reopen it.
+//
+// What v3 adds over v2:
+//
+//  - Real typography. A self-hosted display serif ("BP Fraunces") and text sans
+//    ("BP Inter"), loaded by Campaign\CampaignStyles from assets/fonts/campaign/.
+//    Every family token ends in a system stack, so a font that fails to load
+//    degrades to v2's look rather than to Times.
+//  - The ask is one object. The column holding the Donate button becomes a
+//    single raised panel (progress, figures, amounts, button) instead of five
+//    loose cards — the one place on the page that should look operable.
+//  - Figures carry icons, drawn in CSS from the tile's own modifier class
+//    (`.bp-summary-item--raised|donors|percent|days`), so no markup or setting
+//    is needed and a frozen theme never sees them.
+//  - The progress fill is built from `--bp-progress-color`, the author's own
+//    fill colour, so a gradient and glow follow a colour changed in the builder.
+//
+// Rules carried over from v2, and enforced by CampaignThemeV3StylesTest:
+//
+//  1. NO POSITIONAL SELECTORS on elements. Style what an element IS, never where
+//     it SITS: an author adding, deleting or reordering elements must not knock
+//     the design out. Column geometry is the one exception (a column's place is
+//     structure), exactly as in v2.
+//  2. Every theme declares the full token set. A missing custom property drops
+//     its declaration silently.
+//  3. An accent carries white text at 4.5:1; a light one must restate the
+//     button label.
+//  4. Motion is decoration: everything that moves stops under
+//     `prefers-reduced-motion`.
+//  5. No `transform` on `.bp-element-wrap` or anything that sizes it. The builder
+//     canvas re-measures element boxes when one resizes or a font swaps in, but a
+//     transform moves a box without resizing anything, so an entrance animation
+//     would leave every hotspot where the element started.
+//
+// Adding a theme = one token block below + one selector in each list marked
+// "every v3 theme".
+
+// ── Icons ────────────────────────────────────────────────────────────────────
+// Drawn for this file (24px grid, 2px stroke), used as CSS masks so they take
+// the theme's accent colour. Inline data URIs: no request, and nothing for the
+// build to resolve.
+$bp-v3-icon-raised: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20.5s-7.5-4.6-7.5-10.4A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 7.5 2.5c0 5.8-7.5 10.4-7.5 10.4z'/%3E%3C/svg%3E");
+$bp-v3-icon-donors: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2.5 20a6.5 6.5 0 0 1 13 0'/%3E%3Cpath d='M16 4.6a3.5 3.5 0 0 1 0 6.8'/%3E%3Cpath d='M21.5 20a6.5 6.5 0 0 0-3.8-5.9'/%3E%3C/svg%3E");
+$bp-v3-icon-percent: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Ccircle cx='12' cy='12' r='1.2'/%3E%3C/svg%3E");
+$bp-v3-icon-days: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3.2 2'/%3E%3C/svg%3E");
+$bp-v3-icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+$bp-v3-icon-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='M13 6l6 6-6 6'/%3E%3C/svg%3E");
+
+@keyframes bp-v3-fill {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@keyframes bp-v3-sheen {
+	0% {
+		transform: translateX(-120%);
+	}
+	60%,
+	100% {
+		transform: translateX(320%);
+	}
+}
+
+// ── Per-theme tokens ─────────────────────────────────────────────────────────
+// `--bp-v3-accent` mirrors the template's `preview_color` in PHP, which
+// APPLY_TEMPLATE copies into `bpc_color_primary` — the progress fill colour —
+// so the two must agree or the bar fights the page.
+
+// Refugee Relief Fund — "ember". Warm, humane, editorial: a serif masthead over
+// a cream page, terracotta for the one thing to press.
+.bp-campaign.bp-v3-charity {
+	--bp-v3-accent: #c2410c;
+	--bp-v3-accent-2: #ea580c;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #1c1917;
+	--bp-v3-muted: #57534e;
+	--bp-v3-page: #fffaf5;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #fff1e7;
+	--bp-v3-line: #f0e0d2;
+	--bp-v3-track: #ecd3c0;
+	--bp-v3-glow: rgba(194, 65, 12, 0.18);
+	--bp-v3-wash: rgba(234, 88, 12, 0.07);
+	--bp-v3-wash-2: rgba(194, 65, 12, 0.045);
+	--bp-v3-font-display: "BP Fraunces", Georgia, "Times New Roman", serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 22px;
+	--bp-v3-radius-sm: 14px;
+	--bp-v3-chip-radius: 14px;
+	--bp-v3-btn-radius: 14px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05),
+		0 2px 6px -2px rgba(28, 25, 23, 0.06);
+	--bp-v3-shadow-lg: 0 1px 2px rgba(28, 25, 23, 0.04),
+		0 12px 24px -12px rgba(28, 25, 23, 0.12),
+		0 32px 64px -32px rgba(124, 45, 18, 0.28);
+}
+
+// Child Healthcare Fund — "night". The one dark design: midnight page, glass
+// panel, sky light. Sky is too light to carry white, so everything painted in
+// the accent takes dark text (`--bp-v3-on-accent`).
+.bp-campaign.bp-v3-childcare {
+	--bp-v3-accent: #38bdf8;
+	--bp-v3-accent-2: #7dd3fc;
+	--bp-v3-on-accent: #082f49;
+	--bp-v3-ink: #f1f5f9;
+	--bp-v3-muted: #a8b6c8;
+	--bp-v3-page: #0b1222;
+	--bp-v3-surface: #111a2e;
+	--bp-v3-soft: #16223a;
+	--bp-v3-line: #24324c;
+	--bp-v3-track: #2a3a58;
+	--bp-v3-glow: rgba(56, 189, 248, 0.28);
+	--bp-v3-wash: rgba(56, 189, 248, 0.14);
+	--bp-v3-wash-2: rgba(129, 140, 248, 0.12);
+	--bp-v3-font-display: "BP Jakarta", "BP Inter", -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 22px;
+	--bp-v3-radius-sm: 14px;
+	--bp-v3-chip-radius: 999px;
+	--bp-v3-btn-radius: 999px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+	--bp-v3-shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.04),
+		0 30px 60px -30px rgba(0, 0, 0, 0.75);
+	--bp-v3-panel-bg: rgba(255, 255, 255, 0.05);
+	--bp-v3-panel-border: 1px solid rgba(255, 255, 255, 0.16);
+	--bp-v3-tile-bg: rgba(56, 189, 248, 0.08);
+	--bp-v3-chip-bg: rgba(255, 255, 255, 0.04);
+}
+
+// Emergency Disaster Relief — "urgent". White page, red, black type; square
+// corners, an uppercase call to action. The one design allowed to shout.
+.bp-campaign.bp-v3-relief {
+	--bp-v3-accent: #dc2626;
+	--bp-v3-accent-2: #b91c1c;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #18181b;
+	--bp-v3-muted: #3f3f46;
+	--bp-v3-page: #ffffff;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #fef2f2;
+	--bp-v3-line: #f0d4d4;
+	--bp-v3-track: #f5c7c7;
+	--bp-v3-glow: rgba(220, 38, 38, 0.2);
+	--bp-v3-wash: rgba(220, 38, 38, 0.06);
+	--bp-v3-wash-2: rgba(24, 24, 27, 0.03);
+	--bp-v3-font-display: "BP Jakarta", "BP Inter", -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 8px;
+	--bp-v3-radius-sm: 6px;
+	--bp-v3-chip-radius: 6px;
+	--bp-v3-btn-radius: 6px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.06);
+	--bp-v3-shadow-lg: 0 18px 40px -24px rgba(24, 24, 27, 0.35);
+	--bp-v3-btn-transform: uppercase;
+	--bp-v3-btn-track: 0.08em;
+}
+
+// Medical Emergency Fund — "clinical". A chart, not a poster: outlines and
+// hairlines, no shadow anywhere, figures as a labelled table. "No shadow" is
+// `0 0 #0000`, never `none`: the shadow tokens are also used inside shadow
+// LISTS, where `none` makes the whole declaration invalid.
+.bp-campaign.bp-v3-medical {
+	--bp-v3-accent: #0f766e;
+	--bp-v3-accent-2: #115e59;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #0f172a;
+	--bp-v3-muted: #475569;
+	--bp-v3-page: #f8fbfb;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #eef6f5;
+	--bp-v3-line: #d5e4e2;
+	--bp-v3-track: #c9dfdb;
+	--bp-v3-glow: rgba(15, 118, 110, 0.18);
+	--bp-v3-wash: rgba(15, 118, 110, 0.05);
+	--bp-v3-wash-2: rgba(15, 23, 42, 0.03);
+	--bp-v3-font-display: "BP Inter", -apple-system, BlinkMacSystemFont,
+		"Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 12px;
+	--bp-v3-radius-sm: 10px;
+	--bp-v3-chip-radius: 10px;
+	--bp-v3-btn-radius: 10px;
+	--bp-v3-shadow-sm: 0 0 #0000;
+	--bp-v3-shadow-lg: 0 0 #0000;
+	--bp-v3-panel-border: 1.5px solid var(--bp-v3-line);
+	--bp-v3-tile-bg: var(--bp-v3-surface);
+}
+
+// Student Success Fund — "prospectus". Indigo into violet, soft rounded cards,
+// a gradient-edged panel. Optimistic and contemporary.
+.bp-campaign.bp-v3-education {
+	--bp-v3-accent: #4f46e5;
+	--bp-v3-accent-2: #7c3aed;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #1e1b4b;
+	--bp-v3-muted: #4c4a6a;
+	--bp-v3-page: #fafaff;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #f1f0ff;
+	--bp-v3-line: #e4e2fb;
+	--bp-v3-track: #d9d6fa;
+	--bp-v3-glow: rgba(79, 70, 229, 0.2);
+	--bp-v3-wash: rgba(124, 58, 237, 0.08);
+	--bp-v3-wash-2: rgba(79, 70, 229, 0.07);
+	--bp-v3-font-display: "BP Jakarta", "BP Inter", -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 26px;
+	--bp-v3-radius-sm: 18px;
+	--bp-v3-chip-radius: 999px;
+	--bp-v3-btn-radius: 999px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(30, 27, 75, 0.05),
+		0 4px 12px -6px rgba(30, 27, 75, 0.1);
+	--bp-v3-shadow-lg: 0 1px 2px rgba(30, 27, 75, 0.04),
+		0 24px 48px -24px rgba(79, 70, 229, 0.35);
+	--bp-v3-panel-border: 1.5px solid transparent;
+}
+
+// Elite Golf Club Membership — "club". Cream stationery, fairway green and a
+// gold hairline; a price list, not quick-give chips.
+.bp-campaign.bp-v3-golf {
+	--bp-v3-accent: #15803d;
+	--bp-v3-accent-2: #166534;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #14261a;
+	--bp-v3-muted: #4b5c50;
+	--bp-v3-page: #fbf8f1;
+	--bp-v3-surface: #fffdf8;
+	--bp-v3-soft: #f3eee1;
+	--bp-v3-line: #e4dcc6;
+	--bp-v3-track: #ddd2b4;
+	--bp-v3-glow: rgba(21, 128, 61, 0.18);
+	--bp-v3-wash: rgba(161, 98, 7, 0.06);
+	--bp-v3-wash-2: rgba(21, 128, 61, 0.05);
+	--bp-v3-font-display: "BP Fraunces", Georgia, "Times New Roman", serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 4px;
+	--bp-v3-radius-sm: 3px;
+	--bp-v3-chip-radius: 3px;
+	--bp-v3-btn-radius: 3px;
+	--bp-v3-shadow-sm: 0 0 #0000;
+	--bp-v3-shadow-lg: 0 20px 40px -28px rgba(20, 38, 26, 0.3);
+	--bp-v3-btn-transform: uppercase;
+	--bp-v3-btn-track: 0.16em;
+	--bp-v3-tile-bg: var(--bp-v3-surface);
+}
+
+// Animal Rescue Fund — "soft". Blush and rose, filled panels with no borders,
+// round everything. Friendly and unhurried.
+.bp-campaign.bp-v3-animal {
+	--bp-v3-accent: #be185d;
+	--bp-v3-accent-2: #9d174d;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #3f0c22;
+	--bp-v3-muted: #6b4453;
+	--bp-v3-page: #fff8fa;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #fdeef3;
+	--bp-v3-line: #f6d6e2;
+	--bp-v3-track: #f3c4d6;
+	--bp-v3-glow: rgba(190, 24, 93, 0.18);
+	--bp-v3-wash: rgba(190, 24, 93, 0.07);
+	--bp-v3-wash-2: rgba(251, 146, 60, 0.06);
+	--bp-v3-font-display: "BP Jakarta", "BP Inter", -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 30px;
+	--bp-v3-radius-sm: 22px;
+	--bp-v3-chip-radius: 999px;
+	--bp-v3-btn-radius: 999px;
+	--bp-v3-shadow-sm: 0 0 #0000;
+	--bp-v3-shadow-lg: 0 24px 48px -30px rgba(190, 24, 93, 0.35);
+	// A filled panel with no border must be visibly darker than the page, or its
+	// edge disappears and its inner padding reads as a wider right margin than
+	// the story column's left one (CampaignThemeV3StylesTest pins the contrast).
+	--bp-v3-panel-bg: #fadbe7;
+	--bp-v3-panel-border: 0 solid transparent;
+	--bp-v3-tile-bg: var(--bp-v3-surface);
+	--bp-v3-chip-bg: var(--bp-v3-surface);
+}
+
+// Tree Plantation Campaign — "grove". Sage page, deep emerald, large organic
+// radii and a serif voice. Growth, quietly.
+.bp-campaign.bp-v3-forest {
+	--bp-v3-accent: #047857;
+	--bp-v3-accent-2: #065f46;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #0f2e23;
+	--bp-v3-muted: #47615a;
+	--bp-v3-page: #f6faf7;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #e8f3ec;
+	--bp-v3-line: #d3e6da;
+	--bp-v3-track: #c6e0cf;
+	--bp-v3-glow: rgba(4, 120, 87, 0.18);
+	--bp-v3-wash: rgba(4, 120, 87, 0.08);
+	--bp-v3-wash-2: rgba(132, 204, 22, 0.06);
+	--bp-v3-font-display: "BP Fraunces", Georgia, "Times New Roman", serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 32px;
+	--bp-v3-radius-sm: 20px;
+	--bp-v3-chip-radius: 16px;
+	--bp-v3-btn-radius: 16px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(15, 46, 35, 0.05),
+		0 6px 16px -10px rgba(15, 46, 35, 0.15);
+	--bp-v3-shadow-lg: 0 1px 2px rgba(15, 46, 35, 0.04),
+		0 28px 56px -32px rgba(4, 120, 87, 0.4);
+}
+
+// AI-generated campaign — "studio". The AI chooses the campaign's colours, so
+// the accent FOLLOWS the campaign primary (`--bp-campaign-accent`, printed by the
+// renderer from `bpc_color_primary`) instead of fixing one; every other token is
+// a calm neutral that suits any hue. Indigo when no primary is set.
+.bp-campaign.bp-v3-ai {
+	--bp-v3-accent: var(--bp-campaign-accent, #4f46e5);
+	--bp-v3-accent-2: color-mix(in srgb, var(--bp-v3-accent) 76%, #000000);
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #111827;
+	--bp-v3-muted: #4b5563;
+	--bp-v3-page: #fbfbfd;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: color-mix(in srgb, var(--bp-v3-accent) 7%, #ffffff);
+	--bp-v3-line: #e5e7eb;
+	--bp-v3-track: color-mix(in srgb, var(--bp-v3-accent) 22%, #e5e7eb);
+	--bp-v3-glow: color-mix(in srgb, var(--bp-v3-accent) 22%, transparent);
+	--bp-v3-wash: color-mix(in srgb, var(--bp-v3-accent) 9%, transparent);
+	--bp-v3-wash-2: color-mix(in srgb, var(--bp-v3-accent) 5%, transparent);
+	--bp-v3-font-display: "BP Jakarta", "BP Inter", -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 22px;
+	--bp-v3-radius-sm: 14px;
+	--bp-v3-chip-radius: 14px;
+	--bp-v3-btn-radius: 14px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05),
+		0 4px 12px -6px rgba(17, 24, 39, 0.08);
+	--bp-v3-shadow-lg: 0 1px 2px rgba(17, 24, 39, 0.04),
+		0 24px 48px -28px rgba(17, 24, 39, 0.28);
+}
+
+// ── Pro v3 template themes: fallback tokens ──────────────────────────────────
+// The four Pro -v3 designs ship with Pro (its src/css/campaign-themes.scss). A
+// campaign built from one keeps its theme class after a licence lapses, and
+// without tokens every shared rule would read undefined custom properties. These
+// give that page a plain, readable v3 look instead — no Pro design. `:where()` has
+// zero specificity, so Pro's real token blocks always win.
+:where(
+		.bp-campaign.bp-v3-water,
+		.bp-campaign.bp-v3-fooddrive,
+		.bp-campaign.bp-v3-wildlife,
+		.bp-campaign.bp-v3-climate
+	) {
+	--bp-v3-accent: #334155;
+	--bp-v3-accent-2: #1e293b;
+	--bp-v3-on-accent: #ffffff;
+	--bp-v3-ink: #0f172a;
+	--bp-v3-muted: #475569;
+	--bp-v3-page: #fcfcfd;
+	--bp-v3-surface: #ffffff;
+	--bp-v3-soft: #f1f5f9;
+	--bp-v3-line: #e2e8f0;
+	--bp-v3-track: #d9dfe8;
+	--bp-v3-glow: rgba(51, 65, 85, 0.15);
+	--bp-v3-wash: rgba(51, 65, 85, 0.04);
+	--bp-v3-wash-2: rgba(51, 65, 85, 0.03);
+	--bp-v3-font-display: "BP Inter", -apple-system, BlinkMacSystemFont,
+		"Segoe UI", Roboto, sans-serif;
+	--bp-v3-font-body: "BP Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, sans-serif;
+	--bp-v3-radius: 18px;
+	--bp-v3-radius-sm: 12px;
+	--bp-v3-chip-radius: 12px;
+	--bp-v3-btn-radius: 12px;
+	--bp-v3-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+	--bp-v3-shadow-lg: 0 20px 40px -26px rgba(15, 23, 42, 0.3);
+}
+
+// ── Shared structure (every v3 theme) ────────────────────────────────────────
+// Optional variation tokens, each with a fallback here so a theme sets only what
+// it changes: --bp-v3-panel-bg / -panel-border / -panel-shadow (the ask panel),
+// --bp-v3-tile-bg (figure tiles), --bp-v3-chip-bg (amount tiles),
+// --bp-v3-btn-transform / --bp-v3-btn-track (the Donate button's case and
+// tracking).
+.bp-campaign.bp-v3-charity,
+.bp-campaign.bp-v3-childcare,
+.bp-campaign.bp-v3-relief,
+.bp-campaign.bp-v3-medical,
+.bp-campaign.bp-v3-education,
+.bp-campaign.bp-v3-golf,
+.bp-campaign.bp-v3-animal,
+.bp-campaign.bp-v3-forest,
+.bp-campaign.bp-v3-ai,
+.bp-campaign.bp-v3-water,
+.bp-campaign.bp-v3-fooddrive,
+.bp-campaign.bp-v3-wildlife,
+.bp-campaign.bp-v3-climate {
+	// The column gap is a variable because the split preset's half-widths are
+	// calculated from it; two hardcoded numbers drifting apart wraps a column.
+	--bp-v3-gap: 48px;
+	--bp-v3-tile-gap: 10px;
+
+	max-width: 1200px;
+	padding: 56px 44px 72px;
+	border-radius: var(--bp-v3-radius);
+	color: var(--bp-v3-muted);
+	font-family: var(--bp-v3-font-body);
+	font-size: 16px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	font-feature-settings: "cv11", "ss01";
+
+	// `clip`, not the base `hidden`: both stop a wide element scrolling the page
+	// sideways, but `hidden` makes the wrapper a scroll container, and a scroll
+	// container ends `position: sticky` for everything inside it — the ask panel
+	// below would never stick. Browsers without `clip` keep the base `hidden`.
+	overflow-x: clip;
+
+	// Two soft washes of the accent behind the masthead. Background IMAGES, so
+	// `bpc_color_background` (emitted as background-color with !important) can
+	// still repaint the surface under them.
+	background-color: var(--bp-v3-page);
+	background-image: radial-gradient(
+			70% 48% at 12% -6%,
+			var(--bp-v3-wash) 0%,
+			rgba(0, 0, 0, 0) 70%
+		),
+		radial-gradient(
+			60% 42% at 96% 4%,
+			var(--bp-v3-wash-2) 0%,
+			rgba(0, 0, 0, 0) 70%
+		);
+	background-repeat: no-repeat;
+
+	// Scoped box-sizing reset — the plugin never set one below the column, and a
+	// campaign is not entitled to assume the site theme's. Scoped rather than
+	// global so no frozen-theme campaign reflows.
+	&,
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	.bp-campaign-columns {
+		gap: var(--bp-v3-gap);
+	}
+
+	.bp-campaign-column {
+		gap: 32px;
+	}
+
+	&.bp-campaign--1-column .bp-campaign-column {
+		max-width: 860px;
+		margin: 0 auto;
+	}
+
+	&.bp-campaign--split {
+		@media (min-width: 681px) {
+			.bp-campaign-column:not(:first-child) {
+				width: calc(50% - var(--bp-v3-gap) / 2) !important;
+			}
+		}
+	}
+
+	// ── The ask panel ─────────────────────────────────────────────────────────
+	// The column that holds the Donate button is the ask, wherever the author
+	// put it and whatever the layout preset says: found by what it CONTAINS, so
+	// moving the button to the other column moves the panel with it. Never on a
+	// page with one column, where the "panel" would be the whole page. A browser
+	// without `:has()` renders the column unpanelled, as v2 did.
+	.bp-campaign-column:has(.bp-campaign-donate-wrap):not(:only-child) {
+		position: relative;
+		gap: 26px;
+		padding: 30px 28px 28px;
+		background: var(--bp-v3-panel-bg, var(--bp-v3-surface));
+		border: var(--bp-v3-panel-border, 1px solid var(--bp-v3-line));
+		border-radius: var(--bp-v3-radius);
+		box-shadow: var(--bp-v3-panel-shadow, var(--bp-v3-shadow-lg));
+
+		// A short accent rule along the top edge, inside the radius.
+		&::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 28px;
+			right: 28px;
+			height: 3px;
+			border-radius: 0 0 3px 3px;
+			background-image: linear-gradient(
+				90deg,
+				var(--bp-v3-accent-2),
+				var(--bp-v3-accent)
+			);
+		}
+
+		// Inside the panel every element is part of one surface, so the cards
+		// the shared rules give the organizer and the social blocks fold flat.
+		.bp-campaign-organizer,
+		.bp-social-sharing,
+		.bp-social-links {
+			background: transparent;
+			border: 0;
+			border-top: 1px solid var(--bp-v3-line);
+			border-radius: 0;
+			box-shadow: none;
+			padding: 22px 0 0;
+		}
+	}
+
+	@media (min-width: 901px) {
+		.bp-campaign-column:last-child:not(:first-child) {
+			position: sticky;
+			top: 28px;
+		}
+	}
+
+	// ── Type ──────────────────────────────────────────────────────────────────
+	// Size, weight and colour come from the template's own typography settings,
+	// emitted inline with !important, so this sets only what a setting cannot:
+	// the family, the measure and the wrapping.
+	.bp-campaign-title {
+		font-family: var(--bp-v3-font-display);
+		font-optical-sizing: auto;
+		text-wrap: balance;
+		overflow-wrap: break-word;
+		margin: 0;
+	}
+
+	.bp-campaign-description-headline {
+		font-family: var(--bp-v3-font-display);
+		text-wrap: balance;
+		margin: 0 0 14px;
+
+		// A short accent rule above the heading — the v3 mark, in place of v2's
+		// left bar.
+		&::before {
+			content: "";
+			display: block;
+			width: 36px;
+			height: 3px;
+			margin-bottom: 16px;
+			border-radius: 3px;
+			background-image: linear-gradient(
+				90deg,
+				var(--bp-v3-accent),
+				var(--bp-v3-accent-2)
+			);
+		}
+	}
+
+	.bp-campaign-description-content {
+		text-wrap: pretty;
+	}
+
+	// Micro-labels name a figure without competing with it.
+	.bp-summary-headline,
+	.bp-donate-headline,
+	.bp-progress-headline,
+	.bp-social-headline {
+		font-family: var(--bp-v3-font-body);
+		font-size: 12px;
+		font-weight: 650;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--bp-v3-muted);
+		margin: 0 0 14px;
+	}
+
+	// ── Photo ─────────────────────────────────────────────────────────────────
+	// `width` only: the renderer's inline `max-width` (the author's Width
+	// setting) still governs. The cap keeps a portrait from pushing the story
+	// below the fold on its own.
+	.bp-campaign-image {
+		width: 100% !important;
+		max-height: 460px;
+		object-fit: cover;
+		object-position: center;
+		border-radius: var(--bp-v3-radius);
+		box-shadow:
+			0 0 0 1px rgba(0, 0, 0, 0.04),
+			var(--bp-v3-shadow-lg);
+		display: block;
+	}
+
+	.bp-campaign-photo-placeholder {
+		border-radius: var(--bp-v3-radius);
+		background: var(--bp-v3-soft);
+	}
+
+	// ── Progress ──────────────────────────────────────────────────────────────
+	// The fill keeps its inline colour (the campaign primary); the gradient is
+	// built FROM it through `--bp-progress-color`, so a colour the author picks
+	// in the builder still drives the bar. The track has its own token: at 0%
+	// raised — every campaign's first day — it is the whole bar.
+	.bp-progress-bar-wrap {
+		position: relative;
+		height: 12px;
+		background: var(--bp-v3-track);
+		border-radius: 999px;
+		overflow: hidden;
+	}
+
+	.bp-progress-bar {
+		position: relative;
+		overflow: hidden;
+		border-radius: 999px;
+		transform-origin: left center;
+		background-image: linear-gradient(
+			90deg,
+			color-mix(
+				in srgb,
+				var(--bp-progress-color, var(--bp-v3-accent)) 62%,
+				#ffffff
+			),
+			var(--bp-progress-color, var(--bp-v3-accent))
+		);
+		box-shadow: 0 0 14px -2px color-mix(in srgb, var(
+						--bp-progress-color,
+						var(--bp-v3-accent)
+					)
+					55%, transparent);
+		animation: bp-v3-fill 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+		// A slow sheen across the fill. Inside the bar, which clips it, so it
+		// never touches the layout.
+		&::after {
+			content: "";
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			width: 40%;
+			background-image: linear-gradient(
+				90deg,
+				rgba(255, 255, 255, 0) 0%,
+				rgba(255, 255, 255, 0.45) 50%,
+				rgba(255, 255, 255, 0) 100%
+			);
+			animation: bp-v3-sheen 3.2s ease-in-out 1.2s infinite;
+		}
+	}
+
+	.bp-progress-labels {
+		margin-top: 12px;
+		font-size: 14px;
+		font-weight: 550;
+		color: var(--bp-v3-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.bp-progress-donated {
+		color: var(--bp-v3-ink);
+		font-weight: 700;
+	}
+
+	// ── Figures ───────────────────────────────────────────────────────────────
+	// A size container: a figure tile's room depends on the column it is in, not
+	// on the screen (a 32% sidebar at 1280px is narrower than a phone), so the
+	// compact rules below ask the summary, not the viewport.
+	.bp-campaign-summary {
+		gap: var(--bp-v3-tile-gap);
+		container: bp-figures / inline-size;
+	}
+
+	.bp-summary-item {
+		position: relative;
+		// Two to a row; an odd last tile takes the full row instead of leaving a
+		// hole. The width reads the gap variable — hardcoding both is what once
+		// stacked v2's mobile tiles one per line.
+		flex: 1 1 calc(50% - var(--bp-v3-tile-gap) / 2);
+		min-width: calc(50% - var(--bp-v3-tile-gap) / 2);
+		text-align: left;
+		padding: 16px 16px 15px;
+		background: var(--bp-v3-tile-bg, var(--bp-v3-soft));
+		border: 1px solid transparent;
+		border-radius: var(--bp-v3-radius-sm);
+
+		strong {
+			display: block;
+			font-family: var(--bp-v3-font-display);
+			font-size: 26px;
+			font-weight: 600;
+			line-height: 1.1;
+			letter-spacing: -0.02em;
+			color: var(--bp-v3-ink);
+			margin: 0 0 4px;
+			font-variant-numeric: tabular-nums lining-nums;
+		}
+
+		span {
+			font-size: 11px;
+			font-weight: 650;
+			letter-spacing: 0.1em;
+			color: var(--bp-v3-muted);
+		}
+
+		// The icon: a white disc (::before) with the glyph masked over it
+		// (::after) in the accent. Keyed on the tile's own modifier class, so a
+		// tile without one (an add-on's, or an older renderer's) simply has none.
+		&::before,
+		&::after {
+			position: absolute;
+			top: 14px;
+			right: 14px;
+		}
+
+		&::before {
+			width: 30px;
+			height: 30px;
+			border-radius: 50%;
+			background: var(--bp-v3-surface);
+			box-shadow: var(--bp-v3-shadow-sm);
+		}
+
+		&::after {
+			width: 16px;
+			height: 16px;
+			margin: 7px;
+			background-color: var(--bp-v3-accent);
+			-webkit-mask: var(--bp-v3-icon) center / contain no-repeat;
+			mask: var(--bp-v3-icon) center / contain no-repeat;
+		}
+	}
+
+	.bp-summary-item--raised,
+	.bp-summary-item--donors,
+	.bp-summary-item--percent,
+	.bp-summary-item--days {
+		padding-right: 52px;
+
+		&::before,
+		&::after {
+			content: "";
+		}
+	}
+
+	.bp-summary-item--raised {
+		--bp-v3-icon: #{$bp-v3-icon-raised};
+	}
+
+	.bp-summary-item--donors {
+		--bp-v3-icon: #{$bp-v3-icon-donors};
+	}
+
+	.bp-summary-item--percent {
+		--bp-v3-icon: #{$bp-v3-icon-percent};
+	}
+
+	.bp-summary-item--days {
+		--bp-v3-icon: #{$bp-v3-icon-days};
+	}
+
+	// Compact figures, declared after the tile rules they override (same
+	// specificity, so source order decides).
+	@container bp-figures (max-width: 400px) {
+		.bp-summary-item--raised,
+		.bp-summary-item--donors,
+		.bp-summary-item--percent,
+		.bp-summary-item--days {
+			padding-right: 40px;
+		}
+
+		.bp-summary-item {
+			strong {
+				font-size: 22px;
+			}
+
+			&::before {
+				top: 12px;
+				right: 12px;
+				width: 24px;
+				height: 24px;
+			}
+
+			&::after {
+				top: 12px;
+				right: 12px;
+				width: 13px;
+				height: 13px;
+				margin: 5.5px;
+			}
+		}
+	}
+
+	// Too narrow for a figure and an icon side by side: the icon goes.
+	@container bp-figures (max-width: 300px) {
+		.bp-summary-item--raised,
+		.bp-summary-item--donors,
+		.bp-summary-item--percent,
+		.bp-summary-item--days {
+			padding-right: 14px;
+
+			&::before,
+			&::after {
+				content: none;
+			}
+		}
+	}
+
+	// ── Amounts ───────────────────────────────────────────────────────────────
+	// Equal-width tiles on a grid rather than wrapping pills, so four amounts
+	// read as one choice. The radios are absolutely positioned (visually
+	// hidden), so they take no grid cell.
+	.bp-donate_amounts {
+		display: grid;
+		// 56px floor: four amounts sit on one row in a phone-width panel instead of
+		// wrapping three-and-an-orphan.
+		grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+		gap: 10px;
+	}
+
+	.bp-amount-label {
+		position: relative;
+		gap: 6px;
+		min-height: 52px;
+		padding: 12px 14px;
+		border: 1.5px solid var(--bp-v3-line);
+		border-radius: var(--bp-v3-chip-radius);
+		background: var(--bp-v3-chip-bg, var(--bp-v3-surface));
+		color: var(--bp-v3-ink);
+		font-size: 16px;
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+		box-shadow: var(--bp-v3-shadow-sm);
+		transition:
+			border-color 0.18s ease,
+			background-color 0.18s ease,
+			color 0.18s ease,
+			box-shadow 0.18s ease,
+			transform 0.18s ease;
+
+		// The check that appears on the chosen amount. Zero width until then,
+		// so the label's text stays centred.
+		&::before {
+			content: "";
+			width: 0;
+			height: 14px;
+			flex: 0 0 auto;
+			background-color: currentColor;
+			-webkit-mask: #{$bp-v3-icon-check} center / contain no-repeat;
+			mask: #{$bp-v3-icon-check} center / contain no-repeat;
+			transition: width 0.18s ease;
+		}
+
+		&:hover {
+			border-color: var(--bp-v3-accent);
+			color: var(--bp-v3-accent);
+			transform: translateY(-1px);
+		}
+	}
+
+	input.bp-option-amount:checked + .bp-amount-label {
+		border-color: transparent;
+		background-color: var(--bp-v3-accent);
+		background-image: linear-gradient(
+			135deg,
+			var(--bp-v3-accent-2),
+			var(--bp-v3-accent)
+		);
+		color: var(--bp-v3-on-accent);
+		box-shadow: 0 10px 22px -10px var(--bp-v3-accent);
+
+		&::before {
+			width: 14px;
+		}
+	}
+
+	.other_amount_section {
+		min-height: 52px;
+		border: 1.5px solid var(--bp-v3-line);
+		border-radius: var(--bp-v3-chip-radius);
+		background: var(--bp-v3-surface);
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
+
+		&:focus-within {
+			border-color: var(--bp-v3-accent);
+			box-shadow: 0 0 0 4px var(--bp-v3-glow);
+		}
+	}
+
+	.bp-amount-currency {
+		background: var(--bp-v3-soft);
+		border-right-color: var(--bp-v3-line);
+		color: var(--bp-v3-muted);
+		font-weight: 650;
+		padding: 0 16px;
+	}
+
+	.campaign-custom-amount {
+		color: var(--bp-v3-ink);
+		font-family: inherit;
+		font-size: 16px;
+		font-weight: 550;
+		padding: 14px;
+
+		&::placeholder {
+			color: var(--bp-v3-muted);
+			font-weight: 450;
+		}
+	}
+
+	.bp-min-donation-notice {
+		border-radius: var(--bp-v3-radius-sm);
+		background: var(--bp-v3-soft);
+		border-color: var(--bp-v3-line);
+		color: var(--bp-v3-muted);
+	}
+
+	// ── Donate button ─────────────────────────────────────────────────────────
+	// The colour is the element's own `button_color`, printed with !important in
+	// the campaign's scoped element styles (ElementStyleCompiler); everything here
+	// is a background-IMAGE layered over it, so the
+	// author's colour shows through and a changed colour needs no CSS change.
+	.bp-donate_btn {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		overflow: hidden;
+		min-height: 58px;
+		padding: 16px 28px;
+		border-radius: var(--bp-v3-btn-radius);
+		color: var(--bp-v3-on-accent);
+		font-family: var(--bp-v3-font-body);
+		font-size: 17px;
+		font-weight: 700;
+		text-transform: var(--bp-v3-btn-transform, none);
+		letter-spacing: var(--bp-v3-btn-track, -0.005em);
+		background-image: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.2) 0%,
+			rgba(255, 255, 255, 0) 52%,
+			rgba(0, 0, 0, 0.08) 100%
+		);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.25),
+			0 14px 28px -14px var(--bp-v3-accent),
+			0 4px 10px -6px rgba(0, 0, 0, 0.25);
+		transition:
+			transform 0.18s ease,
+			box-shadow 0.18s ease;
+
+		// Arrow after the label, nudged forward on hover.
+		&::after {
+			content: "";
+			width: 18px;
+			height: 18px;
+			flex: 0 0 auto;
+			background-color: currentColor;
+			-webkit-mask: #{$bp-v3-icon-arrow} center / contain no-repeat;
+			mask: #{$bp-v3-icon-arrow} center / contain no-repeat;
+			transition: transform 0.18s ease;
+		}
+
+		// A sheen that crosses the button once on hover.
+		&::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			width: 35%;
+			background-image: linear-gradient(
+				90deg,
+				rgba(255, 255, 255, 0) 0%,
+				rgba(255, 255, 255, 0.32) 50%,
+				rgba(255, 255, 255, 0) 100%
+			);
+			transform: translateX(-120%);
+			pointer-events: none;
+		}
+
+		&:hover,
+		&:focus {
+			opacity: 1;
+			color: var(--bp-v3-on-accent);
+			transform: translateY(-2px);
+			box-shadow:
+				inset 0 1px 0 rgba(255, 255, 255, 0.25),
+				0 20px 36px -16px var(--bp-v3-accent),
+				0 6px 14px -8px rgba(0, 0, 0, 0.3);
+
+			&::after {
+				transform: translateX(3px);
+			}
+
+			&::before {
+				animation: bp-v3-sheen 0.9s ease-out 1;
+			}
+		}
+
+		// Never lift a button that goes nowhere.
+		&.bp-donate_btn--no-url:hover,
+		&.bp-donate_btn--no-url:focus {
+			transform: none;
+		}
+	}
+
+	// ── Social ────────────────────────────────────────────────────────────────
+	.bp-social-sharing,
+	.bp-social-links {
+		background: var(--bp-v3-surface);
+		border: 1px solid var(--bp-v3-line);
+		border-radius: var(--bp-v3-radius);
+		padding: 22px 24px;
+		box-shadow: var(--bp-v3-shadow-sm);
+	}
+
+	.bp-social-icons {
+		gap: 10px;
+	}
+
+	.bp-social-icon {
+		width: 42px;
+		height: 42px;
+		border: 0;
+		background: var(--bp-v3-soft);
+		color: var(--bp-v3-ink);
+		transition:
+			background-color 0.18s ease,
+			color 0.18s ease,
+			transform 0.18s ease;
+
+		&:hover,
+		&:focus {
+			background: var(--bp-v3-accent);
+			color: var(--bp-v3-on-accent);
+			transform: translateY(-2px);
+		}
+	}
+
+	// ── Organizer ─────────────────────────────────────────────────────────────
+	.bp-campaign-organizer {
+		gap: 18px;
+		align-items: center;
+		background: var(--bp-v3-surface);
+		border: 1px solid var(--bp-v3-line);
+		border-radius: var(--bp-v3-radius);
+		padding: 24px 26px;
+		box-shadow: var(--bp-v3-shadow-sm);
+	}
+
+	.bp-organizer-avatar img {
+		width: 64px;
+		height: 64px;
+		object-fit: cover;
+		// A ring in the accent, separated from the photo by a white gap.
+		box-shadow:
+			0 0 0 3px var(--bp-v3-surface),
+			0 0 0 5px var(--bp-v3-accent);
+	}
+
+	.bp-organizer-name {
+		font-family: var(--bp-v3-font-display);
+		font-size: 19px;
+		font-weight: 600;
+		color: var(--bp-v3-ink);
+	}
+
+	.bp-organizer-role {
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		color: var(--bp-v3-accent);
+	}
+
+	.bp-organizer-description {
+		color: var(--bp-v3-muted);
+		font-size: 15px;
+		line-height: 1.6;
+	}
+
+	// Donors Wall, FAQ and Video are themed by Pro (src/css/campaign-themes.scss).
+
+	// ── Focus ─────────────────────────────────────────────────────────────────
+	input.bp-option-amount:focus-visible + .bp-amount-label,
+	.bp-donate_btn:focus-visible,
+	.bp-social-icon:focus-visible {
+		outline: 3px solid var(--bp-v3-accent);
+		outline-offset: 3px;
+	}
+
+	// ── Motion ────────────────────────────────────────────────────────────────
+	@media (prefers-reduced-motion: reduce) {
+		.bp-progress-bar,
+		.bp-progress-bar::after,
+		.bp-donate_btn::before {
+			animation: none;
+		}
+
+		.bp-campaign-askbar,
+		.bp-donate_btn,
+		.bp-donate_btn::after,
+		.bp-amount-label,
+		.bp-amount-label::before,
+		.bp-social-icon {
+			transition: none;
+		}
+
+		.bp-donate_btn:hover,
+		.bp-donate_btn:focus,
+		.bp-amount-label:hover,
+		.bp-social-icon:hover,
+		.bp-social-icon:focus {
+			transform: none;
+		}
+	}
+
+	// ── Mobile Donate bar ─────────────────────────────────────────────────────
+	// On a phone the ask sits below the whole story, so a fixed bar at the bottom
+	// of the screen carries a Donate link to it. fundraising-campaign.js hides it
+	// while the ask (or nothing of the campaign) is on screen; `inert` takes it
+	// out of the tab order with it. Wider screens see the ask beside the story.
+	@media (max-width: 680px) {
+		.bp-campaign-askbar {
+			display: block;
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 9990;
+			padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+			background: color-mix(
+				in srgb,
+				var(--bp-v3-surface) 88%,
+				transparent
+			);
+			-webkit-backdrop-filter: saturate(1.4) blur(12px);
+			backdrop-filter: saturate(1.4) blur(12px);
+			border-top: 1px solid var(--bp-v3-line);
+			box-shadow: 0 -10px 30px -18px rgba(0, 0, 0, 0.35);
+			transition:
+				transform 0.22s ease,
+				opacity 0.22s ease,
+				visibility 0.22s;
+
+			&.is-hidden {
+				transform: translateY(110%);
+				opacity: 0;
+				visibility: hidden;
+			}
+		}
+
+		.bp-campaign-askbar__btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+			min-height: 50px;
+			border-radius: var(--bp-v3-btn-radius);
+			background-color: var(--bp-v3-accent);
+			background-image: linear-gradient(
+				135deg,
+				var(--bp-v3-accent-2),
+				var(--bp-v3-accent)
+			);
+			color: var(--bp-v3-on-accent);
+			font-family: var(--bp-v3-font-body);
+			font-size: 16px;
+			font-weight: 700;
+			text-decoration: none;
+			box-shadow: 0 10px 22px -12px var(--bp-v3-accent);
+
+			&::after {
+				content: "";
+				width: 16px;
+				height: 16px;
+				background-color: currentColor;
+				-webkit-mask: #{$bp-v3-icon-arrow} center / contain no-repeat;
+				mask: #{$bp-v3-icon-arrow} center / contain no-repeat;
+				transform: rotate(90deg);
+			}
+
+			&:hover,
+			&:focus {
+				color: var(--bp-v3-on-accent);
+				text-decoration: none;
+			}
+
+			&:focus-visible {
+				outline: 3px solid var(--bp-v3-accent);
+				outline-offset: 3px;
+			}
+		}
+	}
+
+	// ── Empty-element placeholder (builder canvas only) ───────────────────────
+	.bp-element-empty {
+		border-radius: var(--bp-v3-radius-sm);
+	}
+
+	// ── Responsive ────────────────────────────────────────────────────────────
+	// Once the page is narrower than the wrapper plus a margin, the wrapper runs
+	// edge to edge, and rounded corners against the screen edge read as a clipped
+	// card, not a design.
+	@media (max-width: 1248px) {
+		border-radius: 0;
+	}
+
+	@media (max-width: 900px) {
+		--bp-v3-gap: 28px;
+
+		padding: 38px 26px 48px;
+
+		.bp-campaign-column:has(.bp-campaign-donate-wrap):not(:only-child) {
+			padding: 26px 22px 22px;
+		}
+
+		.bp-campaign-image {
+			max-height: 360px;
+		}
+	}
+
+	@media (max-width: 680px) {
+		padding: 26px 16px 36px;
+		border-radius: 0;
+
+		// Room at the end of the page, so the Donate bar never covers the last
+		// element while it is still showing. Only when there is a bar: a preview
+		// prints none.
+		&:has(> .bp-campaign-askbar) {
+			padding-bottom: 96px;
+		}
+
+		// The renderer emits the title's size inline with !important, which no
+		// stylesheet rule can beat; `zoom` scales the element and its box
+		// together, and a browser that ignores it renders what it renders today.
+		.bp-campaign-title {
+			zoom: 0.76;
+		}
+
+		.bp-campaign-column {
+			gap: 26px;
+		}
+
+		.bp-summary-item strong {
+			font-size: 22px;
+		}
+
+		.bp-donate_btn {
+			min-height: 54px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		// A phone-width tile has room for the figure or the icon, not both: the
+		// icon is the decoration, so it goes, and the figure keeps the width.
+		.bp-summary-item--raised,
+		.bp-summary-item--donors,
+		.bp-summary-item--percent,
+		.bp-summary-item--days {
+			padding-right: 14px;
+
+			&::before,
+			&::after {
+				content: none;
+			}
+		}
+	}
+
+	@media (max-width: 420px) {
+		.bp-campaign-title {
+			zoom: 0.66;
+		}
+	}
+
+	// Below this a two-up tile is narrower than its figure, and the wrapper
+	// clips horizontally, so the amount would be cut rather than wrapped.
+	@media (max-width: 360px) {
+		.bp-summary-item {
+			min-width: 100%;
+		}
+	}
+}
+
+// ══ Per-design languages ═══════════════════════════════════════════════════════
+// The shared block above is the v3 chrome; each design below restates what makes
+// it itself. Rules style what an element IS, never where it sits (no positional
+// selectors — CampaignThemeV3StylesTest enforces it), and restate rather than
+// nudge: a card 4px rounder is not a different design.
+
+// ── Refugee Relief Fund — ember ───────────────────────────────────────────────
+// The design the shared chrome was drawn from, so it restates only its warmth:
+// figure tiles washed from the accent tint into the surface, a terracotta hairline
+// under the masthead's lede, the organizer's ring in two tones.
+.bp-campaign.bp-v3-charity {
+	.bp-summary-item {
+		background: linear-gradient(165deg, var(--bp-v3-soft) 0%, #fffaf6 100%);
+		border-color: #f6e3d6;
+	}
+
+	.bp-organizer-avatar img {
+		box-shadow:
+			0 0 0 3px var(--bp-v3-surface),
+			0 0 0 5px var(--bp-v3-accent),
+			0 0 0 9px var(--bp-v3-soft);
+	}
+}
+
+// ── Child Healthcare Fund — night ─────────────────────────────────────────────
+.bp-campaign.bp-v3-childcare {
+	.bp-campaign-column:has(.bp-campaign-donate-wrap):not(:only-child) {
+		-webkit-backdrop-filter: blur(14px);
+		backdrop-filter: blur(14px);
+	}
+
+	.bp-campaign-image {
+		box-shadow:
+			0 0 0 1px rgba(255, 255, 255, 0.06),
+			0 30px 60px -30px rgba(56, 189, 248, 0.35);
+	}
+
+	// Sky is the one bright colour, so it glows rather than fills.
+	.bp-progress-bar-wrap {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	// Sky cannot carry white text (2.1:1); the button label is restated dark
+	// rather than left to a token, so the override is visible right here.
+	.bp-donate_btn {
+		color: #082f49;
+	}
+
+	input.bp-option-amount:checked + .bp-amount-label {
+		box-shadow:
+			0 0 0 4px rgba(56, 189, 248, 0.18),
+			0 10px 26px -8px rgba(56, 189, 248, 0.6);
+	}
+
+	.bp-amount-label,
+	.other_amount_section {
+		border-color: rgba(255, 255, 255, 0.1);
+	}
+
+	.campaign-custom-amount {
+		color: var(--bp-v3-ink);
+	}
+
+	.bp-amount-currency {
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.bp-summary-item::before {
+		background: rgba(56, 189, 248, 0.14);
+		box-shadow: none;
+	}
+
+	.bp-social-icon {
+		background: rgba(255, 255, 255, 0.06);
+	}
+}
+
+// ── Emergency Disaster Relief — urgent ────────────────────────────────────────
+.bp-campaign.bp-v3-relief {
+	// The headline mark is a solid red block, not a soft rule.
+	.bp-campaign-description-headline::before {
+		width: 44px;
+		height: 6px;
+		border-radius: 0;
+		background-image: none;
+		background-color: var(--bp-v3-accent);
+	}
+
+	// Figures as one banded strip under a red rule, read in a glance.
+	.bp-campaign-summary {
+		gap: 0;
+		border-top: 4px solid var(--bp-v3-accent);
+		background: var(--bp-v3-soft);
+		border-radius: 0 0 var(--bp-v3-radius) var(--bp-v3-radius);
+	}
+
+	.bp-summary-item {
+		flex: 1 1 0;
+		min-width: 0;
+		background: transparent;
+		border-radius: 0;
+		padding: 18px 16px;
+
+		strong {
+			font-size: 30px;
+			font-weight: 800;
+			letter-spacing: -0.03em;
+		}
+	}
+
+	// A short divider between figures: a 1px line, half the strip's height,
+	// centred on each tile's left edge. Drawn as a background (the tile's
+	// ::before/::after are its icon) and keyed on `+`, so the first figure has
+	// none whichever tiles the author switched off.
+	.bp-summary-item + .bp-summary-item {
+		background-image: linear-gradient(
+			var(--bp-v3-track),
+			var(--bp-v3-track)
+		);
+		background-size: 1px 50%;
+		background-position: left center;
+		background-repeat: no-repeat;
+	}
+
+	.bp-progress-bar-wrap {
+		height: 14px;
+		border-radius: 3px;
+	}
+
+	.bp-progress-bar {
+		border-radius: 3px;
+	}
+
+	// The emergency CTA is bigger and squarer than anything else on the page.
+	.bp-donate_btn {
+		min-height: 64px;
+		font-size: 16px;
+		font-weight: 800;
+	}
+
+	.bp-amount-label {
+		font-weight: 800;
+	}
+
+	// Two to a row, a short line would also mark the left edge of the second
+	// row. Hairlines between the cells instead: a 1px gap over a tinted strip.
+	@media (max-width: 680px) {
+		.bp-campaign-summary {
+			--bp-v3-tile-gap: 1px;
+			gap: var(--bp-v3-tile-gap);
+			background: var(--bp-v3-track);
+			overflow: hidden;
+		}
+
+		.bp-summary-item {
+			flex: 1 1 calc(50% - var(--bp-v3-tile-gap) / 2);
+			min-width: calc(50% - var(--bp-v3-tile-gap) / 2);
+			background: var(--bp-v3-soft);
+		}
+
+		.bp-summary-item + .bp-summary-item {
+			background-image: none;
+		}
+	}
+}
+
+// ── Medical Emergency Fund — clinical ─────────────────────────────────────────
+.bp-campaign.bp-v3-medical {
+	// The headline mark becomes a thin teal tick.
+	.bp-campaign-description-headline::before {
+		width: 24px;
+		height: 2px;
+		margin-bottom: 14px;
+	}
+
+	.bp-campaign-column:has(.bp-campaign-donate-wrap):not(:only-child)::before {
+		left: 0;
+		right: 0;
+		top: 0;
+		height: 4px;
+		border-radius: var(--bp-v3-radius) var(--bp-v3-radius) 0 0;
+	}
+
+	// Figures as a labelled table: one row each, label left, value right,
+	// divided by hairlines drawn from a 1px gap over the line colour.
+	.bp-campaign-summary {
+		flex-direction: column;
+		gap: 1px;
+		background: var(--bp-v3-line);
+		border: 1px solid var(--bp-v3-line);
+		border-radius: var(--bp-v3-radius-sm);
+		overflow: hidden;
+	}
+
+	.bp-summary-item {
+		display: flex;
+		flex-direction: row-reverse;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		min-width: 100%;
+		border: 0;
+		border-radius: 0;
+		padding: 13px 16px 13px 50px;
+
+		strong {
+			font-size: 20px;
+			font-weight: 700;
+			margin: 0;
+		}
+
+		&::before,
+		&::after {
+			top: 50%;
+			right: auto;
+			transform: translateY(-50%);
+		}
+
+		&::before {
+			left: 12px;
+			background: var(--bp-v3-soft);
+		}
+
+		// Centred on the disc: the shared rule offsets the glyph with a margin,
+		// which a vertically centred box would add to its offset.
+		&::after {
+			left: 19px;
+			margin: 0;
+		}
+	}
+
+	.bp-amount-label {
+		border-width: 1px;
+		font-weight: 600;
+	}
+
+	.bp-organizer-avatar img {
+		box-shadow: 0 0 0 2px var(--bp-v3-line);
+	}
+
+	@media (max-width: 480px) {
+		.bp-summary-item {
+			padding-left: 16px;
+		}
+	}
+}
+
+// ── Student Success Fund — prospectus ─────────────────────────────────────────
+.bp-campaign.bp-v3-education {
+	// A gradient edge around the ask panel: the border is transparent and two
+	// backgrounds paint the surface inside it and the gradient under it.
+	.bp-campaign-column:has(.bp-campaign-donate-wrap):not(:only-child) {
+		background:
+			linear-gradient(var(--bp-v3-surface), var(--bp-v3-surface))
+				padding-box,
+			linear-gradient(135deg, var(--bp-v3-accent), var(--bp-v3-accent-2))
+				border-box;
+
+		&::before {
+			content: none;
+		}
+	}
+
+	.bp-campaign-description-headline::before {
+		width: 48px;
+		height: 4px;
+		border-radius: 4px;
+		background-image: linear-gradient(
+			90deg,
+			var(--bp-v3-accent),
+			var(--bp-v3-accent-2)
+		);
+	}
+
+	.bp-summary-item {
+		border: 1px solid var(--bp-v3-line);
+		background: linear-gradient(
+			160deg,
+			var(--bp-v3-surface),
+			var(--bp-v3-soft)
+		);
+	}
+
+	.bp-progress-bar-wrap {
+		height: 10px;
+	}
+
+	.bp-campaign-image {
+		border-radius: var(--bp-v3-radius);
+	}
+}
+
+// ── Elite Golf Club Membership — club ─────────────────────────────────────────
+.bp-campaign.bp-v3-golf {
+	// Stationery: a gold hairline instead of an accent bar.
+	.bp-campaign-description-headline::before {
+		width: 100%;
+		height: 1px;
+		border-radius: 0;
+		background-image: linear-gradient(
+			90deg,
+			#a16207 0%,
+			rgba(161, 98, 7, 0.15) 70%,
+			rgba(161, 98, 7, 0) 100%
+		);
+		margin-bottom: 18px;
+	}
+
+	.bp-summary-headline,
+	.bp-donate-headline,
+	.bp-progress-headline,
+	.bp-social-headline {
+		color: #854d0e;
+		letter-spacing: 0.2em;
+	}
+
+	// A club sells membership categories: a two-column tariff, not chips.
+	.bp-donate_amounts {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	// Row-reversed so the amount reads first and the chosen tier's check sits at
+	// the far end, like a tick on a price list.
+	.bp-amount-label {
+		flex-direction: row-reverse;
+		justify-content: space-between;
+		min-height: 56px;
+		padding: 14px 18px;
+		border-width: 1px;
+		box-shadow: none;
+		font-family: var(--bp-v3-font-display);
+		font-size: 19px;
+		font-weight: 600;
+	}
+
+	.bp-summary-item {
+		border: 1px solid var(--bp-v3-line);
+
+		&::before {
+			border: 1px solid #e9d8a6;
+			box-shadow: none;
+		}
+
+		&::after {
+			background-color: #a16207;
+		}
+	}
+
+	.bp-donate_btn {
+		font-size: 14px;
+	}
+
+	.bp-progress-bar-wrap {
+		height: 8px;
+		border-radius: 0;
+	}
+
+	.bp-progress-bar {
+		border-radius: 0;
+	}
+
+	.bp-campaign-image {
+		border-radius: var(--bp-v3-radius);
+		box-shadow:
+			0 0 0 1px #e4dcc6,
+			0 0 0 6px var(--bp-v3-surface),
+			0 0 0 7px #e9d8a6;
+	}
+}
+
+// ── Animal Rescue Fund — soft ─────────────────────────────────────────────────
+.bp-campaign.bp-v3-animal {
+	.bp-campaign-column:has(.bp-campaign-donate-wrap):not(:only-child)::before {
+		content: none;
+	}
+
+	// A rounded dot instead of a rule.
+	.bp-campaign-description-headline::before {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+	}
+
+	.bp-summary-item {
+		border: 0;
+
+		&::before {
+			background: var(--bp-v3-soft);
+			box-shadow: none;
+		}
+	}
+
+	.bp-amount-label {
+		border-color: transparent;
+	}
+
+	.other_amount_section {
+		border-color: transparent;
+	}
+
+	.bp-campaign-organizer,
+	.bp-social-sharing,
+	.bp-social-links {
+		border: 0;
+		background: var(--bp-v3-soft);
+	}
+
+	.bp-social-icon {
+		background: var(--bp-v3-surface);
+	}
+
+	.bp-progress-bar-wrap {
+		height: 16px;
+		background: var(--bp-v3-surface);
+		box-shadow: inset 0 0 0 1px var(--bp-v3-line);
+	}
+}
+
+// ── Tree Plantation Campaign — grove ──────────────────────────────────────────
+.bp-campaign.bp-v3-forest {
+	// A leaf, not a rule: two opposite corners rounded fully.
+	.bp-campaign-description-headline::before {
+		width: 18px;
+		height: 18px;
+		border-radius: 0 100% 0 100%;
+		margin-bottom: 14px;
+	}
+
+	.bp-campaign-image {
+		border-radius: var(--bp-v3-radius) var(--bp-v3-radius-sm);
+	}
+
+	.bp-summary-item {
+		border-radius: var(--bp-v3-radius-sm) 6px;
+	}
+
+	.bp-amount-label {
+		border-radius: var(--bp-v3-chip-radius) 6px;
+	}
+
+	.bp-progress-bar-wrap {
+		height: 10px;
+	}
+}
+
+// ── AI-generated campaign — studio ────────────────────────────────────────────
+// A page the AI composed can hold any elements in any order, so this design
+// restates only what is safe everywhere: a crisp outline on the figure tiles.
+.bp-campaign.bp-v3-ai {
+	.bp-summary-item {
+		border: 1px solid var(--bp-v3-line);
+		background: var(--bp-v3-surface);
+	}
+}

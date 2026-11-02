@@ -3,10 +3,7 @@ import { applyFilters } from '@wordpress/hooks';
 export default function RecurringSubscriptionWidget( {
 	proEnabled,
 	proAssets,
-	subscriptions,
-	title,
-	viewAllLabel,
-	noItemsLabel,
+	...panelProps
 } ) {
 	if ( ! proEnabled ) {
 		return (
@@ -36,11 +33,7 @@ export default function RecurringSubscriptionWidget( {
 	}
 
 	return (
-		<Panel
-			subscriptions={ subscriptions }
-			title={ title }
-			viewAllLabel={ viewAllLabel }
-			noItemsLabel={ noItemsLabel }
-		/>
+		// title, viewAllLabel, noItemsLabel and blockData (Pro builds the rows from it).
+		<Panel { ...panelProps } />
 	);
 }

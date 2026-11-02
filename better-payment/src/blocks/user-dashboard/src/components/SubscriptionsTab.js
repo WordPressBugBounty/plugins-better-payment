@@ -3,12 +3,7 @@ import { applyFilters } from '@wordpress/hooks';
 export default function SubscriptionsTab( {
 	proEnabled,
 	proAssets,
-	subscriptions,
-	subPage,
-	subMeta,
-	setSubPage,
-	attributes,
-	noItemsLabel,
+	...panelProps
 } ) {
 	if ( ! proEnabled ) {
 		return (
@@ -40,13 +35,7 @@ export default function SubscriptionsTab( {
 	}
 
 	return (
-		<Panel
-			subscriptions={ subscriptions }
-			subPage={ subPage }
-			subMeta={ subMeta }
-			setSubPage={ setSubPage }
-			attributes={ attributes }
-			noItemsLabel={ noItemsLabel }
-		/>
+		// attributes, noItemsLabel, blockData, restUrl and restNonce: Pro pages the rows itself.
+		<Panel { ...panelProps } />
 	);
 }

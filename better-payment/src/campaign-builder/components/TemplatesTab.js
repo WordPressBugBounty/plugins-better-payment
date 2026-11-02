@@ -9,7 +9,11 @@ import { __ } from '@wordpress/i18n';
 import AiIcon from '../ai/AiIcon';
 import ProCrownIcon from './ProCrownIcon';
 import UpgradeModal from './UpgradeModal';
-import { getPreviewImageUrl } from '../utils/templatePreview';
+import {
+	fullPreviewDevices,
+	getFullPreviewUrl,
+	getPreviewImageUrl,
+} from '../utils/templatePreview';
 import { getCampaignCategories } from '../utils/campaignCategories';
 import { isProEnabled, isTemplateLocked } from '../utils/proEnabled';
 
@@ -245,25 +249,37 @@ export function skeletonShape( layout ) {
 }
 
 /**
- * How the Preview lightbox shows a template: a live document or its screenshot.
+ * How the Preview lightbox shows a template: live, as a full-page image, or as
+ * its card screenshot.
  *
- * A locked Pro card (a free install) previews as its screenshot only. Lite ships
- * no copy of Pro's layouts, so there is nothing to render and the server would
- * answer 404 — and asking anyway opened the modal at live width over a skeleton,
- * only to snap back to the screenshot when the request failed. Deciding up front
- * means no request, no skeleton and no resize. With Pro active the card is not
- * locked and previews live like any other template. A live preview whose request
- * failed falls back to the same screenshot.
+ * A locked Pro card (a free install) is never rendered live. Lite ships no copy
+ * of Pro's layouts, so there is nothing to render and the server would answer
+ * 404 — and asking anyway opened the modal at live width over a skeleton, only
+ * to snap back when the request failed. Deciding up front means no request, no
+ * skeleton and no resize. Instead it shows its FULL-PAGE images
+ * (`preview_full`, desktop and mobile screenshots of the whole design, shipped
+ * by ProTemplateCatalog) — the card screenshot is only the top of the page, and
+ * a design a free user cannot see end to end is a design they cannot want. With
+ * no full-page image, or once one fails to load, it falls back to the card
+ * screenshot. With Pro active the card is not locked and previews live like any
+ * other template; a live preview whose request failed takes the same fallbacks.
  *
  * @param {Object|undefined} tpl        Template card, or undefined while closed.
  * @param {boolean}          proEnabled Whether Pro is active.
  * @param {boolean}          failed     Whether this template's document request failed.
- * @return {?string} 'live' | 'screenshot', or null when no template is open.
+ * @param {boolean}          fullFailed Whether its full-page image failed to load.
+ * @return {?string} 'live' | 'full' | 'screenshot', or null when no template is open.
  */
-export function lightboxPreviewMode( tpl, proEnabled, failed ) {
+export function lightboxPreviewMode(
+	tpl,
+	proEnabled,
+	failed,
+	fullFailed = false
+) {
 	if ( ! tpl ) return null;
-	if ( isTemplateLocked( tpl, proEnabled ) || failed ) return 'screenshot';
-	return 'live';
+	if ( ! isTemplateLocked( tpl, proEnabled ) && ! failed ) return 'live';
+	if ( ! fullFailed && fullPreviewDevices( tpl ).length > 0 ) return 'full';
+	return 'screenshot';
 }
 
 /**
@@ -372,13 +388,72 @@ function TemplatePreviewSkeleton( { layout } ) {
 // campaign (no columns) so the editor/save controls ungate, marks the card Active,
 // and — because it has no columns — leaves the layout free for the AI to choose.
 // Exported so the builder can apply it directly when opened with `start=ai`.
+//
+// Its key names a hidden registry entry (TemplateManager, `ai-assistant-v3`) that
+// gives an AI campaign the v3 `bp-v3-ai` theme. Campaigns made before that store
+// `ai-assistant`, which has no entry and stays unthemed — but is still an AI
+// campaign to the builder: test with isAiTemplateKey(), never `=== AI_TEMPLATE.key`.
 export const AI_TEMPLATE = {
-	key: 'ai-assistant',
+	key: 'ai-assistant-v3',
 	category: 'blank',
 	label: __( 'Create using AI Assistant', 'better-payment' ),
 	layout: '1-column',
 	columns: [],
 };
+
+/**
+ * The layout chip on a prebuilt card: what shape the page is, in words.
+ *
+ * @param {string} layout Template layout preset.
+ * @return {string} Label, or '' for an unknown preset (no chip).
+ */
+export function layoutLabel( layout ) {
+	switch ( layout ) {
+		case '1-column':
+			return __( 'Single column', 'better-payment' );
+		case '2-column':
+			return __( 'Story + sidebar', 'better-payment' );
+		case 'split':
+			return __( 'Hero + split', 'better-payment' );
+		default:
+			return '';
+	}
+}
+
+/**
+ * The category chip on a prebuilt card: the first of its tags that names a
+ * registered category.
+ *
+ * @param {Object} tpl        Template card.
+ * @param {Array}  categories `{ key|slug, label }` list (the picker keys them
+ *                            `key`; the registry `slug`).
+ * @return {string} Label, or ''.
+ */
+export function categoryLabel( tpl, categories ) {
+	for ( const tag of tpl?.tags ?? [] ) {
+		const found = ( categories ?? [] ).find(
+			( c ) => ( c.key ?? c.slug ) === tag
+		);
+		if ( found ) return found.label;
+	}
+	return '';
+}
+
+/**
+ * Every key an AI-built campaign can carry, newest first.
+ */
+export const AI_TEMPLATE_KEYS = [ AI_TEMPLATE.key, 'ai-assistant' ];
+
+/**
+ * Whether a stored `bpc_template_key` marks a campaign started with the AI
+ * Assistant — under either generation of the key.
+ *
+ * @param {string} key Template key.
+ * @return {boolean}
+ */
+export function isAiTemplateKey( key ) {
+	return AI_TEMPLATE_KEYS.includes( key );
+}
 
 export default function TemplatesTab( {
 	dispatch,
@@ -575,6 +650,25 @@ export default function TemplatesTab( {
 		} );
 	}, [ lightboxKey ] );
 
+	// Full-page images (locked Pro cards): which device is shown, and which
+	// templates' images failed to load, so the lightbox falls back to the card
+	// screenshot instead of a broken-image icon.
+	const [ lightboxDevice, setLightboxDevice ] = useState( 'desktop' );
+	const [ fullFailed, setFullFailed ] = useState( () => new Set() );
+
+	const markFullFailed = ( key ) =>
+		setFullFailed( ( prev ) => {
+			if ( prev.has( key ) ) return prev;
+			const next = new Set( prev );
+			next.add( key );
+			return next;
+		} );
+
+	// Every template opens on desktop — the layout it is designed around.
+	useEffect( () => {
+		setLightboxDevice( 'desktop' );
+	}, [ lightboxKey ] );
+
 	const lightboxDoc = lightboxTpl ? previewDocs[ lightboxTpl.key ] : '';
 	const lightboxDocFailed = lightboxTpl
 		? previewFailed.has( lightboxTpl.key )
@@ -588,14 +682,33 @@ export default function TemplatesTab( {
 	// and snapped to 1080px x 90vh a beat later — the layout jumping under a user
 	// who is trying to look at something.
 	// A locked Pro card is decided here too: it opens straight at the screenshot.
-	const lightboxIsLive =
-		lightboxPreviewMode( lightboxTpl, proEnabled, lightboxDocFailed ) ===
-		'live';
+	const lightboxMode = lightboxPreviewMode(
+		lightboxTpl,
+		proEnabled,
+		lightboxDocFailed,
+		lightboxTpl ? fullFailed.has( lightboxTpl.key ) : false
+	);
+	const lightboxIsLive = lightboxMode === 'live';
+	const lightboxIsFull = lightboxMode === 'full';
+	const lightboxDevices = lightboxIsFull
+		? fullPreviewDevices( lightboxTpl )
+		: [];
+	// A template with only one device's image shows that one, whatever was picked.
+	const shownDevice = lightboxDevices.includes( lightboxDevice )
+		? lightboxDevice
+		: lightboxDevices[ 0 ];
 
 	// The frame renders at PREVIEW_VIEWPORT_WIDTH and is scaled down to whatever
 	// the body actually is, so the preview shows the template's DESKTOP layout on
 	// every screen instead of re-laying it out for the modal (see the constant).
 	const lightboxBodyRef = useRef( null );
+
+	// Switching device shows a different picture of the same page, so it starts
+	// at the top — not wherever the other device's image had been scrolled to.
+	useEffect( () => {
+		if ( lightboxBodyRef.current ) lightboxBodyRef.current.scrollTop = 0;
+	}, [ shownDevice ] );
+
 	const [ frameBox, setFrameBox ] = useState( { width: 0, height: 0 } );
 
 	// Layout effect, not effect: the frame is positioned before the browser
@@ -764,7 +877,7 @@ export default function TemplatesTab( {
                                     editor with the AI Assistant ready to build the page. */ }
 								{ ( () => {
 									const aiActive =
-										appliedTemplateKey === AI_TEMPLATE.key;
+										isAiTemplateKey( appliedTemplateKey );
 									return (
 										<button
 											className={ `bp-tpl-card bp-tpl-card--ai${
@@ -905,9 +1018,16 @@ export default function TemplatesTab( {
 									return (
 										<div
 											key={ tpl.key }
-											className={ `bp-tpl-card${
+											className={ `bp-tpl-card bp-tpl-card--prebuilt${
 												isActive ? ' is-active' : ''
 											}${ locked ? ' is-locked' : '' }` }
+											// The card's own accent (its preview_color) tints the
+											// thumbnail frame and the strip along its top edge.
+											style={ {
+												'--bp-tpl-accent':
+													tpl.preview_color ||
+													'#6b63f6',
+											} }
 										>
 											{ isActive && (
 												<span className="bp-tpl-card__badge">
@@ -1007,6 +1127,34 @@ export default function TemplatesTab( {
 														{ tpl.description }
 													</span>
 												) }
+												{ ( layoutLabel( tpl.layout ) ||
+													categoryLabel(
+														tpl,
+														categories
+													) ) && (
+													<div className="bp-tpl-card__meta">
+														{ categoryLabel(
+															tpl,
+															categories
+														) && (
+															<em className="bp-tpl-card__chip bp-tpl-card__chip--category">
+																{ categoryLabel(
+																	tpl,
+																	categories
+																) }
+															</em>
+														) }
+														{ layoutLabel(
+															tpl.layout
+														) && (
+															<em className="bp-tpl-card__chip">
+																{ layoutLabel(
+																	tpl.layout
+																) }
+															</em>
+														) }
+													</div>
+												) }
 											</div>
 										</div>
 									);
@@ -1029,7 +1177,7 @@ export default function TemplatesTab( {
 				</div>
 			</div>
 
-			{ /* Lightbox — live document, or the screenshot (locked Pro card / failed request) */ }
+			{ /* Lightbox — live document, full-page images (locked Pro card), or the card screenshot */ }
 			{ lightboxTpl && (
 				<div
 					className="bp-template-lightbox-overlay"
@@ -1038,6 +1186,8 @@ export default function TemplatesTab( {
 					<div
 						className={ `bp-template-lightbox${
 							lightboxIsLive ? ' bp-template-lightbox--live' : ''
+						}${
+							lightboxIsFull ? ' bp-template-lightbox--full' : ''
 						}` }
 						onClick={ ( e ) => e.stopPropagation() }
 					>
@@ -1071,13 +1221,52 @@ export default function TemplatesTab( {
 									{ lightboxTpl.description }
 								</p>
 							) }
+							{ lightboxDevices.length > 1 && (
+								<div
+									className="bp-template-lightbox__devices"
+									role="group"
+									aria-label={ __(
+										'Preview device',
+										'better-payment'
+									) }
+								>
+									{ lightboxDevices.map( ( device ) => (
+										<button
+											key={ device }
+											type="button"
+											className={ `bp-template-lightbox__device${
+												device === shownDevice
+													? ' is-active'
+													: ''
+											}` }
+											aria-pressed={
+												device === shownDevice
+											}
+											onClick={ () =>
+												setLightboxDevice( device )
+											}
+										>
+											{ device === 'mobile'
+												? __(
+														'Mobile',
+														'better-payment'
+												  )
+												: __(
+														'Desktop',
+														'better-payment'
+												  ) }
+										</button>
+									) ) }
+								</div>
+							) }
 						</div>
 
 						{ /* Preview area. The live document is the real template
 						    rendered by the same code the frontend uses, so the
-						    iframe scrolls the design end to end. It falls back to
-						    the static screenshot for a locked Pro card (no layout
-						    to render) or if the request fails. */ }
+						    iframe scrolls the design end to end. A locked Pro card
+						    (no layout to render) shows its full-page images
+						    instead, and anything with neither falls back to the
+						    card screenshot. */ }
 						<div
 							ref={ lightboxBodyRef }
 							className={ `bp-template-lightbox__body${
@@ -1120,7 +1309,27 @@ export default function TemplatesTab( {
 									layout={ lightboxTpl.layout }
 								/>
 							) }
+							{ lightboxIsFull && (
+								<div
+									className={ `bp-template-lightbox__full bp-template-lightbox__full--${ shownDevice }` }
+								>
+									<img
+										key={ `${ lightboxTpl.key }-${ shownDevice }` }
+										src={ getFullPreviewUrl(
+											lightboxTpl,
+											shownDevice,
+											pluginUrl
+										) }
+										alt={ lightboxTpl.label }
+										className="bp-template-lightbox__full-img"
+										onError={ () =>
+											markFullFailed( lightboxTpl.key )
+										}
+									/>
+								</div>
+							) }
 							{ ! lightboxIsLive &&
+								! lightboxIsFull &&
 								( thumbUrl( lightboxTpl ) ? (
 									<img
 										src={ thumbUrl( lightboxTpl ) }

@@ -1000,14 +1000,31 @@ class AdminAPI extends WP_REST_Controller
             // From the stored row, before form_fields_info is unserialized (see get_transactions()).
             $transaction->status_type = \Better_Payment\Lite\Classes\Helper::transaction_status_type($transaction, 'v2');
             $transaction->form_fields_info = maybe_unserialize($transaction->form_fields_info);
-            $woo_products = maybe_unserialize($transaction->form_fields_info['detailed_product_info'] ?? []);
-            $transaction->woo_products = $woo_products['woo_products'] ?? [];
-            $transaction->woo_products = array_values($transaction->woo_products);
 
-            return rest_ensure_response($transaction);
+            /**
+             * The transaction the details screen and Pro's receipt read.
+             *
+             * Pro adds what only its payments store, e.g. layout 6's `woo_products`.
+             *
+             * @since 2.4.4
+             *
+             * @param object $transaction The row, `form_fields_info` unserialized.
+             */
+            return rest_ensure_response( self::filtered_object( apply_filters( 'better_payment/admin_api/transaction_details', $transaction ), $transaction ) );
         } catch (\Exception $e) {
             return new WP_Error('transaction_error', $e->getMessage(), ['status' => 500]);
         }
+    }
+
+    /**
+     * An add-on's answer when it is still an object, else what was asked.
+     *
+     * @param mixed  $filtered The filtered value.
+     * @param object $fallback The unfiltered row.
+     * @return object
+     */
+    private static function filtered_object( $filtered, $fallback ) {
+        return is_object( $filtered ) ? $filtered : $fallback;
     }
 
     /**

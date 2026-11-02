@@ -1,4 +1,5 @@
 import { blocksDonation, hasAmountPicker } from './_campaign-minimum';
+import { initAskBars } from './_campaign-ask-bar';
 
 ( function ( $ ) {
 	// Function to initialize the slider
@@ -372,6 +373,9 @@ import { blocksDonation, hasAmountPicker } from './_campaign-minimum';
 			bpFundraisingCampaignSlider();
 		}
 	} );
+
+	// The campaign page's mobile Donate bar (see _campaign-ask-bar.js).
+	$( () => initAskBars( document, window ) );
 
 	// Initialize for Elementor editor
 	$( window ).on( 'elementor/frontend/init', function () {

@@ -187,6 +187,78 @@ class Handler extends Controller{
     }
 
     /**
+     * The item rows a payment e-mail lists, when the payment bought several products.
+     *
+     * A Lite form charges for one thing — its own product, or the form itself — and the
+     * e-mail's item table shows that single row, so Lite returns []. Pro's Payment Form
+     * layout 6 sells a product list and fills the filter with one row per product.
+     *
+     * @since 2.4.4
+     *
+     * @param array $form_fields_info The transaction's stored fields.
+     * @return array[] `name`, `image_src`, `price`, `quantity`, `total_price`.
+     */
+    public static function email_product_rows( array $form_fields_info ) {
+        /**
+         * One e-mail item row per product the payment bought.
+         *
+         * @since 2.4.4
+         *
+         * @param array[] $rows             [] from Lite.
+         * @param array   $form_fields_info The transaction's stored fields.
+         */
+        return self::valid_product_rows( apply_filters( 'better_payment/email/product_rows', array(), $form_fields_info ) );
+    }
+
+    /**
+     * The non-empty names of an add-on's answer to `better_payment/success_page/product_names`.
+     *
+     * @param mixed    $names    The filtered value.
+     * @param string[] $fallback Lite's own names, kept when the answer is not a list.
+     * @return string[]
+     */
+    private static function product_names( $names, array $fallback ) {
+        if ( ! is_array( $names ) ) {
+            return $fallback;
+        }
+
+        $kept = array();
+        foreach ( $names as $name ) {
+            if ( is_scalar( $name ) && '' !== (string) $name ) {
+                $kept[] = (string) $name;
+            }
+        }
+
+        return $kept;
+    }
+
+    /**
+     * The well-formed rows of an add-on's answer to `better_payment/email/product_rows`.
+     *
+     * @param mixed $rows The filtered value.
+     * @return array[]
+     */
+    private static function valid_product_rows( $rows ) {
+        $valid = array();
+
+        foreach ( is_array( $rows ) ? $rows : array() as $row ) {
+            if ( ! is_array( $row ) || ! isset( $row['name'] ) || ! is_scalar( $row['name'] ) ) {
+                continue;
+            }
+
+            $valid[] = array(
+                'name'        => (string) $row['name'],
+                'image_src'   => isset( $row['image_src'] ) && is_scalar( $row['image_src'] ) ? (string) $row['image_src'] : '',
+                'price'       => isset( $row['price'] ) && is_numeric( $row['price'] ) ? (float) $row['price'] : 0.0,
+                'quantity'    => isset( $row['quantity'] ) && is_numeric( $row['quantity'] ) ? (int) $row['quantity'] : 1,
+                'total_price' => isset( $row['total_price'] ) && is_numeric( $row['total_price'] ) ? (float) $row['total_price'] : 0.0,
+            );
+        }
+
+        return $valid;
+    }
+
+    /**
      * The translated fallback label for a payment button.
      *
      * The two defaults callers pass (Lite's own, and Pro's donation layout) are translated as
@@ -1947,10 +2019,39 @@ class Handler extends Controller{
                             </li>
                         <?php endforeach; ?>
                         <?php
-                        $has_woo_products = !empty($settings['better_payment_form_woocommerce_product_id']) || !empty($settings['better_payment_form_woocommerce_product_ids']);
-                        $has_fluentcart_products = !empty($settings['better_payment_form_fluentcart_product_id']) || !empty($settings['better_payment_form_fluentcart_product_ids']);
+                        $product_names = [];
 
-                        if( $has_woo_products || $has_fluentcart_products ):
+                        if( !empty( $settings['better_payment_form_woocommerce_product_id'] ) ):
+                            $product_names[] = get_the_title( $settings['better_payment_form_woocommerce_product_id'] );
+                        endif;
+
+                        if( !empty( $settings['better_payment_form_fluentcart_product_id'] ) && function_exists('fluentCart') && class_exists( '\FluentCart\App\Models\Product' ) ):
+                            try {
+                                $fluentcart_product = \FluentCart\App\Models\Product::query()->find($settings['better_payment_form_fluentcart_product_id']);
+                                if ($fluentcart_product) {
+                                    $product_names[] = sanitize_text_field( $fluentcart_product->post_title );
+                                }
+                            } catch ( \Exception $e ) {
+                                //
+                            }
+                        endif;
+
+                        $has_products = ! empty( $settings['better_payment_form_woocommerce_product_id'] ) || ! empty( $settings['better_payment_form_fluentcart_product_id'] );
+
+                        /**
+                         * Product names the thank-you page lists under "Purchase Details".
+                         *
+                         * Lite lists the form's own product (the WooCommerce / FluentCart payment
+                         * source). Pro adds Payment Form layout 6's product list.
+                         *
+                         * @since 2.4.4
+                         *
+                         * @param string[] $product_names Names, unescaped.
+                         * @param array    $settings      Form settings.
+                         */
+                        $product_names = self::product_names( apply_filters( 'better_payment/success_page/product_names', $product_names, is_array( $settings ) ? $settings : [] ), $product_names );
+
+                        if( $has_products || ! empty( $product_names ) ):
                         ?>
                         <li class="bp-flex bp-font_ibm  bp-page_info-list_item">
                             <span class="bp-info_content">
@@ -1959,44 +2060,6 @@ class Handler extends Controller{
                                 ?>
                             </span>
                             <?php
-                            $product_names = [];
-
-                            if( !empty( $settings['better_payment_form_woocommerce_product_id'] ) ):
-                                $product_names[] = get_the_title( $settings['better_payment_form_woocommerce_product_id'] );
-                            endif;
-
-                            if( !empty( $settings['better_payment_form_woocommerce_product_ids'] ) ):
-                                $product_ids = $settings['better_payment_form_woocommerce_product_ids'];
-                                foreach( $product_ids as $product_id ):
-                                    $product_names[] = get_the_title( $product_id );
-                                endforeach;
-                            endif;
-
-                            if( !empty( $settings['better_payment_form_fluentcart_product_id'] ) && function_exists('fluentCart') && class_exists( '\FluentCart\App\Models\Product' ) ):
-                                try {
-                                    $fluentcart_product = \FluentCart\App\Models\Product::query()->find($settings['better_payment_form_fluentcart_product_id']);
-                                    if ($fluentcart_product) {
-                                        $product_names[] = sanitize_text_field( $fluentcart_product->post_title );
-                                    }
-                                } catch ( \Exception $e ) {
-                                    //
-                                }
-                            endif;
-
-                            if( !empty( $settings['better_payment_form_fluentcart_product_ids'] ) && function_exists('fluentCart') && class_exists( '\FluentCart\App\Models\Product' ) ):
-                                $product_ids = $settings['better_payment_form_fluentcart_product_ids'];
-                                foreach( $product_ids as $product_id ):
-                                    try {
-                                        $fluentcart_product = \FluentCart\App\Models\Product::query()->find($product_id);
-                                        if ($fluentcart_product) {
-                                            $product_names[] = sanitize_text_field( $fluentcart_product->post_title );
-                                        }
-                                    } catch ( \Exception $e ) {
-                                        //
-                                    }
-                                endforeach;
-                            endif;
-
                             if( !empty($product_names) ):
                                 echo '<span class="bp-info_content  bp-bold">' . esc_html( implode( ', ', $product_names ) ) . '</span>';
                             endif;
@@ -2702,8 +2765,6 @@ class Handler extends Controller{
         // #ToDo Product id or ids with comma
         $woo_product_id = ! empty( $form_fields_info_arr['woo_product_id'] ) ? intval( $form_fields_info_arr['woo_product_id'] ) : 0;
         $fluentcart_product_id = ! empty( $form_fields_info_arr['fluentcart_product_id'] ) ? intval( $form_fields_info_arr['fluentcart_product_id'] ) : 0;
-        $woo_product_ids = ! empty( $form_fields_info_arr['woo_product_ids'] ) ? maybe_unserialize( $form_fields_info_arr['woo_product_ids'] ) : [0];
-        $fluentcart_product_ids = ! empty( $form_fields_info_arr['fluentcart_product_ids'] ) ? maybe_unserialize( $form_fields_info_arr['fluentcart_product_ids'] ) : [0];
         $product_name = '';
         $product_permalink = '';
         $product_image_src = '';
@@ -2748,19 +2809,18 @@ class Handler extends Controller{
             }
         }
 
-        $detailed_product_info = isset( $form_fields_info_arr['detailed_product_info'] ) ? maybe_unserialize( $form_fields_info_arr['detailed_product_info'] ) : [];
+        $product_rows = self::email_product_rows( $form_fields_info_arr );
 
         $all_data = [
             'amount' => $amount,
             'amount_quantity' => $amount_quantity,
             'woo_product_id' => $woo_product_id,
-            'woo_product_ids' => $woo_product_ids,
             'fluentcart_product_id' => $fluentcart_product_id,
-            'fluentcart_product_ids' => $fluentcart_product_ids,
             'product_name' => $product_name,
             'product_permalink' => $product_permalink,
             'product_image_src' => $product_image_src,
-            'detailed_product_info' => $detailed_product_info,
+            // The e-mail's item table: one row per product when an add-on lists several, else [].
+            'product_rows' => $product_rows,
             'amount_single' => $amount_quantity > 0 ? floatval( (float) $amount / $amount_quantity ) : $amount,
             'currency' => ! empty( $currency ) ? $currency : '',
             'currency_symbol' => ! empty( $currency_symbol ) ? $currency_symbol : '',

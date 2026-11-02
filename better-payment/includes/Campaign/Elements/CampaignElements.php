@@ -2,6 +2,8 @@
 
 namespace Better_Payment\Lite\Campaign\Elements;
 
+use Better_Payment\Lite\Campaign\Styles\StyleControls;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -31,7 +33,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   'max'         => int,      // for number type
  *   'rows'        => int,      // for textarea type
  *   'options'     => array,    // for select type: [['value'=>..., 'label'=>...], ...]
+ *   'tab'         => string,   // 'style' | 'advanced'; omitted = 'content'
+ *   'ai'          => bool,     // false = the AI never sees or writes the key
+ *   'selectors'   => array,    // style controls: selector => declaration template
  * ]
+ *
+ * Style controls are built by Styles\StyleControls, and every element ends its
+ * schema with StyleControls::box() (the Advanced tab). See
+ * docs/features/campaign-builder/style-controls.md.
  */
 class CampaignElements {
 
@@ -162,6 +171,7 @@ class CampaignElements {
                 'type'  => 'number',
                 'min'   => 8,
                 'max'   => 200,
+                'step'  => 0.5,
             ],
             [
                 'key'          => 'font_weight',
@@ -197,6 +207,7 @@ class CampaignElements {
                 'type'  => 'number',
                 'min'   => 0,
                 'max'   => 400,
+                'step'  => 0.1,
             ],
             [
                 'key'   => 'letter_spacing',
@@ -204,6 +215,7 @@ class CampaignElements {
                 'type'  => 'number',
                 'min'   => -20,
                 'max'   => 100,
+                'step'  => 0.1,
             ],
             [
                 'key'   => 'word_spacing',
@@ -211,6 +223,7 @@ class CampaignElements {
                 'type'  => 'number',
                 'min'   => -20,
                 'max'   => 100,
+                'step'  => 0.1,
             ],
             [
                 'key'   => 'color',
@@ -248,11 +261,48 @@ class CampaignElements {
                 'key'         => $section_key,
                 'label'       => $section_label,
                 'type'        => 'section',
+                // Drawn on the Style tab. Unlike the StyleControls groups it stays
+                // visible to the AI: these keys were writable before the tab
+                // existed, and "make the title bigger" is a content request.
+                'tab'         => 'style',
                 'collapsible' => true,
-                'collapsed'   => true,
                 'children'    => $children,
             ],
         ];
+    }
+
+    /**
+     * The Width control every element carries, placed directly above its Align
+     * control. One descriptor so the range, unit and default cannot drift between
+     * elements — Campaign Summary's copy once had no step and no default, and
+     * Title, Social Sharing and Social Links had none at all.
+     *
+     * The value is a percentage of the element's column, 10–100. The renderer
+     * reads it through RendererService::resolve_element_width(), which treats a
+     * blank or non-positive value as 100.
+     *
+     * `CampaignElementWidthTest` fails if a registered element has no width
+     * control or no `width` default.
+     *
+     * @param string $info Optional help text shown under the control.
+     * @return array<string, mixed>
+     */
+    public static function width_control( string $info = '' ): array {
+        $control = [
+            'key'          => 'width',
+            'label'        => __( 'Width', 'better-payment' ),
+            'type'         => 'range',
+            'min'          => 10,
+            'max'          => 100,
+            'step'         => 1,
+            'unit'         => '%',
+            'defaultValue' => 100,
+        ];
+        if ( '' !== $info ) {
+            $control['info'] = $info;
+        }
+
+        return $control;
     }
 
     public static function register_all(): void {
@@ -264,6 +314,7 @@ class CampaignElements {
             // how the renderer distinguishes a user override (emitted with
             // !important to beat template styles) from the template default.
             'defaultSettings' => [
+                'width' => 100,
                 'align' => 'left',
             ],
             'settingsSchema'  => array_merge(
@@ -280,12 +331,14 @@ class CampaignElements {
                     'color'     => [ 'defaultValue' => '#1a1a2e' ],
                 ] ),
                 [
+                    self::width_control( __( 'Title width as a percentage of its container.', 'better-payment' ) ),
                     [
                         'key'   => 'align',
                         'label' => __( 'Align', 'better-payment' ),
                         'type'  => 'align',
                     ],
-                ]
+                ],
+                StyleControls::box()
             ),
         ] );
 
@@ -345,23 +398,15 @@ class CampaignElements {
                     '_content_typography'
                 ),
                 [
-                    [
-                        'key'          => 'width',
-                        'label'        => __( 'Width', 'better-payment' ),
-                        'type'         => 'range',
-                        'min'          => 10,
-                        'max'          => 100,
-                        'step'         => 1,
-                        'unit'         => '%',
-                        'defaultValue' => 100,
-                        'info'         => __( 'Content width as a percentage of its container.', 'better-payment' ),
-                    ],
+                    self::width_control( __( 'Content width as a percentage of its container.', 'better-payment' ) ),
                     [
                         'key'   => 'align',
                         'label' => __( 'Align', 'better-payment' ),
                         'type'  => 'align',
                     ],
-                ]
+                ],
+                StyleControls::description(),
+                StyleControls::box()
             ),
         ] );
 
@@ -404,22 +449,14 @@ class CampaignElements {
                         [ 'value' => 'full',         'label' => __( 'Full (Original)', 'better-payment' ) ],
                     ],
                 ],
-                [
-                    'key'          => 'width',
-                    'label'        => __( 'Width', 'better-payment' ),
-                    'type'         => 'range',
-                    'min'          => 10,
-                    'max'          => 100,
-                    'step'         => 1,
-                    'unit'         => '%',
-                    'defaultValue' => 100,
-                    'info'         => __( 'Image width as a percentage of its container.', 'better-payment' ),
-                ],
+                self::width_control( __( 'Image width as a percentage of its container.', 'better-payment' ) ),
                 [
                     'key'   => 'align',
                     'label' => __( 'Align', 'better-payment' ),
                     'type'  => 'align',
                 ],
+                ...StyleControls::photo(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -485,23 +522,15 @@ class CampaignElements {
                     'defaultValue' => 'Goal:',
                     'info'         => __( 'Shown before the goal amount — the amount and currency are added automatically. Do not type an amount here.', 'better-payment' ),
                 ],
-                [
-                    'key'          => 'width',
-                    'label'        => __( 'Width', 'better-payment' ),
-                    'type'         => 'range',
-                    'min'          => 10,
-                    'max'          => 100,
-                    'step'         => 1,
-                    'unit'         => '%',
-                    'defaultValue' => 100,
-                    'info'         => __( 'Controls the width of the progress bar relative to its container.', 'better-payment' ),
-                ],
+                self::width_control( __( 'Controls the width of the progress bar relative to its container.', 'better-payment' ) ),
                 [
                     'key'          => 'align',
                     'label'        => __( 'Align', 'better-payment' ),
                     'type'         => 'align',
                     'defaultValue' => 'left',
                 ],
+                ...StyleControls::progress_bar(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -555,19 +584,14 @@ class CampaignElements {
                     'label' => __( 'Time Remaining', 'better-payment' ),
                     'type'  => 'toggle',
                 ],
-                [
-                    'key'   => 'width',
-                    'label' => __( 'Width', 'better-payment' ),
-                    'type'  => 'range',
-                    'min'   => 10,
-                    'max'   => 100,
-                    'unit'  => '%',
-                ],
+                self::width_control(),
                 [
                     'key'   => 'align',
                     'label' => __( 'Align', 'better-payment' ),
                     'type'  => 'align',
                 ],
+                ...StyleControls::campaign_summary(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -589,12 +613,6 @@ class CampaignElements {
                     'type'         => 'text',
                     'placeholder'  => __( 'Donate Now', 'better-payment' ),
                     'defaultValue' => 'Donate Now',
-                ],
-                [
-                    'key'   => 'button_color',
-                    'label' => __( 'Button Color', 'better-payment' ),
-                    'type'  => 'color',
-                    'info'  => __( 'Leave empty to use the campaign primary color.', 'better-payment' ),
                 ],
                 // How donors pay. The popup payment form is Pro's: on a free install
                 // the builder draws this control as a locked choice (page link
@@ -622,22 +640,15 @@ class CampaignElements {
                     'type'         => 'switch',
                     'defaultValue' => false,
                 ],
-                [
-                    'key'          => 'width',
-                    'label'        => __( 'Width', 'better-payment' ),
-                    'type'         => 'range',
-                    'min'          => 10,
-                    'max'          => 100,
-                    'step'         => 1,
-                    'unit'         => '%',
-                    'defaultValue' => 100,
-                ],
+                self::width_control(),
                 [
                     'key'          => 'align',
                     'label'        => __( 'Align', 'better-payment' ),
                     'type'         => 'align',
                     'defaultValue' => 'center',
                 ],
+                ...StyleControls::donate_button(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -682,23 +693,15 @@ class CampaignElements {
                     'type'  => 'rich_text',
                     'info'  => __( 'Brief bio or message shown beneath the creator\'s name.', 'better-payment' ),
                 ],
-                [
-                    'key'          => 'width',
-                    'label'        => __( 'Width', 'better-payment' ),
-                    'type'         => 'range',
-                    'min'          => 10,
-                    'max'          => 100,
-                    'step'         => 1,
-                    'unit'         => '%',
-                    'defaultValue' => 100,
-                    'info'         => __( 'Width of the organizer block as a percentage.', 'better-payment' ),
-                ],
+                self::width_control( __( 'Width of the organizer block as a percentage.', 'better-payment' ) ),
                 [
                     'key'          => 'align',
                     'label'        => __( 'Align', 'better-payment' ),
                     'type'         => 'align',
                     'defaultValue' => 'left',
                 ],
+                ...StyleControls::organizer(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -739,23 +742,15 @@ class CampaignElements {
                     'metaKey'      => 'bpc_allow_custom_amount',
                     'defaultValue' => true,
                 ],
-                [
-                    'key'          => 'width',
-                    'label'        => __( 'Width', 'better-payment' ),
-                    'type'         => 'range',
-                    'min'          => 10,
-                    'max'          => 100,
-                    'step'         => 1,
-                    'unit'         => '%',
-                    'defaultValue' => 100,
-                    'info'         => __( 'Controls the width of the donation amounts relative to its container.', 'better-payment' ),
-                ],
+                self::width_control( __( 'Controls the width of the donation amounts relative to its container.', 'better-payment' ) ),
                 [
                     'key'          => 'align',
                     'label'        => __( 'Align', 'better-payment' ),
                     'type'         => 'align',
                     'defaultValue' => 'left',
                 ],
+                ...StyleControls::donate_amount(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -772,6 +767,7 @@ class CampaignElements {
                 'threads'      => true,
                 'bluesky'      => true,
                 'open_new_tab' => true,
+                'width'        => 100,
                 'align'        => 'left',
             ],
             'settingsSchema'  => [
@@ -835,11 +831,14 @@ class CampaignElements {
                     'type'         => 'switch',
                     'defaultValue' => true,
                 ],
+                self::width_control( __( 'Width of the sharing buttons as a percentage of its container.', 'better-payment' ) ),
                 [
                     'key'   => 'align',
                     'label' => __( 'Align', 'better-payment' ),
                     'type'  => 'align',
                 ],
+                ...StyleControls::social_icons(),
+                ...StyleControls::box(),
             ],
         ] );
 
@@ -859,6 +858,7 @@ class CampaignElements {
                 'bluesky'      => '',
                 'mastodon'     => '',
                 'open_new_tab' => true,
+                'width'        => 100,
                 'align'        => 'left',
             ],
             'settingsSchema'  => [
@@ -935,11 +935,14 @@ class CampaignElements {
                     'type'         => 'switch',
                     'defaultValue' => true,
                 ],
+                self::width_control( __( 'Width of the social links as a percentage of its container.', 'better-payment' ) ),
                 [
                     'key'   => 'align',
                     'label' => __( 'Align', 'better-payment' ),
                     'type'  => 'align',
                 ],
+                ...StyleControls::social_icons(),
+                ...StyleControls::box(),
             ],
         ] );
 

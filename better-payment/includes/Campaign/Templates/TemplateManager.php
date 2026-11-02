@@ -107,13 +107,21 @@ class TemplateManager {
         // Design tokens for the templates below, resolved once so a template
         // definition stays readable as data. See self::palette().
         $charity   = self::palette( 'charity-basic-v2' );
+        $charity3  = self::palette( 'charity-basic-v3' );
         $medical   = self::palette( 'medical-relief-v2' );
+        $medical3  = self::palette( 'medical-relief-v3' );
         $education = self::palette( 'education-fund-v2' );
+        $education3 = self::palette( 'education-fund-v3' );
         $golf      = self::palette( 'golf-destinations-v2' );
+        $golf3     = self::palette( 'golf-destinations-v3' );
         $childcare = self::palette( 'child-healthcare-v2' );
+        $childcare3 = self::palette( 'child-healthcare-v3' );
         $forest    = self::palette( 'tree-plantation-v2' );
+        $forest3   = self::palette( 'tree-plantation-v3' );
         $animal    = self::palette( 'animal-rescue-v2' );
+        $animal3   = self::palette( 'animal-rescue-v3' );
         $relief    = self::palette( 'disaster-relief-v2' );
+        $relief3   = self::palette( 'disaster-relief-v3' );
 
         // Sidebar shared by the frozen `charity-basic` template. Retained because
         // that template is frozen verbatim, not because anything new uses it.
@@ -196,6 +204,26 @@ class TemplateManager {
                         'elements' => [],
                     ],
                 ],
+            ],
+
+            // Not a card: the theme a campaign built with the AI Assistant renders
+            // under. The builder's "Create using AI" card (AI_TEMPLATE in
+            // TemplatesTab.js) stores this key on a new AI campaign, and the
+            // renderer resolves its theme class here like any template's. Hidden,
+            // so the picker never shows it, and it carries no layout — the AI
+            // composes the page. Campaigns the AI built before this key existed
+            // store `ai-assistant`, which has no entry and so keeps rendering
+            // unthemed, exactly as it always has (a theme class is a live lookup).
+            'ai-assistant-v3' => [
+                'key'         => 'ai-assistant-v3',
+                'category'    => 'blank',
+                'hidden'      => true,
+                'ai'          => true,
+                'tags'        => [],
+                'label'       => __( 'AI-generated campaign', 'better-payment' ),
+                'theme_class' => 'bp-v3-ai',
+                'layout'      => '1-column',
+                'columns'     => [],
             ],
 
             'blank-3col' => [
@@ -1107,6 +1135,10 @@ class TemplateManager {
 
             'charity-basic-v2' => [
                 'key'           => 'charity-basic-v2',
+                // Retired in 2.4.5 by `charity-basic-v3`. Frozen exactly as it
+                // shipped: campaigns built from it still render under
+                // `bp-v2-charity`, so neither this entry nor that class may change.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'charity' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/charity-basic-v2.webp',
@@ -1173,8 +1205,84 @@ class TemplateManager {
                 ],
             ],
 
+            /*
+             * ── The -v3 templates ─────────────────────────────────────────────
+             *
+             * The third generation, reissued one design at a time. Each takes the
+             * picker slot of the `-v2` design it retires (which stays in the
+             * registry, `hidden`), so the card order and the layout rotation
+             * described above are unchanged. What a v3 design adds — self-hosted
+             * display and text faces, the ask column as one raised panel, icon
+             * figures, a progress fill built from the author's colour — lives in
+             * src/blocks/campaign-display/_v3-themes.scss under `bp-v3-*`
+             * classes. Same contract as v2: once released, a `bp-v3-*` class is
+             * published API, and a redesign is a `-v4`.
+             */
+
+            'charity-basic-v3' => [
+                'key'           => 'charity-basic-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'charity' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/charity-basic-v3.webp',
+                'label'         => __( 'Refugee Relief Fund', 'better-payment' ),
+                'default_title' => __( 'Refugee Relief Fund', 'better-payment' ),
+                'description'   => __( 'A warm, story-led appeal beside a raised donation panel — for humanitarian and emergency relief funds.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-charity',
+                'preview_color' => '#c2410c',
+                'layout'        => '2-column',
+                'columns'       => [
+                    [
+                        'id'       => 'main',
+                        'label'    => __( 'Main Content', 'better-payment' ),
+                        'width'    => '58%',
+                        'elements' => [
+                            self::title_el( $charity3, 'left' ),
+                            self::desc_el(
+                                'el_lede',
+                                $charity3,
+                                '',
+                                'Families arrive carrying what they could hold in their arms. The first weeks decide the next year — whether there is a roof, whether the children go back to school, whether anyone is well enough to work. That window is what this fund exists to cover.',
+                                [ 'size' => 20 ]
+                            ),
+                            self::photo_el( 'el_hero', 'charity/Refugee-Relief-Fund.webp', 'Aid workers unloading supplies for refugee families' ),
+                            self::desc_el(
+                                'el_story',
+                                $charity3,
+                                'Where your donation goes',
+                                'Shelter, bedding, food, clean water, medicine and school kits — bought as close to the people receiving them as possible, so the money stays in the communities hosting new arrivals. The rest keeps the work moving: transport, storage, and the caseworkers who make sure help reaches the families who need it most rather than the ones who are easiest to reach.'
+                            ),
+                            self::desc_el(
+                                'el_why_now',
+                                $charity3,
+                                'Why it matters today',
+                                'Help is cheapest and furthest-reaching at the beginning. A family supported in their first month rarely needs emergency help again; a family reached much later often needs it for years. Giving now is not the same as giving later.',
+                                [ 'accent_headline' => true ]
+                            ),
+                            self::organizer_el(
+                                'Campaign Organizer',
+                                'I run this appeal and answer every message personally. If you would like to talk before giving, please do get in touch.'
+                            ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'sidebar',
+                        'label'    => __( 'Donation Panel', 'better-payment' ),
+                        'width'    => '42%',
+                        'elements' => [
+                            self::progress_el( 'Appeal progress', 'Raised:', 'Target:' ),
+                            self::summary_el( [ 'raised', 'donors', 'percent', 'days' ] ),
+                            self::amounts_el( 'Choose your gift' ),
+                            self::donate_el( $charity3, 'Donate now' ),
+                            self::share_el( 'Share this appeal' ),
+                        ],
+                    ],
+                ],
+            ],
+
             'child-healthcare-v2' => [
                 'key'           => 'child-healthcare-v2',
+                // Retired in 2.4.5 by `child-healthcare-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'medical' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/child-healthcare-v2.webp',
@@ -1248,8 +1356,85 @@ class TemplateManager {
                 ],
             ],
 
+            'child-healthcare-v3' => [
+                'key'           => 'child-healthcare-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'medical' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/child-healthcare-v3.webp',
+                'label'         => __( 'Child Healthcare Fund', 'better-payment' ),
+                'default_title' => __( 'Child Healthcare Fund', 'better-payment' ),
+                'description'   => __( 'A dark, high-contrast appeal for paediatric care — headline first, then story and ask.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-childcare',
+                'preview_color' => '#38bdf8',
+                'layout'        => 'split',
+                'columns'       => [
+                    [
+                        'id'       => 'top',
+                        'label'    => __( 'Hero (Full Width)', 'better-payment' ),
+                        'width'    => '100%',
+                        'elements' => [
+                            self::title_el( $childcare3, 'left' ),
+                            self::desc_el(
+                                                            'el_lede',
+                                                            $childcare3,
+                                                            '',
+                                                            'Children do not get to wait for a funding round to close. Every week a treatment is delayed is a week of growing up spent on a ward instead of in a classroom — and the treatments that work best are almost always the ones that start soonest.',
+                                                            [ 'size' => 21 ]
+                                                        ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'bottom-left',
+                        'label'    => __( 'Story', 'better-payment' ),
+                        'width'    => '50%',
+                        'elements' => [
+                            self::photo_el( 'el_hero', 'medical/Child-Healthcare-Fund.webp', 'A child being cared for on a hospital ward' ),
+                            self::desc_el(
+                                                            'el_story',
+                                                            $childcare3,
+                                                            'What this fund pays for',
+                                                            'Theatre time, and the specialists who use it. Equipment a paediatric ward cannot borrow from anywhere else. And the travel, meals and beds that decide whether a parent can be in the room at all — the part of a child\'s treatment no clinical budget covers and every family notices.'
+                                                        ),
+                            self::desc_el(
+                                                            'el_after',
+                                                            $childcare3,
+                                                            'After the goal is met',
+                                                            'Nothing here stops when the total is reached. Anything raised beyond it goes to the next child on the list, and we say publicly where it went. You should know that before you give, not afterwards.',
+                                                            [ 'accent_headline' => true ]
+                                                        ),
+                            self::organizer_el(
+                                                            'Appeal Lead',
+                                                            'I run this appeal and post an update whenever there is real news to report — not before.'
+                                                        ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'bottom-right',
+                        'label'    => __( 'Donate', 'better-payment' ),
+                        'width'    => '50%',
+                        'elements' => [
+                            self::progress_el( 'Progress so far', 'Raised:', 'Goal:' ),
+                            self::summary_el( [ 'raised', 'donors', 'percent', 'days' ] ),
+                            self::amounts_el( 'Choose an amount' ),
+                            self::donate_el( $childcare3, 'Give Now' ),
+                            self::share_el( 'Share this appeal' ),
+                            self::links_el(
+                                                            'Follow the appeal',
+                                                            [
+                                                                'facebook'  => 'https://facebook.com/',
+                                                                'twitter'   => 'https://twitter.com/',
+                                                                'instagram' => 'https://instagram.com/',
+                                                            ]
+                                                        ),
+                        ],
+                    ],
+                ],
+            ],
+
             'disaster-relief-v2' => [
                 'key'           => 'disaster-relief-v2',
+                // Retired in 2.4.5 by `disaster-relief-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'environmental' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/disaster-relief-v2.webp',
@@ -1309,8 +1494,71 @@ class TemplateManager {
                 ],
             ],
 
+            'disaster-relief-v3' => [
+                'key'           => 'disaster-relief-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'environmental' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/disaster-relief-v3.webp',
+                'label'         => __( 'Emergency Disaster Relief', 'better-payment' ),
+                'default_title' => __( 'Emergency Disaster Relief', 'better-payment' ),
+                'description'   => __( 'Single-column emergency appeal that puts the figures and the ask above the fold.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-relief',
+                'preview_color' => '#dc2626',
+                'layout'        => '1-column',
+                'columns'       => [
+                    [
+                        'id'       => 'main',
+                        'label'    => __( 'Appeal', 'better-payment' ),
+                        'width'    => '100%',
+                        'elements' => [
+                            self::title_el( $relief3, 'left' ),
+                            self::desc_el(
+                                                                                        'el_lede',
+                                                                                        $relief3,
+                                                                                        'This is happening now',
+                                                                                        'Teams are on the ground and supplies are staged. What moves this week depends on what is raised in the next few days, not next month. If you are going to give, giving now is worth more than giving later.',
+                                                                                        [ 'size' => 20, 'accent_headline' => true ]
+                                                                                    ),
+                            // Figures before the photo, on purpose. This is a
+                                                                                    // single-column page, so everything competes for the same
+                                                                                    // vertical space — and a full-width hero pushes the ask a
+                                                                                    // screen and a half down, which is the opposite of what an
+                                                                                    // emergency appeal is for.
+                                                                                    self::progress_el( '', 'Raised:', 'Goal:' ),
+                            self::summary_el( [ 'raised', 'donors', 'percent', 'days' ] ),
+                            self::photo_el( 'el_hero', 'environmental/Emergency-Disaster-Relief.webp', 'Relief teams distributing emergency supplies' ),
+                            self::amounts_el( 'Give what you can' ),
+                            self::donate_el( $relief3, 'Donate Now' ),
+                            self::desc_el(
+                                                                                        'el_buys',
+                                                                                        $relief3,
+                                                                                        'What your donation buys',
+                                                                                        'A family food parcel. A shelter kit for a household with no roof left. A water filter, and the fuel that gets it to a village the road no longer reaches. These are the units a response is actually measured in — not appeals, and not totals.'
+                                                                                    ),
+                            self::desc_el(
+                                                                                        'el_situation',
+                                                                                        $relief3,
+                                                                                        'How the response is running',
+                                                                                        'Distribution is handled by people who were here before this happened and will still be here afterwards. That is the difference between aid that arrives and aid that is announced.',
+                                                                                        [ 'accent_headline' => true ]
+                                                                                    ),
+                            self::share_el( 'Share this appeal', 'left' ),
+                            self::links_el(
+                                                                                        'Follow the response',
+                                                                                        [
+                                                                                            'facebook' => 'https://facebook.com/',
+                                                                                            'twitter'  => 'https://twitter.com/',
+                                                                                        ]
+                                                                                    ),
+                        ],
+                    ],
+                ],
+            ],
+
             'medical-relief-v2' => [
                 'key'           => 'medical-relief-v2',
+                // Retired in 2.4.5 by `medical-relief-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'medical' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/medical-relief-v2.webp',
@@ -1376,8 +1624,77 @@ class TemplateManager {
                 ],
             ],
 
+            'medical-relief-v3' => [
+                'key'           => 'medical-relief-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'medical' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/medical-relief-v3.webp',
+                'label'         => __( 'Medical Emergency Fund', 'better-payment' ),
+                'default_title' => __( 'Medical Emergency Fund', 'better-payment' ),
+                'description'   => __( 'Calm, clinical two-column layout for treatment appeals and family fundraisers.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-medical',
+                'preview_color' => '#0f766e',
+                'layout'        => '2-column',
+                'columns'       => [
+                    [
+                        'id'       => 'main',
+                        'label'    => __( 'Main Content', 'better-payment' ),
+                        'width'    => '55%',
+                        'elements' => [
+                            self::title_el( $medical3, 'left' ),
+                            self::desc_el(
+                                                            'el_lede',
+                                                            $medical3,
+                                                            '',
+                                                            'A diagnosis arrives and everything else stops. Treatment starts immediately, the bills start with it, and the person who would normally be earning is the one in the ward.',
+                                                            [ 'size' => 20 ]
+                                                        ),
+                            self::desc_el(
+                                                            'el_story',
+                                                            $medical3,
+                                                            'The treatment ahead',
+                                                            'Care like this is measured in months rather than appointments: scans, cycles of treatment, the slow recovery between them, and the journeys to reach a hospital equipped to give it. None of it is quick, and none of it waits for a fundraising page to catch up.'
+                                                        ),
+                            self::photo_el( 'el_hero', 'medical/Medical-Emergency-Fund.webp', 'A patient receiving care in hospital' ),
+                            self::desc_el(
+                                                            'el_costs',
+                                                            $medical3,
+                                                            'What your donation pays for',
+                                                            'Hospital fees and medication. Scans and the follow-up appointments after them. Travel to treatment, and somewhere to stay when it runs late. And the income a family loses while one of them is at a bedside instead of at work — the cost nobody budgets for and every family feels.',
+                                                            [ 'accent_headline' => true ]
+                                                        ),
+                            self::share_el( 'Share this fundraiser' ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'sidebar',
+                        'label'    => __( 'Sidebar', 'better-payment' ),
+                        'width'    => '45%',
+                        'elements' => [
+                            self::summary_el( [ 'raised', 'donors', 'days' ] ),
+                            self::progress_el( 'Treatment funded', 'Funded:', 'Treatment target:' ),
+                            self::amounts_el( 'Cover a cost' ),
+                            self::donate_el( $medical3, 'Fund treatment' ),
+                            self::organizer_el(
+                                                            'Family Organizer',
+                                                            'I post an update here as treatment progresses. Message me if you have questions before giving.'
+                                                        ),
+                            self::links_el(
+                                                            'Follow for updates',
+                                                            [
+                                                                'facebook' => 'https://facebook.com/',
+                                                                'twitter'  => 'https://twitter.com/',
+                                                            ]
+                                                        ),
+                        ],
+                    ],
+                ],
+            ],
+
             'education-fund-v2' => [
                 'key'           => 'education-fund-v2',
+                // Retired in 2.4.5 by `education-fund-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'education' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/education-fund-v2.webp',
@@ -1456,8 +1773,90 @@ class TemplateManager {
                 ],
             ],
 
+            'education-fund-v3' => [
+                'key'           => 'education-fund-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'education' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/education-fund-v3.webp',
+                'label'         => __( 'Student Success Fund', 'better-payment' ),
+                'default_title' => __( 'Student Success Fund', 'better-payment' ),
+                'description'   => __( 'Full-width hero, then story and donation side by side — for scholarship and hardship funds.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-education',
+                'preview_color' => '#4f46e5',
+                'layout'        => 'split',
+                'columns'       => [
+                    [
+                        'id'       => 'top',
+                        'label'    => __( 'Hero (Full Width)', 'better-payment' ),
+                        'width'    => '100%',
+                        'elements' => [
+                            self::title_el( $education3, 'left' ),
+                            self::desc_el(
+                                                            'el_lede',
+                                                            $education3,
+                                                            '',
+                                                            'Almost nobody leaves education because they stopped caring. They leave because a bus fare ran out, a laptop broke, or a term bill landed in a month the family could not absorb.',
+                                                            [ 'size' => 21 ]
+                                                        ),
+                            self::progress_el( 'Progress so far', 'Raised:', 'Goal:' ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'bottom-left',
+                        'label'    => __( 'Story', 'better-payment' ),
+                        'width'    => '50%',
+                        'elements' => [
+                            // The artwork carries the campaign name in the image
+                                                        // itself, so at full hero width it restated the H1 in a
+                                                        // second typeface and a second palette. At half width it
+                                                        // reads as an illustration beside the story, which is
+                                                        // what it is.
+                                                        self::photo_el( 'el_hero', 'education/Student-Success-Fund.webp', 'Students working together in a classroom' ),
+                            self::desc_el(
+                                                            'el_covers',
+                                                            $education3,
+                                                            'What the fund covers',
+                                                            'Tuition and exam fees. Textbooks, lab materials, and a laptop that actually works. Travel to and from campus. And a small hardship grant for the months when none of the above is the real problem. Wherever it can be, the money is paid straight to the institution, so it lands where it was given for.'
+                                                        ),
+                            self::desc_el(
+                                                            'el_reaches',
+                                                            $education3,
+                                                            'Who it reaches',
+                                                            'Students who have already done the hard part — earned the place, kept the grades, and then hit a wall that has nothing to do with ability. A modest amount at the right moment is often the whole difference between a degree finished and a year abandoned.',
+                                                            [ 'accent_headline' => true ]
+                                                        ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'bottom-right',
+                        'label'    => __( 'Donate', 'better-payment' ),
+                        'width'    => '50%',
+                        'elements' => [
+                            self::summary_el( [ 'raised', 'donors', 'percent', 'days' ] ),
+                            self::amounts_el( 'Choose an amount' ),
+                            self::donate_el( $education3, 'Fund a Student' ),
+                            self::organizer_el(
+                                                            'Fund Coordinator',
+                                                            'I manage this fund and publish an update at the end of every term. Questions before you give are always welcome.'
+                                                        ),
+                            self::share_el( 'Share this fund' ),
+                            self::links_el(
+                                                            'Follow the fund',
+                                                            [
+                                                                'facebook' => 'https://facebook.com/',
+                                                                'twitter'  => 'https://twitter.com/',
+                                                                'linkedin' => 'https://linkedin.com/',
+                                                            ]
+                                                        ),
+                        ],
+                    ],
+                ],
+            ],
+
             'golf-destinations-v2' => [
                 'key'           => 'golf-destinations-v2',
+                // Retired in 2.4.5 by `golf-destinations-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'club-organizations' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/golf-destinations-v2.webp',
@@ -1512,8 +1911,66 @@ class TemplateManager {
                 ],
             ],
 
+            'golf-destinations-v3' => [
+                'key'           => 'golf-destinations-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'club-organizations' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/golf-destinations-v3.webp',
+                'label'         => __( 'Elite Golf Club Membership', 'better-payment' ),
+                'default_title' => __( 'Elite Golf Club Membership', 'better-payment' ),
+                'description'   => __( 'A single-column prospectus for clubs and societies collecting subscriptions.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-golf',
+                'preview_color' => '#15803d',
+                'layout'        => '1-column',
+                'columns'       => [
+                    [
+                        'id'       => 'main',
+                        'label'    => __( 'Membership', 'better-payment' ),
+                        'width'    => '100%',
+                        'elements' => [
+                            self::title_el( $golf3, 'left' ),
+                            self::desc_el(
+                                                            'el_lede',
+                                                            $golf3,
+                                                            '',
+                                                            'A course that rewards a good round and forgives an honest one, a clubhouse worth staying in afterwards, and a membership small enough that people know your name.',
+                                                            [ 'size' => 20 ]
+                                                        ),
+                            self::photo_el( 'el_hero', 'club-organizations/Elite-Golf-Club-Membership.webp', 'The clubhouse and first fairway at dawn' ),
+                            self::progress_el( 'Subscriptions received', 'Received:', 'Target:' ),
+                            self::summary_el( [ 'raised', 'donors', 'days' ] ),
+                            self::amounts_el( 'Membership category' ),
+                            self::donate_el( $golf3, 'Join the Club' ),
+                            self::desc_el(
+                                                            'el_about',
+                                                            $golf3,
+                                                            'About the club',
+                                                            'The club has kept the same character for as long as anyone can remember: unhurried, welcoming, and serious about the golf without being solemn about it. Members play year-round, guests are genuinely welcome, and the calendar is full enough to matter without ever feeling like an obligation.'
+                                                        ),
+                            self::desc_el(
+                                                            'el_includes',
+                                                            $golf3,
+                                                            'What membership includes',
+                                                            'Full course access and priority booking, with guest rates for the people you bring. A locker and winter storage. Coaching, the competition calendar and the off-season programme. The clubhouse and its terrace — and reciprocal arrangements with clubs beyond this one.',
+                                                            [ 'accent_headline' => true ]
+                                                        ),
+                            self::share_el( 'Share with a member', 'left' ),
+                            self::links_el(
+                                                            'Club channels',
+                                                            [
+                                                                'facebook'  => 'https://facebook.com/',
+                                                                'instagram' => 'https://instagram.com/',
+                                                            ]
+                                                        ),
+                        ],
+                    ],
+                ],
+            ],
+
             'animal-rescue-v2' => [
                 'key'           => 'animal-rescue-v2',
+                // Retired in 2.4.5 by `animal-rescue-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'charity' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/animal-rescue-v2.webp',
@@ -1580,8 +2037,78 @@ class TemplateManager {
                 ],
             ],
 
+            'animal-rescue-v3' => [
+                'key'           => 'animal-rescue-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'charity' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/animal-rescue-v3.webp',
+                'label'         => __( 'Animal Rescue Fund', 'better-payment' ),
+                'default_title' => __( 'Animal Rescue Fund', 'better-payment' ),
+                'description'   => __( 'Warm, story-led page for shelters and rescue groups taking ongoing donations.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-animal',
+                'preview_color' => '#be185d',
+                'layout'        => '2-column',
+                'columns'       => [
+                    [
+                        'id'       => 'main',
+                        'label'    => __( 'Main Content', 'better-payment' ),
+                        'width'    => '68%',
+                        'elements' => [
+                            self::photo_el( 'el_hero', 'charity/Animal-Rescue-Fund.webp', 'A rescued dog being cared for at the shelter' ),
+                            self::title_el( $animal3, 'left' ),
+                            self::desc_el(
+                                                            'el_lede',
+                                                            $animal3,
+                                                            '',
+                                                            'Every animal that comes through the door arrives mid-story. Some need a fortnight and a warm room. Some need surgery, months of rehabilitation and a foster carer with more patience than most people have. This fund is what stops the difference coming down to what happens to be in the account that week.',
+                                                            [ 'size' => 20 ]
+                                                        ),
+                            self::desc_el(
+                                                            'el_what',
+                                                            $animal3,
+                                                            'What your donation covers',
+                                                            'Veterinary treatment and medication. Vaccination, neutering and microchipping. Food, bedding, and the heating bill for a building that cannot be allowed to get cold. Fuel for the emergency call-outs that come in at hours nobody chose.'
+                                                        ),
+                            self::desc_el(
+                                                            'el_hardest',
+                                                            $animal3,
+                                                            'The ones who take longest',
+                                                            'The straightforward cases rehome themselves. The animals who need us are the old, the frightened and the badly hurt — the ones a shelter running on empty has to turn away. Every donation here is really a decision about how often we get to say yes.',
+                                                            [ 'accent_headline' => true ]
+                                                        ),
+                            self::links_el(
+                                                            'Follow the shelter',
+                                                            [
+                                                                'facebook'  => 'https://facebook.com/',
+                                                                'instagram' => 'https://instagram.com/',
+                                                                'tiktok'    => 'https://tiktok.com/',
+                                                            ]
+                                                        ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'sidebar',
+                        'label'    => __( 'Sidebar', 'better-payment' ),
+                        'width'    => '32%',
+                        'elements' => [
+                            self::progress_el( 'Shelter fund', 'Raised:', 'Target:' ),
+                            self::summary_el( [ 'raised', 'donors', 'days' ] ),
+                            self::amounts_el( 'Choose your gift' ),
+                            self::donate_el( $animal3, 'Sponsor an animal' ),
+                            self::organizer_el(
+                                                            'Shelter Manager',
+                                                            'I look after the animals here and write the updates. If you would like to visit before donating, just ask.'
+                                                        ),
+                            self::share_el( 'Share the shelter' ),
+                        ],
+                    ],
+                ],
+            ],
+
             'tree-plantation-v2' => [
                 'key'           => 'tree-plantation-v2',
+                // Retired in 2.4.5 by `tree-plantation-v3`. Frozen exactly as it shipped.
+                'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'environmental' ],
                 'preview_image' => 'assets/img/campaign/templates/preview/v2/tree-plantation-v2.webp',
@@ -1645,6 +2172,81 @@ class TemplateManager {
                             self::summary_el( [ 'raised', 'donors', 'percent', 'days' ] ),
                             self::amounts_el( 'Plant a tree' ),
                             self::donate_el( $forest, 'Plant Trees' ),
+                            self::organizer_el(
+                                                            'Planting Coordinator',
+                                                            'I look after the sites and report back at the end of each planting season, survival rates included.'
+                                                        ),
+                            self::share_el( 'Share this campaign' ),
+                        ],
+                    ],
+                ],
+            ],
+
+            'tree-plantation-v3' => [
+                'key'           => 'tree-plantation-v3',
+                'category'      => 'prebuilt',
+                'tags'          => [ 'environmental' ],
+                'preview_image' => 'assets/img/campaign/templates/preview/v3/tree-plantation-v3.webp',
+                'label'         => __( 'Tree Plantation Campaign', 'better-payment' ),
+                'default_title' => __( 'Tree Plantation Campaign', 'better-payment' ),
+                'description'   => __( 'Calm, green reforestation page built around cost-per-tree giving.', 'better-payment' ),
+                'theme_class'   => 'bp-v3-forest',
+                'preview_color' => '#047857',
+                'layout'        => 'split',
+                'columns'       => [
+                    [
+                        'id'       => 'top',
+                        'label'    => __( 'Hero (Full Width)', 'better-payment' ),
+                        'width'    => '100%',
+                        'elements' => [
+                            self::photo_el( 'el_hero', 'environmental/Tree-Plantation-Campaign.webp', 'Newly planted saplings on restored land' ),
+                            self::title_el( $forest3, 'left' ),
+                            self::desc_el(
+                                                            'el_lede',
+                                                            $forest3,
+                                                            '',
+                                                            'Planting a tree is the cheap part. Choosing the right species, getting it into the ground in the right season, and coming back for years to make sure it survived — that is the part that needs funding, and the part that decides whether any of it mattered.',
+                                                            [ 'size' => 21 ]
+                                                        ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'bottom-left',
+                        'label'    => __( 'Story', 'better-payment' ),
+                        'width'    => '50%',
+                        'elements' => [
+                            self::desc_el(
+                                                            'el_how',
+                                                            $forest3,
+                                                            'How the planting works',
+                                                            'Seedlings are raised locally and planted by the people who live on the land being restored. Each site is tended long after the photographs are taken: watered through the first dry seasons, thinned, replanted where it failed, and left alone only once it can look after itself.'
+                                                        ),
+                            self::desc_el(
+                                                            'el_where',
+                                                            $forest3,
+                                                            'Where we plant',
+                                                            'On ground that has been cleared, burned or farmed past exhaustion — where a forest will not come back on its own. Species are chosen for the place rather than for the pace, so what grows here belongs here.',
+                                                            [ 'accent_headline' => true ]
+                                                        ),
+                            self::links_el(
+                                                            'Follow the planting',
+                                                            [
+                                                                'facebook'  => 'https://facebook.com/',
+                                                                'instagram' => 'https://instagram.com/',
+                                                                'youtube'   => 'https://youtube.com/',
+                                                            ]
+                                                        ),
+                        ],
+                    ],
+                    [
+                        'id'       => 'bottom-right',
+                        'label'    => __( 'Donate', 'better-payment' ),
+                        'width'    => '50%',
+                        'elements' => [
+                            self::progress_el( 'Progress so far', 'Raised:', 'Goal:' ),
+                            self::summary_el( [ 'raised', 'donors', 'percent', 'days' ] ),
+                            self::amounts_el( 'Plant a tree' ),
+                            self::donate_el( $forest3, 'Plant Trees' ),
                             self::organizer_el(
                                                             'Planting Coordinator',
                                                             'I look after the sites and report back at the end of each planting season, survival rates included.'
@@ -1809,6 +2411,18 @@ class TemplateManager {
                 'body'   => [ 'size' => 17, 'leading' => 1.75 ],
             ],
 
+            // v3 "ember": the same terracotta, set in the display serif the
+            // theme loads (`BP Fraunces`), which wants a lighter weight than
+            // v2's system-font 800 at a larger size.
+            'charity-basic-v3' => [
+                'accent' => '#c2410c',
+                'ink'    => '#1c1917',
+                'muted'  => '#57534e',
+                'title'  => [ 'size' => 52, 'weight' => '600', 'track' => -1.4, 'leading' => 1.04 ],
+                'head'   => [ 'size' => 27, 'weight' => '600', 'track' => -0.4 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.75 ],
+            ],
+
             // Clinical teal. Calm and precise — the tone a medical appeal needs.
             'medical-relief-v2' => [
                 'accent' => '#0f766e',
@@ -1818,9 +2432,25 @@ class TemplateManager {
                 'head'   => [ 'size' => 24, 'weight' => '700', 'track' => -0.35 ],
                 'body'   => [ 'size' => 17, 'leading' => 1.75 ],
             ],
+            'medical-relief-v3' => [
+                'accent' => '#0f766e',
+                'ink'    => '#0f172a',
+                'muted'  => '#475569',
+                'title'  => [ 'size' => 44, 'weight' => '700', 'track' => -1.1, 'leading' => 1.08 ],
+                'head'   => [ 'size' => 24, 'weight' => '600', 'track' => -0.35 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.75 ],
+            ],
 
             // Indigo. Optimistic and contemporary — a scholarship prospectus.
             'education-fund-v2' => [
+                'accent' => '#4f46e5',
+                'ink'    => '#1e1b4b',
+                'muted'  => '#4c4a6a',
+                'title'  => [ 'size' => 50, 'weight' => '800', 'track' => -1.5, 'leading' => 1.04 ],
+                'head'   => [ 'size' => 25, 'weight' => '700', 'track' => -0.4 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.75 ],
+            ],
+            'education-fund-v3' => [
                 'accent' => '#4f46e5',
                 'ink'    => '#1e1b4b',
                 'muted'  => '#4c4a6a',
@@ -1838,10 +2468,26 @@ class TemplateManager {
                 'head'   => [ 'size' => 22, 'weight' => '700', 'track' => 0.2 ],
                 'body'   => [ 'size' => 17, 'leading' => 1.8 ],
             ],
+            'golf-destinations-v3' => [
+                'accent' => '#15803d',
+                'ink'    => '#14261a',
+                'muted'  => '#4b5c50',
+                'title'  => [ 'size' => 40, 'weight' => '600', 'track' => 1.2, 'leading' => 1.12, 'transform' => 'uppercase' ],
+                'head'   => [ 'size' => 22, 'weight' => '600', 'track' => 0.2 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.8 ],
+            ],
 
             // Sky on midnight. The one dark template — see the SCSS note on why
             // the theme, not the element settings, owns the light text.
             'child-healthcare-v2' => [
+                'accent' => '#38bdf8',
+                'ink'    => '#f1f5f9',
+                'muted'  => '#a8b6c8',
+                'title'  => [ 'size' => 50, 'weight' => '800', 'track' => -1.6, 'leading' => 1.04 ],
+                'head'   => [ 'size' => 25, 'weight' => '700', 'track' => -0.4 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.75 ],
+            ],
+            'child-healthcare-v3' => [
                 'accent' => '#38bdf8',
                 'ink'    => '#f1f5f9',
                 'muted'  => '#a8b6c8',
@@ -1859,12 +2505,28 @@ class TemplateManager {
                 'head'   => [ 'size' => 25, 'weight' => '700', 'track' => -0.4 ],
                 'body'   => [ 'size' => 17, 'leading' => 1.75 ],
             ],
+            'tree-plantation-v3' => [
+                'accent' => '#047857',
+                'ink'    => '#0f2e23',
+                'muted'  => '#47615a',
+                'title'  => [ 'size' => 48, 'weight' => '600', 'track' => -1.4, 'leading' => 1.05 ],
+                'head'   => [ 'size' => 25, 'weight' => '600', 'track' => -0.4 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.75 ],
+            ],
 
             // Amber on warm white. Friendly, hand-on-the-shoulder.
             // Rose on blush, soft and round. Amber sat a few degrees from
             // charity-basic's terracotta, so the two cards read as one design in
             // two shades — the whole reason this template was reworked.
             'animal-rescue-v2' => [
+                'accent' => '#be185d',
+                'ink'    => '#3f0c22',
+                'muted'  => '#6b4453',
+                'title'  => [ 'size' => 44, 'weight' => '800', 'track' => -1.0, 'leading' => 1.1 ],
+                'head'   => [ 'size' => 24, 'weight' => '700', 'track' => -0.2 ],
+                'body'   => [ 'size' => 17, 'leading' => 1.8 ],
+            ],
+            'animal-rescue-v3' => [
                 'accent' => '#be185d',
                 'ink'    => '#3f0c22',
                 'muted'  => '#6b4453',
@@ -1880,6 +2542,14 @@ class TemplateManager {
                 'muted'  => '#3f3f46',
                 'title'  => [ 'size' => 50, 'weight' => '800', 'track' => -1.6, 'leading' => 1.03 ],
                 'head'   => [ 'size' => 26, 'weight' => '700', 'track' => -0.5 ],
+                'body'   => [ 'size' => 18, 'leading' => 1.7 ],
+            ],
+            'disaster-relief-v3' => [
+                'accent' => '#dc2626',
+                'ink'    => '#18181b',
+                'muted'  => '#3f3f46',
+                'title'  => [ 'size' => 50, 'weight' => '800', 'track' => -1.6, 'leading' => 1.03 ],
+                'head'   => [ 'size' => 26, 'weight' => '800', 'track' => -0.5 ],
                 'body'   => [ 'size' => 18, 'leading' => 1.7 ],
             ],
         ];

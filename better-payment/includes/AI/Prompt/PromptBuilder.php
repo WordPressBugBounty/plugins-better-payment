@@ -357,7 +357,13 @@ class PromptBuilder {
                 $elements[] = [
                     'id'       => $element['id'] ?? '',
                     'type'     => $element['type'] ?? '',
-                    'settings' => self::trim_settings( $element['settings'] ?? [] ),
+                    // Style settings are not the AI's (CampaignSchema::without_style_settings()).
+                    'settings' => self::trim_settings(
+                        CampaignSchema::without_style_settings(
+                            is_string( $element['type'] ?? null ) ? $element['type'] : '',
+                            is_array( $element['settings'] ?? null ) ? $element['settings'] : []
+                        )
+                    ),
                 ];
             }
             $columns[] = [

@@ -7,7 +7,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { getElement } from '../fields/FieldRegistry';
 import { isElementLocked } from '../utils/proEnabled';
 import ProCrownIcon from './ProCrownIcon';
-import { AI_TEMPLATE } from './TemplatesTab';
+import { isAiTemplateKey } from './TemplatesTab';
+import { watchPreviewLayout } from '../utils/watchPreviewLayout';
+import { canvasWidth } from '../utils/builderHooks';
 
 // ── SVG icons (match ElementCard toolbar exactly) ─────────────────────────────
 
@@ -340,6 +342,7 @@ export default function LiveCanvas( {
 	sidebarTab,
 	proEnabled = false,
 	onRequestUpgrade,
+	styleDevice = 'desktop',
 } ) {
 	const [ previewHtml, setPreviewHtml ] = useState( '' );
 	const [ loading, setLoading ] = useState( false );
@@ -354,6 +357,10 @@ export default function LiveCanvas( {
 	const previewHtmlRef = useRef( '' );
 
 	const columns = state.layout?.columns || [];
+
+	// The canvas narrows to the device being styled when an add-on says how wide
+	// that device is (Pro's tablet / mobile preview). Without one it is full width.
+	const deviceWidth = canvasWidth( styleDevice );
 
 	// Clear stale hotspot rects the moment layout changes so misplaced hotspots
 	// don't linger while the new iframe preview is loading.
@@ -456,6 +463,28 @@ export default function LiveCanvas( {
 		setColumnRects( colRects );
 	}, [] );
 
+	// ── Keep hotspots on their elements after load ────────────────────────────
+	// `load` is not the end of layout: the campaign fonts swap in (font-display:
+	// swap) and late images grow their elements, pushing everything below them
+	// down. Measure on load, then re-measure on every later shift.
+	const stopWatchingRef = useRef( null );
+	// A width change reflows the iframe without reloading it, so onLoad never
+	// fires: measure again once the new width has painted.
+	useEffect( () => {
+		const frame = requestAnimationFrame( measurePositions );
+		return () => cancelAnimationFrame( frame );
+	}, [ deviceWidth ] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+	const handleIframeLoad = useCallback( () => {
+		stopWatchingRef.current?.();
+		measurePositions();
+		stopWatchingRef.current = watchPreviewLayout(
+			iframeRef.current?.contentDocument,
+			measurePositions
+		);
+	}, [ measurePositions ] );
+	useEffect( () => () => stopWatchingRef.current?.(), [] );
+
 	// Re-measure on window resize.
 	useEffect( () => {
 		window.addEventListener( 'resize', measurePositions );
@@ -497,7 +526,7 @@ export default function LiveCanvas( {
 		// opens the AI panel instead. It matters when the sidebar is parked on
 		// Elements or Customize, where the assistant is off-screen and the + is
 		// the most obvious thing to click.
-		const isAiCampaign = state.meta?.bpc_template_key === AI_TEMPLATE.key;
+		const isAiCampaign = isAiTemplateKey( state.meta?.bpc_template_key );
 		const canFocusAI = isAiCampaign && typeof onRequestAI === 'function';
 
 		return (
@@ -588,8 +617,15 @@ export default function LiveCanvas( {
 
 			{ /* Outer shell — iframe + overlay share the same coordinate space */ }
 			<div
-				className="bp-lc-inner"
-				style={ { height: iframeHeight || 'auto' } }
+				className={ `bp-lc-inner${
+					deviceWidth ? ' bp-lc-inner--device' : ''
+				}` }
+				style={ {
+					height: iframeHeight || 'auto',
+					...( deviceWidth
+						? { width: deviceWidth, maxWidth: '100%' }
+						: {} ),
+				} }
 			>
 				{ /* Live preview iframe — pointer-events disabled so overlay intercepts all input */ }
 				<iframe
@@ -597,7 +633,7 @@ export default function LiveCanvas( {
 					srcDoc={ previewHtml }
 					className="bp-lc-iframe"
 					style={ { height: iframeHeight } }
-					onLoad={ measurePositions }
+					onLoad={ handleIframeLoad }
 					title={ __( 'Campaign Preview', 'better-payment' ) }
 					sandbox="allow-same-origin allow-scripts"
 				/>

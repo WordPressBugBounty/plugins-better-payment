@@ -308,9 +308,7 @@ class BlockActions {
 
         $el_settings_currency    = $el_settings['better_payment_form_currency'];
         $woo_product_id          = ! empty( $el_settings['better_payment_form_woocommerce_product_id'] ) ? intval( $el_settings['better_payment_form_woocommerce_product_id'] ) : 0;
-        $woo_product_ids         = ! empty( $el_settings['better_payment_form_woocommerce_product_ids'] ) ? $el_settings['better_payment_form_woocommerce_product_ids'] : array( 0 );
         $fluentcart_product_id   = ! empty( $el_settings['better_payment_form_fluentcart_product_id'] ) ? intval( $el_settings['better_payment_form_fluentcart_product_id'] ) : 0;
-        $fluentcart_product_ids  = ! empty( $el_settings['better_payment_form_fluentcart_product_ids'] ) ? $el_settings['better_payment_form_fluentcart_product_ids'] : array( 0 );
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
         // Amount, quantity, currency and campaign come from the stored settings, never
@@ -365,25 +363,15 @@ class BlockActions {
             'notify_url'    => admin_url( 'admin-post.php?action=better_payment_paypal_ipn' ),
         );
 
-        $product_ids = array(
-            'woo_product_ids'       => $woo_product_ids,
-            'fluentcart_product_ids' => $fluentcart_product_ids,
-        );
-
-        $detailed_product_info = $this->get_detailed_product_info( $product_ids );
-
         // Form fields data to send via email.
         $better_form_fields = array(
             'amount'               => sanitize_text_field( $el_settings_currency_symbol ) . $primary_payment_amount,
             'referer_page_id'      => $page_id,
             'referer_widget_id'    => $widget_id,
             'woo_product_id'       => $woo_product_id,
-            'woo_product_ids'      => maybe_serialize( $woo_product_ids ),
             'fluentcart_product_id' => $fluentcart_product_id,
-            'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source'               => 'paypal',
             'amount_quantity'      => ! empty( $primary_payment_amount_quantity ) ? intval( $primary_payment_amount_quantity ) : '',
-            'detailed_product_info' => maybe_serialize( $detailed_product_info ),
             'paypal_business_email' => Handler::paypal_business_identifier( $el_settings['better_payment_paypal_business_email'] ),
             // The PayPal environment the order was sent to; the IPN must come from the same one.
             'paypal_mode'           => 'yes' === $el_settings['better_payment_paypal_live_mode'] ? 'live' : 'sandbox',
@@ -602,28 +590,16 @@ class BlockActions {
 
         // Build form fields.
         $woo_product_id         = ! empty( $el_settings['better_payment_form_woocommerce_product_id'] ) ? intval( $el_settings['better_payment_form_woocommerce_product_id'] ) : 0;
-        $woo_product_ids        = ! empty( $el_settings['better_payment_form_woocommerce_product_ids'] ) ? $el_settings['better_payment_form_woocommerce_product_ids'] : array( 0 );
         $fluentcart_product_id  = ! empty( $el_settings['better_payment_form_fluentcart_product_id'] ) ? intval( $el_settings['better_payment_form_fluentcart_product_id'] ) : 0;
-        $fluentcart_product_ids = ! empty( $el_settings['better_payment_form_fluentcart_product_ids'] ) ? $el_settings['better_payment_form_fluentcart_product_ids'] : array( 0 );
-
-        $product_ids = array(
-            'woo_product_ids'       => $woo_product_ids,
-            'fluentcart_product_ids' => $fluentcart_product_ids,
-        );
-
-        $detailed_product_info = $this->get_detailed_product_info( $product_ids );
 
         $better_form_fields = array(
             'amount'                => sanitize_text_field( $el_settings_currency_symbol ) . $amount,
             'referer_page_id'       => $page_id,
             'referer_widget_id'     => $widget_id,
             'woo_product_id'        => $woo_product_id,
-            'woo_product_ids'       => maybe_serialize( $woo_product_ids ),
             'fluentcart_product_id' => $fluentcart_product_id,
-            'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source'                => 'stripe',
             'amount_quantity'       => ! empty( $amount_quantity ) ? intval( $amount_quantity ) : '',
-            'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         );
 
         // Fields the form set win over what the visitor posts: a custom field the admin
@@ -840,28 +816,16 @@ class BlockActions {
 
         // Build form fields.
         $woo_product_id         = ! empty( $el_settings['better_payment_form_woocommerce_product_id'] ) ? intval( $el_settings['better_payment_form_woocommerce_product_id'] ) : 0;
-        $woo_product_ids        = ! empty( $el_settings['better_payment_form_woocommerce_product_ids'] ) ? $el_settings['better_payment_form_woocommerce_product_ids'] : array( 0 );
         $fluentcart_product_id  = ! empty( $el_settings['better_payment_form_fluentcart_product_id'] ) ? intval( $el_settings['better_payment_form_fluentcart_product_id'] ) : 0;
-        $fluentcart_product_ids = ! empty( $el_settings['better_payment_form_fluentcart_product_ids'] ) ? $el_settings['better_payment_form_fluentcart_product_ids'] : array( 0 );
-
-        $product_ids = array(
-            'woo_product_ids'       => $woo_product_ids,
-            'fluentcart_product_ids' => $fluentcart_product_ids,
-        );
-
-        $detailed_product_info = $this->get_detailed_product_info( $product_ids );
 
         $better_form_fields = array(
             'amount'                => sanitize_text_field( $el_settings_currency_symbol ) . $amount,
             'referer_page_id'       => $page_id,
             'referer_widget_id'     => $widget_id,
             'woo_product_id'        => $woo_product_id,
-            'woo_product_ids'       => maybe_serialize( $woo_product_ids ),
             'fluentcart_product_id' => $fluentcart_product_id,
-            'fluentcart_product_ids' => maybe_serialize( $fluentcart_product_ids ),
             'source'                => 'paystack',
             'amount_quantity'       => ! empty( $amount_quantity ) ? intval( $amount_quantity ) : '',
-            'detailed_product_info' => maybe_serialize( $detailed_product_info ),
         );
 
         // Fields the form set win over what the visitor posts: a custom field the admin
@@ -956,44 +920,6 @@ class BlockActions {
         $location = isset( $_SERVER['HTTP_REFERER'] ) ? wp_unslash( $_SERVER['HTTP_REFERER'] ) : home_url();
         wp_safe_redirect( esc_url_raw( $location ) );
         exit();
-    }
-
-    /**
-     * Get detailed product information.
-     *
-     * @param array $product_ids Array of product IDs.
-     * @param array $product_quantities Array of product quantities.
-     * @return array Detailed product information.
-     */
-    public function get_detailed_product_info( $product_ids, $product_quantities = array() ) {
-        $detailed_product_info = array();
-
-        if ( function_exists( 'wc_get_product' ) && ! empty( $product_ids['woo_product_ids'] ) ) {
-            foreach ( $product_ids['woo_product_ids'] as $key => $product_id ) {
-                if ( empty( $product_id ) ) {
-                    continue;
-                }
-
-                $product = wc_get_product( $product_id );
-                if ( $product ) {
-                    $quantity    = isset( $product_quantities[ $key ] ) ? intval( $product_quantities[ $key ] ) : 1;
-                    $price       = floatval( $product->get_price() );
-                    $total_price = $price * $quantity;
-
-                    $detailed_product_info['woo_products'][ $product_id ] = array(
-                        'name'        => sanitize_text_field( $product->get_name() ),
-                        'product_id'  => intval( $product_id ),
-                        'permalink'   => esc_url( $product->get_permalink() ),
-                        'image_src'   => esc_url( wp_get_attachment_url( (int) $product->get_image_id() ) ),
-                        'price'       => $price,
-                        'quantity'    => $quantity,
-                        'total_price' => $total_price,
-                    );
-                }
-            }
-        }
-
-        return $detailed_product_info;
     }
 
     /**

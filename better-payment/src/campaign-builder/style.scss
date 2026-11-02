@@ -1565,8 +1565,8 @@ body.bp-fullscreen {
 	&__body {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
-		padding: 4px 12px 14px;
+		gap: 14px;
+		padding: 14px 12px 16px;
 		border-top: 1px solid $border;
 
 		// Inline layout for every field inside the section: label on the left,
@@ -2925,146 +2925,8 @@ $sa-del-w: 32px;
 	}
 }
 
-// Generic repeater control (used by add-on elements such as the Pro FAQ widget)
-.bp-rp-editor {
-	border: 1px solid $border;
-	border-radius: 6px;
-	overflow: hidden;
-	background: $white;
-}
-
-.bp-rp-row {
-	border-bottom: 1px solid $border;
-
-	&:last-child {
-		border-bottom: none;
-	}
-
-	&__head {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px 8px 6px 10px;
-		background: #fafafa;
-	}
-
-	&__toggle {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		min-width: 0;
-		background: none;
-		border: none;
-		padding: 4px 2px;
-		margin: 0;
-		cursor: pointer;
-		text-align: left;
-	}
-
-	&__title {
-		flex: 1;
-		font-size: 12px;
-		font-weight: 600;
-		color: $text;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	&__chevron {
-		flex: 0 0 auto;
-		color: $muted;
-		transition: transform 0.15s ease;
-	}
-
-	&.is-open &__chevron {
-		transform: rotate(180deg);
-	}
-
-	&__body {
-		padding: 10px;
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		border-top: 1px solid $border;
-	}
-}
-
-.bp-rp-drag {
-	cursor: grab;
-	color: $muted;
-	font-size: 14px;
-	line-height: 1;
-	user-select: none;
-
-	&:active {
-		cursor: grabbing;
-	}
-}
-
-.bp-rp-field {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-
-	input[type="text"],
-	textarea {
-		width: 100%;
-	}
-}
-
-.bp-rp-delete {
-	background: none;
-	border: none;
-	cursor: pointer;
-	color: $muted;
-	font-size: 13px;
-	line-height: 1;
-	padding: 2px 4px;
-
-	&:hover {
-		color: $danger;
-	}
-}
-
-.bp-rp-footer {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 8px 10px;
-	border-top: 1px solid $border;
-	background: #fafafa;
-}
-
-.bp-rp-add {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 5px 14px;
-	font-size: 12px;
-	font-weight: 600;
-	color: $primary;
-	background: rgba($primary, 0.06);
-	border: 1px solid rgba($primary, 0.22);
-	border-radius: 5px;
-	cursor: pointer;
-	line-height: 1.4;
-
-	&:hover {
-		background: rgba($primary, 0.12);
-	}
-
-	&:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-}
-
-.bp-rp-max-note {
-	font-size: 11px;
-	color: $muted;
-}
+// The repeater control's styles: Lite's transitional copy (transitional/_repeater-control.scss).
+@import "./transitional/repeater-control";
 
 // Compact mode — used inside the widget settings sidebar (no description column, $ prefix on amount)
 .bp-sa-editor--compact {
@@ -3589,12 +3451,18 @@ $sa-del-w: 32px;
 
 		// The upgrade CTA takes the Pro gradient rather than $primary, so the
 		// card, its badge and the modal it opens read as one thing.
+		//
+		// `border-box` in the shorthand, not the default `padding-box`: the
+		// button keeps a 1.5px transparent border (so it matches the Preview
+		// button's size), and a gradient sized to the padding box REPEATS into
+		// that border — the far end of the gradient showed as a thin band of the
+		// wrong colour down the left and right edges of the pill.
 		.bp-tpl-card__hover-btn--primary {
-			background: linear-gradient(135deg, #f7a12b, #ec6a2b);
+			background: linear-gradient(135deg, #f7a12b, #ec6a2b) border-box;
 			border-color: transparent;
 
 			&:hover {
-				background: linear-gradient(135deg, #f8ad48, #f0763a);
+				background: linear-gradient(135deg, #f8ad48, #f0763a) border-box;
 				border-color: transparent;
 			}
 		}
@@ -3740,6 +3608,197 @@ $sa-del-w: 32px;
 	}
 }
 
+// ── Prebuilt template cards ───────────────────────────────────────────────────
+// The designs are the product, so their cards present them like one: the
+// screenshot runs edge to edge in a frame tinted with the template's own accent
+// (`--bp-tpl-accent`, its preview_color, set inline), a strip of that accent runs
+// along the top, the card lifts and the screenshot eases in on hover, and two
+// chips say what kind of page it is. Scoped to `--prebuilt`; the blank and AI
+// cards keep their own look.
+.bp-tpl-card--prebuilt {
+	border: 1px solid $border;
+	border-radius: 14px;
+	box-shadow:
+		0 1px 2px rgba(16, 24, 40, 0.04),
+		0 8px 24px -16px rgba(16, 24, 40, 0.18);
+	transition:
+		border-color 0.22s ease-out,
+		box-shadow 0.22s ease-out,
+		transform 0.22s ease-out;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		z-index: 3;
+		background: var(--bp-tpl-accent, #{$primary});
+	}
+
+	&:hover {
+		transform: translateY(-3px);
+		box-shadow:
+			0 2px 4px rgba(16, 24, 40, 0.05),
+			0 20px 40px -18px rgba(16, 24, 40, 0.3);
+
+		// A darker outline — no zoom (a scaled picture would spill into the frame
+		// unevenly) and no drop shadow (it fell into the frame as a dark smudge).
+		.bp-tpl-card__screenshot {
+			box-shadow: 0 0 0 1px rgba(16, 24, 40, 0.16);
+		}
+	}
+
+	&:focus-within {
+		box-shadow:
+			0 0 0 3px rgba($primary, 0.25),
+			0 20px 40px -18px rgba(16, 24, 40, 0.3);
+	}
+
+	// A ratio, not a fixed height: the box is always wider than the 1100x860
+	// screenshot (16:10 > 1.28 even inside the 12px white frame), so `cover`
+	// crops only the bottom and the design is never cut down one side. The fixed
+	// 210px height was narrower than the artwork on a common 1440px screen and cut
+	// its right edge off, which read as a page with a bigger margin on one side.
+	.bp-tpl-card__thumb {
+		height: auto;
+		aspect-ratio: 16 / 10;
+		background: $white;
+	}
+
+	// The screenshot sits in an even white frame — the same 12px on all four
+	// sides — as a rounded, outlined picture of the page. The picture is the
+	// page edge to edge (no margin of its own: see capture-template-thumbnails),
+	// so this frame is the only white round it and the bottom matches the rest.
+	.bp-tpl-card__screenshot {
+		inset: 12px;
+		width: calc(100% - 24px);
+		height: calc(100% - 24px);
+		border-radius: 8px;
+		// An outline only, never a drop shadow: the frame below the picture is
+		// just 12px, and a shadow falling into it read as a dark smudge under the
+		// image (strongest on hover). The card's own shadow does the lifting.
+		box-shadow: 0 0 0 1px rgba(16, 24, 40, 0.08);
+		// Full width, cropped from the bottom only (see the thumb's ratio).
+		object-position: center top;
+		transition: box-shadow 0.22s ease-out;
+	}
+
+	// The overlay covers the picture, not the white frame around it.
+	.bp-tpl-card__hover {
+		inset: 12px;
+		border-radius: 8px;
+		background: linear-gradient(
+			180deg,
+			rgba(16, 24, 40, 0.15) 0%,
+			rgba(16, 24, 40, 0.62) 100%
+		);
+		backdrop-filter: blur(1.5px);
+	}
+
+	.bp-tpl-card__hover-btn {
+		border-radius: 999px;
+		min-width: 148px;
+		padding: 10px 20px;
+	}
+
+	.bp-tpl-card__badge,
+	.bp-tpl-card__pro-badge {
+		top: 16px;
+	}
+
+	.bp-tpl-card__badge {
+		left: 16px;
+	}
+
+	.bp-tpl-card__pro-badge {
+		right: 16px;
+		transition: opacity 0.18s ease-out;
+	}
+
+	// On hover the overlay's own "Upgrade to Pro" (crown and all) says what the
+	// badge says, and on a short 16:10 thumb its first button reaches up into
+	// the badge's corner. The badge steps aside rather than overlap it.
+	&:hover .bp-tpl-card__pro-badge,
+	&:focus-within .bp-tpl-card__pro-badge {
+		opacity: 0;
+	}
+
+	.bp-tpl-card__info {
+		padding: 16px 18px 18px;
+
+		strong {
+			font-size: 17px;
+			letter-spacing: -0.01em;
+		}
+
+		// Three lines at most: the cards in a row stay level, and the full
+		// description is one click away in the Preview.
+		span {
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 3;
+			overflow: hidden;
+		}
+	}
+
+	&.is-locked {
+		&::before {
+			background: linear-gradient(90deg, #f7a12b, #ec6a2b);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&,
+		.bp-tpl-card__screenshot {
+			transition: none;
+		}
+
+		&:hover,
+		&:hover .bp-tpl-card__screenshot {
+			transform: none;
+		}
+	}
+}
+
+// Category and layout chips under the description. `em`, so wp-admin's and the
+// card's `span` rules never reach them.
+.bp-tpl-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: auto;
+	padding-top: 6px;
+}
+
+.bp-tpl-card__chip {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 9px;
+	border-radius: 999px;
+	background: $bg;
+	color: $muted;
+	font-size: 11px;
+	font-style: normal;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	line-height: 1.5;
+
+	&--category {
+		background: color-mix(
+			in srgb,
+			var(--bp-tpl-accent, #{$primary}) 12%,
+			#{$white}
+		);
+		color: color-mix(
+			in srgb,
+			var(--bp-tpl-accent, #{$primary}) 70%,
+			#{$text}
+		);
+	}
+}
+
 // ── Blank-template row only (AI Assistant, 1 / 2 Column, Custom) ───────────────
 // Shorter, tighter cards scoped to the "Start with a blank template" grid — the
 // pre-built template cards below keep their original larger size.
@@ -3842,6 +3901,82 @@ $sa-del-w: 32px;
 	&--live {
 		width: 1080px;
 		height: 90vh;
+	}
+
+	// Full-page images (a locked Pro card on a free install): the same frame as
+	// a live preview, so a Pro card and a free one open at the same size, with
+	// the body scrolling the tall image.
+	&--full {
+		width: 1080px;
+		height: 90vh;
+	}
+
+	// Desktop / Mobile switch for the full-page images.
+	&__devices {
+		display: inline-flex;
+		gap: 2px;
+		margin-top: 14px;
+		padding: 3px;
+		border-radius: 999px;
+		background: $bg;
+	}
+
+	&__device {
+		border: 0;
+		border-radius: 999px;
+		padding: 6px 16px;
+		background: transparent;
+		color: $muted;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background 0.15s,
+			color 0.15s,
+			box-shadow 0.15s;
+
+		&:hover {
+			color: $text;
+		}
+
+		&.is-active {
+			background: $white;
+			color: $text;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+		}
+
+		&:focus-visible {
+			outline: 2px solid $primary;
+			outline-offset: 2px;
+		}
+	}
+
+	&__full {
+		width: 100%;
+
+		// Mobile is shown at phone width inside a device frame, not stretched to
+		// the modal: a 390px design blown up to 1000px reads as a broken page.
+		&--mobile {
+			width: 390px;
+			max-width: 100%;
+			padding: 12px;
+			border-radius: 36px;
+			background: #111827;
+			box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.45);
+			margin: 0 auto;
+
+			.bp-template-lightbox__full-img {
+				border-radius: 26px;
+			}
+		}
+	}
+
+	&__full-img {
+		width: 100%;
+		height: auto;
+		display: block;
+		border-radius: 8px;
+		box-shadow: 0 0 0 1px $border;
 	}
 
 	// Minimal × — absolute top-right, no background pill
@@ -7388,4 +7523,604 @@ $sa-del-w: 32px;
 			}
 		}
 	}
+}
+
+// ── Style controls (Style / Advanced tabs) ────────────────────────────────────
+// Components in components/StyleControls.js + Popover.js. Inputs answer wp-admin's
+// own `input[type=…]` rules with a descendant selector + !important (see
+// .claude/rules/js-coding-standards.md Rule 2a).
+
+$checker: conic-gradient($border 0 25%, $white 0 50%, $border 0 75%, $white 0);
+$field-h: 34px;
+
+.bp-color-picker__alpha {
+	display: block;
+	width: 100%;
+	height: 10px;
+	margin: 8px 0 0;
+	padding: 0;
+	border: none;
+	-webkit-appearance: none;
+	appearance: none;
+	cursor: pointer;
+	background: linear-gradient(
+			to right,
+			transparent,
+			var(--bp-alpha-color, #000)
+		),
+		$checker;
+	background-size:
+		auto,
+		10px 10px;
+
+	&::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: #fff;
+		border: 2px solid rgba(0, 0, 0, 0.25);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	}
+
+	&::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: #fff;
+		border: 2px solid rgba(0, 0, 0, 0.25);
+	}
+}
+
+// A stacked control takes the panel's full width — the section body's inline
+// "label 44% | control" row is only for one-field controls (RightSidebar.js
+// STACKED_TYPES). Same specificity as the inline rule plus one class.
+.bp-cb-collapsible-section__body .bp-cb-control.bp-cb-control--stacked,
+.bp-cb-states__body .bp-cb-control.bp-cb-control--stacked {
+	flex-direction: column;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	gap: 6px;
+
+	> label.bp-cb-field-label {
+		flex: none;
+		max-width: none;
+	}
+
+	> *:not(label):not(.bp-cb-field-hint) {
+		flex: none;
+		width: 100%;
+	}
+}
+
+// Label row a stacked control draws itself: label left, actions right.
+.bp-cb-control-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	min-height: 22px;
+
+	> label.bp-cb-field-label {
+		margin: 0;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+}
+
+// ── Colour: swatch + field (+ clear); the picker floats in a Popover ─────────
+.bp-cb-color {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+
+	&__swatch {
+		position: relative;
+		flex-shrink: 0;
+		width: $field-h;
+		height: $field-h;
+		padding: 0;
+		border: 1px solid $border;
+		border-radius: 6px;
+		cursor: pointer;
+		overflow: hidden;
+		background: $checker;
+		background-size: 10px 10px;
+		transition:
+			box-shadow 0.15s,
+			border-color 0.15s;
+
+		&:hover {
+			border-color: color.adjust($border, $lightness: -15%);
+		}
+
+		&.is-active,
+		&:focus-visible {
+			outline: none;
+			border-color: $primary;
+			box-shadow: 0 0 0 2px rgba($primary, 0.18);
+		}
+	}
+
+	&__fill {
+		position: absolute;
+		inset: 0;
+	}
+
+	&__field {
+		position: relative;
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__field input.bp-cb-color__input {
+		width: 100% !important;
+		height: $field-h !important;
+		min-height: $field-h !important;
+		padding: 0 28px 0 9px !important;
+		font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+		font-size: 12px;
+		text-transform: none;
+	}
+
+	&__clear {
+		position: absolute;
+		top: 50%;
+		right: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
+		padding: 0;
+		border: none;
+		border-radius: 50%;
+		background: $bg;
+		color: $muted;
+		cursor: pointer;
+		transform: translateY(-50%);
+
+		&:hover,
+		&:focus-visible {
+			outline: none;
+			background: rgba($danger, 0.1);
+			color: $danger;
+		}
+	}
+}
+
+// The floating panel (portal on <body>, so builder-scoped rules above do not
+// reach inside; it styles itself).
+.bp-cb-popover {
+	box-sizing: border-box;
+	max-height: calc(100vh - 16px);
+	overflow: auto;
+	border: 1px solid $border;
+	border-radius: 10px;
+	background: $white;
+	box-shadow:
+		0 12px 32px -8px rgba(15, 23, 42, 0.22),
+		0 4px 10px -4px rgba(15, 23, 42, 0.12);
+	animation: bp-cb-popover-in 0.12s ease-out;
+
+	.bp-color-picker {
+		width: 100%;
+		box-sizing: border-box;
+		box-shadow: none;
+		border: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes bp-cb-popover-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.bp-cb-popover.is-top {
+	animation-name: bp-cb-popover-in-top;
+}
+
+.bp-cb-popover.is-side {
+	animation-name: bp-cb-popover-in-side;
+}
+
+@keyframes bp-cb-popover-in-side {
+	from {
+		opacity: 0;
+		transform: translateX(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes bp-cb-popover-in-top {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+// ── Number field with a caption (dimensions, shadow offsets) ────────────────
+.bp-cb-num-field {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 4px;
+	min-width: 0;
+	font-size: 10px;
+	font-weight: 500;
+	color: $muted;
+	text-align: center;
+	letter-spacing: 0.02em;
+
+	input[type="number"] {
+		width: 100% !important;
+		min-width: 0;
+		height: $field-h !important;
+		min-height: $field-h !important;
+		padding: 0 4px !important;
+		text-align: center;
+		font-size: 12px;
+		-moz-appearance: textfield;
+
+		&::-webkit-inner-spin-button,
+		&::-webkit-outer-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+
+		&::placeholder {
+			color: color.adjust($muted, $lightness: 20%);
+		}
+	}
+}
+
+// ── Number with its unit inside the field (style sizes: px, ms) ──────────────
+.bp-cb-num-unit {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	input[type="number"] {
+		width: 100% !important;
+		padding-right: 34px !important;
+		-moz-appearance: textfield;
+
+		&::-webkit-inner-spin-button,
+		&::-webkit-outer-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+	}
+
+	&__suffix {
+		position: absolute;
+		right: 10px;
+		font-size: 11px;
+		font-weight: 500;
+		color: $muted;
+		pointer-events: none;
+	}
+}
+
+// ── Dimensions ──────────────────────────────────────────────────────────────
+.bp-cb-dims {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+
+	&__row {
+		display: flex;
+		align-items: flex-start;
+		gap: 6px;
+	}
+
+	&__fields {
+		display: flex;
+		flex: 1;
+		min-width: 0;
+		gap: 6px;
+	}
+
+	&__link {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: $field-h;
+		height: $field-h;
+		padding: 0;
+		border: 1px solid $border;
+		border-radius: 6px;
+		background: $white;
+		color: $muted;
+		cursor: pointer;
+		transition:
+			background 0.15s,
+			color 0.15s,
+			border-color 0.15s;
+
+		&:hover {
+			color: $text;
+		}
+
+		&.is-active {
+			color: $white;
+			background: $primary;
+			border-color: $primary;
+		}
+
+		&:focus-visible {
+			outline: none;
+			box-shadow: 0 0 0 2px rgba($primary, 0.25);
+		}
+	}
+}
+
+// Unit switch in a control's label row (px / % / em).
+.bp-cb-units {
+	display: inline-flex;
+	padding: 2px;
+	border-radius: 6px;
+	background: $bg;
+
+	&__btn {
+		min-width: 26px;
+		height: 20px;
+		padding: 0 6px;
+		border: none;
+		border-radius: 4px;
+		background: transparent;
+		color: $muted;
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 20px;
+		text-transform: lowercase;
+		cursor: pointer;
+
+		&:hover {
+			color: $text;
+		}
+
+		&.is-active {
+			background: $white;
+			color: $primary;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+		}
+
+		&:focus-visible {
+			outline: none;
+			box-shadow: 0 0 0 2px rgba($primary, 0.25);
+		}
+	}
+}
+
+// ── Box shadow ──────────────────────────────────────────────────────────────
+.bp-cb-shadow {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 10px;
+		border-radius: 8px;
+		background: $bg;
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+
+		.bp-cb-color {
+			flex: 1;
+		}
+	}
+
+	&__inset {
+		flex-shrink: 0;
+	}
+}
+
+// ── State tabs (Normal / Hover / Selected / Open) ───────────────────────────
+.bp-cb-states {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+
+	&__tabs {
+		display: flex;
+		padding: 3px;
+		border-radius: 8px;
+		background: $bg;
+	}
+
+	&__tab {
+		flex: 1;
+		padding: 6px 4px;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		color: $muted;
+		font-size: 12px;
+		font-weight: 500;
+		cursor: pointer;
+
+		&:hover {
+			color: $text;
+		}
+
+		&.is-active {
+			background: $white;
+			color: $text;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+		}
+
+		&:focus-visible {
+			outline: none;
+			box-shadow: 0 0 0 2px rgba($primary, 0.25);
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+
+		// The same inline "label | control" row the section body uses, so a tab's
+		// colour fields line up with the controls outside the tabs.
+		.bp-cb-control {
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 8px;
+
+			> label.bp-cb-field-label {
+				flex: 0 0 44%;
+				max-width: 44%;
+				margin: 0;
+				line-height: 1.3;
+			}
+
+			> *:not(label):not(.bp-cb-field-hint) {
+				flex: 1 1 0;
+				min-width: 0;
+			}
+
+			> .bp-cb-field-hint {
+				flex: 0 0 100%;
+				margin: 0;
+			}
+		}
+	}
+}
+
+// Device row above the Style / Advanced controls. Lite draws only the locked
+// free version (ResponsiveLock.js); Pro reuses the classes for its switcher.
+.bp-cb-devices {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 12px;
+
+	&__btn {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 30px;
+		padding: 0;
+		border: 1px solid $border;
+		border-radius: 6px;
+		background: $white;
+		color: $muted;
+		cursor: pointer;
+
+		&.is-active {
+			color: $primary;
+			border-color: $primary;
+			background: rgba($primary, 0.06);
+		}
+
+		&.is-locked {
+			cursor: pointer;
+		}
+	}
+}
+
+.bp-lc-inner--device {
+	margin-left: auto;
+	margin-right: auto;
+	transition: width 0.2s ease;
+}
+
+// Free-only teaser for Pro's Effects (EffectsLock.js), end of the Advanced tab.
+.bp-cb-effects-lock {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	width: 100%;
+	margin-top: 12px;
+	padding: 10px 12px;
+	border: 1px dashed #f0a020;
+	border-radius: 6px;
+	background: #fff8ee;
+	text-align: left;
+	cursor: pointer;
+
+	&__title {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+		font-weight: 600;
+		color: $text;
+	}
+
+	&__text {
+		font-size: 12px;
+		color: #7a6a52;
+	}
+
+	&:focus-visible {
+		outline: 2px solid $primary;
+		outline-offset: 2px;
+	}
+}
+
+// The crown outside the palette cards (its base rule is scoped there).
+.bp-cb-devices__btn .bp-cb-pro-crown,
+.bp-cb-effects-lock .bp-cb-pro-crown {
+	display: flex;
+	width: 12px;
+	height: 12px;
+	color: #ec6a2b;
+	pointer-events: none;
+
+	svg {
+		width: 12px;
+		height: 12px;
+		display: block;
+	}
+}
+
+.bp-cb-devices__btn .bp-cb-pro-crown {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	padding: 1px;
+	border-radius: 50%;
+	background: $white;
+}
+
+// The box shadow's switch is a <label> (StyleControls.js), so the track toggles.
+label.bp-cb-switch-wrap {
+	display: inline-block;
+	cursor: pointer;
 }

@@ -82,10 +82,10 @@ class OperationRegistry {
                 ],
             ],
             'set_colors' => [
-                'summary' => 'Set the campaign primary and/or background colour (hex).',
+                'summary' => 'Set the WHOLE campaign\'s primary and/or page background colour (hex). Repaints the entire page; never use it to style one widget.',
                 'params'  => [
-                    'primary'    => [ 'type' => 'string', 'required' => false, 'summary' => 'Hex colour, e.g. #6b63f6.' ],
-                    'background' => [ 'type' => 'string', 'required' => false, 'summary' => 'Hex colour.' ],
+                    'primary'    => [ 'type' => 'string', 'required' => false, 'summary' => 'Hex colour, e.g. #6b63f6. The accent on every widget.' ],
+                    'background' => [ 'type' => 'string', 'required' => false, 'summary' => 'Hex colour of the page behind every widget.' ],
                 ],
             ],
             'set_donation_amounts' => [

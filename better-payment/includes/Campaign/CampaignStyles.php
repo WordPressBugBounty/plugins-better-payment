@@ -34,6 +34,24 @@ final class CampaignStyles {
     const DISPLAY_HANDLE = 'better-payment-campaign-display-style';
 
     /**
+     * The self-hosted typefaces the `-v3` template themes are set in.
+     *
+     * @since 2.4.5
+     */
+    const FONTS_HANDLE = 'better-payment-campaign-fonts';
+
+    /**
+     * The font stylesheet, relative to the plugin's assets directory.
+     *
+     * A static file rather than part of the campaign-display bundle: webpack's
+     * css-loader would try to resolve the woff2 URLs as modules, and a separate
+     * file keeps the `@font-face` rules next to the fonts they point at.
+     *
+     * @since 2.4.5
+     */
+    const FONTS_FILE = '/fonts/campaign/fonts.css';
+
+    /**
      * Enqueue the theme stylesheets for one campaign surface.
      *
      * Call it right after the campaign-display stylesheet is enqueued or registered.
@@ -43,6 +61,8 @@ final class CampaignStyles {
      * @return void
      */
     public static function enqueue_theme_styles( string $context = 'frontend' ): void {
+        self::enqueue_fonts();
+
         /**
          * Fires wherever a campaign's stylesheets are enqueued, so an add-on can load
          * its own theme CSS after Lite's campaign-display stylesheet.
@@ -50,6 +70,59 @@ final class CampaignStyles {
          * @param string $context 'frontend' or 'builder'.
          */
         do_action( 'better_payment/campaign/enqueue_styles', $context );
+    }
+
+    /**
+     * Enqueue the campaign typefaces.
+     *
+     * Free: the `-v3` themes are free designs. `@font-face` downloads nothing
+     * until a rule uses the family, so a page whose campaign is on any other
+     * theme loads this small stylesheet and no font file.
+     *
+     * @since 2.4.5
+     * @return void
+     */
+    public static function enqueue_fonts(): void {
+        $url = self::fonts_url();
+        if ( '' === $url ) {
+            return;
+        }
+
+        if ( ! wp_style_is( self::FONTS_HANDLE, 'registered' ) ) {
+            wp_register_style( self::FONTS_HANDLE, $url, array(), self::fonts_version() );
+        }
+
+        wp_enqueue_style( self::FONTS_HANDLE );
+    }
+
+    /**
+     * The font stylesheet's URL, versioned, for a document that cannot enqueue
+     * (a preview never runs wp_head). Empty when the file is missing.
+     *
+     * @since 2.4.5
+     * @return string
+     */
+    public static function fonts_url(): string {
+        if ( ! file_exists( BETTER_PAYMENT_ASSETS_PATH . self::FONTS_FILE ) ) {
+            return '';
+        }
+
+        return BETTER_PAYMENT_ASSETS . self::FONTS_FILE;
+    }
+
+    /**
+     * Cache-buster for the font stylesheet: its own mtime, since the plugin
+     * version changes far less often than the file.
+     *
+     * @since 2.4.5
+     * @return string
+     */
+    public static function fonts_version(): string {
+        $mtime = file_exists( BETTER_PAYMENT_ASSETS_PATH . self::FONTS_FILE )
+            ? filemtime( BETTER_PAYMENT_ASSETS_PATH . self::FONTS_FILE )
+            : false;
+
+        return false === $mtime ? (string) BETTER_PAYMENT_VERSION : (string) $mtime;
     }
 
     /**

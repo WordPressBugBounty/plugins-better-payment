@@ -321,7 +321,8 @@ class Usage_Data {
      *   - `campaigns_{status}`  — how many campaigns exist, and how many made it
      *     out of draft. The gap between the two is the builder's drop-off rate.
      *   - `campaign_template_*` — which starting templates people actually pick
-     *     (including `ai-assistant`, the AI-generated path).
+     *     (including `ai-assistant-v3` / the older `ai-assistant`, the
+     *     AI-generated path).
      *   - `campaign_element_*`  — which elements survive on a saved campaign.
      *     This is the campaign equivalent of widget usage and the only way to
      *     tell a shipped element from an ignored one.

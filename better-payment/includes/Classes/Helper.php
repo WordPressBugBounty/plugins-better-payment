@@ -563,36 +563,22 @@ class Helper extends Controller
     }
 
     /**
-     * Get interval text for recurring and split payment
+     * A fatal guard for Better Payment Pro 1.4.3 and older, which called this from layout
+     * partials that no longer load (Pro 1.4.3 fills no `layout_template` filter).
      *
-     * Lite never calls this. Better Payment Pro <= 1.4.3's layout partials did, from
-     * templates that no longer load (Pro 1.4.3 fills no `layout_template` filter), and
-     * tests/Unit/ProCouplingContractTest.php still pins it. Pro 1.4.4+ uses its own
-     * Admin\Elementor\LayoutRenderer::interval_text().
+     * Holds no recurring-interval logic: that is Pro's (Pro 1.4.4+ uses its own
+     * Admin\Elementor\LayoutRenderer::interval_text()). It only keeps the method a Pro 1.4.3
+     * might still name, so a site that updated Lite first does not fatal.
+     * tests/Unit/ProCouplingContractTest.php pins it.
      *
      * @since 1.3.0
-     * @deprecated 2.4.0 Kept as belt-and-braces for Pro 1.4.3. Delete once no supported
-     *             site can run it.
+     * @deprecated 2.4.0 Delete once no supported site can run Pro 1.4.3.
+     *
+     * @param string $interval Unused.
+     * @return string Always ''.
      */
-    public function get_interval_text( $interval = '' ){
-        $interval_text = '';
-
-        switch( $interval ) {
-            case 'day':
-                $interval_text = 'Daily';
-                break;
-
-            case 'month': 
-            case 'year':
-                $interval_text = $interval . 'ly';
-                break;
-
-            default :
-                $interval_text = ! empty( $interval ) ? "Per " . esc_html( $interval ) : "";
-                break;
-        }
-
-        return esc_html( ucfirst( $interval_text ) );
+    public function get_interval_text( $interval = '' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- the signature Pro 1.4.3 calls.
+        return '';
     }
 
     /**

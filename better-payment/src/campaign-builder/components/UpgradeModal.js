@@ -102,6 +102,61 @@ const PRO_CONTENT = {
 			),
 		],
 	},
+	// The locked Tablet / Mobile buttons above the Style and Advanced controls
+	// (ResponsiveLock.js).
+	responsive_styles: {
+		label: __( 'Responsive Styling', 'better-payment' ),
+		tagline: __(
+			'Make every widget look right on every screen.',
+			'better-payment'
+		),
+		description: __(
+			'Set spacing, colours, borders and shadows separately for desktop, tablet and mobile, and preview each size right in the builder.',
+			'better-payment'
+		),
+		benefits: [
+			__( 'Per-device values for every style control', 'better-payment' ),
+			__(
+				'Preview the campaign at tablet and mobile width',
+				'better-payment'
+			),
+			__(
+				'Gradients, hover transitions and custom CSS',
+				'better-payment'
+			),
+			__(
+				'Desktop styles stay the fallback for smaller screens',
+				'better-payment'
+			),
+		],
+	},
+	// The locked Effects row on the Advanced tab (EffectsLock.js).
+	style_effects: {
+		label: __( 'Style Effects', 'better-payment' ),
+		tagline: __(
+			'Give every widget a finish that stands out.',
+			'better-payment'
+		),
+		description: __(
+			'Gradient backgrounds, hover effects with smooth transitions, and your own CSS on any campaign widget.',
+			'better-payment'
+		),
+		benefits: [
+			__( 'Linear and radial gradients', 'better-payment' ),
+			__(
+				'Lift, grow or shrink on hover, with a transition',
+				'better-payment'
+			),
+			__(
+				'Custom CSS scoped to the widget with `selector`',
+				'better-payment'
+			),
+			__(
+				'Per-device values for desktop, tablet and mobile',
+				'better-payment'
+			),
+		],
+	},
 };
 
 const GENERIC = {

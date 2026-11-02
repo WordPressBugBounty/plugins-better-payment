@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { arrayMove } from '@dnd-kit/sortable';
 import { filterInitialMeta } from '../utils/builderHooks';
-import { getDefaultSettings } from '../fields/FieldRegistry';
+import { getDefaultSettings, getElement } from '../fields/FieldRegistry';
+import { carryStyleSettings } from '../utils/styleControls';
 import { applyOperations } from '../ai/operationExecutor';
 
 /**
@@ -594,7 +595,14 @@ function baseReducer( state, action ) {
 		// missing, malformed or duplicate id is re-minted. See normalizeColumns().
 		case 'REPLACE_LAYOUT': {
 			const migrated = migrateLegacyLayout( action.layout );
-			const columns = stableIds( migrated.columns || [] );
+			// The AI never sees style settings, so a whole-page replacement
+			// cannot echo them: keep each surviving element's own.
+			const columns = carryStyleSettings(
+				state.layout?.columns ?? [],
+				stableIds( migrated.columns || [] ),
+				// `?.()`: some Jest suites mock FieldRegistry without getElement.
+				( type ) => getElement?.( type )?.settingsSchema
+			);
 			return {
 				...state,
 				layout: { layout: migrated.layout || '1-column', columns },

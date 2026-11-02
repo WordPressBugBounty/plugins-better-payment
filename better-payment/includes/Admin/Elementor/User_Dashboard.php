@@ -1177,7 +1177,7 @@ class User_Dashboard extends Widget_Base {
 			Group_Control_Typography::get_type(),
 			[
 				'name'      => 'better_payment_user_dashboard_table_body_typography',
-				'selector'  => '{{WRAPPER}} .bp--table-body .td h5, {{WRAPPER}} .bp--table-body .td h5 span, {{WRAPPER}} .bp--table-body .td p, {{WRAPPER}} button.active, {{WRAPPER}} button.cancel, {{WRAPPER}} .bp--table-body .td span, {{WRAPPER}} button.inactive',
+				'selector'  => $this->pro_selector( 'better_payment_user_dashboard_table_body_typography', '{{WRAPPER}} .bp--table-body .td h5, {{WRAPPER}} .bp--table-body .td h5 span, {{WRAPPER}} .bp--table-body .td p, {{WRAPPER}} .bp--table-body .td span' ),
 			]
 		);
 
@@ -1277,220 +1277,27 @@ class User_Dashboard extends Widget_Base {
 
 		$this->end_controls_tabs();
 
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_label',
-			[
-				'label' => esc_html__( 'Table Body » Buttons', 'better-payment' ),
-				'type'  => Controls_Manager::HEADING,
-                'separator' => 'before',
-			]
-		);
-		
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_active_label',
-			[
-				'label' => esc_html__( 'Active Button', 'better-payment' ),
-				'type'  => Controls_Manager::HEADING,
-			]
-		);
-
-		$this->start_controls_tabs( 'better_payment_user_dashboard_table_body_buttons_active_controls_tabs' );
-
-		$this->start_controls_tab( 'better_payment_user_dashboard_table_body_buttons_active_control_normal', [
-			'label' => esc_html__( 'Normal', 'better-payment' ),
-		] );
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_active_normal_text_color',
-			[
-				'label'     => esc_html__( 'Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.active'		=> 'color: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_active_normal_background_color',
-			[
-				'label'     => esc_html__( 'Background Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.active' => 'background: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->start_controls_tab( 'better_payment_user_dashboard_table_body_buttons_active_control_hover', [
-			'label' => esc_html__( 'Hover', 'better-payment' ),
-		] );
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_active_hover_text_color',
-			[
-				'label'     => esc_html__( 'Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.active:hover'	=> 'color: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_active_hover_background_color',
-			[
-				'label'     => esc_html__( 'Background Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.active:hover' => 'background: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->end_controls_tabs();
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_inactive_label',
-			[
-				'label' => esc_html__( 'Inactive Button', 'better-payment' ),
-				'type'  => Controls_Manager::HEADING,
-			]
-		);
-
-		$this->start_controls_tabs( 'better_payment_user_dashboard_table_body_buttons_inactive_controls_tabs' );
-
-		$this->start_controls_tab( 'better_payment_user_dashboard_table_body_buttons_inactive_control_normal', [
-			'label' => esc_html__( 'Normal', 'better-payment' ),
-		] );
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_inactive_normal_text_color',
-			[
-				'label'     => esc_html__( 'Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.inactive'		=> 'color: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_inactive_normal_background_color',
-			[
-				'label'     => esc_html__( 'Background Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.inactive' => 'background: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->start_controls_tab( 'better_payment_user_dashboard_table_body_buttons_inactive_control_hover', [
-			'label' => esc_html__( 'Hover', 'better-payment' ),
-		] );
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_inactive_hover_text_color',
-			[
-				'label'     => esc_html__( 'Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.inactive:hover'		=> 'color: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_inactive_hover_background_color',
-			[
-				'label'     => esc_html__( 'Background Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.inactive:hover' => 'background: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->end_controls_tabs();
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_cancel_label',
-			[
-				'label' => esc_html__( 'Cancel Button', 'better-payment' ),
-				'type'  => Controls_Manager::HEADING,
-			]
-		);
-
-		$this->start_controls_tabs( 'better_payment_user_dashboard_table_body_buttons_cancel_controls_tabs' );
-
-		$this->start_controls_tab( 'better_payment_user_dashboard_table_body_buttons_cancel_control_normal', [
-			'label' => esc_html__( 'Normal', 'better-payment' ),
-		] );
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_cancel_normal_text_color',
-			[
-				'label'     => esc_html__( 'Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.cancel'		=> 'color: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_cancel_normal_background_color',
-			[
-				'label'     => esc_html__( 'Background Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.cancel' => 'background: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->start_controls_tab( 'better_payment_user_dashboard_table_body_buttons_cancel_control_hover', [
-			'label' => esc_html__( 'Hover', 'better-payment' ),
-		] );
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_cancel_hover_text_color',
-			[
-				'label'     => esc_html__( 'Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.cancel:hover'		=> 'color: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'better_payment_user_dashboard_table_body_buttons_cancel_hover_background_color',
-			[
-				'label'     => esc_html__( 'Background Color', 'better-payment' ),
-				'type'      => Controls_Manager::COLOR,
-				'selectors' => [
-					'{{WRAPPER}} button.cancel:hover' => 'background: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->end_controls_tab();
-
-		$this->end_controls_tabs();
+		// The Active / Inactive / Cancel buttons are rendered only by Pro's Subscriptions
+		// tab, so their style controls are Pro's and land here (`user_dashboard_pro_button_styles`).
+		do_action( 'better_payment/elementor/user_dashboard/table_style_after', $this );
 
 		$this->end_controls_section();
+    }
+
+    /**
+     * A free control's selector plus any selectors Pro adds for markup only Pro renders.
+     *
+     * @param string $control_id Control id, passed to the filter.
+     * @param string $selector   The free selector list.
+     * @return string
+     */
+    private function pro_selector( string $control_id, string $selector ): string {
+        $extra = apply_filters( 'better_payment/elementor/user_dashboard/pro_selectors', array(), $control_id );
+        $extra = is_array( $extra ) ? array_filter( $extra, static function ( $item ) {
+            return is_string( $item ) && '' !== trim( $item );
+        } ) : array();
+
+        return $extra ? $selector . ', ' . implode( ', ', $extra ) : $selector;
     }
 
     /**
@@ -1604,10 +1411,7 @@ class User_Dashboard extends Widget_Base {
         $bp_settings['dashboard_incomplete_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_incomplete_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_incomplete_amount_label'] : __( 'Incomplete Amount', 'better-payment' );
         $bp_settings['dashboard_refunded_amount_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_refunded_amount_label']) ? $settings['better_payment_user_dashboard_dashboard_refunded_amount_label'] : __( 'Refunded Amount', 'better-payment' );
         $bp_settings['dashboard_view_all_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_view_all_label']) ? $settings['better_payment_user_dashboard_dashboard_view_all_label'] : __( 'View All', 'better-payment' );
-        $bp_settings['dashboard_analytics_reports_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_analytics_reports_label']) ? $settings['better_payment_user_dashboard_dashboard_analytics_reports_label'] : __( 'Analytics Reports', 'better-payment' );
         $bp_settings['dashboard_recent_transactions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_recent_transactions_label']) ? $settings['better_payment_user_dashboard_dashboard_recent_transactions_label'] : __( 'Recent Transactions', 'better-payment' );
-        $bp_settings['dashboard_recurring_subscriptions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_recurring_subscriptions_label']) ? $settings['better_payment_user_dashboard_dashboard_recurring_subscriptions_label'] : __( 'Recurring Subscriptions', 'better-payment' );
-        $bp_settings['dashboard_split_subscriptions_label']  = ! empty( $settings['better_payment_user_dashboard_dashboard_split_subscriptions_label']) ? $settings['better_payment_user_dashboard_dashboard_split_subscriptions_label'] : __( 'Split Subscriptions', 'better-payment' );
         
 		// Transaction
         $bp_settings['transaction_table_name_show'] = ! empty( $settings['better_payment_user_dashboard_transactions_list_name_show']) && 'yes' === $settings['better_payment_user_dashboard_transactions_list_name_show'];
@@ -1629,9 +1433,6 @@ class User_Dashboard extends Widget_Base {
         $bp_settings['transaction_table_status_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_label'] : __( 'Status', 'better-payment' );
         $bp_settings['transaction_table_date_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_date_label']) ? $settings['better_payment_user_dashboard_transactions_list_date_label'] : __( 'Date', 'better-payment' );
         $bp_settings['transaction_table_action_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_label'] : __( 'Action', 'better-payment' );
-        // $bp_settings['transaction_table_status_active_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_active_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_active_label'] : 'Active';
-        // $bp_settings['transaction_table_status_inactive_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_status_inactive_label']) ? $settings['better_payment_user_dashboard_transactions_list_status_inactive_label'] : 'Inactive';
-        // $bp_settings['transaction_table_action_cancel_label']  = ! empty( $settings['better_payment_user_dashboard_transactions_list_action_cancel_label']) ? $settings['better_payment_user_dashboard_transactions_list_action_cancel_label'] : 'Cancel';
 		
         $bp_settings = apply_filters( 'better_payment/elementor/user_dashboard/bp_settings', $bp_settings, $settings );
 
@@ -1784,19 +1585,9 @@ class User_Dashboard extends Widget_Base {
 	    	] 
         );
 
-        $widgetObj->add_control( 
-            'better_payment_user_dashboard_dashboard_analytics_reports_label', 
-            [
-                'label'       => esc_html__( 'Analytics Reports', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'label_block' => false,
-                'default'     => esc_html__( 'Analytics Reports', 'better-payment' ),
-                'ai' => [
-                    'active' => false,
-                ],
-	    	] 
-        );
-		
+        // Pro's Analytics Reports card label (`user_dashboard_pro_panel_labels`).
+        do_action( 'better_payment/elementor/user_dashboard/dashboard_content_view_all_after', $widgetObj );
+
 		$widgetObj->add_control( 
             'better_payment_user_dashboard_dashboard_recent_transactions_label', 
             [
@@ -1810,31 +1601,8 @@ class User_Dashboard extends Widget_Base {
 	    	] 
         );
 		
-		$widgetObj->add_control( 
-            'better_payment_user_dashboard_dashboard_recurring_subscriptions_label', 
-            [
-                'label'       => esc_html__( 'Recurring Subscriptions', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'label_block' => false,
-                'default'     => esc_html__( 'Recurring Subscriptions', 'better-payment' ),
-                'ai' => [
-                    'active' => false,
-                ],
-	    	] 
-        );
-		
-		$widgetObj->add_control( 
-            'better_payment_user_dashboard_dashboard_split_subscriptions_label', 
-            [
-                'label'       => esc_html__( 'Split Subscriptions', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'label_block' => false,
-                'default'     => esc_html__( 'Split Subscriptions', 'better-payment' ),
-                'ai' => [
-                    'active' => false,
-                ],
-	    	] 
-        );
+		// Pro's Recurring and Split Subscriptions card labels (`user_dashboard_pro_panel_labels`).
+		do_action( 'better_payment/elementor/user_dashboard/dashboard_content_recent_transactions_after', $widgetObj );
 	}
 	
 	public function get_transaction_layout_settings( $widgetObj ) {
@@ -2069,58 +1837,6 @@ class User_Dashboard extends Widget_Base {
                 ],
 	    	] 
         );
-        
-        // $widgetObj->add_control( 
-        //     'better_payment_user_dashboard_transactions_list_action_label', 
-        //     [
-        //         'label'       => esc_html__( 'Action', 'better-payment' ),
-        //         'type'        => Controls_Manager::TEXT,
-        //         'label_block' => false,
-        //         'default'     => esc_html__( 'Action', 'better-payment' ),
-        //         'ai' => [
-        //             'active' => false,
-        //         ],
-	    // 	]
-        // );
-
-        // $widgetObj->add_control( 
-        //     'better_payment_user_dashboard_transactions_list_status_active_label', 
-        //     [
-        //         'label'       => esc_html__( 'Status » Active', 'better-payment' ),
-        //         'type'        => Controls_Manager::TEXT,
-        //         'label_block' => false,
-        //         'default'     => esc_html__( 'Active', 'better-payment' ),
-        //         'ai' => [
-        //             'active' => false,
-        //         ],
-	    // 	]
-        // );
-        
-        // $widgetObj->add_control( 
-        //     'better_payment_user_dashboard_transactions_list_status_inactive_label', 
-        //     [
-        //         'label'       => esc_html__( 'Status » Inactive', 'better-payment' ),
-        //         'type'        => Controls_Manager::TEXT,
-        //         'label_block' => false,
-        //         'default'     => esc_html__( 'Inactive', 'better-payment' ),
-        //         'ai' => [
-        //             'active' => false,
-        //         ],
-	    // 	]
-        // );
-
-        // $widgetObj->add_control(
-        //     'better_payment_user_dashboard_transactions_list_action_cancel_label', 
-        //     [
-        //         'label'       => esc_html__( 'Action » Cancel', 'better-payment' ),
-        //         'type'        => Controls_Manager::TEXT,
-        //         'label_block' => false,
-        //         'default'     => esc_html__( 'Cancel', 'better-payment' ),
-        //         'ai' => [
-        //             'active' => false,
-        //         ],
-	    // 	]
-        // );
 	}
 
 	public function get_user_transactions( $email = '', $page = 1, $per_page = 10 ){

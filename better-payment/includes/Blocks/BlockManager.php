@@ -1814,6 +1814,8 @@ class BlockManager {
             'siteName'   => get_bloginfo( 'name' ),
             'siteDomain' => $this->get_site_domain(),
             'proEnabled' => apply_filters( 'better_payment/pro_enabled', false ),
+            // Lite copies an older Pro still reads (Classes\TransitionalProCopies); all false on a free install.
+            'liteCopies' => \Better_Payment\Lite\Classes\TransitionalProCopies::client_flags(),
         );
     }
 

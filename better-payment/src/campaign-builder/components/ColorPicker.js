@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { splitAlpha, withAlpha } from '../utils/styleControls';
 
 // ── Color math helpers ────────────────────────────────────────────────────────
 
@@ -180,6 +181,9 @@ const CANVAS_H = 130;
 // means "inherit" — the campaign background, where writing the theme's own colour
 // in freezes the page against the theme it came from. Such a caller passes
 // `onReset` to clear its value, and `resetLabel` to say what Reset now restores.
+//
+// `alpha` adds an opacity slider (the style controls): the picker then reads
+// `#RRGGBBAA` / rgba() and writes `#RRGGBBAA` below full opacity, `#RRGGBB` at it.
 export default function ColorPicker( {
 	value,
 	defaultValue,
@@ -187,11 +191,22 @@ export default function ColorPicker( {
 	onClose,
 	onReset,
 	resetLabel,
+	alpha = false,
 } ) {
-	const safe = /^#[0-9a-fA-F]{6}$/.test( value )
-		? value
-		: defaultValue || '#000000';
+	const parsed = splitAlpha( value );
+	const safe = parsed.hex || defaultValue || '#000000';
 	const initHsv = hexToHsv( safe );
+	const [ opacity, setOpacity ] = useState( alpha ? parsed.alpha : 1 );
+	const opacityRef = useRef( opacity );
+	opacityRef.current = opacity;
+
+	// Every colour the picker reports goes through here, so the opacity rides
+	// along with a hue, canvas or text change.
+	const emit = useCallback(
+		( hex ) =>
+			onChange( alpha ? withAlpha( hex, opacityRef.current ) : hex ),
+		[ onChange, alpha ]
+	);
 
 	const [ hue, setHue ] = useState( initHsv.h );
 	const [ sat, setSat ] = useState( initHsv.s );
@@ -240,9 +255,9 @@ export default function ColorPicker( {
 			setVal( nv );
 			const hex = hsvToHex( hue, ns, nv );
 			setHexInput( hex );
-			onChange( hex );
+			emit( hex );
 		},
-		[ hue, onChange ]
+		[ hue, emit ]
 	);
 
 	// Global mouse-move / up for canvas drag.
@@ -270,9 +285,9 @@ export default function ColorPicker( {
 			setSat( hsv.s );
 			setVal( hsv.v );
 			setHexInput( clean );
-			onChange( clean );
+			emit( clean );
 		},
-		[ onChange ]
+		[ emit ]
 	);
 
 	const handleHueChange = ( e ) => {
@@ -280,7 +295,7 @@ export default function ColorPicker( {
 		setHue( h );
 		const hex = hsvToHex( h, sat, val );
 		setHexInput( hex );
-		onChange( hex );
+		emit( hex );
 	};
 
 	const handleHexInput = ( e ) => {
@@ -291,7 +306,7 @@ export default function ColorPicker( {
 			setHue( hsv.h );
 			setSat( hsv.s );
 			setVal( hsv.v );
-			onChange( raw.toUpperCase() );
+			emit( raw.toUpperCase() );
 		}
 	};
 
@@ -348,6 +363,27 @@ export default function ColorPicker( {
 				value={ Math.round( hue ) }
 				onChange={ handleHueChange }
 			/>
+
+			{ alpha && (
+				<input
+					type="range"
+					className="bp-color-picker__alpha"
+					aria-label={ __( 'Opacity', 'better-payment' ) }
+					min="0"
+					max="100"
+					step="1"
+					value={ Math.round( opacity * 100 ) }
+					style={ {
+						'--bp-alpha-color': currentHex,
+					} }
+					onChange={ ( e ) => {
+						const next = parseInt( e.target.value, 10 ) / 100;
+						setOpacity( next );
+						opacityRef.current = next;
+						onChange( withAlpha( currentHex, next ) );
+					} }
+				/>
+			) }
 
 			{ /* Preview + mode input */ }
 			<div className="bp-color-picker__preview-row">

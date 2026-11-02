@@ -111,7 +111,9 @@ $layout_form_currency_right     = 'right'   === $currency_alignment ? $layout_fo
 
 $stripe_public_key = 'yes' === sanitize_text_field( $settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $settings[ 'better_payment_stripe_public_key_live' ] ) : sanitize_text_field( $settings[ 'better_payment_stripe_public_key' ] );
 $stripe_secret_key = 'yes' === sanitize_text_field( $settings[ 'better_payment_stripe_live_mode' ] ) ? sanitize_text_field( $settings[ 'better_payment_stripe_secret_key_live' ] ) : sanitize_text_field( $settings[ 'better_payment_stripe_secret_key' ] );
-$amount_quantity_text = ! empty( $settings['better_payment_show_amount_quantity_text'] ) ? $settings['better_payment_show_amount_quantity_text'] : 'Amount Quantity';
+// Layouts 4 and 5's quantity label. Better Payment Pro 1.4.7+ sets it in its own partial, which
+// runs after this one; the setting is read here only for an older Pro (TransitionalProCopies).
+$amount_quantity_text = \Better_Payment\Lite\Classes\TransitionalProCopies::amount_quantity_text( $settings );
 
 if ( $is_payment_type_stripe ) {
     $payment_source_stripe_price_id = ! empty( $settings['better_payment_form_payment_source_stripe_price_id'] ) ? sanitize_text_field( $settings['better_payment_form_payment_source_stripe_price_id'] ) : '';

@@ -62,15 +62,23 @@ if ( ! defined( 'ABSPATH' ) ) {
  * instead of dropping it out of the v2 system altogether, and reactivating Pro
  * restores the full design with no data change. It is a class name, not CSS.
  *
- * ## Thumbnails — the only preview a locked card has
+ * ## Thumbnails and full-page previews — the only preview a locked card has
  *
  * Lite ships its own copies under `assets/img/campaign/templates/preview/pro/`.
  * Pointing at Pro's asset URL would 404 on the only install that needs these
  * cards — the one without Pro — and a template whose thumbnail fails to load
- * falls back to a flat `preview_color` block, which sells nothing. The Preview
- * lightbox shows the same screenshot: Lite carries no copy of Pro's layouts, so
- * a locked card is never rendered live. Keep the two sets of files in sync when
- * Pro's artwork changes.
+ * falls back to a flat `preview_color` block, which sells nothing. Keep the two
+ * sets of files in sync when Pro's artwork changes.
+ *
+ * The card thumbnail is only the top of the page, so each card also carries
+ * `preview_full`: a desktop (1280px) and a mobile (390px) screenshot of the
+ * WHOLE design, under `preview/pro/full/`, which the Preview lightbox scrolls
+ * with a Desktop/Mobile switch. Lite carries no copy of Pro's layouts, so a
+ * locked card is never rendered live — these images are what lets a free user
+ * see a Pro design end to end. They are pictures, exactly like the thumbnail:
+ * nothing in them can build a page. Made with
+ * `node scripts/capture-template-thumbnails.mjs --full <key> --out <dir>` on a
+ * site with Pro active (see docs/features/campaign-builder/templates.md).
  *
  * @since 2.3.2
  */
@@ -80,6 +88,14 @@ class ProTemplateCatalog {
      * Path below Lite's assets/ where Lite's copies of the Pro card thumbnails live.
      */
     const PREVIEW_DIR = 'assets/img/campaign/templates/preview/pro';
+
+    /**
+     * Path below Lite's assets/ where the full-page previews of the Pro templates
+     * live, as `{key}-desktop.webp` and `{key}-mobile.webp`.
+     *
+     * @since 2.4.5
+     */
+    const FULL_PREVIEW_DIR = self::PREVIEW_DIR . '/full';
 
     /**
      * The locked Pro template cards, or an empty array when Pro is active.
@@ -105,6 +121,53 @@ class ProTemplateCatalog {
      */
     public static function catalog(): array {
         $templates = array(
+            'pro-emergency-relief-v3'   => array(
+                'key'           => 'pro-emergency-relief-v3',
+                'label'         => __( 'Food Drive Campaign', 'better-payment' ),
+                'description'   => __( 'Community food appeal with a live donation ticker, video and FAQ beside a sticky giving panel.', 'better-payment' ),
+                'tags'          => array( 'charity' ),
+                'layout'        => '2-column',
+                'theme_class'   => 'bp-v3-fooddrive',
+                'preview_color' => '#f59e0b',
+                'preview_image' => self::PREVIEW_DIR . '/Food-Drive-Campaign-v3.webp',
+            ),
+            'pro-nonprofit-landing-v3'  => array(
+                'key'           => 'pro-nonprofit-landing-v3',
+                'label'         => __( 'Climate Action Campaign', 'better-payment' ),
+                'description'   => __( 'Long-form single-column landing page — hero, proof, and the ask repeated where readers reach it.', 'better-payment' ),
+                'tags'          => array( 'environmental' ),
+                'layout'        => '1-column',
+                'theme_class'   => 'bp-v3-climate',
+                'preview_color' => '#1d4ed8',
+                'preview_image' => self::PREVIEW_DIR . '/Climate-Action-Campaign-v3.webp',
+            ),
+            'pro-modern-fundraising-v3' => array(
+                'key'           => 'pro-modern-fundraising-v3',
+                'label'         => __( 'Clean Water Campaign', 'better-payment' ),
+                'description'   => __( 'Full-width hero, then story and donation side by side — with video, FAQ and a live donor wall.', 'better-payment' ),
+                'tags'          => array( 'charity' ),
+                'layout'        => 'split',
+                'theme_class'   => 'bp-v3-water',
+                'preview_color' => '#0369a1',
+                'preview_image' => self::PREVIEW_DIR . '/Clean-Water-Campaign-v3.webp',
+            ),
+            'pro-community-support-v3'  => array(
+                'key'           => 'pro-community-support-v3',
+                'label'         => __( 'Wildlife Conservation Campaign', 'better-payment' ),
+                'description'   => __( 'Habitat restoration page built around a public supporters wall, with video and FAQ.', 'better-payment' ),
+                'tags'          => array( 'environmental' ),
+                'layout'        => '1-column',
+                'theme_class'   => 'bp-v3-wildlife',
+                'preview_color' => '#4d7c0f',
+                'preview_image' => self::PREVIEW_DIR . '/Wildlife-Conservation-Campaign-v3.webp',
+            ),
+        );
+
+        // The -v2 cards, retired by the -v3 reissue. Hidden: never offered, but
+        // still in the registry so a campaign built from one with Pro, whose
+        // licence has since lapsed, keeps resolving its theme class (and the
+        // `:where()` fallback tokens behind it).
+        $retired = array(
             'pro-emergency-relief-v2'   => array(
                 'key'           => 'pro-emergency-relief-v2',
                 'label'         => __( 'Food Drive Campaign', 'better-payment' ),
@@ -114,6 +177,7 @@ class ProTemplateCatalog {
                 'theme_class'   => 'bp-v2-fooddrive',
                 'preview_color' => '#f59e0b',
                 'preview_image' => self::PREVIEW_DIR . '/Food-Drive-Campaign-v2.webp',
+                'hidden'        => true,
             ),
             'pro-nonprofit-landing-v2'  => array(
                 'key'           => 'pro-nonprofit-landing-v2',
@@ -124,6 +188,7 @@ class ProTemplateCatalog {
                 'theme_class'   => 'bp-v2-climate',
                 'preview_color' => '#1d4ed8',
                 'preview_image' => self::PREVIEW_DIR . '/Climate-Action-Campaign-v2.webp',
+                'hidden'        => true,
             ),
             'pro-modern-fundraising-v2' => array(
                 'key'           => 'pro-modern-fundraising-v2',
@@ -134,6 +199,7 @@ class ProTemplateCatalog {
                 'theme_class'   => 'bp-v2-water',
                 'preview_color' => '#0369a1',
                 'preview_image' => self::PREVIEW_DIR . '/Clean-Water-Campaign-v2.webp',
+                'hidden'        => true,
             ),
             'pro-community-support-v2'  => array(
                 'key'           => 'pro-community-support-v2',
@@ -144,6 +210,7 @@ class ProTemplateCatalog {
                 'theme_class'   => 'bp-v2-wildlife',
                 'preview_color' => '#4d7c0f',
                 'preview_image' => self::PREVIEW_DIR . '/Wildlife-Conservation-Campaign-v2.webp',
+                'hidden'        => true,
             ),
         );
 
@@ -151,6 +218,11 @@ class ProTemplateCatalog {
         // builder's shared lock predicate reads (utils/proEnabled.js), and
         // `columns` being empty is the contract the whole class rests on — both
         // are properties of "this is a catalogue entry", not of any one template.
+        foreach ( $templates as $key => $template ) {
+            $templates[ $key ]['preview_full'] = self::full_previews( $key );
+        }
+
+        $templates = array_merge( $templates, $retired );
         foreach ( $templates as $key => $template ) {
             $templates[ $key ]['category'] = 'prebuilt';
             $templates[ $key ]['pro']      = true;
@@ -161,11 +233,38 @@ class ProTemplateCatalog {
     }
 
     /**
-     * The four Pro template keys.
+     * The full-page preview images of one Pro template, by device.
+     *
+     * Named by key, so a template added to the catalogue needs only its two
+     * images — and `ProTemplateCatalogFullPreviewTest` fails until they exist.
+     *
+     * @since 2.4.5
+     *
+     * @param string $key Template key.
+     * @return array{desktop: string, mobile: string} Plugin-relative paths.
+     */
+    public static function full_previews( string $key ): array {
+        return array(
+            'desktop' => self::FULL_PREVIEW_DIR . '/' . $key . '-desktop.webp',
+            'mobile'  => self::FULL_PREVIEW_DIR . '/' . $key . '-mobile.webp',
+        );
+    }
+
+    /**
+     * The four OFFERED Pro template keys, in card order. The retired `-v2` cards
+     * are in {@see self::catalog()} but not here: this is what Pro sells, and what
+     * Pro's BuilderTemplatesRegistrationTest compares with its own offered list.
      *
      * @return string[]
      */
     public static function keys(): array {
-        return array_keys( self::catalog() );
+        return array_keys(
+            array_filter(
+                self::catalog(),
+                static function ( $template ) {
+                    return empty( $template['hidden'] );
+                }
+            )
+        );
     }
 }

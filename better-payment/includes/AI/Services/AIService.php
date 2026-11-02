@@ -92,7 +92,14 @@ class AIService {
 
         // A text-only mode never carries operations — skip extraction entirely so
         // a stray tool call the model made anyway cannot become an applied edit.
-        $operations = $text_only ? [] : self::extract_operations( $result, $context, $scope );
+        // `$proposed` keeps what the model asked for before validation, so an edit
+        // the validator dropped in full (e.g. a style key) can be reported as such.
+        $proposed   = $text_only ? [] : ResponseValidator::extract_operations( $result );
+        $operations = $text_only ? [] : OperationValidator::validate_batch( $proposed, $context, $scope );
+
+        // A request to style one widget must never become a page-wide colour. Read
+        // from the user's own words, because the operation itself is valid.
+        $style_request = 'edit' === $mode && empty( $scope ) ? WidgetStyleGuard::detect( $message ) : [];
 
         // Robustness: sometimes the model *describes* the change ("I will update the
         // button label…") but never calls the tool, so nothing is applied. When we
@@ -103,11 +110,14 @@ class AIService {
         // a perfectly good critique; forcing a tool call there manufactures an edit
         // the user never asked for out of a sentence like "the story could be
         // stronger", and hands them an Apply button for it. Never in a text-only
-        // mode either — there is no operation it could be trying to make.
-        if ( ! $text_only && 'analyze' !== $mode && empty( $operations ) && self::narrates_change( (string) ( $result['text'] ?? '' ) ) ) {
+        // mode either — there is no operation it could be trying to make. Nor for a
+        // widget style request: the only operation it could force is a page colour.
+        if ( ! $text_only && 'analyze' !== $mode && empty( $style_request ) && empty( $operations ) && self::narrates_change( (string) ( $result['text'] ?? '' ) ) ) {
             $forced = $provider->chat( $messages, array_merge( $chat_options, [ 'tool_choice' => 'required' ] ) );
             if ( empty( $forced['error'] ) ) {
-                $forced_ops = self::extract_operations( $forced, $context, $scope );
+                $forced_proposed = ResponseValidator::extract_operations( $forced );
+                $proposed        = array_merge( $proposed, $forced_proposed );
+                $forced_ops      = OperationValidator::validate_batch( $forced_proposed, $context, $scope );
                 if ( ! empty( $forced_ops ) ) {
                     $result     = $forced;
                     $operations = $forced_ops;
@@ -115,9 +125,20 @@ class AIService {
             }
         }
 
+        $safe_operations = WidgetStyleGuard::without_page_paint( $operations, $style_request );
+        $paint_dropped   = count( $safe_operations ) !== count( $operations );
+        $operations      = $safe_operations;
+
         $assistant_message = trim( (string) ( $result['text'] ?? '' ) );
         if ( '' === $assistant_message ) {
             $assistant_message = self::fallback_message( $mode, $operations );
+        }
+
+        // The model's prose is written before validation and may claim an edit the
+        // validator then dropped. An edit turn must never say "updated" when
+        // nothing reached the campaign.
+        if ( 'edit' === $mode ) {
+            $assistant_message = self::reconcile_edit_message( $assistant_message, $proposed, $operations, $context, $style_request, $paint_dropped );
         }
 
         // A free install still gets the exact Pro widget it asked for — inserted as
@@ -236,16 +257,149 @@ class AIService {
     }
 
     /**
-     * Extract + validate operations from a provider chat result.
+     * Make an edit turn's reply match what was actually applied.
      *
-     * @param array $result
-     * @param array $context
-     * @param array $scope Optional [ 'element_id' => string ] restriction.
-     * @return array<int, array>
+     * - Nothing applied, but the model proposed operations or wrote a completion
+     *   claim ("I've updated…") → the reply is replaced by
+     *   {@see nothing_applied_notice()}; the model's text is false.
+     * - Something applied, but the model also tried to write style settings →
+     *   {@see style_notice()} is appended, so the user knows that part was skipped.
+     * - The user asked to style one widget ({@see WidgetStyleGuard}) → the refusal
+     *   names that widget. A model's "I made it white" never stands beside a colour
+     *   the guard dropped. A question keeps its answer, and so does a reply about a
+     *   colour the AI can write, unless a page colour was dropped.
+     *
+     * @param string $message       The reply so far.
+     * @param array  $proposed      Raw candidate operations, before validation.
+     * @param array  $operations    Validated operations.
+     * @param array  $context       Current campaign state.
+     * @param array  $style_request From {@see WidgetStyleGuard::detect()}.
+     * @param bool   $paint_dropped Whether page-wide colour operations were dropped.
+     * @return string
      */
-    private static function extract_operations( array $result, array $context, array $scope = [] ): array {
-        $candidates = ResponseValidator::extract_operations( $result );
-        return OperationValidator::validate_batch( $candidates, $context, $scope );
+    public static function reconcile_edit_message( string $message, array $proposed, array $operations, array $context = [], array $style_request = [], bool $paint_dropped = false ): string {
+        $style_keys = CampaignSchema::style_keys_in_operations( $proposed, $context );
+
+        if ( ! empty( $style_request ) ) {
+            $notice = self::widget_style_notice( $style_request );
+
+            if ( empty( $operations ) ) {
+                $declined = empty( $style_request['question'] ) && empty( $style_request['writable'] );
+                if ( $paint_dropped || $declined || ! empty( $proposed ) || self::claims_change( $message ) ) {
+                    return self::nothing_applied_lead() . "\n\n" . $notice;
+                }
+                return $message;
+            }
+
+            if ( $paint_dropped ) {
+                return __( 'I applied the other changes you asked for.', 'better-payment' ) . "\n\n" . $notice;
+            }
+
+            if ( ! empty( $style_keys ) ) {
+                return $message . "\n\n" . $notice;
+            }
+
+            return $message;
+        }
+
+        if ( empty( $operations ) ) {
+            if ( ! empty( $proposed ) || self::claims_change( $message ) ) {
+                return self::nothing_applied_notice( ! empty( $style_keys ) );
+            }
+            return $message;
+        }
+
+        if ( ! empty( $style_keys ) ) {
+            return $message . "\n\n" . self::style_notice();
+        }
+
+        return $message;
+    }
+
+    /**
+     * Reply for an edit turn that changed nothing. Written in the Markdown subset
+     * the assistant bubble renders ({@see ai/reportFormat.js}).
+     *
+     * @param bool $style_requested Whether the model tried to write style settings.
+     * @return string
+     */
+    public static function nothing_applied_notice( bool $style_requested = false ): string {
+        return self::nothing_applied_lead() . "\n\n" . ( $style_requested
+            ? self::style_notice()
+            : __( 'I can change the wording, the donation amounts, the campaign colours and the title and description typography. For per-widget styling, select the widget and use **Customize → Style**.', 'better-payment' ) );
+    }
+
+    /**
+     * The bold first line of a reply that changed nothing.
+     *
+     * @return string
+     */
+    private static function nothing_applied_lead(): string {
+        return __( '**Nothing was changed.** I could not apply that edit to your campaign.', 'better-payment' );
+    }
+
+    /**
+     * The note that per-widget style controls are not the AI's.
+     *
+     * @return string
+     */
+    public static function style_notice(): string {
+        return __( 'Widget styles (colours, borders, corner radius, shadows and spacing) cannot be changed by the AI yet. Select the widget and use **Customize → Style** or **Advanced**. I can still set the campaign\'s primary colour and page background, which apply to the whole page.', 'better-payment' );
+    }
+
+    /**
+     * The refusal for a request to style one widget, naming what was asked.
+     *
+     * @param array $request From {@see WidgetStyleGuard::detect()}.
+     * @return string
+     */
+    public static function widget_style_notice( array $request ): string {
+        $label = (string) ( $request['label'] ?? '' );
+
+        // A colour the AI does hold for this widget: refuse the page colour, not the request.
+        if ( ! empty( $request['writable'] ) && '' !== $label ) {
+            return sprintf(
+                /* translators: %s: widget name (e.g. "Donate Button"). */
+                __( 'I did not use the campaign colours, because they would repaint the whole page. Ask again and name the colour of the **%s** widget, and I will change only that widget.', 'better-payment' ),
+                $label
+            );
+        }
+
+        if ( '' === $label ) {
+            return self::style_notice();
+        }
+
+        $properties = [
+            'background' => __( 'background', 'better-payment' ),
+            'border'     => __( 'border', 'better-payment' ),
+            'radius'     => __( 'corner radius', 'better-payment' ),
+            'shadow'     => __( 'shadow', 'better-payment' ),
+            'spacing'    => __( 'spacing', 'better-payment' ),
+            'hover'      => __( 'hover style', 'better-payment' ),
+            'colour'     => __( 'colour', 'better-payment' ),
+        ];
+        $property   = $properties[ $request['property'] ?? '' ] ?? $properties['colour'];
+
+        return sprintf(
+            /* translators: 1: style property (e.g. "background"), 2: widget name (e.g. "Campaign Summary"). */
+            __( 'The %1$s of the **%2$s** widget cannot be changed by the AI yet. Select that widget and use **Customize → Style** or **Advanced**.', 'better-payment' ),
+            $property,
+            $label
+        ) . "\n\n" . __( 'I can still set the campaign\'s primary colour and page background, which apply to the whole page. Ask for those by name if that is what you want.', 'better-payment' );
+    }
+
+    /**
+     * Whether the reply claims a finished edit ("I've updated…", "has been
+     * changed", "Done"). Only consulted when no operation survived, to catch a
+     * model that announced a change without making one.
+     */
+    private static function claims_change( string $text ): bool {
+        if ( '' === trim( $text ) ) {
+            return false;
+        }
+        // Past tense only: "should I change…?" is a question, not a claim.
+        $verbs = '(?:updated|changed|added|removed|deleted|rewr(?:ote|itten)|improved|moved|replaced|adjusted|swapped|revised|applied|made|shortened)\\b';
+        return (bool) preg_match( "/\\bi\\s*(?:['\x{2019}]ve|have)?\\s+{$verbs}|\\b(?:has|have)\\s+been\\s+{$verbs}|^\\s*done\\b/iu", $text );
     }
 
     /**
@@ -272,6 +426,13 @@ class AIService {
         if ( '' === trim( $text ) ) {
             return false;
         }
+        // A refusal is not a narrated edit. "Let me know if you want me to set the
+        // page colour" used to match below, and the forced retry then made a tool
+        // call out of the offer: a model that declined still repainted the page.
+        if ( preg_match( "/\\b(?:can(?:no|')t|can\x{2019}t|unable|not able|let me know)\\b/iu", $text ) ) {
+            return false;
+        }
+
         // A first-person "I'm about to do it" phrase — NOT a question like
         // "what would you like to change?" (which must not trigger a forced retry).
         $intent = preg_match( "/\b(i\s*(?:will|'ll|am going to|'m going to)|let'?s|let me|here'?s|here is)\b/i", $text );

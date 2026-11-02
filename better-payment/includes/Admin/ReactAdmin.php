@@ -172,8 +172,8 @@ class ReactAdmin extends Controller
                 'callback'   => [$this, 'render_react_admin_page'],
             ),
         ), $this->page_slug_prefix );
-        
-        foreach( $submenu_page_list as $slug => $setting ) {
+
+        foreach( self::sanitize_submenu_page_list( $submenu_page_list, [$this, 'render_react_admin_page'] ) as $slug => $setting ) {
             add_submenu_page(
                 $this->page_slug_prefix . '-admin',
                 $setting['title'],
@@ -185,6 +185,43 @@ class ReactAdmin extends Controller
         }
         
         remove_submenu_page($this->page_slug_prefix . '-admin', $this->page_slug_prefix . '-admin');
+    }
+
+    /**
+     * Normalize the filtered submenu list before it reaches add_submenu_page()
+     *
+     * Every entry is a tab of this React admin, so an entry whose callback cannot be
+     * called renders the React page instead. WordPress does not check a submenu
+     * callback when it is added, only when its page hook fires, and then a bad one is
+     * a TypeError on PHP 8 (Pro 1.4.7's License entry pointed at a method its own class
+     * lacks — issue #158). Entries that are not arrays or have no title are dropped.
+     *
+     * @param mixed    $submenu_page_list Filtered list, keyed by submenu slug.
+     * @param callable $fallback          Callback for an entry whose own is not callable.
+     * @return array
+     * @since 2.4.5
+     */
+    public static function sanitize_submenu_page_list( $submenu_page_list, $fallback )
+    {
+        if ( ! is_array( $submenu_page_list ) ) {
+            return array();
+        }
+
+        $sanitized = array();
+
+        foreach ( $submenu_page_list as $slug => $setting ) {
+            if ( ! is_string( $slug ) || '' === $slug || ! is_array( $setting ) || empty( $setting['title'] ) ) {
+                continue;
+            }
+
+            $sanitized[ $slug ] = array(
+                'title'      => (string) $setting['title'],
+                'capability' => ! empty( $setting['capability'] ) ? (string) $setting['capability'] : 'manage_options',
+                'callback'   => isset( $setting['callback'] ) && is_callable( $setting['callback'] ) ? $setting['callback'] : $fallback,
+            );
+        }
+
+        return $sanitized;
     }
     
     /**

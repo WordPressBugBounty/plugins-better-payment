@@ -639,11 +639,6 @@ class Better_Payment_Widget extends Widget_Base {
                     'operator' => '!=',
                     'value' => 'layout-5-pro',
                 ],
-                // [
-                //     'name' => 'better_payment_form_layout',
-                //     'operator' => '!=',
-                //     'value' => 'layout-6-pro',
-                // ],
             ],
         ];
 
@@ -1951,22 +1946,9 @@ class Better_Payment_Widget extends Widget_Base {
             ]
         );
 
-        $this->add_control(
-            'better_payment_form_success_message_pay_type_text',
-            [
-                'label'       => __( 'Payment Type', 'better-payment' ),
-                'type'        => Controls_Manager::TEXT,
-                'default'     => __( 'Payment Type', 'better-payment' ),
-                'placeholder' => __( 'Payment Type', 'better-payment' ),
-                'dynamic'     => [
-                    'active' => true,
-                ],
-                'label_block' => true,
-                'ai' => [
-                    'active' => false,
-                ],
-            ]
-        );
+        // The thank-you page's "Payment Type" row is printed only by Pro's payment types, so its
+        // text control is Pro's and lands here (`payment_form_pay_type_text_control`).
+        do_action( 'better_payment/elementor/editor/success_message_pay_method_text_after', $this );
 
         $this->add_control(
             'better_payment_form_success_message_merchant_details_text',
@@ -2232,7 +2214,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'     => 'better_payment_form_sidebar_background',
                 'types'    => [ 'classic', 'gradient' ],
-                'selector' => '{{WRAPPER}} .better-payment .dynamic-amount-section, {{WRAPPER}} .better-payment .transaction-details-wrap, {{WRAPPER}} .better-payment .donation-image-wrap, {{WRAPPER}} .better-payment .order-details-wrap',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_background', '{{WRAPPER}} .better-payment .dynamic-amount-section' ),
                 'fields_options' => [
                     'color' => [
                         'selectors' => [
@@ -2249,12 +2231,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Margin', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_margin', [
                     '{{WRAPPER}} .better-payment .dynamic-amount-section' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .transaction-details-wrap' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-image-wrap' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .order-details-wrap' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
                 'separator'  => 'before',
             ]
         );
@@ -2265,12 +2244,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_padding', [
                     '{{WRAPPER}} .better-payment .dynamic-amount-section-inner.p-6' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .better-payment .transaction-details-wrap' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .better-payment .donation-image-wrap' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .better-payment .order-details-wrap' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                ],
+                ] ),
             ]
         );
 
@@ -2281,12 +2257,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'type'       => Controls_Manager::DIMENSIONS,
                 'separator'  => 'before',
                 'size_units' => [ 'px' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_border_radius', [
                     '{{WRAPPER}} .better-payment .dynamic-amount-section' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .transaction-details-wrap' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-image-wrap' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .order-details-wrap' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -2294,7 +2267,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Border::get_type(),
             [
                 'name'     => 'better_payment_form_sidebar_border',
-                'selector' => '{{WRAPPER}} .better-payment .dynamic-amount-section, {{WRAPPER}} .better-payment .transaction-details-wrap, {{WRAPPER}} .better-payment .donation-image-wrap, {{WRAPPER}} .better-payment .order-details-wrap',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_border', '{{WRAPPER}} .better-payment .dynamic-amount-section' ),
             ]
         );
 
@@ -2302,7 +2275,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Box_Shadow::get_type(),
             [
                 'name'     => 'better_payment_form_sidebar_box_shadow',
-                'selector' => '{{WRAPPER}} .better-payment .dynamic-amount-section, {{WRAPPER}} .better-payment .transaction-details-wrap, {{WRAPPER}} .better-payment .donation-image-wrap, {{WRAPPER}} .better-payment .order-details-wrap',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_box_shadow', '{{WRAPPER}} .better-payment .dynamic-amount-section' ),
             ]
         );
 
@@ -2338,11 +2311,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_title_color', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-title' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .transaction-details-wrap .transaction-details-header-title' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .order-details-wrap .title' => 'color: {{VALUE}}',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2354,7 +2325,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_sidebar_text_title_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-title, {{WRAPPER}} .transaction-details-wrap .transaction-details-header-title, {{WRAPPER}} .order-details-wrap .title',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_text_title_typography', '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-title' ),
                 'separator' => 'after',
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
@@ -2368,11 +2339,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Margin', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_title_margin', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .transaction-details-wrap .transaction-details-header-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .order-details-wrap .title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2385,11 +2354,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_title_padding', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .transaction-details-wrap .transaction-details-header-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .order-details-wrap .title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2414,10 +2381,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_sub_title_color', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-sub-title' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .transaction-details-wrap .transaction-details-header-paragraph' => 'color: {{VALUE}}',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro', 'layout-6-pro'],
                 ],
@@ -2429,7 +2395,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_sidebar_text_sub_title_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-sub-title, {{WRAPPER}} .transaction-details-wrap .transaction-details-header-paragraph',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_text_sub_title_typography', '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-sub-title' ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro', 'layout-6-pro'],
                 ],
@@ -2442,10 +2408,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Margin', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_sub_title_margin', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-sub-title' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .transaction-details-wrap .transaction-details-header-paragraph' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro', 'layout-6-pro'],
                 ],
@@ -2458,10 +2423,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_sub_title_padding', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-sub-title' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .transaction-details-wrap .transaction-details-header-paragraph' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro', 'layout-6-pro'],
                 ],
@@ -2486,12 +2450,10 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_amount_title_color', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount' => 'color: {{VALUE}}',
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount a' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-text' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .order-details-wrap .total-amount-text' => 'color: {{VALUE}}',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2503,7 +2465,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_sidebar_text_amount_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount, {{WRAPPER}} .transaction-details-wrap .total-amount-text, {{WRAPPER}} .order-details-wrap .total-amount-text',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_text_amount_typography', '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount' ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2516,11 +2478,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Margin', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_amount_margin', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-text' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .order-details-wrap .total-amount-text' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2533,11 +2493,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_amount_padding', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-text' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .order-details-wrap .total-amount-text' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2562,12 +2520,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_amount_summary_color', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount-summary' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-number' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-number span' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .order-details-wrap .total-amount-number' => 'color: {{VALUE}}',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2579,7 +2534,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_sidebar_text_amount_summary_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount-summary, {{WRAPPER}} .transaction-details-wrap .total-amount-number, {{WRAPPER}} .transaction-details-wrap .total-amount-number span, {{WRAPPER}} .order-details-wrap .total-amount-number',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_sidebar_text_amount_summary_typography', '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount-summary' ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2592,11 +2547,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Margin', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_amount_summary_margin', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount-summary' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-number' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .order-details-wrap .total-amount-number' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2609,11 +2562,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_sidebar_text_amount_summary_padding', [
                     '{{WRAPPER}} .dynamic-amount-section-inner .bp-dynamic-amount-section-amount-summary' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .transaction-details-wrap .total-amount-number' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .order-details-wrap .total-amount-number' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                ],
+                ] ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -2719,7 +2670,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'     => 'better_payment_form_container_background',
                 'types'    => [ 'classic', 'gradient' ],
-                'selector' => '{{WRAPPER}} .better-payment .form-content-section, {{WRAPPER}} .better-payment .general-form-wrap, {{WRAPPER}} .better-payment .donation-form-wrap, {{WRAPPER}} .better-payment .woo-form-wrap',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_container_background', '{{WRAPPER}} .better-payment .form-content-section' ),
             ]
         );
 
@@ -2729,12 +2680,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Margin', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_container_margin', [
                     '{{WRAPPER}} .better-payment .form-content-section' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -2744,12 +2692,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => esc_html__( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_container_padding', [
                     '{{WRAPPER}} .better-payment .form-content-section-inner.p-6' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .better-payment .general-form-wrap' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}} !important;',
-                ],
+                ] ),
             ]
         );
 
@@ -2760,12 +2705,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'type'       => Controls_Manager::DIMENSIONS,
                 'separator'  => 'before',
                 'size_units' => [ 'px' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_container_border_radius', [
                     '{{WRAPPER}} .better-payment .form-content-section' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -2773,7 +2715,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Border::get_type(),
             [
                 'name'     => 'better_payment_form_container_border',
-                'selector' => '{{WRAPPER}} .better-payment .form-content-section, {{WRAPPER}} .better-payment .general-form-wrap, {{WRAPPER}} .better-payment .donation-form-wrap, {{WRAPPER}} .better-payment .woo-form-wrap',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_container_border', '{{WRAPPER}} .better-payment .form-content-section' ),
             ]
         );
 
@@ -2781,7 +2723,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Box_Shadow::get_type(),
             [
                 'name'     => 'better_payment_form_container_box_shadow',
-                'selector' => '{{WRAPPER}} .better-payment .form-content-section, {{WRAPPER}} .better-payment .general-form-wrap, {{WRAPPER}} .better-payment .donation-form-wrap, {{WRAPPER}} .better-payment .woo-form-wrap',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_container_box_shadow', '{{WRAPPER}} .better-payment .form-content-section' ),
             ]
         );
 
@@ -2803,12 +2745,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Background Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_bg', [
                     '{{WRAPPER}} .better-payment .form-content-section input' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input' => 'background-color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -2818,13 +2757,10 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Text Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_text_color', [
                     '{{WRAPPER}} .better-payment .form-content-section input' => 'color: {{VALUE}}',
                     '{{WRAPPER}} .better-payment .form-content-section .payment-method-checkbox' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input' => 'color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
         
@@ -2834,12 +2770,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Placeholder Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_placeholder_color', [
                     '{{WRAPPER}} .better-payment .form-content-section input::placeholder' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input::placeholder' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input::placeholder' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input::placeholder' => 'color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -2860,12 +2793,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_spacing', [
                     '{{WRAPPER}} .better-payment .form-content-section input' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -2875,12 +2805,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => __( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_padding', [
                     '{{WRAPPER}} .better-payment .form-content-section input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -2902,12 +2829,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_text_indent', [
                     '{{WRAPPER}} .form-content-section input' => 'text-indent: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .general-form-wrap input' => 'text-indent: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input' => 'text-indent: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input' => 'text-indent: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -2925,20 +2849,11 @@ class Better_Payment_Widget extends Widget_Base {
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
                 'description' => __( 'Set width for all input fields. Not applicable if the field is set to display inline (<b>Content => Form Settings => Form Fields (Repeater) => Display Inline?</b>)', 'better-payment' ),
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_width', [
                     '{{WRAPPER}} .better-payment .form-content-section input[type="text"]' => 'width: {{SIZE}}{{UNIT}}',
                     '{{WRAPPER}} .better-payment .form-content-section input[type="email"]' => 'width: {{SIZE}}{{UNIT}}',
                     '{{WRAPPER}} .better-payment .form-content-section input[type="number"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input[type="text"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input[type="email"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input[type="number"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input[type="text"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input[type="email"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input[type="number"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input[type="text"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input[type="email"]' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input[type="number"]' => 'width: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -2955,20 +2870,11 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_height', [
                     '{{WRAPPER}} .better-payment .form-content-section input[type="text"]' => 'height: {{SIZE}}{{UNIT}}',
                     '{{WRAPPER}} .better-payment .form-content-section input[type="email"]' => 'height: {{SIZE}}{{UNIT}}',
                     '{{WRAPPER}} .better-payment .form-content-section input[type="number"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input[type="text"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input[type="email"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input[type="number"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input[type="text"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input[type="email"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input[type="number"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input[type="text"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input[type="email"]' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input[type="number"]' => 'height: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -2979,7 +2885,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'       => __( 'Border', 'better-payment' ),
                 'placeholder' => '1px',
                 'default'     => '1px',
-                'selector'    => '{{WRAPPER}} .better-payment .form-content-section input, {{WRAPPER}} .better-payment .general-form-wrap input, {{WRAPPER}} .better-payment .donation-form-wrap input, {{WRAPPER}} .better-payment .woo-form-wrap input',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_input_border', '{{WRAPPER}} .better-payment .form-content-section input' ),
             ]
         );
 
@@ -2989,12 +2895,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => __( 'Border Radius', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_input_radius', [
                     '{{WRAPPER}} .better-payment .form-content-section input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap input' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
                 'separator'  => 'after',
             ]
         );
@@ -3004,7 +2907,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_fields_input_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .better-payment .form-content-section input, {{WRAPPER}} .better-payment .general-form-wrap input, {{WRAPPER}} .better-payment .donation-form-wrap input, {{WRAPPER}} .better-payment .woo-form-wrap input',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_input_typography', '{{WRAPPER}} .better-payment .form-content-section input' ),
             ]
         );
 
@@ -3012,7 +2915,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Box_Shadow::get_type(),
             [
                 'name'      => 'better_payment_form_fields_input_box_shadow',
-                'selector'  => '{{WRAPPER}} .better-payment .form-content-section input, {{WRAPPER}} .better-payment .general-form-wrap input, {{WRAPPER}} .better-payment .donation-form-wrap input, {{WRAPPER}} .better-payment .woo-form-wrap input',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_input_box_shadow', '{{WRAPPER}} .better-payment .form-content-section input' ),
             ]
         );
 
@@ -3045,7 +2948,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'        => 'better_payment_form_fields_payment_method_border_active',
                 'label'       => __( 'Border', 'better-payment' ),
-                'selector'    => '{{WRAPPER}} .better-payment .payment-form-layout-3 .payment-method-checkbox.active, {{WRAPPER}} .better-payment .payment-form-layout-1 .payment-method-checkbox.single-item.active, {{WRAPPER}} .better-payment .payment-form-layout-2 .payment-method-checkbox.single-item.active, {{WRAPPER}} .better-payment .general-form-wrap .payment-method-items input:checked + .payment-method-image-wrap, {{WRAPPER}} .better-payment .woo-form-wrap .payment-method-items input:checked + .payment-option',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_payment_method_border_active', '{{WRAPPER}} .better-payment .payment-form-layout-3 .payment-method-checkbox.active, {{WRAPPER}} .better-payment .payment-form-layout-1 .payment-method-checkbox.single-item.active, {{WRAPPER}} .better-payment .payment-form-layout-2 .payment-method-checkbox.single-item.active' ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -3069,7 +2972,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'        => 'better_payment_form_fields_payment_method_border_inactive',
                 'label'       => __( 'Border', 'better-payment' ),
-                'selector'    => '{{WRAPPER}} .better-payment .payment-form-layout-3 .payment-method-checkbox, {{WRAPPER}} .better-payment .general-form-wrap .payment-method-items .payment-method-image-wrap, {{WRAPPER}} .better-payment .woo-form-wrap .payment-method-items .payment-option',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_payment_method_border_inactive', '{{WRAPPER}} .better-payment .payment-form-layout-3 .payment-method-checkbox' ),
                 'condition' => [
                     'better_payment_form_layout!' => ['layout-5-pro'],
                 ],
@@ -3207,12 +3110,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_width', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text' => 'width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text' => 'width: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3229,12 +3129,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_height', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text' => 'height: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text' => 'height: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3255,12 +3152,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_spacing', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text' => 'margin-bottom: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3279,12 +3173,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Background Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_normal_bg', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text' => 'background-color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3294,12 +3185,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Text Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_normal_text_color', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text' => 'color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3318,12 +3206,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Background Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_selected_bg', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group input[type="radio"].bp-form__control:checked ~ label' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount input:checked + .text' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount input:checked + .text' => 'background-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount input:checked + .text' => 'background-color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3333,12 +3218,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Text Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_selected_text_color', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group input[type="radio"].bp-form__control:checked ~ label' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount input:checked + .text' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount input:checked + .text' => 'color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount input:checked + .text' => 'color: {{VALUE}}',
-                ]
+                ] )
             ]
         );
 
@@ -3353,7 +3235,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'       => __( 'Border', 'better-payment' ),
                 'placeholder' => '1px',
                 'default'     => '1px',
-                'selector'    => '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label, {{WRAPPER}} .better-payment .general-form-wrap .payment-amount input:checked + .text, {{WRAPPER}} .better-payment .donation-form-wrap .payment-amount input:checked + .text, {{WRAPPER}} .better-payment .woo-form-wrap .payment-amount input:checked + .text',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_amount_border', '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' ),
                 'separator'   => 'before',
             ]
         );
@@ -3364,12 +3246,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => __( 'Border Radius', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_fields_amount_border_radius', [
                     '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -3378,7 +3257,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_fields_amount_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label, {{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text, {{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text, {{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_amount_typography', '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' ),
                 'separator' => 'before',
             ]
         );
@@ -3387,7 +3266,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Box_Shadow::get_type(),
             [
                 'name'      => 'better_payment_form_fields_amount_box_shadow',
-                'selector'  => '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label, {{WRAPPER}} .better-payment .general-form-wrap .payment-amount .text, {{WRAPPER}} .better-payment .donation-form-wrap .payment-amount .text, {{WRAPPER}} .better-payment .woo-form-wrap .payment-amount .text',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_fields_amount_box_shadow', '{{WRAPPER}} .payment-form-layout .bp-payment-amount-wrap .bp-form__group label' ),
             ]
         );
 
@@ -3416,12 +3295,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_width', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button' => 'flex: none;width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button' => 'flex: none;width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button' => 'flex: none;width: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button' => 'flex: none;width: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3440,12 +3316,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Background Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_normal_bg', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button' => 'background-color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button' => 'background-color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button' => 'background-color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button' => 'background: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3455,12 +3328,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Text Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_normal_text_color', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button' => 'color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button' => 'color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button' => 'color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button' => 'color: {{VALUE}} !important',
-                ],
+                ] ),
             ]
         );
 
@@ -3470,7 +3340,7 @@ class Better_Payment_Widget extends Widget_Base {
                 'name'     => 'better_payment_form_button_normal_border',
                 'label'    => __( 'Border', 'better-payment' ),
                 'default'  => '1px',
-                'selector' => '{{WRAPPER}} .better-payment .payment-form-layout .button, {{WRAPPER}} .better-payment .general-form-wrap .button, {{WRAPPER}} .better-payment .donation-form-wrap .button, {{WRAPPER}} .better-payment .woo-form-wrap .button',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_button_normal_border', '{{WRAPPER}} .better-payment .payment-form-layout .button' ),
             ]
         );
 
@@ -3480,12 +3350,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => __( 'Border Radius', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_normal_border_radius', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -3495,12 +3362,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'      => __( 'Padding', 'better-payment' ),
                 'type'       => Controls_Manager::DIMENSIONS,
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_normal_padding', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
-                ],
+                ] ),
             ]
         );
 
@@ -3517,12 +3381,9 @@ class Better_Payment_Widget extends Widget_Base {
                     ],
                 ],
                 'size_units' => [ 'px', 'em', '%' ],
-                'selectors'  => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_normal_margin', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button' => 'margin-top: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button' => 'margin-top: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button' => 'margin-top: {{SIZE}}{{UNIT}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button' => 'margin-top: {{SIZE}}{{UNIT}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3531,7 +3392,7 @@ class Better_Payment_Widget extends Widget_Base {
             [
                 'name'      => 'better_payment_form_button_normal_typography',
                 'label'     => __( 'Typography', 'better-payment' ),
-                'selector'  => '{{WRAPPER}} .better-payment .payment-form-layout .button, {{WRAPPER}} .better-payment .general-form-wrap .button, {{WRAPPER}} .better-payment .donation-form-wrap .button, {{WRAPPER}} .better-payment .woo-form-wrap .button',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_button_normal_typography', '{{WRAPPER}} .better-payment .payment-form-layout .button' ),
                 'separator' => 'before',
             ]
         );
@@ -3540,7 +3401,7 @@ class Better_Payment_Widget extends Widget_Base {
             Group_Control_Box_Shadow::get_type(),
             [
                 'name'      => 'better_payment_form_button_normal_box_shadow',
-                'selector'  => '{{WRAPPER}} .better-payment .payment-form-layout .button, {{WRAPPER}} .better-payment .general-form-wrap .button, {{WRAPPER}} .better-payment .donation-form-wrap .button, {{WRAPPER}} .better-payment .woo-form-wrap .button',
+                'selector' => $this->pro_layout_selector( 'better_payment_form_button_normal_box_shadow', '{{WRAPPER}} .better-payment .payment-form-layout .button' ),
             ]
         );
 
@@ -3559,13 +3420,10 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Background Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_hover_bg', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button:hover' => 'background-color: {{VALUE}} !important',
                     '{{WRAPPER}} .better-payment .payment-form-layout.payment-form-layout-3 .button:hover' => 'background-color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button:hover' => 'background-color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button:hover' => 'background-color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button:hover' => 'background-color: {{VALUE}} !important',
-                ],
+                ] ),
             ]
         );
 
@@ -3575,13 +3433,10 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Text Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_hover_text_color', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button:hover' => 'color: {{VALUE}} !important',
                     '{{WRAPPER}} .better-payment .payment-form-layout.payment-form-layout-3 .button:hover' => 'color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button:hover' => 'color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button:hover' => 'color: {{VALUE}} !important',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button:hover' => 'color: {{VALUE}} !important',
-                ],
+                ] ),
             ]
         );
 
@@ -3591,12 +3446,9 @@ class Better_Payment_Widget extends Widget_Base {
                 'label'     => __( 'Border Color', 'better-payment' ),
                 'type'      => Controls_Manager::COLOR,
                 'default'   => '',
-                'selectors' => [
+                'selectors' => $this->pro_layout_selectors( 'better_payment_form_button_hover_border', [
                     '{{WRAPPER}} .better-payment .payment-form-layout .button:hover' => 'border-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .general-form-wrap .button:hover' => 'border-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .donation-form-wrap .button:hover' => 'border-color: {{VALUE}}',
-                    '{{WRAPPER}} .better-payment .woo-form-wrap .button:hover' => 'border-color: {{VALUE}}',
-                ],
+                ] ),
             ]
         );
 
@@ -3834,6 +3686,70 @@ class Better_Payment_Widget extends Widget_Base {
             <input type="hidden" name="campaign_id" value="' . esc_attr( $campaign_id_value ) . '">
             <input type="hidden" name="campaign_currency" value="' . esc_attr( $campaign_currency_value ) . '">
         ';
+    }
+
+    /**
+     * A style control's group selector, with whatever an add-on's layouts need appended.
+     *
+     * The free layouts' selector is Lite's. Pro's layouts 4-6 render their own markup and add
+     * their selectors to the same controls here, so one Typography or Border control styles
+     * both — and a site without Pro carries no selector for markup it never renders.
+     *
+     * @since 2.4.4
+     *
+     * @param string $control_id Control (or group control) name.
+     * @param string $selector   Lite's selector list.
+     * @return string
+     */
+    protected function pro_layout_selector( $control_id, $selector ) {
+        /**
+         * Extra selectors for a Payment Form style control, as a comma-separated list.
+         *
+         * @since 2.4.4
+         *
+         * @param string                $extra      '' from Lite.
+         * @param string                $control_id Control (or group control) name.
+         * @param Better_Payment_Widget $widget     The widget.
+         */
+        $extra = apply_filters( 'better_payment/elementor/widget/pro_layout_selector', '', $control_id, $this );
+
+        return is_string( $extra ) && '' !== trim( $extra ) ? $selector . ', ' . $extra : $selector;
+    }
+
+    /**
+     * A style control's `selectors` map, with whatever an add-on's layouts need added after Lite's.
+     *
+     * @since 2.4.4
+     *
+     * @param string $control_id Control name.
+     * @param array  $selectors  Lite's selector => declaration map.
+     * @return array
+     */
+    protected function pro_layout_selectors( $control_id, array $selectors ) {
+        /**
+         * Extra selector => declaration pairs for a Payment Form style control.
+         *
+         * Lite's own selectors always win a key clash: an add-on adds, never rewrites.
+         *
+         * @since 2.4.4
+         *
+         * @param array                 $extra      [] from Lite.
+         * @param string                $control_id Control name.
+         * @param Better_Payment_Widget $widget     The widget.
+         */
+        $extra = apply_filters( 'better_payment/elementor/widget/pro_layout_selectors', [], $control_id, $this );
+
+        if ( ! is_array( $extra ) ) {
+            return $selectors;
+        }
+
+        foreach ( $extra as $selector => $declaration ) {
+            if ( is_string( $selector ) && is_string( $declaration ) && ! isset( $selectors[ $selector ] ) ) {
+                $selectors[ $selector ] = $declaration;
+            }
+        }
+
+        return $selectors;
     }
 
     public function better_payment_free_layouts(){

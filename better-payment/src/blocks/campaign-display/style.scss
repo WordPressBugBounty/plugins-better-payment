@@ -2324,7 +2324,8 @@ $white: #fff;
 	}
 
 	// ── Donate button ─────────────────────────────────────────────────────────
-	// The colour is the element's own `button_color`, set inline; the gloss is a
+	// The colour is the element's own `button_color`, printed with !important in
+	// the campaign's scoped element styles (ElementStyleCompiler); the gloss is a
 	// background-image layered over it, so the author's colour still shows
 	// through and a changed colour needs no CSS change here.
 	.bp-donate_btn {
@@ -2890,3 +2891,19 @@ $white: #fff;
 		padding-bottom: 17px;
 	}
 }
+
+// ── Mobile Donate bar (markup: RendererService::render_campaign) ──────────────
+// Printed once per page as a jump link to the ask. Hidden on every theme here, so
+// no frozen or v2 campaign changes; a theme opts in (the v3 themes, on a phone).
+.bp-campaign-askbar {
+	display: none;
+}
+
+// Land the jump a little below the top edge rather than flush against it.
+.bp-campaign-ask-anchor {
+	display: block;
+	scroll-margin-top: 24px;
+}
+
+// The v3 template themes live in their own partial. See its header.
+@import "v3-themes";

@@ -1,11 +1,11 @@
 === Better Payment – Instant Payments, Donations, Fundraising with Subscriptions & More ===
 Contributors: wpdevteam, re_enter_rupok, asif2bd, fuadragib, rahatsheikhleon
 Donate link: https://wpdeveloper.com
-Tags: donation, fundraising, recurring donations, payments, stripe paypal paystack
+Tags: donation, fundraising, recurring donations, payments, stripe-payment
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.4.3
+Stable tag: 2.4.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -259,14 +259,24 @@ The JavaScript and CSS files in `assets/` are compiled with `@wordpress/scripts`
 
 == Changelog ==
 
+= 2.4.4 - 02/11/2026 =
+- Added: Advanced Campaign Builder styling with Content, Style and Advanced tabs, including widths, colours, borders, shadows, spacing and hover states
+- Added: Redesigned all eight campaign templates (v3), a mobile sticky Donate bar, and themed designs for AI-generated campaigns
+- Added: Full desktop and mobile previews of Pro templates for Free users
+- Improved: Moved Pro-only features out of Free while retaining upgrade previews
+- Improved: Template picker, accessibility, settings organization, and plugin download size
+- Fixed: Payment confirmation emails, settings saving, AI style feedback, progress bar visibility, default donation amounts, and builder element outlines
+- Security: Added quantity validation to prevent unauthorized payment quantities
+- Improved: Minor bug fixes and overall stability
+
 = 2.4.3 - 25/10/2026 =
-- Added: Campaign Donate Button popup payment option (Pro), payment amount limits, and secret key rotation notices.
-- Fixed: Stripe, PayPal, and Paystack payment processing, verification, currency handling, decimal precision, and error handling.
-- Fixed: Payment receipts, duplicate orders, payer validation, settings persistence, email templates, and subscription routing.
-- Fixed: Campaign visibility, dates, goals, layouts, Donate Button behavior, builder editing, drag-and-drop, and AI actions.
-- Improved: Campaign access control, CSV export safety, PayPal IPN validation, dashboard transaction matching, and AI history permissions.
-- Security: Protected gateway secret keys, escaped payment-related output, rate-limited payment attempts, and rejected donations below 1.
-- Improved: Minor bug fixes and overall stability improvements.
+- Added: Campaign Donate Button popup payment option (Pro), payment amount limits, and secret key rotation notices
+- Fixed: Stripe, PayPal, and Paystack payment processing, verification, currency handling, decimal precision, and error handling
+- Fixed: Payment receipts, duplicate orders, payer validation, settings persistence, email templates, and subscription routing
+- Fixed: Campaign visibility, dates, goals, layouts, Donate Button behavior, builder editing, drag-and-drop, and AI actions
+- Improved: Campaign access control, CSV export safety, PayPal IPN validation, dashboard transaction matching, and AI history permissions
+- Security: Protected gateway secret keys, escaped payment-related output, rate-limited payment attempts, and rejected donations below 1
+- Improved: Minor bug fixes and overall stability improvements
 
 = 2.4.2 - 14/10/2026 =
 - Fixed: PayPal return URL validation, CSV imports, transaction filters, subscription role fallback, and Payment Form block issues

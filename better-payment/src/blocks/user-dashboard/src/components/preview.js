@@ -11,6 +11,7 @@ import AnalyticsReport from './AnalyticsReport';
 import RecurringSubscriptionWidget from './RecurringSubscriptionWidget';
 import SplitSubscriptionWidget from './SplitSubscriptionWidget';
 import SubscriptionsTab from './SubscriptionsTab';
+import { useLegacySubscriptionProps } from './transitional/legacySubscriptionProps';
 import { getBpStatusInfo } from './statusInfo';
 import { avatarFor } from './defaultAvatar';
 
@@ -246,59 +247,12 @@ export default function DashboardPreview( { attributes } ) {
 		fetchTxPage( txPage );
 	}, [ txPage ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
-	// Paginated subscription state — initialized from block data (page 1)
-	const initSubMeta = blockData.userSubscriptionsMeta || {
-		total: 0,
-		pages: 1,
-		perPage: 20,
-	};
-	const [ subRows, setSubRows ] = useState(
-		blockData.userSubscriptions || []
-	);
-	const [ subPage, setSubPage ] = useState( 1 );
-	const [ subMeta, setSubMeta ] = useState( initSubMeta );
-	const subMounted = useRef( false );
-
-	const fetchSubPage = useCallback(
-		( page ) => {
-			if ( ! restUrl ) return;
-			fetch(
-				`${ restUrl }?tab=subscriptions&page=${ page }&per_page=${
-					subMeta.perPage || 20
-				}`,
-				{
-					headers: { 'X-WP-Nonce': restNonce },
-				}
-			)
-				.then( ( r ) => r.json() )
-				.then( ( data ) => {
-					setSubRows( data.transactions || [] );
-					setSubPage( data.page || page );
-					setSubMeta( {
-						total: data.total,
-						pages: data.pages,
-						perPage: data.per_page,
-					} );
-				} );
-		},
-		[ restUrl, restNonce, subMeta.perPage ]
-	);
-
-	useEffect( () => {
-		if ( ! subMounted.current ) {
-			subMounted.current = true;
-			return;
-		}
-		fetchSubPage( subPage );
-	}, [ subPage ] ); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Subscription data for the Dashboard tab summary widgets (uses first page from block data)
-	const allSubscriptions = blockData.userSubscriptions || [];
-	const recurringSubscriptions = allSubscriptions.filter(
-		( tx ) => ! parseInt( tx.is_payment_split_payment || 0, 10 )
-	);
-	const splitSubscriptions = allSubscriptions.filter(
-		( tx ) => !! parseInt( tx.is_payment_split_payment || 0, 10 )
+	// The Pro panels build their own subscription rows from blockData. Pro 1.4.6 and older
+	// still read the rows from Lite (transitional/legacySubscriptionProps.js).
+	const legacySubscriptionProps = useLegacySubscriptionProps(
+		blockData,
+		restUrl,
+		restNonce
 	);
 
 	const [ activeTab, setActiveTab ] = useState(
@@ -818,9 +772,8 @@ export default function DashboardPreview( { attributes } ) {
 															proEnabled
 														}
 														proAssets={ proAssets }
-														subscriptions={
-															recurringSubscriptions
-														}
+														blockData={ blockData }
+														{ ...legacySubscriptionProps.recurring }
 														title={
 															attributes.dashboardRecurringSubscriptionsLabel ||
 															'Recurring Subscriptions'
@@ -842,9 +795,8 @@ export default function DashboardPreview( { attributes } ) {
 															proEnabled
 														}
 														proAssets={ proAssets }
-														subscriptions={
-															splitSubscriptions
-														}
+														blockData={ blockData }
+														{ ...legacySubscriptionProps.split }
 														title={
 															attributes.dashboardSplitSubscriptionsLabel ||
 															'Split Subscriptions'
@@ -1418,10 +1370,10 @@ export default function DashboardPreview( { attributes } ) {
 						<SubscriptionsTab
 							proEnabled={ proEnabled }
 							proAssets={ proAssets }
-							subscriptions={ subRows }
-							subPage={ subPage }
-							subMeta={ subMeta }
-							setSubPage={ setSubPage }
+							blockData={ blockData }
+							restUrl={ restUrl }
+							restNonce={ restNonce }
+							{ ...legacySubscriptionProps.table }
 							attributes={ attributes }
 							noItemsLabel={ attributes.noItemsLabel }
 						/>

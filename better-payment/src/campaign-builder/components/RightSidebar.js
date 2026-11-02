@@ -1,28 +1,36 @@
-import {
-	useState,
-	useEffect,
-	useMemo,
-	useRef,
-	useCallback,
-	createPortal,
-} from '@wordpress/element';
+import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { isVisibleForMeta } from '../utils/metaCondition';
-import { customSettingsControl } from '../utils/builderHooks';
+import { progressBarNote } from '../utils/progressBarNote';
+import {
+	customSettingsControl,
+	styleToolbar,
+	styleValueKey,
+} from '../utils/builderHooks';
+import {
+	controlsForTab,
+	initialOpenSection,
+	parseNumberValue,
+	toggleSection,
+} from '../utils/styleControls';
 import { useDraggable } from '@dnd-kit/core';
 import { getAllElements, getElement } from '../fields/FieldRegistry';
 import SuggestedAmountsEditor from './SuggestedAmountsEditor';
 import DonationModeLock from './DonationModeLock';
-import RepeaterControl from './RepeaterControl';
+import RepeaterControl, {
+	liteDrawsRepeater,
+} from '../transitional/RepeaterControl';
 import { openWpMedia } from '../utils/media';
 import { getGlobalCurrencySymbol } from '../utils/currency';
 import { isElementLocked, lockedElementFeatures } from '../utils/proEnabled';
 import {
-	backgroundFieldState,
-	resolveThemeBackground,
-	themeClassForKey,
-} from '../utils/themeBackground';
-import ColorPicker from './ColorPicker';
+	BoxShadowControl,
+	ColorControl,
+	DimensionsControl,
+	StateTabs,
+} from './StyleControls';
+import ResponsiveLock from './ResponsiveLock';
+import EffectsLock from './EffectsLock';
 import ProCrownIcon from './ProCrownIcon';
 import AIAssistantPanel from '../ai/AIAssistantPanel';
 import AiIcon from '../ai/AiIcon';
@@ -136,6 +144,8 @@ export default function RightSidebar( {
 	campaignId,
 	adminUrl,
 	aiFocusSignal = 0,
+	styleDevice = 'desktop',
+	onStyleDeviceChange,
 } ) {
 	const setActiveTab = onTabChange;
 	// The tab's own "off" indicator. Seeded SYNCHRONOUSLY from the builder payload
@@ -274,6 +284,8 @@ export default function RightSidebar( {
 							onRequestUpgrade={ onRequestUpgrade }
 							aiUsable={ ! aiBlocked }
 							aiLockedReason={ aiTooltip }
+							styleDevice={ styleDevice }
+							onStyleDeviceChange={ onStyleDeviceChange }
 						/>
 					) }
 				</div>
@@ -352,6 +364,12 @@ function DraggableFieldCard( { element, locked = false, onRequestUpgrade } ) {
 
 // ── Input Customization tab ────────────────────────────────────────────────────
 
+const INNER_TABS = [
+	{ key: 'content', label: __( 'Content', 'better-payment' ) },
+	{ key: 'style', label: __( 'Style', 'better-payment' ) },
+	{ key: 'advanced', label: __( 'Advanced', 'better-payment' ) },
+];
+
 function CustomizationPanel( {
 	state,
 	campaignId,
@@ -364,8 +382,10 @@ function CustomizationPanel( {
 	onRequestUpgrade,
 	aiUsable = false,
 	aiLockedReason = '',
+	styleDevice = 'desktop',
+	onStyleDeviceChange,
 } ) {
-	const [ innerTab, setInnerTab ] = useState( 'general' );
+	const [ innerTab, setInnerTab ] = useState( 'content' );
 
 	let selectedElement = null;
 	if ( selectedElementId && layout?.columns ) {
@@ -390,42 +410,41 @@ function CustomizationPanel( {
 
 	return (
 		<div className="bp-cb-element-settings">
-			{ /* General / Advanced tabs — always visible */ }
-			<div className="bp-cb-inner-tabs">
-				<button
-					className={ `bp-cb-inner-tab${
-						innerTab === 'general' ? ' is-active' : ''
-					}` }
-					onClick={ () => setInnerTab( 'general' ) }
-				>
-					{ __( 'General', 'better-payment' ) }
-				</button>
-				<button
-					className={ `bp-cb-inner-tab${
-						innerTab === 'advanced' ? ' is-active' : ''
-					}` }
-					onClick={ () => setInnerTab( 'advanced' ) }
-				>
-					{ __( 'Advanced', 'better-payment' ) }
-				</button>
+			{ /* Content / Style / Advanced — always visible. Each schema control
+			     says which tab draws it (`tab`, default 'content'); see
+			     utils/styleControls.js controlTab(). */ }
+			<div className="bp-cb-inner-tabs" role="tablist">
+				{ INNER_TABS.map( ( tab ) => (
+					<button
+						key={ tab.key }
+						type="button"
+						role="tab"
+						aria-selected={ innerTab === tab.key }
+						className={ `bp-cb-inner-tab${
+							innerTab === tab.key ? ' is-active' : ''
+						}` }
+						onClick={ () => setInnerTab( tab.key ) }
+					>
+						{ tab.label }
+					</button>
+				) ) }
 			</div>
 
-			{ innerTab === 'general' &&
-				( selectedElement ? (
-					<>
-						<div className="bp-cb-element-settings__header">
-							<span
-								className={ `dashicons dashicons-${
-									def?.icon || 'block-default'
-								}` }
-							/>
-							<span className="bp-cb-element-settings__title">
-								{ def?.label ||
-									__( 'Element Settings', 'better-payment' ) }
-							</span>
-						</div>
+			{ selectedElement ? (
+				<>
+					<div className="bp-cb-element-settings__header">
+						<span
+							className={ `dashicons dashicons-${
+								def?.icon || 'block-default'
+							}` }
+						/>
+						<span className="bp-cb-element-settings__title">
+							{ def?.label ||
+								__( 'Element Settings', 'better-payment' ) }
+						</span>
+					</div>
 
-						{ /* Free-only. `isProLocked` is `def.pro && ! proEnabled`,
+					{ /* Free-only. `isProLocked` is `def.pro && ! proEnabled`,
 							     so with Pro active this whole banner is gone and a
 							     Pro element's panel is indistinguishable from a free
 							     one's — which is the point: an entitled user should
@@ -443,65 +462,64 @@ function CustomizationPanel( {
 							     option in a sales pitch. Deletion belongs to the
 							     canvas — the element's floating toolbar has the
 							     trash action, same as every other element. */ }
-						{ isProLocked && (
-							<div className="bp-cb-pro-locked-notice">
-								<span className="bp-cb-pro-locked-notice__badge">
-									{ __( 'PRO', 'better-payment' ) }
-								</span>
-								<p className="bp-cb-pro-locked-notice__text">
-									{ __(
-										'This is a Better Payment Pro element. Preview only - activate Pro to configure it and display it on your live campaign.',
-										'better-payment'
-									) }
-								</p>
-								{ proFeatures.length > 0 && (
-									<ul className="bp-cb-pro-locked-notice__features">
-										{ proFeatures.map( ( feature ) => (
-											<li key={ feature }>{ feature }</li>
-										) ) }
-									</ul>
-								) }
-								<button
-									type="button"
-									className="bp-cb-pro-locked-notice__cta"
-									onClick={ () =>
-										typeof onRequestUpgrade ===
-											'function' &&
-										onRequestUpgrade( selectedElement.type )
-									}
-								>
-									{ __( 'Upgrade to Pro', 'better-payment' ) }
-								</button>
-							</div>
-						) }
-
-						{ /* AI edits an element by writing its settings, so it
-							     has to follow the same lock. While AI is unusable
-							     (toggle off or no API key) the row is shown as UI
-							     only — buttons disabled, with a note naming the fix —
-							     since any request would only fail. */ }
-						{ ! isProLocked && (
-							<ElementAIActions
-								element={ selectedElement }
-								elementLabel={ def?.label }
-								campaignId={ campaignId }
-								state={ state }
-								dispatch={ dispatch }
-								aiUsable={ aiUsable }
-								lockedReason={ aiLockedReason }
-							/>
-						) }
-
-						{ selectedElement.type === 'progress_bar' && (
-							<p className="bp-cb-widget-note">
+					{ isProLocked && (
+						<div className="bp-cb-pro-locked-notice">
+							<span className="bp-cb-pro-locked-notice__badge">
+								{ __( 'PRO', 'better-payment' ) }
+							</span>
+							<p className="bp-cb-pro-locked-notice__text">
 								{ __(
-									'Note: The progress bar is always shown. When no campaign goal is set, the goal amount displays as 0 and the donated percentage stays at 0%.',
+									'This is a Better Payment Pro element. Preview only - activate Pro to configure it and display it on your live campaign.',
 									'better-payment'
 								) }
 							</p>
+							{ proFeatures.length > 0 && (
+								<ul className="bp-cb-pro-locked-notice__features">
+									{ proFeatures.map( ( feature ) => (
+										<li key={ feature }>{ feature }</li>
+									) ) }
+								</ul>
+							) }
+							<button
+								type="button"
+								className="bp-cb-pro-locked-notice__cta"
+								onClick={ () =>
+									typeof onRequestUpgrade === 'function' &&
+									onRequestUpgrade( selectedElement.type )
+								}
+							>
+								{ __( 'Upgrade to Pro', 'better-payment' ) }
+							</button>
+						</div>
+					) }
+
+					{ /* AI edits an element by writing its settings, so it
+							     has to follow the same lock. While AI is unusable
+							     (toggle off or no API key) the row is shown as UI
+							     only — buttons disabled, with a note naming the fix —
+							     since any request would only fail. Content tab only:
+							     the AI writes copy, never style. */ }
+					{ ! isProLocked && innerTab === 'content' && (
+						<ElementAIActions
+							element={ selectedElement }
+							elementLabel={ def?.label }
+							campaignId={ campaignId }
+							state={ state }
+							dispatch={ dispatch }
+							aiUsable={ aiUsable }
+							lockedReason={ aiLockedReason }
+						/>
+					) }
+
+					{ innerTab === 'content' &&
+						selectedElement.type === 'progress_bar' && (
+							<p className="bp-cb-widget-note">
+								{ progressBarNote( meta ) }
+							</p>
 						) }
 
-						{ ( selectedElement.type === 'social_links' ||
+					{ innerTab === 'content' &&
+						( selectedElement.type === 'social_links' ||
 							selectedElement.type === 'social_sharing' ) && (
 							<p className="bp-cb-social-info">
 								{ __(
@@ -518,264 +536,79 @@ function CustomizationPanel( {
 							</p>
 						) }
 
-						{ ! isProLocked && (
-							<ElementSettings
-								element={ selectedElement }
-								schema={ def?.settingsSchema ?? [] }
-								meta={ meta }
-								layout={ layout }
-								dispatch={ dispatch }
-								proEnabled={ proEnabled }
+					{ /* Style and Advanced carry a toolbar slot above the
+							     controls. An add-on draws its own there (Pro's
+							     device switcher); a free install draws the
+							     locked one. Nothing for an older Pro that does
+							     not answer — never an upsell to a paying user. */ }
+					{ ! isProLocked &&
+						innerTab !== 'content' &&
+						( styleToolbar( {
+							device: styleDevice,
+							setDevice: onStyleDeviceChange,
+							element: selectedElement,
+							tab: innerTab,
+						} ) ??
+							( ! proEnabled && (
+								<ResponsiveLock
+									onRequestUpgrade={ onRequestUpgrade }
+								/>
+							) ) ) }
+
+					{ ! isProLocked && (
+						<ElementSettings
+							// One per element and tab: the open section resets
+							// when either changes, never on a device switch.
+							key={ `${ selectedElement.id }:${ innerTab }` }
+							element={ selectedElement }
+							schema={ controlsForTab(
+								def?.settingsSchema ?? [],
+								innerTab
+							) }
+							tab={ innerTab }
+							styleDevice={ styleDevice }
+							meta={ meta }
+							layout={ layout }
+							dispatch={ dispatch }
+							proEnabled={ proEnabled }
+							onRequestUpgrade={ onRequestUpgrade }
+						/>
+					) }
+
+					{ /* Free-only teaser for Pro's Effects (EffectsLock.js). */ }
+					{ ! isProLocked &&
+						! proEnabled &&
+						innerTab === 'advanced' && (
+							<EffectsLock
 								onRequestUpgrade={ onRequestUpgrade }
 							/>
 						) }
-					</>
-				) : (
-					<div className="bp-cb-customization-empty">
-						<svg
-							width="40"
-							height="40"
-							viewBox="0 0 40 40"
-							fill="none"
-						>
-							<circle
-								cx="20"
-								cy="20"
-								r="18"
-								stroke="#ddd"
-								strokeWidth="2"
-							/>
-							<path
-								d="M14 20h12M20 14v12"
-								stroke="#ccc"
-								strokeWidth="2"
-								strokeLinecap="round"
-							/>
-						</svg>
-						<p>
-							{ __(
-								'Click an element on the canvas to customize it.',
-								'better-payment'
-							) }
-						</p>
-					</div>
-				) ) }
-
-			{ innerTab === 'advanced' && (
-				<ThemeColors meta={ meta } dispatch={ dispatch } />
+				</>
+			) : (
+				<div className="bp-cb-customization-empty">
+					<svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+						<circle
+							cx="20"
+							cy="20"
+							r="18"
+							stroke="#ddd"
+							strokeWidth="2"
+						/>
+						<path
+							d="M14 20h12M20 14v12"
+							stroke="#ccc"
+							strokeWidth="2"
+							strokeLinecap="round"
+						/>
+					</svg>
+					<p>
+						{ __(
+							'Click an element on the canvas to customize it.',
+							'better-payment'
+						) }
+					</p>
+				</div>
 			) }
-		</div>
-	);
-}
-
-// ── Theme Colors (Advanced tab) ────────────────────────────────────────────────
-
-// Campaign background colour. The per-button colour lives on the Donate Button
-// widget now (its "Button Color" control), not here.
-//
-// There is no flat default: an unset `bpc_color_background` means the template's
-// theme paints the page, and the theme's own colour is read out of the loaded
-// campaign CSS (utils/themeBackground.js). A hardcoded `#ffffff` here is what
-// made every campaign report a white background it did not have, and made Reset
-// write that white in as a real override.
-const COLOR_FIELDS = [
-	{
-		key: 'bpc_color_background',
-		label: __( 'Background', 'better-payment' ),
-	},
-];
-
-const PICKER_W = 270;
-const PICKER_H_EST = 320; // estimated picker height after size reduction
-
-function ThemeColors( { meta, dispatch } ) {
-	const [ openKey, setOpenKey ] = useState( null );
-	const [ pickerPos, setPickerPos ] = useState( {
-		top: 0,
-		left: 0,
-		caretLeft: 0,
-		caretAtBottom: true,
-	} );
-	const swatchRefs = useRef( {} );
-	const controlRefs = useRef( {} );
-	const pickerRef = useRef( null );
-
-	const openPickerFor = useCallback(
-		( key ) => {
-			if ( openKey === key ) {
-				setOpenKey( null );
-				return;
-			}
-
-			const el = swatchRefs.current[ key ];
-			if ( el ) {
-				const rect = el.getBoundingClientRect();
-
-				// Horizontal: center picker over swatch, clamp to viewport.
-				let left = rect.left + rect.width / 2 - PICKER_W / 2;
-				left = Math.max(
-					8,
-					Math.min( left, window.innerWidth - PICKER_W - 8 )
-				);
-				const caretLeft = rect.left + rect.width / 2 - left;
-
-				// Vertical: prefer above the swatch, fall back to below.
-				const spaceAbove = rect.top - 10;
-				const caretAtBottom = spaceAbove >= PICKER_H_EST;
-				let top = caretAtBottom
-					? rect.top - PICKER_H_EST - 10
-					: rect.bottom + 10;
-
-				// Clamp so the picker never leaves the viewport.
-				top = Math.max(
-					8,
-					Math.min( top, window.innerHeight - PICKER_H_EST - 8 )
-				);
-
-				setPickerPos( { top, left, caretLeft, caretAtBottom } );
-			}
-			setOpenKey( key );
-		},
-		[ openKey ]
-	);
-
-	// Close picker when clicking outside both the popup and the color control.
-	// The check covers the whole control (swatch + text input), not just the
-	// swatch — otherwise a mousedown on the input reads as "outside" and closes
-	// the popup, which the input's onClick then reopens (so it never toggles
-	// shut). Anchoring on the control wrapper leaves onClick as the sole toggle.
-	useEffect( () => {
-		if ( ! openKey ) return;
-		const handler = ( e ) => {
-			const inPicker = pickerRef.current?.contains( e.target );
-			const inControl = Object.values( controlRefs.current ).some(
-				( el ) => el?.contains( e.target )
-			);
-			if ( ! inPicker && ! inControl ) setOpenKey( null );
-		};
-		document.addEventListener( 'mousedown', handler );
-		return () => document.removeEventListener( 'mousedown', handler );
-	}, [ openKey ] );
-
-	const update = ( key, val ) =>
-		dispatch( { type: 'UPDATE_META', payload: { [ key ]: val } } );
-
-	// The theme's own page colour, probed out of the campaign CSS that is loaded
-	// on this page — Lite's for the free themes, Pro's for its four. Recomputed
-	// only when the campaign's template changes; the probe itself is cached per
-	// theme class.
-	const themeBackground = useMemo( () => {
-		const themes = window.betterPaymentCampaignData?.templateThemes ?? {};
-		return resolveThemeBackground(
-			themeClassForKey( meta?.bpc_template_key, themes )
-		);
-	}, [ meta?.bpc_template_key ] );
-
-	const activeField = COLOR_FIELDS.find( ( f ) => f.key === openKey );
-
-	return (
-		<div className="bp-theme-colors">
-			<p className="bp-theme-colors__title">
-				{ __( 'Theme Colors', 'better-payment' ) }
-			</p>
-
-			{ COLOR_FIELDS.map( ( { key, label } ) => {
-				const field = backgroundFieldState( {
-					override: meta[ key ],
-					themeBackground,
-				} );
-				// A campaign whose theme paints nothing (a blank layout, a
-				// pre-`-v2` design) inherits the site's background, so the row
-				// says so instead of naming a colour nothing applies.
-				const display =
-					field.display || __( 'Theme default', 'better-payment' );
-				return (
-					<div key={ key } className="bp-theme-color-row">
-						<span className="bp-theme-color-row__label">
-							{ label }
-						</span>
-						<div
-							className="bp-theme-color-row__control"
-							ref={ ( el ) => {
-								controlRefs.current[ key ] = el;
-							} }
-						>
-							<button
-								ref={ ( el ) => {
-									swatchRefs.current[ key ] = el;
-								} }
-								type="button"
-								className={ `bp-theme-color-row__swatch${
-									openKey === key ? ' is-active' : ''
-								}${ field.hasColor ? '' : ' is-unset' }` }
-								style={
-									field.hasColor
-										? { background: field.hex }
-										: undefined
-								}
-								aria-label={ label }
-								title={
-									field.isThemeDefault
-										? __(
-												'Set by the template theme — not overridden.',
-												'better-payment'
-										  )
-										: undefined
-								}
-								onClick={ () => openPickerFor( key ) }
-							/>
-							<input
-								type="text"
-								className={ `bp-theme-color-row__input${
-									field.isThemeDefault ? ' is-inherited' : ''
-								}` }
-								value={ display }
-								readOnly
-								onClick={ () => openPickerFor( key ) }
-							/>
-						</div>
-					</div>
-				);
-			} ) }
-
-			{ openKey &&
-				activeField &&
-				createPortal(
-					<div
-						ref={ pickerRef }
-						className="bp-color-picker-popup"
-						style={ {
-							position: 'fixed',
-							top: pickerPos.top,
-							left: pickerPos.left,
-							width: PICKER_W,
-							zIndex: 999999,
-						} }
-					>
-						<ColorPicker
-							value={ meta[ openKey ] || themeBackground }
-							defaultValue={ themeBackground || '#ffffff' }
-							onChange={ ( hex ) => update( openKey, hex ) }
-							// Clears the override instead of writing the
-							// theme's colour in as one: the theme owns the
-							// background again, gradient wash included, and a
-							// later template change follows the new theme.
-							onReset={ () => update( openKey, '' ) }
-							resetLabel={ __(
-								'Theme default',
-								'better-payment'
-							) }
-							onClose={ () => setOpenKey( null ) }
-						/>
-						<div
-							className={ `bp-color-picker-popup__caret${
-								pickerPos.caretAtBottom ? '' : ' is-top'
-							}` }
-							style={ { left: pickerPos.caretLeft } }
-						/>
-					</div>,
-					document.body
-				) }
 		</div>
 	);
 }
@@ -810,9 +643,17 @@ export function isControlVisible( control, settings = {} ) {
 	} );
 }
 
+const EMPTY_TAB_HINT = {
+	content: __( 'No settings for this element.', 'better-payment' ),
+	style: __( 'No style settings for this element.', 'better-payment' ),
+	advanced: __( 'No advanced settings for this element.', 'better-payment' ),
+};
+
 function ElementSettings( {
 	element,
 	schema,
+	tab = 'content',
+	styleDevice = 'desktop',
 	meta,
 	layout,
 	dispatch,
@@ -835,10 +676,20 @@ function ElementSettings( {
 	};
 	const s = element.settings || {};
 
+	// Accordion: one section open at a time. Starts on the first section that
+	// shows.
+	const [ openSection, setOpenSection ] = useState( () =>
+		initialOpenSection(
+			schema.filter(
+				( c ) => isControlVisible( c, s ) && isVisibleForMeta( c, meta )
+			)
+		)
+	);
+
 	if ( schema.length === 0 ) {
 		return (
 			<p className="bp-cb-customization-hint">
-				{ __( 'No settings for this element.', 'better-payment' ) }
+				{ EMPTY_TAB_HINT[ tab ] ?? EMPTY_TAB_HINT.content }
 			</p>
 		);
 	}
@@ -850,14 +701,19 @@ function ElementSettings( {
 		if ( ! isControlVisible( control, s ) ) return null;
 		if ( ! isVisibleForMeta( control, meta ) ) return null;
 		const isMeta = !! control.metaKey;
-		const rawValue = isMeta ? meta?.[ control.metaKey ] : s[ control.key ];
+		// A style control may store its value under another key for the device
+		// being edited (Pro's `{key}_tablet`); without an add-on it is the key.
+		const settingKey = control.selectors
+			? styleValueKey( control, styleDevice, element )
+			: control.key;
+		const rawValue = isMeta ? meta?.[ control.metaKey ] : s[ settingKey ];
 		const value =
 			rawValue !== undefined && rawValue !== null
 				? rawValue
 				: control.defaultValue ?? '';
 		const onChange = isMeta
 			? ( val ) => updateMeta( { [ control.metaKey ]: val } )
-			: ( val ) => updateElement( { [ control.key ]: val } );
+			: ( val ) => updateElement( { [ settingKey ]: val } );
 		const onMultiChange =
 			! isMeta && control.type === 'image_upload'
 				? ( patch ) => updateElement( patch )
@@ -866,7 +722,7 @@ function ElementSettings( {
 			! isMeta && control.type === 'image_upload' ? s : undefined;
 		return (
 			<SettingsControl
-				key={ control.key }
+				key={ `${ control.key }:${ settingKey }` }
 				control={ control }
 				value={ value }
 				onChange={ onChange }
@@ -880,52 +736,80 @@ function ElementSettings( {
 		);
 	};
 
+	// Draw one schema node: a collapsible section, a state-tabs group, or a
+	// control. Sections and tabs nest (the Advanced box group puts Normal/Hover
+	// tabs inside a section), so this recurses.
+	const renderNode = ( control ) => {
+		if ( ! control ) return null;
+		if ( control.type === 'tabs' && Array.isArray( control.tabs ) ) {
+			if ( ! isControlVisible( control, s ) ) return null;
+			return (
+				<StateTabs
+					key={ control.key }
+					tabs={ control.tabs }
+					renderChildren={ ( children ) =>
+						children.map( renderNode )
+					}
+				/>
+			);
+		}
+		// A `section` control (e.g. Typography on the title/description
+		// elements) renders its children inside a collapsible accordion.
+		// Sections honour `condition` too — its children are filtered by
+		// renderControl, but a section whose own condition fails should
+		// not leave an empty accordion behind.
+		if ( control.type === 'section' && Array.isArray( control.children ) ) {
+			if ( ! isControlVisible( control, s ) ) return null;
+			if ( ! isVisibleForMeta( control, meta ) ) return null;
+			return (
+				<CollapsibleSection
+					key={ control.key }
+					label={ control.label }
+					open={ openSection === control.key }
+					onToggle={ () =>
+						setOpenSection( ( cur ) =>
+							toggleSection( cur, control.key )
+						)
+					}
+				>
+					{ control.children.map( renderNode ) }
+				</CollapsibleSection>
+			);
+		}
+		return renderControl( control );
+	};
+
 	return (
-		<div className="bp-cb-settings-form">
-			{ schema.map( ( control ) => {
-				// A `section` control (e.g. Typography on the title/description
-				// elements) renders its children inside a collapsible accordion.
-				// Sections honour `condition` too — its children are filtered by
-				// renderControl, but a section whose own condition fails should
-				// not leave an empty accordion behind.
-				if (
-					control.type === 'section' &&
-					Array.isArray( control.children )
-				) {
-					if ( ! isControlVisible( control, s ) ) return null;
-					if ( ! isVisibleForMeta( control, meta ) ) return null;
-					return (
-						<CollapsibleSection
-							key={ control.key }
-							label={ control.label }
-							defaultCollapsed={ control.collapsed !== false }
-						>
-							{ control.children.map( renderControl ) }
-						</CollapsibleSection>
-					);
-				}
-				return renderControl( control );
-			} ) }
-		</div>
+		<div className="bp-cb-settings-form">{ schema.map( renderNode ) }</div>
 	);
 }
 
 /**
- * Collapsible settings group with an accordion header + chevron. Keeps the
- * builder's current light panel theme; only adds expand/collapse behaviour.
+ * Collapsible settings group with an accordion header + chevron. Controlled:
+ * ElementSettings keeps one section open at a time (`openSection`), so a tab
+ * never unfolds into one long scroll of every group.
  */
-function CollapsibleSection( { label, defaultCollapsed = true, children } ) {
-	const [ open, setOpen ] = useState( ! defaultCollapsed );
+function CollapsibleSection( { label, open, onToggle, children } ) {
+	const ref = useRef( null );
+
+	// Bring a just-opened section into view: opening one closes the one above
+	// it, which can shift the new one up out of the sidebar's viewport.
+	useEffect( () => {
+		if ( open ) {
+			ref.current?.scrollIntoView?.( { block: 'nearest' } );
+		}
+	}, [ open ] );
 
 	return (
 		<div
+			ref={ ref }
 			className={ `bp-cb-collapsible-section${ open ? ' is-open' : '' }` }
 		>
 			<button
 				type="button"
 				className="bp-cb-collapsible-section__header"
 				aria-expanded={ open }
-				onClick={ () => setOpen( ( v ) => ! v ) }
+				onClick={ onToggle }
 			>
 				<span className="bp-cb-collapsible-section__title">
 					{ label }
@@ -1676,6 +1560,99 @@ function ImageUploadControl( { value, onMultiChange, elementSettings } ) {
 	);
 }
 
+/**
+ * A number setting. With a `unit` (the style controls' sizes) the unit sits
+ * inside the field instead of in the label. A fractional `step` keeps decimals
+ * (typography); otherwise whole numbers (parseNumberValue()).
+ *
+ * @param {Object}   props
+ * @param {string}   props.id          Input id.
+ * @param {*}        props.value       Stored value.
+ * @param {number}   props.min         Lower bound.
+ * @param {number}   props.max         Upper bound.
+ * @param {number}   props.step        Step; fractional = keep decimals.
+ * @param {string}   props.unit        Unit suffix.
+ * @param {string}   props.placeholder Placeholder.
+ * @param {Function} props.onChange    Receives a number, or ''.
+ */
+function NumberField( {
+	id,
+	value,
+	min,
+	max,
+	step,
+	unit,
+	placeholder,
+	onChange,
+} ) {
+	const input = (
+		<input
+			id={ id }
+			type="number"
+			value={
+				value === '' ||
+				value === null ||
+				value === undefined ||
+				Number.isNaN( value )
+					? ''
+					: value
+			}
+			min={ min }
+			max={ max }
+			step={ step }
+			placeholder={ placeholder || ( unit ? '–' : '' ) }
+			onChange={ ( e ) =>
+				onChange( parseNumberValue( e.target.value, step ) )
+			}
+		/>
+	);
+
+	if ( ! unit ) return input;
+
+	return (
+		<div className="bp-cb-num-unit">
+			{ input }
+			<span className="bp-cb-num-unit__suffix" aria-hidden="true">
+				{ unit }
+			</span>
+		</div>
+	);
+}
+
+/**
+ * Control types that take the panel's full width. Inside a collapsible section
+ * every other control sits beside a 44% label; a four-field dimensions row or a
+ * shadow editor squeezed into the remaining ~140px was unusable. A schema
+ * control (or an add-on's, e.g. Pro's gradient) can also ask with
+ * `layout: 'stacked'`.
+ */
+export const STACKED_TYPES = new Set( [
+	'dimensions',
+	'box_shadow',
+	'textarea',
+	'rich_text',
+	'suggested_amounts',
+	'repeater',
+	'image_upload',
+] );
+
+/** Stacked types that draw their own label row (label + unit/switch). */
+export const SELF_LABELLED_TYPES = new Set( [ 'dimensions', 'box_shadow' ] );
+
+/**
+ * The control wrapper's classes.
+ *
+ * @param {Object} control Schema control.
+ * @return {string} Class list.
+ */
+export function controlClass( control ) {
+	const stacked =
+		control?.layout === 'stacked' || STACKED_TYPES.has( control?.type );
+	return `bp-cb-control bp-cb-control--${ control?.type ?? 'text' }${
+		stacked ? ' bp-cb-control--stacked' : ''
+	}`;
+}
+
 function SettingsControl( {
 	control,
 	value,
@@ -1728,8 +1705,12 @@ function SettingsControl( {
 
 	if ( custom !== null ) {
 		return (
-			<div className="bp-cb-control">
-				<label className="bp-cb-field-label">{ label }</label>
+			<div className={ controlClass( control ) }>
+				{ /* `ownLabel`: the add-on draws its own label row (e.g. Pro's
+				     gradient, with its switch beside the label). */ }
+				{ ! control.ownLabel && (
+					<label className="bp-cb-field-label">{ label }</label>
+				) }
 				{ custom }
 			</div>
 		);
@@ -1751,11 +1732,12 @@ function SettingsControl( {
 	}
 
 	return (
-		<div className="bp-cb-control">
+		<div className={ controlClass( control ) }>
 			{ type !== 'toggle' &&
 				type !== 'switch' &&
 				type !== 'image_upload' &&
-				type !== 'rich_text' && (
+				type !== 'rich_text' &&
+				! SELF_LABELLED_TYPES.has( type ) && (
 					<label
 						className="bp-cb-field-label"
 						htmlFor={ `ctrl-${ key }` }
@@ -1867,27 +1849,15 @@ function SettingsControl( {
 			) }
 
 			{ type === 'number' && (
-				<input
+				<NumberField
 					id={ `ctrl-${ key }` }
-					type="number"
-					value={
-						value === '' ||
-						value === null ||
-						value === undefined ||
-						Number.isNaN( value )
-							? ''
-							: value
-					}
+					value={ value }
 					min={ min }
 					max={ max }
-					placeholder={ placeholder || '' }
-					onChange={ ( e ) =>
-						onChange(
-							e.target.value === ''
-								? ''
-								: parseInt( e.target.value, 10 )
-						)
-					}
+					step={ step }
+					unit={ unit }
+					placeholder={ placeholder }
+					onChange={ onChange }
 				/>
 			) }
 
@@ -1909,17 +1879,33 @@ function SettingsControl( {
 			) }
 
 			{ type === 'color' && (
-				<div className="bp-color-row">
-					<input
-						id={ `ctrl-${ key }` }
-						type="color"
-						value={ value || '#6b63f6' }
-						onChange={ ( e ) => onChange( e.target.value ) }
-					/>
-					<span className="bp-color-value">
-						{ value || '#6b63f6' }
-					</span>
-				</div>
+				<ColorControl
+					id={ `ctrl-${ key }` }
+					label={ label }
+					value={ value ?? '' }
+					onChange={ onChange }
+					alpha={ !! control.alpha }
+				/>
+			) }
+
+			{ type === 'dimensions' && (
+				<DimensionsControl
+					id={ `ctrl-${ key }` }
+					label={ label }
+					value={ value }
+					onChange={ onChange }
+					units={ control.units }
+					min={ min }
+				/>
+			) }
+
+			{ type === 'box_shadow' && (
+				<BoxShadowControl
+					id={ `ctrl-${ key }` }
+					label={ label }
+					value={ value }
+					onChange={ onChange }
+				/>
 			) }
 
 			{ type === 'toggle' && (
@@ -1987,7 +1973,8 @@ function SettingsControl( {
 				/>
 			) }
 
-			{ type === 'repeater' && (
+			{ /* Pro 1.4.7+ draws its repeater through customSettingsControl() above; this is Lite's copy for an older Pro. */ }
+			{ type === 'repeater' && liteDrawsRepeater() && (
 				<RepeaterControl
 					control={ control }
 					value={ Array.isArray( value ) ? value : [] }

@@ -23,7 +23,10 @@ import { getElement, getDefaultSettings } from './fields/FieldRegistry';
 import Toolbar from './components/Toolbar';
 import LiveCanvas from './components/LiveCanvas';
 import RightSidebar from './components/RightSidebar';
-import TemplatesTab, { AI_TEMPLATE } from './components/TemplatesTab';
+import TemplatesTab, {
+	AI_TEMPLATE,
+	isAiTemplateKey,
+} from './components/TemplatesTab';
 import CampaignNameModal from './components/CampaignNameModal';
 import TitleRequiredModal from './components/TitleRequiredModal';
 import DonateUrlWarningModal from './components/DonateUrlWarningModal';
@@ -80,6 +83,10 @@ export default function App( {
 	// element from. Passing the raw useState setter keeps its identity stable —
 	// RightSidebar's select-an-element effect depends on that (see its comment).
 	const [ sidebarTab, setSidebarTab ] = useState( 'ai' );
+	// The device whose style values the Style / Advanced tabs edit. Always
+	// 'desktop' without an add-on; Pro's device switcher changes it, and the
+	// canvas narrows to match (builderHooks canvasWidth()).
+	const [ styleDevice, setStyleDevice ] = useState( 'desktop' );
 	// Bumped whenever the canvas empty-state "+" opens the AI panel, so the panel
 	// can move the caret into its composer. A counter (not a boolean) so every
 	// click re-triggers the focus effect even if the tab is already 'ai'.
@@ -568,7 +575,7 @@ export default function App( {
 							// they just picked: the AI assistant for an AI
 							// campaign, otherwise the Elements palette so they
 							// can start building on the blank/prebuilt layout.
-							if ( template?.key === AI_TEMPLATE.key ) {
+							if ( isAiTemplateKey( template?.key ) ) {
 								showAITab();
 							} else {
 								showElementsTab();
@@ -606,6 +613,7 @@ export default function App( {
 									sidebarTab={ sidebarTab }
 									proEnabled={ PRO_ENABLED }
 									onRequestUpgrade={ requestUpgrade }
+									styleDevice={ styleDevice }
 								/>
 							) }
 						</div>
@@ -624,6 +632,8 @@ export default function App( {
 							proEnabled={ PRO_ENABLED }
 							onRequestUpgrade={ requestUpgrade }
 							aiFocusSignal={ aiFocusSignal }
+							styleDevice={ styleDevice }
+							onStyleDeviceChange={ setStyleDevice }
 						/>
 					</div>
 				) }

@@ -1378,10 +1378,10 @@
      * there is no React component. Base = a full-width 50px table row.
      *
      * PUBLIC-ISH: this is a cross-plugin contract. Better Payment PRO emits
-     * `wp-skeleton` (and `_heading`, `_text`, `_w-60`, `_chart`) in its dashboard
-     * Analytics card but ships NO skeleton CSS of its own — Lite styles it, the
-     * same way Lite already styles `.bp-spinner` for
-     * Pro. That's safe because Pro's init_plugin() bails unless Lite is active,
+     * `wp-skeleton` (and `_heading`, `_text`, `_w-60`) in its dashboard
+     * Analytics card and relies on Lite's rules for them, the same way Lite
+     * already styles `.bp-spinner` for Pro. `_chart` is Pro's own (Pro 1.4.7
+     * ships it); Lite keeps a transitional copy for older Pro only. That's safe because Pro's init_plugin() bails unless Lite is active,
      * so this stylesheet is always present. Renaming or removing a modifier here
      * silently breaks Pro's dashboard; grep the Pro plugin before you do.
      */
@@ -1469,98 +1469,8 @@
 			border-radius: 8px;
 		}
 
-		/*
-         * A Chart.js canvas. Chart.js is `responsive` with its default 2:1
-         * aspectRatio and .bp-analytics_graph-box sets no height, so the rendered
-         * canvas is always width/2 — matching that here reserves the chart's real
-         * height. Used by PRO's dashboard Analytics card AND its Analytics page
-         * (see the cross-plugin note above); Lite ships no chart of its own.
-         *
-         * Unlike every other modifier here, this one is not just geometry: it
-         * draws a chart rather than a slab. A plain grey rectangle reserved the
-         * right space but read as "an image is loading", which is the one thing
-         * the box definitely isn't — so it's built from gridlines at the rhythm
-         * Chart.js draws them, plus the silhouette of a plotted line.
-         *
-         * Still a BARE DIV — no child markup. That keeps the cross-plugin
-         * contract intact (Pro emits `<div class="wp-skeleton wp-skeleton_chart">`
-         * and nothing else, in two places), so both of Pro's charts get this for
-         * free and any third-party use does too.
-         */
-		&.wp-skeleton_chart {
-			height: auto;
-			aspect-ratio: 2 / 1;
-			margin-bottom: 0;
-			border-radius: 8px;
-
-			/*
-             * The plot area. The base sets `background` (the shorthand, so both
-             * colour and image); this nested rule outranks it — and outranks the
-             * base's dark rule too, which is why BOTH modes are answered
-             * explicitly here rather than inherited. See
-             * .claude/rules/js-coding-standards.md Rule 2b.
-             *
-             * Transparent, not grey: the card behind supplies the "paper" and the
-             * gridlines sit on it, which is what makes this read as a chart.
-             */
-			background-color: transparent;
-			background-image: repeating-linear-gradient(
-				to bottom,
-				#e6e7e9 0,
-				#e6e7e9 1px,
-				transparent 1px,
-				transparent 25%
-			);
-
-			@include mode("dark") {
-				background-color: transparent;
-				background-image: repeating-linear-gradient(
-					to bottom,
-					#1c232e 0,
-					#1c232e 1px,
-					transparent 1px,
-					transparent 25%
-				);
-			}
-
-			/*
-             * The plotted line's silhouette, as a filled area. `::after` is
-             * already the shimmer, so the shape goes on `::before` — and because
-             * `::after` paints later, the shimmer sweeps across the line exactly
-             * as it does across every other skeleton.
-             *
-             * `clip-path` rather than an SVG data URI: no encoding, and the shape
-             * inherits its colour from this rule, so dark mode is one override
-             * instead of a second copy of the artwork.
-             */
-			&::before {
-				content: "";
-				position: absolute;
-				inset: 0;
-				background-color: #e6e7e9;
-				clip-path: polygon(
-					0% 76%,
-					8% 60%,
-					16% 68%,
-					24% 47%,
-					32% 55%,
-					40% 34%,
-					48% 43%,
-					56% 26%,
-					64% 37%,
-					72% 20%,
-					80% 29%,
-					88% 13%,
-					100% 21%,
-					100% 100%,
-					0% 100%
-				);
-
-				@include mode("dark") {
-					background-color: #1c232e;
-				}
-			}
-		}
+		// Pro's Analytics chart placeholder: Lite's copy, for Pro 1.4.6 and older only.
+		@include bp-transitional-chart-skeleton;
 
 		// Line lengths — a paragraph of equal-width bars reads as a table, not
 		// as prose.

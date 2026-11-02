@@ -456,6 +456,8 @@ class CPT extends Controller {
             'pluginUrl'      => plugins_url( '', BETTER_PAYMENT_BASENAME ),
             'proEnabled'     => (bool) apply_filters( 'better_payment/pro_enabled', false ),
             'upgradeUrl'     => 'https://wpdeveloper.com/in/upgrade-better-payment-pro',
+            // Lite copies an older Pro still reads (Classes\TransitionalProCopies); all false on a free install.
+            'liteCopies'     => \Better_Payment\Lite\Classes\TransitionalProCopies::client_flags(),
             // Seed the AI enabled/configured flags synchronously so the AI panel's
             // "disabled" / "add an API key" notice paints immediately instead of
             // flickering in after the async /ai/config round-trip resolves. The

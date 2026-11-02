@@ -3,6 +3,7 @@
 namespace Better_Payment\Lite\AI\Schema;
 
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
+use Better_Payment\Lite\Campaign\Styles\StyleControls;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -390,7 +391,21 @@ class CampaignSchema {
                 if ( ! is_array( $control ) ) {
                     continue;
                 }
+                // Style controls (StyleControls, `ai => false`) are not the AI's:
+                // never offered, never accepted. A container marked so hides its
+                // whole subtree.
+                if ( isset( $control['ai'] ) && false === $control['ai'] ) {
+                    continue;
+                }
                 $ctype = $control['type'] ?? '';
+                if ( 'tabs' === $ctype ) {
+                    foreach ( (array) ( $control['tabs'] ?? [] ) as $tab ) {
+                        if ( is_array( $tab ) && ! empty( $tab['children'] ) ) {
+                            $collect( $tab['children'], $out );
+                        }
+                    }
+                    continue;
+                }
                 if ( in_array( $ctype, [ 'section', 'section_label', 'note' ], true ) ) {
                     if ( ! empty( $control['children'] ) ) {
                         $collect( $control['children'], $out );
@@ -409,6 +424,98 @@ class CampaignSchema {
         $collect( $schema['settingsSchema'] ?? [], $keys );
 
         return array_values( array_unique( $keys ) );
+    }
+
+    /**
+     * Drop an element's style settings (and an add-on's per-device variants of
+     * them) before the settings reach a prompt. The model never sees them, so a
+     * `set_layout` cannot echo them back; the builder carries them over from the
+     * element it replaces (campaignStore.js `carryStyleSettings()`).
+     *
+     * @param string $type     Element type.
+     * @param array  $settings Element settings.
+     * @return array
+     */
+    public static function without_style_settings( string $type, array $settings ): array {
+        $schema = ElementRegistry::get( $type );
+        $hidden = StyleControls::ai_hidden_keys( (array) ( $schema['settingsSchema'] ?? [] ) );
+        if ( empty( $hidden ) ) {
+            return $settings;
+        }
+        foreach ( array_keys( $settings ) as $key ) {
+            if ( StyleControls::is_hidden_key( (string) $key, $hidden ) ) {
+                unset( $settings[ $key ] );
+            }
+        }
+
+        return $settings;
+    }
+
+    /**
+     * The style setting keys a batch of model-proposed operations tried to write.
+     *
+     * Read from the raw candidates, before validation drops them, so the reply can
+     * say that a style change was not applied instead of letting the model's own
+     * "I updated the border" stand. Covers `update_block` (type resolved from the
+     * current layout), `insert_block` and `set_layout`.
+     *
+     * @param array $operations Raw candidate operations.
+     * @param array $context    [ 'layout' => [...] ] current campaign state.
+     * @return array<int, string> Distinct style keys, in first-seen order.
+     */
+    public static function style_keys_in_operations( array $operations, array $context = [] ): array {
+        $types = [];
+        foreach ( (array) ( $context['layout']['columns'] ?? [] ) as $column ) {
+            foreach ( (array) ( is_array( $column ) ? ( $column['elements'] ?? [] ) : [] ) as $element ) {
+                if ( is_array( $element ) && ! empty( $element['id'] ) && ! empty( $element['type'] ) ) {
+                    $types[ (string) $element['id'] ] = (string) $element['type'];
+                }
+            }
+        }
+
+        // [ type, settings ] pairs to inspect.
+        $targets = [];
+        foreach ( $operations as $operation ) {
+            if ( ! is_array( $operation ) ) {
+                continue;
+            }
+            $name     = $operation['op'] ?? ( $operation['operation'] ?? '' );
+            $settings = is_array( $operation['settings'] ?? null ) ? $operation['settings'] : [];
+
+            if ( 'update_block' === $name ) {
+                $id = is_string( $operation['element_id'] ?? null ) ? $operation['element_id'] : '';
+                if ( isset( $types[ $id ] ) ) {
+                    $targets[] = [ $types[ $id ], $settings ];
+                }
+            } elseif ( 'insert_block' === $name ) {
+                $targets[] = [ self::resolve_element_type( is_string( $operation['type'] ?? null ) ? $operation['type'] : '' ), $settings ];
+            } elseif ( 'set_layout' === $name ) {
+                foreach ( (array) ( $operation['columns'] ?? [] ) as $column ) {
+                    foreach ( (array) ( is_array( $column ) ? ( $column['elements'] ?? [] ) : [] ) as $element ) {
+                        if ( is_array( $element ) && is_string( $element['type'] ?? null ) ) {
+                            $targets[] = [ self::resolve_element_type( $element['type'] ), is_array( $element['settings'] ?? null ) ? $element['settings'] : [] ];
+                        }
+                    }
+                }
+            }
+        }
+
+        $found = [];
+        foreach ( $targets as $target ) {
+            list( $type, $settings ) = $target;
+            $schema = '' !== $type ? ElementRegistry::get( $type ) : null;
+            if ( null === $schema || empty( $settings ) ) {
+                continue;
+            }
+            $hidden = StyleControls::ai_hidden_keys( (array) ( $schema['settingsSchema'] ?? [] ) );
+            foreach ( array_keys( $settings ) as $key ) {
+                if ( StyleControls::is_hidden_key( (string) $key, $hidden ) && ! in_array( (string) $key, $found, true ) ) {
+                    $found[] = (string) $key;
+                }
+            }
+        }
+
+        return $found;
     }
 
     public static function is_allowed_settings_key( string $type, string $key ): bool {

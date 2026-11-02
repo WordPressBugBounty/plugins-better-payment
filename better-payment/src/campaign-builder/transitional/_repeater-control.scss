@@ -1,0 +1,147 @@
+// TRANSITIONAL — styles of Lite's copy of the repeater control (RepeaterControl.js beside
+// this file), the editor of Better Payment Pro's FAQ widget items. Pro 1.4.7 ships the control
+// and these styles in its own builder bundle (src/campaign-builder-pro/) and declares
+// `campaign_builder_repeater_control`; Lite draws its copy only for Pro 1.4.6 and older. A
+// free install never draws a repeater, so these match nothing there.
+// The next Lite release, which raises MIN_PRO_VERSION to 1.4.7, deletes this folder and the
+// @import in style.scss (tests/Unit/ProHandoffTwoTest.php).
+
+.bp-rp-editor {
+	border: 1px solid $border;
+	border-radius: 6px;
+	overflow: hidden;
+	background: $white;
+}
+
+.bp-rp-row {
+	border-bottom: 1px solid $border;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 8px 6px 10px;
+		background: #fafafa;
+	}
+
+	&__toggle {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+		background: none;
+		border: none;
+		padding: 4px 2px;
+		margin: 0;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	&__title {
+		flex: 1;
+		font-size: 12px;
+		font-weight: 600;
+		color: $text;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__chevron {
+		flex: 0 0 auto;
+		color: $muted;
+		transition: transform 0.15s ease;
+	}
+
+	&.is-open &__chevron {
+		transform: rotate(180deg);
+	}
+
+	&__body {
+		padding: 10px;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		border-top: 1px solid $border;
+	}
+}
+
+.bp-rp-drag {
+	cursor: grab;
+	color: $muted;
+	font-size: 14px;
+	line-height: 1;
+	user-select: none;
+
+	&:active {
+		cursor: grabbing;
+	}
+}
+
+.bp-rp-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	input[type="text"],
+	textarea {
+		width: 100%;
+	}
+}
+
+.bp-rp-delete {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: $muted;
+	font-size: 13px;
+	line-height: 1;
+	padding: 2px 4px;
+
+	&:hover {
+		color: $danger;
+	}
+}
+
+.bp-rp-footer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 10px;
+	border-top: 1px solid $border;
+	background: #fafafa;
+}
+
+.bp-rp-add {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 14px;
+	font-size: 12px;
+	font-weight: 600;
+	color: $primary;
+	background: rgba($primary, 0.06);
+	border: 1px solid rgba($primary, 0.22);
+	border-radius: 5px;
+	cursor: pointer;
+	line-height: 1.4;
+
+	&:hover {
+		background: rgba($primary, 0.12);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.bp-rp-max-note {
+	font-size: 11px;
+	color: $muted;
+}

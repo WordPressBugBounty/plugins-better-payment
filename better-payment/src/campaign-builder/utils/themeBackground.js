@@ -10,7 +10,8 @@
  * have, and the picker's Reset button wrote that white in as a real override,
  * repainting the themed page white with no way back.
  *
- * The theme's own page colour is the `--bp-v2-page` custom property declared on
+ * The theme's own page colour is the `--bp-v3-page` / `--bp-v2-page` custom
+ * property (see THEME_PAGE_TOKENS) declared on
  * `.bp-campaign.{theme_class}` in the campaign-display stylesheet (free themes)
  * and in Pro's `campaign-themes.scss` (Pro's four). Both sheets are loaded on the
  * builder page — `CPT::enqueue_builder_assets()` enqueues the first and fires
@@ -24,6 +25,17 @@
  */
 
 export const THEME_PAGE_TOKEN = '--bp-v2-page';
+
+/**
+ * Every page-colour token a theme generation declares, newest first.
+ *
+ * The `-v3` designs carry their own token set (`--bp-v3-*`) rather than reusing
+ * the `-v2` names, so a v3 theme class answers on `--bp-v3-page` and a v2 one on
+ * `--bp-v2-page`. The probe takes the first non-empty answer. Add a generation's
+ * token here when it ships, or its campaigns report no theme colour and the
+ * Background control falls back to "inherits the site".
+ */
+export const THEME_PAGE_TOKENS = [ '--bp-v3-page', THEME_PAGE_TOKEN ];
 
 /**
  * Cache of `theme_class => page colour`.
@@ -142,9 +154,11 @@ export function readThemeToken( themeClass, doc = document ) {
 
 	let value = '';
 	try {
-		value = doc.defaultView
-			.getComputedStyle( probe )
-			.getPropertyValue( THEME_PAGE_TOKEN );
+		const style = doc.defaultView.getComputedStyle( probe );
+		for ( const token of THEME_PAGE_TOKENS ) {
+			value = String( style.getPropertyValue( token ) ?? '' ).trim();
+			if ( value ) break;
+		}
 	} catch ( e ) {
 		value = '';
 	} finally {

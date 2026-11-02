@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - `better_payment/stripe_checkout/pro_request` (null, $checkout, $context)
  *   → [ 'request' => array, 'form_fields' => array ] | WP_Error. Nothing returned refuses it.
  * - `better_payment/payment_form/pro_form_fields` ([], $settings) → the fields repeater a Pro form renders.
- * - `better_payment/payment_form/pro_transaction_fields` ($form_fields_info, $settings) → the stored fields.
+ * - `better_payment/payment_form/pro_transaction_fields` ($form_fields_info, $settings, $guarded) → the stored fields.
  * - `better_payment/stripe_payment/pro_verification_args` ($args, $form_fields_info) → `expand` + recurring/split flags.
  * - `better_payment/stripe_payment/pro_verified_session` ($details, $session, $args) → stored + returned details.
  * - `better_payment/success_page/pro_rows` ([], $position, $settings, $payment, $context) → thank-you page rows.
@@ -62,9 +62,12 @@ final class PaymentEntitlement {
 
     /**
      * Request fields only a Pro payment form renders: a subscription mode, a plan, an
-     * installment, and a mixed form's one-time/recurring choice and period.
+     * installment, a mixed form's one-time/recurring choice and period, and the quantity of
+     * layouts 4-6 (a free layout has no quantity field, so a posted one would multiply the
+     * charge of a form that never offered it).
      */
     const PRO_REQUEST_FIELDS = [
+        'payment_amount_quantity',
         'better_payment_recurring_mode',
         'better_payment_recurring_price_id',
         'split_payment_installment',
@@ -221,18 +224,23 @@ final class PaymentEntitlement {
     }
 
     /**
-     * The fields a transaction stores, with any Pro adds (layout 6's platform flags).
+     * The fields a transaction stores, with any Pro adds (layout 6's products and platform flags).
+     *
+     * `$guarded` is the guard's resolution (resolve_form_payment()), so Pro can store what was
+     * really charged, e.g. layout 6's `product_quantities`. Added in 2.4.4; a callback that
+     * accepts two arguments keeps working.
      *
      * @param array $form_fields_info Fields the handler built.
      * @param array $settings         Stored form settings.
+     * @param array $guarded          The guard's resolution, or [] when the handler has none to share.
      * @return array
      */
-    public static function transaction_fields( array $form_fields_info, array $settings ): array {
+    public static function transaction_fields( array $form_fields_info, array $settings, array $guarded = [] ): array {
         if ( ! ProCompatibility::pro_enabled() ) {
             return $form_fields_info;
         }
 
-        $result = self::answer( 'better_payment/payment_form/pro_transaction_fields', [ $form_fields_info, $settings ] );
+        $result = self::answer( 'better_payment/payment_form/pro_transaction_fields', [ $form_fields_info, $settings, $guarded ] );
 
         return is_array( $result ) ? $result : $form_fields_info;
     }

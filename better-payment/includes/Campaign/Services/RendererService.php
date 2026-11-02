@@ -9,6 +9,7 @@ use Better_Payment\Lite\Campaign\Templates\TemplateManager;
 use Better_Payment\Lite\Campaign\Support\Money;
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
 use Better_Payment\Lite\Campaign\Elements\ProElementPreview;
+use Better_Payment\Lite\Campaign\Styles\ElementStyleCompiler;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -83,11 +84,20 @@ class RendererService {
         $color_style = self::generate_color_style( $meta, $campaign_id );
         $extra_class = self::css_class_attr( $meta );
 
+        // The mobile "Donate" bar: one per page (the first campaign rendered), never
+        // in a preview, and only when the page has an ask to jump to.
+        $ask_target = ( ! $is_preview && ! self::$ask_bar_printed ) ? self::ask_target_id( $columns ) : '';
+        $ask_anchor = 'bp-campaign-ask-' . $campaign_id;
+        if ( '' !== $ask_target ) {
+            self::$ask_bar_printed = true;
+        }
+
         ob_start();
         ?>
         <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class . $extra_class ); ?>"
              data-campaign-id="<?php echo esc_attr( $campaign_id ); ?>">
             <?php echo wp_kses( $color_style, [ 'style' => [] ] ); ?>
+            <?php echo ElementStyleCompiler::style_tag( $columns, $campaign_id, $meta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is validated per control type and the CSS is refused if it contains '<' (ElementStyleCompiler::safe_css()); wp_kses() would turn a '>' combinator into '&gt;'. ?>
             <input type="hidden" class="better_payment_campaign_id"
                    value="<?php echo esc_attr( $campaign_id ); ?>">
             <input type="hidden" class="better_payment_campaign_currency"
@@ -103,6 +113,10 @@ class RendererService {
                          style="<?php echo esc_attr( $col_style ); ?>">
                         <?php
                         foreach ( self::column_elements( $column ) as $element ) {
+                            if ( '' !== $ask_target && $ask_target === ( $element['id'] ?? '' ) ) {
+                                // Where the mobile Donate bar jumps to: the top of the ask.
+                                echo '<span class="bp-campaign-ask-anchor" id="' . esc_attr( $ask_anchor ) . '"></span>';
+                            }
                             // Same flag as `after_columns` below, so a Donate Button an
                             // add-on turns into a popup trigger and the popup it opens
                             // are both printed, or neither is.
@@ -112,6 +126,18 @@ class RendererService {
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php if ( '' !== $ask_target ) : ?>
+                <?php
+                // A link, not a second Donate button: it takes the visitor to the
+                // real one (amounts, minimum, an add-on's popup all live there).
+                // Hidden by the base stylesheet; a theme shows it (the v3 themes, on
+                // a phone), and fundraising-campaign.js hides it while the ask is
+                // on screen. Without JavaScript it is still a working jump link.
+                ?>
+                <div class="bp-campaign-askbar" data-bp-ask="<?php echo esc_attr( $ask_anchor ); ?>">
+                    <a class="bp-campaign-askbar__btn" href="#<?php echo esc_attr( $ask_anchor ); ?>"><?php echo esc_html( self::ask_bar_label( $columns ) ); ?></a>
+                </div>
+            <?php endif; ?>
             <?php
             /**
              * Fires inside the campaign wrapper, after its columns. Pro prints its
@@ -145,18 +171,102 @@ class RendererService {
         // (settings['button_color']), not a campaign-wide override.
         $background = ! empty( $meta['bpc_color_background'] ) ? sanitize_hex_color( $meta['bpc_color_background'] ) : '';
 
-        if ( ! $background ) {
+        // The campaign's primary colour as a custom property, for a theme whose
+        // accent should follow the campaign rather than fix its own (the v3 AI
+        // theme, whose colours the AI chooses). Nothing else reads it, so every
+        // other theme renders exactly as before.
+        $primary = ! empty( $meta['bpc_color_primary'] ) ? sanitize_hex_color( $meta['bpc_color_primary'] ) : '';
+
+        if ( ! $background && ! $primary ) {
             return '';
         }
 
-        // $campaign_id is typed int and $background is validated hex — both safe for CSS output.
+        // $campaign_id is typed int and both colours are validated hex — safe for CSS output.
         $scope = $campaign_id > 0
             ? '.bp-campaign[data-campaign-id="' . $campaign_id . '"]'
             : '.bp-campaign';
 
-        $css = $scope . ' { background-color: ' . $background . ' !important; }';
+        $decls = '';
+        if ( $background ) {
+            $decls .= ' background-color: ' . $background . ' !important;';
+        }
+        if ( $primary ) {
+            $decls .= ' --bp-campaign-accent: ' . $primary . ';';
+        }
 
-        return '<style>' . wp_strip_all_tags( $css ) . '</style>';
+        return '<style>' . wp_strip_all_tags( $scope . ' {' . $decls . ' }' ) . '</style>';
+    }
+
+    /**
+     * Whether this request has printed its mobile Donate bar. One per page: two
+     * campaigns embedded on one page would otherwise stack two fixed bars.
+     *
+     * @var bool
+     */
+    private static $ask_bar_printed = false;
+
+    /**
+     * The element the mobile Donate bar jumps to: the first Donate Amount picker
+     * (the ask starts with choosing an amount), else the first Donate Button.
+     * '' when the layout has neither, and then no bar is printed.
+     *
+     * @since 2.4.5
+     *
+     * @param array $columns Layout columns.
+     * @return string Element id, or ''.
+     */
+    public static function ask_target_id( array $columns ): string {
+        $button = '';
+
+        foreach ( $columns as $column ) {
+            if ( ! is_array( $column ) ) {
+                continue;
+            }
+            foreach ( self::column_elements( $column ) as $element ) {
+                $id = isset( $element['id'] ) && is_string( $element['id'] ) ? $element['id'] : '';
+                if ( '' === $id ) {
+                    continue;
+                }
+                if ( 'donate_amount' === ( $element['type'] ?? '' ) ) {
+                    return $id;
+                }
+                if ( '' === $button && 'donation_form' === ( $element['type'] ?? '' ) ) {
+                    $button = $id;
+                }
+            }
+        }
+
+        return $button;
+    }
+
+    /**
+     * The mobile Donate bar's label: the page's own Donate Button text, so the bar
+     * and the button it leads to say the same thing. A cleared label falls back to
+     * the default — the bar must say something.
+     *
+     * @since 2.4.5
+     *
+     * @param array $columns Layout columns.
+     * @return string
+     */
+    public static function ask_bar_label( array $columns ): string {
+        foreach ( $columns as $column ) {
+            if ( ! is_array( $column ) ) {
+                continue;
+            }
+            foreach ( self::column_elements( $column ) as $element ) {
+                if ( 'donation_form' !== ( $element['type'] ?? '' ) ) {
+                    continue;
+                }
+                $settings = isset( $element['settings'] ) && is_array( $element['settings'] ) ? $element['settings'] : [];
+                $label    = trim( (string) ( $settings['button_label'] ?? $settings['button_text'] ?? '' ) );
+                if ( '' !== $label ) {
+                    return $label;
+                }
+            }
+        }
+
+        return __( 'Donate Now', 'better-payment' );
     }
 
     /**
@@ -172,6 +282,38 @@ class RendererService {
      *
      * @param int $campaign_id Campaign id.
      */
+    /**
+     * Index of the preselected suggested amount: the first item flagged
+     * `is_default` with an amount above zero, or null when none is.
+     *
+     * @param array $amounts Suggested amounts (`[ [ 'amount' => …, 'is_default' => … ], … ]`).
+     * @return int|null
+     */
+    public static function default_amount_index( array $amounts ) {
+        foreach ( array_values( $amounts ) as $i => $item ) {
+            if ( is_array( $item ) && ! empty( $item['is_default'] ) && floatval( $item['amount'] ?? 0 ) > 0 ) {
+                return $i;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * A suggested amount as the custom amount field's `value`: a plain number with
+     * no thousands separator or currency (`type="number"` rejects both), and no
+     * trailing `.00` — the same value the chip's radio carries.
+     *
+     * @param mixed $amount Stored amount.
+     * @return string
+     */
+    public static function amount_input_value( $amount ): string {
+        $amount = round( floatval( $amount ), 2 );
+        if ( $amount <= 0 ) {
+            return '';
+        }
+        return rtrim( rtrim( number_format( $amount, 2, '.', '' ), '0' ), '.' );
+    }
+
     private static function amount_group_key( int $campaign_id ): string {
         $count = isset( self::$amount_groups[ $campaign_id ] ) ? self::$amount_groups[ $campaign_id ] + 1 : 1;
 
@@ -249,6 +391,7 @@ class RendererService {
                 $title_style .= '' !== $user_size  ? 'font-size:' . $user_size . ' !important;' : 'font-size:32px;';
                 $title_style .= self::decls_to_style( self::typography_common_decls( $settings ) );
                 $title_style .= 'text-align:' . $align . ';';
+                $title_style .= self::element_box_style( self::resolve_element_width( $settings ), $align );
                 ?>
                 <h2 class="bp-campaign-title" style="<?php echo esc_attr( $title_style ); ?>">
                     <?php echo esc_html( $title_text ); ?>
@@ -406,10 +549,31 @@ class RendererService {
                     <?php if ( $headline ) : ?>
                         <h3 class="bp-progress-headline"><?php echo esc_html( $headline ); ?></h3>
                     <?php endif; ?>
-                    <div class="bp-progress-bar-wrap">
+                    <?php
+                    // `--bp-progress-color` repeats the fill colour as a custom
+                    // property, so a theme can build a gradient or a glow from the
+                    // author's colour (the inline background-color stays, and with
+                    // it every existing theme's rendering). The progressbar role
+                    // is printed only with a goal: without one there is no
+                    // progress to report, and "0%" would be a false statement.
+                    ?>
+                    <?php
+                    // `data-bp-paints`: the track is a visible shape with no text, so
+                    // renders_nothing_visible() must not read a bar without labels or
+                    // a headline (no goal, or both figures switched off) as empty.
+                    // It did, and the progress bar vanished from the live page and
+                    // showed as a blank box in the builder.
+                    ?>
+                    <div class="bp-progress-bar-wrap" data-bp-paints<?php if ( $has_goal ) : ?>
+                         role="progressbar"
+                         aria-valuemin="0"
+                         aria-valuemax="100"
+                         aria-valuenow="<?php echo esc_attr( (string) $progress ); ?>"
+                         aria-label="<?php echo esc_attr( '' !== $headline ? $headline : __( 'Fundraising progress', 'better-payment' ) ); ?>"<?php endif; ?>>
                         <div class="bp-progress-bar"
                              style="width:<?php echo esc_attr( $progress ); ?>%;
-                                    background-color:<?php echo esc_attr( $primary ); ?>;"></div>
+                                    background-color:<?php echo esc_attr( $primary ); ?>;
+                                    --bp-progress-color:<?php echo esc_attr( $primary ); ?>;"></div>
                     </div>
                     <?php if ( $show_donated || $show_goal ) : ?>
                         <div class="bp-progress-labels">
@@ -457,25 +621,26 @@ class RendererService {
                     <?php endif; ?>
                     <div class="bp-campaign-summary">
                         <?php if ( $show_raised ) : ?>
-                            <div class="bp-summary-item">
+                            <div class="bp-summary-item bp-summary-item--raised">
                                 <strong><?php echo esc_html( Money::with_symbol( $sm_currency_sym, $stats['total_raised'] ) ); ?></strong>
                                 <span><?php esc_html_e( 'Raised', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
                         <?php if ( $show_donors ) : ?>
-                            <div class="bp-summary-item">
+                            <div class="bp-summary-item bp-summary-item--donors">
                                 <strong><?php echo esc_html( $stats['donor_count'] ); ?></strong>
                                 <span><?php esc_html_e( 'Donors', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
                         <?php if ( $show_percent ) : ?>
-                            <div class="bp-summary-item">
+                            <div class="bp-summary-item bp-summary-item--percent">
                                 <strong><?php echo esc_html( $percent ); ?>%</strong>
-                                <span><?php esc_html_e( 'Raised', 'better-payment' ); ?></span>
+                                <?php // "Funded", not "Raised": the amount tile already says "Raised", and two tiles with one label read as one figure twice. ?>
+                                <span><?php esc_html_e( 'Funded', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
                         <?php if ( $show_days ) : ?>
-                            <div class="bp-summary-item">
+                            <div class="bp-summary-item bp-summary-item--days">
                                 <strong><?php echo esc_html( (string) (int) $stats['days_remaining'] ); ?></strong>
                                 <span><?php esc_html_e( 'Days Left', 'better-payment' ); ?></span>
                             </div>
@@ -498,8 +663,9 @@ class RendererService {
                 } else {
                     $button_label = __( 'Donate Now', 'better-payment' );
                 }
-                $primary      = $meta['bpc_color_primary'] ?: '#6b63f6';
-                $button_color = sanitize_hex_color( $settings['button_color'] ?? '' ) ?: sanitize_hex_color( $primary ) ?: '#6b63f6';
+                // The colour (`button_color`, else the campaign primary) is printed
+                // by ElementStyleCompiler, not inline: an inline `!important` could
+                // not be beaten by the Style tab's hover colour.
                 $open_new_tab = ! empty( $settings['open_new_tab'] );
                 $width        = self::resolve_element_width( $settings );
                 $align        = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true )
@@ -599,7 +765,6 @@ class RendererService {
                         <div class="bp-campaign-donate-btn" style="<?php echo esc_attr( $wrap_style ); ?>">
                             <a href="<?php echo $url_missing ? '#' : esc_url( $donate_url ); ?>"
                                class="<?php echo esc_attr( $btn_class ); ?>"
-                               style="background-color:<?php echo esc_attr( $button_color ); ?> !important;"
                                <?php if ( $url_missing ) : ?>
                                aria-disabled="true"
                                title="<?php esc_attr_e( 'Payment page not configured', 'better-payment' ); ?>"
@@ -690,6 +855,17 @@ class RendererService {
                 // twice: both copies formed one radio group, and every label pointed at
                 // the first copy's radios. The first picker keeps the old names.
                 $da_group = self::amount_group_key( $campaign_id );
+
+                // The preselected amount is shown in the custom amount field from the
+                // first render, not only after the donor clicks a chip: the field used
+                // to stay empty until fundraising-campaign.js copied a *changed* chip
+                // into it, so a fresh page (and the builder canvas, which runs no
+                // script) showed a checked chip beside an empty input. One default
+                // only — the first — so the checked chip and the field always agree
+                // (several checked radios in one group leave the browser the last).
+                $amounts_meta     = array_values( (array) $amounts_meta );
+                $da_default_index = self::default_amount_index( $amounts_meta );
+                $da_default_value = null === $da_default_index ? '' : self::amount_input_value( $amounts_meta[ $da_default_index ]['amount'] ?? 0 );
                 ?>
                 <div class="bp-campaign-donate" style="<?php echo esc_attr( $da_wrap_style ); ?>">
                     <?php if ( $da_headline ) : ?>
@@ -699,7 +875,7 @@ class RendererService {
                         <?php foreach ( $amounts_meta as $i => $item ) :
                             $amt        = floatval( $item['amount'] ?? 0 );
                             $uid        = 'bp_camt_' . $da_group . '_' . $i;
-                            $is_default = ! empty( $item['is_default'] );
+                            $is_default = $i === $da_default_index;
                         ?>
                             <input
                                 type="radio"
@@ -722,6 +898,7 @@ class RendererService {
                             class="campaign-custom-amount"
                             min="0"
                             step="0.01"
+                            value="<?php echo esc_attr( $da_default_value ); ?>"
                             placeholder="<?php esc_attr_e( 'Enter custom amount', 'better-payment' ); ?>"
                         />
                     </div>
@@ -758,7 +935,7 @@ class RendererService {
                 // page labelling nothing.
                 if ( $active_sharing ) :
                 ?>
-                <div class="bp-social-sharing" style="text-align:<?php echo esc_attr( $sh_align ); ?>;">
+                <div class="bp-social-sharing" style="text-align:<?php echo esc_attr( $sh_align ); ?>;<?php echo esc_attr( self::element_box_style( self::resolve_element_width( $settings ), $sh_align ) ); ?>">
                     <?php if ( $sh_headline ) : ?>
                         <p class="bp-social-headline"><?php echo esc_html( $sh_headline ); ?></p>
                     <?php endif; ?>
@@ -799,7 +976,7 @@ class RendererService {
                 // its own because the headline defaults to a non-empty string.)
                 if ( $active_links ) :
                 ?>
-                <div class="bp-social-links" style="text-align:<?php echo esc_attr( $sl_align ); ?>;">
+                <div class="bp-social-links" style="text-align:<?php echo esc_attr( $sl_align ); ?>;<?php echo esc_attr( self::element_box_style( self::resolve_element_width( $settings ), $sl_align ) ); ?>">
                     <?php if ( $sl_headline ) : ?>
                         <p class="bp-social-headline"><?php echo esc_html( $sl_headline ); ?></p>
                     <?php endif; ?>
@@ -868,7 +1045,11 @@ class RendererService {
             return $html;
         }
 
-        return '<div class="bp-element-wrap" data-bp-element-id="' . esc_attr( $el_id ) . '">' . $html . '</div>';
+        // Classes the author added on the Advanced tab (sanitized, max 10).
+        $extra_classes = ElementStyleCompiler::css_classes( is_array( $element['settings'] ?? null ) ? $element['settings'] : [] );
+        $wrap_class    = 'bp-element-wrap' . ( '' !== $extra_classes ? ' ' . $extra_classes : '' );
+
+        return '<div class="' . esc_attr( $wrap_class ) . '" data-bp-element-id="' . esc_attr( $el_id ) . '">' . $html . '</div>';
     }
 
     /**
@@ -898,6 +1079,13 @@ class RendererService {
         // present the element is showing the author something real.
         $visual = '#<(img|svg|iframe|video|audio|canvas|picture|object|embed|input|select|textarea|progress|meter|hr|table)[\s/>]#i';
         if ( preg_match( $visual, $html ) ) {
+            return false;
+        }
+
+        // A <div> styled into a visible shape (the progress bar's track) paints
+        // without text too. Such markup opts in with `data-bp-paints`, since no
+        // tag name can say it.
+        if ( preg_match( '#<[a-z][a-z0-9]*\b[^>]*\sdata-bp-paints[\s=/>]#i', $html ) ) {
             return false;
         }
 
@@ -1114,6 +1302,35 @@ class RendererService {
      *
      * @param mixed $val
      */
+    /**
+     * Inline width + alignment declarations for an element narrower than its
+     * column: `width:N%;box-sizing:border-box;` plus the auto margin that places
+     * the block (center → both sides, right → left side).
+     *
+     * Returns '' at 100%, so an element whose width was never changed prints the
+     * same markup it always did — the Title, Social Sharing and Social Links
+     * widgets gained the control later, and their live pages must not move.
+     * `box-sizing` keeps a bordered, padded block (Social Sharing / Links) inside
+     * the percentage instead of overflowing it.
+     *
+     * @param int    $width Percentage from resolve_element_width() (10–100).
+     * @param string $align left | center | right.
+     */
+    private static function element_box_style( int $width, string $align ): string {
+        if ( $width >= 100 ) {
+            return '';
+        }
+
+        $style = 'width:' . $width . '%;box-sizing:border-box;';
+        if ( 'center' === $align ) {
+            $style .= 'margin-left:auto;margin-right:auto;';
+        } elseif ( 'right' === $align ) {
+            $style .= 'margin-left:auto;';
+        }
+
+        return $style;
+    }
+
     /**
      * Resolve an element's percentage width setting.
      *
@@ -1346,6 +1563,7 @@ class RendererService {
         ob_start();
         ?>
         <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class ); ?>">
+            <?php echo ElementStyleCompiler::style_tag( $columns, 0, $meta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- validated per control type; see ElementStyleCompiler::safe_css(). ?>
             <div class="bp-campaign-columns">
                 <?php foreach ( $columns as $column ) :
                     $col_style = 'width: ' . esc_attr( $column['width'] ?? '100%' ) . ';';
@@ -1572,6 +1790,7 @@ class RendererService {
         <div class="bp-campaign bp-campaign--<?php echo esc_attr( $layout ); ?> better-payment<?php echo esc_attr( $theme_class . $extra_class ); ?>"
              data-campaign-id="<?php echo esc_attr( $campaign_id ); ?>">
             <?php echo wp_kses( $color_style, [ 'style' => [] ] ); ?>
+            <?php echo ElementStyleCompiler::style_tag( $columns, $campaign_id, $meta ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every value is validated per control type and the CSS is refused if it contains '<' (ElementStyleCompiler::safe_css()); wp_kses() would turn a '>' combinator into '&gt;'. ?>
             <input type="hidden" class="better_payment_campaign_id"
                    value="<?php echo esc_attr( $campaign_id ); ?>">
             <input type="hidden" class="better_payment_campaign_currency"
@@ -1658,6 +1877,11 @@ class RendererService {
         // `better_payment/campaign/preview_stylesheets`. A free install links no
         // Pro design. See Campaign\CampaignStyles.
         $theme_links = '';
+        $fonts_url   = \Better_Payment\Lite\Campaign\CampaignStyles::fonts_url();
+        if ( '' !== $fonts_url ) {
+            // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- Standalone preview document built by the plugin; no wp_head to enqueue into.
+            $theme_links .= '<link rel="stylesheet" href="' . esc_url( add_query_arg( 'ver', \Better_Payment\Lite\Campaign\CampaignStyles::fonts_version(), $fonts_url ) ) . '">' . "\n";
+        }
         foreach ( \Better_Payment\Lite\Campaign\CampaignStyles::preview_stylesheets() as $theme_css ) {
             // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- Standalone preview document built by the plugin; no wp_head to enqueue into.
             $theme_links .= '<link rel="stylesheet" href="' . esc_url( $theme_css ) . '">' . "\n";
@@ -1676,7 +1900,12 @@ class RendererService {
             . '<style>' . "\n"
             . '*, *::before, *::after { box-sizing: border-box; }' . "\n"
             . 'html, body { margin: 0; padding: 0; background: #fff; }' . "\n"
-            . ( $theme_class ? 'body { padding: 0 24px 16px; }' . "\n" : '' )
+            // A themed campaign is a rounded, coloured page: give it the same
+            // margin on all four sides. At the 1280px the previews render at, the
+            // centred 1200px wrapper sits 40px from each side (24 + 16), so 40px
+            // top and bottom make the four equal. The top used to be 0, which put
+            // the page flush against the top of every preview frame.
+            . ( $theme_class ? 'body { padding: 40px 24px; }' . "\n" : '' )
             . '.bp-builder-el-wrap { position: relative; }' . "\n"
             // Empty columns need a minimum height so the overlay ColumnDropZone can
             // measure them and render the dashed drop-zone border at the correct size.
