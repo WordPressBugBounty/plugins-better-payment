@@ -67,7 +67,7 @@ class Handler extends Controller{
         $return_base = '' !== $return_base ? $return_base : (string) get_the_permalink();
 
         $return_url = add_query_arg( $query_vars, add_query_arg( [ 'better_payment_paypal_status' => 'success', 'better_payment_widget_id' => $widget_id ], $return_base ) );
-        $cancel_url = add_query_arg( $query_vars, add_query_arg( [ 'better_payment_error_status' => 'error', 'better_payment_widget_id' => $widget_id ], $return_base ) );
+        $cancel_url = add_query_arg( $query_vars, add_query_arg( [ 'better_payment_error_status' => 'cancelled', 'better_payment_widget_id' => $widget_id ], $return_base ) );
 
         ob_start();
         $error_info = [
@@ -147,7 +147,7 @@ class Handler extends Controller{
     public static function paypal_return_fallback( $page_url, $widget_id, $outcome ) {
         $args = 'success' === $outcome
             ? array( 'better_payment_paypal_status' => 'success' )
-            : array( 'better_payment_error_status' => 'error' );
+            : array( 'better_payment_error_status' => 'cancelled' );
 
         $args['better_payment_widget_id'] = $widget_id;
 
@@ -593,7 +593,12 @@ class Handler extends Controller{
                 $order_id = sanitize_text_field( wp_unslash( $_REQUEST['better_payment_paypal_id'] ) );
             }
             
-            self::render_failed_response( $settings, $order_id );
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL (PayPal/Stripe/Paystack redirect back) cannot carry a nonce; the value only picks a message.
+            if ( 'cancelled' === $_REQUEST['better_payment_error_status'] ) {
+                self::render_cancelled_notice( $order_id );
+            } else {
+                self::render_failed_response( $settings, $order_id );
+            }
 
             // The failure is shown once. Left in the URL, its arguments rendered it
             // again on every reload — for the campaign popup, the popup reopened each
@@ -617,10 +622,26 @@ class Handler extends Controller{
         if ( is_wp_error( $status ) ) {
             // A verification that confirmed no payment never renders the success page or
             // redirects to the success URL (a WP_Error is truthy, and used to do both).
-            if ( 'bp_stripe_payment_processing' === $status->get_error_code() ) {
-                self::stripe_processing_message_template();
+            // A status request that failed says nothing about the payment: the payer is
+            // never told it failed, and the return URL keeps its query args, so reloading
+            // it verifies the order again. The gateway's reason is already in the log.
+            if ( in_array( $status->get_error_code(), array( 'bp_stripe_payment_processing', 'stripe_error', 'bp_stripe_unconfirmed', 'paystack_error' ), true ) ) {
+                switch ( $status->get_error_code() ) {
+                    case 'paystack_error':
+                        self::paystack_processing_message_template();
+                        break;
+                    case 'stripe_error':
+                        self::stripe_unreachable_message_template();
+                        break;
+                    case 'bp_stripe_unconfirmed':
+                        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Gateway return URL cannot carry a nonce; the value is only printed, escaped.
+                        $stripe_order_id = ! empty( $_REQUEST['better_payment_stripe_id'] ) && is_scalar( $_REQUEST['better_payment_stripe_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['better_payment_stripe_id'] ) ) : '';
+                        self::stripe_unconfirmed_message_template( $stripe_order_id );
+                        break;
+                    default:
+                        self::stripe_processing_message_template();
+                }
 
-                // The return URL keeps its query args, so reloading it verifies the order again.
                 return $status;
             }
 
@@ -1098,13 +1119,13 @@ class Handler extends Controller{
         );
 
         if ( is_wp_error( $response ) || '' === wp_remote_retrieve_body( $response ) ) {
-            return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
+            return self::stripe_status_unavailable( $response );
         }
 
         $session = json_decode( wp_remote_retrieve_body( $response ) );
 
         if ( ! is_object( $session ) || isset( $session->error ) ) {
-            return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
+            return self::stripe_status_unavailable( $response );
         }
 
         return self::confirm_stripe_session( $row, $session, $settings, $verification );
@@ -1546,6 +1567,121 @@ class Handler extends Controller{
     }
 
     /**
+     * Shown when Stripe could not be reached about a returning payment.
+     *
+     * @since 2.5.0
+     */
+    private static function stripe_unreachable_message_template() {
+        ?>
+        <section class="bp-thank_page">
+            <div class="bp-thank_page-wrapper bp-stripe-processing bp-stripe-unreachable">
+                <div class="bp-thank_page-text">
+                    <h2 class="bp-font_ibm bp-page_header"><?php esc_html_e( 'Your payment is processing', 'better-payment' ); ?></h2>
+                    <p class="bp-font_ibm bp-payment_info"><?php esc_html_e( 'We could not reach Stripe to confirm your payment. You do not need to pay again; please reload this page in a moment.', 'better-payment' ); ?></p>
+                </div>
+            </div>
+        </section>
+        <?php
+    }
+
+    /**
+     * Shown when Stripe answered a returning payment with an error that a reload
+     * will not clear, such as a key that no longer matches the session's account.
+     *
+     * The payment may have gone through, so the payer is never told it failed:
+     * paying again could charge them twice.
+     *
+     * @since 2.5.0
+     *
+     * @param string $order_id The order id from the return URL, '' if none.
+     */
+    private static function stripe_unconfirmed_message_template( $order_id ) {
+        ?>
+        <section class="bp-thank_page">
+            <div class="bp-thank_page-wrapper bp-stripe-processing bp-stripe-unconfirmed">
+                <div class="bp-thank_page-text">
+                    <h2 class="bp-font_ibm bp-page_header"><?php esc_html_e( 'We could not confirm your payment yet', 'better-payment' ); ?></h2>
+                    <p class="bp-font_ibm bp-payment_info"><?php esc_html_e( 'Please do not pay again. If you were charged, contact the site owner and quote your order number.', 'better-payment' ); ?></p>
+                    <?php if ( '' !== $order_id ) : ?>
+                        <p class="bp-font_ibm bp-payment_info">
+                            <?php
+                            /* translators: %s: order number. */
+                            echo esc_html( sprintf( __( 'Order number: %s', 'better-payment' ), $order_id ) );
+                            ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </section>
+        <?php
+    }
+
+    /**
+     * Why Stripe could not tell a returning payment's status, logged for the admin.
+     *
+     * A request that never got an answer — no connection, a timeout, an empty or
+     * unreadable body, a rate limit, a Stripe outage — is `stripe_error`: reloading
+     * the page asks again. An error Stripe returned on purpose (a key for another
+     * account, a session that does not exist) is `bp_stripe_unconfirmed`: a reload
+     * gives the same answer, so the payer is told so, and the admin gets Stripe's
+     * own reason. Both leave the order unpaid.
+     *
+     * @since 2.5.0
+     *
+     * @param array|\WP_Error $response The Checkout Session request's result.
+     * @return \WP_Error
+     */
+    private static function stripe_status_unavailable( $response ) {
+        $failure = PaymentError::read_stripe( $response );
+        $answer  = is_wp_error( $response ) ? null : json_decode( (string) wp_remote_retrieve_body( $response ), true );
+        $stated  = is_array( $answer ) && isset( $answer['error'] ) && is_array( $answer['error'] );
+
+        // No error object at all is a transport problem, whatever the status line says.
+        if ( ! $stated ) {
+            $failure['kind'] = PaymentError::BUSY;
+            if ( '' === $failure['message'] ) {
+                $failure['code']    = 'stripe_unreadable_response';
+                $failure['message'] = sprintf( 'Stripe returned HTTP %d with no readable body.', (int) wp_remote_retrieve_response_code( $response ) );
+            }
+        }
+
+        PaymentError::record(
+            array(
+                'gateway' => 'stripe',
+                'surface' => 'return',
+                'page_id' => (int) get_the_ID(),
+                'kind'    => $failure['kind'],
+                'code'    => $failure['code'],
+                'message' => $failure['message'],
+            )
+        );
+
+        if ( PaymentError::BUSY === $failure['kind'] ) {
+            return new \WP_Error( 'stripe_error', __( 'There was a problem connecting to the Stripe API endpoint.', 'better-payment' ) );
+        }
+
+        return new \WP_Error( 'bp_stripe_unconfirmed', __( 'Stripe could not confirm this payment.', 'better-payment' ) );
+    }
+
+    /**
+     * Shown when Paystack could not be asked about a returning payment.
+     *
+     * @since 2.5.0
+     */
+    private static function paystack_processing_message_template() {
+        ?>
+        <section class="bp-thank_page">
+            <div class="bp-thank_page-wrapper bp-stripe-processing">
+                <div class="bp-thank_page-text">
+                    <h2 class="bp-font_ibm bp-page_header"><?php esc_html_e( 'Your payment is processing', 'better-payment' ); ?></h2>
+                    <p class="bp-font_ibm bp-payment_info"><?php esc_html_e( 'Paystack has not confirmed your payment yet. Please reload this page in a moment.', 'better-payment' ); ?></p>
+                </div>
+            </div>
+        </section>
+        <?php
+    }
+
+    /**
      * The failed-payment page, with the optional redirect to the form's error page.
      *
      * @param array  $settings Form settings.
@@ -1572,6 +1708,30 @@ class Handler extends Controller{
             </script>
             <?php
         }
+    }
+
+    /**
+     * Tell a payer who left the gateway's page that nothing was charged.
+     *
+     * Leaving is not a failure, so this is no "Payment Failed" page and it never follows the
+     * form's error redirect. The form renders again below. The styles are inline because the
+     * notice also prints in the campaign popup, which loads no form stylesheet.
+     *
+     * @since 2.5.0
+     *
+     * @param string $order_id The order, when the return URL names one.
+     * @return void
+     */
+    private static function render_cancelled_notice( $order_id ) {
+        // The cancel URL is the visitor's to replay; an order that was paid was not cancelled.
+        if ( self::order_is_confirmed( $order_id ) ) {
+            return;
+        }
+        ?>
+        <p class="bp-payment-cancelled-notice" role="status" style="margin:0 0 16px;padding:12px 16px;border:1px solid #e5e7eb;border-radius:6px;background:#f9fafb;color:#1f2937;font-size:15px;line-height:1.5;">
+            <?php esc_html_e( 'Payment cancelled. You have not been charged.', 'better-payment' ); ?>
+        </p>
+        <?php
     }
 
     /**
@@ -1622,7 +1782,7 @@ class Handler extends Controller{
             "Cache-Control: no-cache",
         );
 
-        $response = wp_safe_remote_get(
+        $verification = wp_safe_remote_get(
             'https://api.paystack.co/transaction/verify/' . rawurlencode( $reference ),
             array(
                 'headers' => $header_info,
@@ -1630,10 +1790,17 @@ class Handler extends Controller{
             )
         );
 
-        $response = json_decode(wp_remote_retrieve_body($response));
+        $response = json_decode(wp_remote_retrieve_body($verification));
 
         if ( empty( $response->status ) ) {
-            return false;
+            $failure = PaymentError::read_paystack( $verification );
+
+            PaymentError::paystack( $verification, 'return', (int) get_the_ID() );
+
+            // No answer says nothing about the payment, so the return page can check again.
+            return PaymentError::BUSY === $failure['kind']
+                ? new \WP_Error( 'paystack_error', __( 'There was a problem connecting to Paystack.', 'better-payment' ) )
+                : false;
         }
 
         $verified = isset( $response->data ) ? $response->data : null;
@@ -2624,7 +2791,7 @@ class Handler extends Controller{
      *
      * @param string $to
      * @param string $subject
-     * @param array  $message
+     * @param string $message
      *
      * @return bool false indicates mail sending failed while true doesn't gurantee that mail sent.
      * true just indicate script processed successfully without any errors. 

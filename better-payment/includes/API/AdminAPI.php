@@ -4,6 +4,8 @@ namespace Better_Payment\Lite\API;
 
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Admin\SubscriptionListFilter;
+use Better_Payment\Lite\Classes\PaymentError;
+use Better_Payment\Lite\Classes\TransactionCampaign;
 use Better_Payment\Lite\Models\SubscriptionRelationModel;
 use Better_Payment\Lite\Traits\Helper;
 use Better_Payment\Lite\WooCommerce\Subscriptions as WooSubscriptions;
@@ -106,6 +108,27 @@ class AdminAPI extends WP_REST_Controller
             'methods' => WP_REST_Server::READABLE,
             'callback' => [$this, 'get_transaction_count'],
             'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        // The campaigns the Transactions screen can filter by: every one with a transaction.
+        register_rest_route($this->namespace, '/transactions/campaigns', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [$this, 'get_transaction_campaigns'],
+            'permission_callback' => [$this, 'check_admin_permissions']
+        ]);
+
+        // Why payments failed to start, for the Transactions screen.
+        register_rest_route($this->namespace, '/payment-errors', [
+            [
+                'methods' => WP_REST_Server::READABLE,
+                'callback' => [$this, 'get_payment_errors'],
+                'permission_callback' => [$this, 'check_admin_permissions']
+            ],
+            [
+                'methods' => WP_REST_Server::DELETABLE,
+                'callback' => [$this, 'clear_payment_errors'],
+                'permission_callback' => [$this, 'check_admin_permissions']
+            ],
         ]);
 
         register_rest_route($this->namespace, '/transactions/(?P<id>\d+)', [
@@ -440,6 +463,7 @@ class AdminAPI extends WP_REST_Controller
             $order = $request->get_param('order') ? sanitize_text_field($request->get_param('order')) : 'DESC';
             $source = $request->get_param('source') ? sanitize_text_field($request->get_param('source')) : '';
             $currency = $request->get_param('currency') ? sanitize_text_field($request->get_param('currency')) : 'all';
+            $campaign_id = TransactionCampaign::sanitize_filter($request->get_param('campaign_id'));
 
             $filters = [];
             $filters['per_page'] = $per_page;
@@ -469,10 +493,15 @@ class AdminAPI extends WP_REST_Controller
             if ($currency) {
                 $filters['currency'] = $currency;
             }
+            if ('' !== $campaign_id) {
+                $filters['campaign_id'] = $campaign_id;
+            }
 
             $transactions = DB::get_transactions($filters, 0, 'v2');
 
             foreach ($transactions as $key => $transaction) {
+                // The campaign's title and links, so the list never shows a raw id (null without one).
+                $transactions[$key]->campaign = TransactionCampaign::describe($transaction->campaign_id ?? '');
                 // The bucket the row is labelled under (an unconfirmed pre-2.4.0 free checkout is
                 // `incomplete`). The React list prefers it to its own raw-status map.
                 $transactions[$key]->status_type = \Better_Payment\Lite\Classes\Helper::transaction_status_type($transaction, 'v2');
@@ -977,6 +1006,72 @@ class AdminAPI extends WP_REST_Controller
     }
 
     /**
+     * Recent payment failures, with each form page's title.
+     *
+     * @since 2.5.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_payment_errors($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        $errors = array_map(
+            static function ($entry) {
+                $page_id = (int) ($entry['page_id'] ?? 0);
+
+                $entry['page_title'] = $page_id ? get_the_title($page_id) : '';
+                $entry['page_url']   = $page_id ? (string) get_edit_post_link($page_id, 'raw') : '';
+
+                return $entry;
+            },
+            PaymentError::entries()
+        );
+
+        return rest_ensure_response(['errors' => $errors]);
+    }
+
+    /**
+     * Empty the payment error log.
+     *
+     * @since 2.5.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function clear_payment_errors($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        PaymentError::clear();
+
+        return rest_ensure_response(['errors' => []]);
+    }
+
+    /**
+     * The campaigns the Transactions screen can filter by.
+     *
+     * Every campaign at least one transaction row names — Campaign Builder campaigns and
+     * Elementor Fundraising Campaign widgets alike — with its title and links
+     * (TransactionCampaign::describe()), sorted by title.
+     *
+     * @since 2.5.0
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_transaction_campaigns($request)
+    {
+        if (!$this->bp_valid_nonce($request)) {
+            return new WP_Error('invalid_nonce', 'Invalid Request', ['status' => 403]);
+        }
+
+        return rest_ensure_response(['campaigns' => TransactionCampaign::options()]);
+    }
+
+    /**
      * Get single transaction
      *
      * @since 1.5.0
@@ -999,6 +1094,7 @@ class AdminAPI extends WP_REST_Controller
 
             // From the stored row, before form_fields_info is unserialized (see get_transactions()).
             $transaction->status_type = \Better_Payment\Lite\Classes\Helper::transaction_status_type($transaction, 'v2');
+            $transaction->campaign = TransactionCampaign::describe($transaction->campaign_id ?? '');
             $transaction->form_fields_info = maybe_unserialize($transaction->form_fields_info);
 
             /**

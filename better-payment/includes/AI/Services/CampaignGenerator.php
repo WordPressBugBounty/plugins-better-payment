@@ -4,6 +4,7 @@ namespace Better_Payment\Lite\AI\Services;
 
 use Better_Payment\Lite\AI\AIManager;
 use Better_Payment\Lite\AI\Layout\LayoutLibrary;
+use Better_Payment\Lite\AI\Operations\StateDeriver;
 use Better_Payment\Lite\AI\Schema\CampaignSchema;
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
 use Better_Payment\Lite\Campaign\Templates\CategoryRegistry;
@@ -202,6 +203,9 @@ class CampaignGenerator {
         // meta is derived below, so the operations and that meta always agree.
         $result['operations'] = UserFieldGuard::apply( $result['operations'], $fields );
 
+        // Status stops payments, and a new page has no reason to touch it.
+        $result['operations'] = self::drop_status_writes( $result['operations'] );
+
         // Bake every generated widget's registry defaults into its settings, so a
         // generated element never ships missing a default the way a hand-dropped
         // one never does. The model routinely omits keys, or emits a blank
@@ -215,45 +219,14 @@ class CampaignGenerator {
         // forced, non-blank photo src is preserved).
         $result['operations'] = self::fill_element_defaults( $result['operations'] );
 
-        $layout = null;
-        $meta   = [];
-        foreach ( $result['operations'] as $operation ) {
-            $op = $operation['op'] ?? '';
-            if ( 'set_layout' === $op ) {
-                $layout = [ 'layout' => $operation['layout'], 'columns' => $operation['columns'] ];
-            } elseif ( 'update_meta' === $op ) {
-                $meta[ $operation['key'] ] = $operation['value'];
-            } elseif ( 'set_colors' === $op ) {
-                if ( isset( $operation['primary'] ) ) {
-                    $meta['bpc_color_primary'] = $operation['primary'];
-                }
-                if ( isset( $operation['background'] ) ) {
-                    $meta['bpc_color_background'] = $operation['background'];
-                }
-            } elseif ( 'set_donation_amounts' === $op ) {
-                $meta['bpc_suggested_amounts'] = $operation['amounts'];
-            }
-        }
+        // Fold the batch into the campaign state it describes. Lives in
+        // StateDeriver so the MCP module applies the identical contract instead of
+        // carrying a second copy of it.
+        $derived = StateDeriver::derive( $result['operations'] );
 
-        // An all-empty layout must not wipe the canvas — drop the set_layout op.
-        if ( null !== $layout ) {
-            $total = 0;
-            foreach ( $layout['columns'] as $col ) {
-                $total += is_array( $col['elements'] ?? null ) ? count( $col['elements'] ) : 0;
-            }
-            if ( 0 === $total ) {
-                $layout = null;
-                $result['operations'] = array_values( array_filter(
-                    $result['operations'],
-                    static function ( $op ) {
-                        return is_array( $op ) && 'set_layout' !== ( $op['op'] ?? '' );
-                    }
-                ) );
-            }
-        }
-
-        $result['layout'] = $layout;
-        $result['meta']   = $meta;
+        $result['operations'] = $derived['operations'];
+        $result['layout']     = $derived['layout'];
+        $result['meta']       = $derived['meta'];
         return $result;
     }
 
@@ -304,6 +277,30 @@ class CampaignGenerator {
          * the brief, including its leading blank line.
          */
         return (string) apply_filters( 'better_payment/ai/pro_generation_instruction', '' );
+    }
+
+    /**
+     * Drop any `bpc_status` write from generated operations.
+     *
+     * Status is enforced: `closed` stops payments. An edit may still set it, because
+     * there the user asked; a generated page has nothing to close.
+     *
+     * @since 2.5.0
+     *
+     * @param array $operations Validated operations.
+     * @return array
+     */
+    public static function drop_status_writes( array $operations ): array {
+        return array_values(
+            array_filter(
+                $operations,
+                static function ( $operation ) {
+                    return ! is_array( $operation )
+                        || 'update_meta' !== ( $operation['op'] ?? '' )
+                        || 'bpc_status' !== ( $operation['key'] ?? '' );
+                }
+            )
+        );
     }
 
     /**

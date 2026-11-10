@@ -5,7 +5,7 @@ Tags: donation, fundraising, recurring donations, payments, stripe-payment
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.4.4
+Stable tag: 2.5.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -258,6 +258,15 @@ The JavaScript and CSS files in `assets/` are compiled with `@wordpress/scripts`
 * `src/controls/` — the shared block editor controls, compiled into `assets/blocks/`
 
 == Changelog ==
+
+= 2.5.0 - 10/11/2026 =
+- Added: Campaign auto-closure based on end date, Closed status, or reached goal
+- Added: Campaign filter and column in Transactions, including exports
+- Added: MCP server for AI assistants (off by default) and recent payment error logs.
+- Improved: Clearer payment messages and unique donor counts
+- Improved: Campaign-level currency handling and accurate multi-currency totals
+- Fixed: Stripe/Paystack payment verification flow and Custom Redirect URL help text
+- Few minor bug fixes and improvements
 
 = 2.4.4 - 02/11/2026 =
 - Added: Advanced Campaign Builder styling with Content, Style and Advanced tabs, including widths, colours, borders, shadows, spacing and hover states

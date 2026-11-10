@@ -2048,7 +2048,7 @@ class Better_Payment_Widget extends Widget_Base {
 			'label'         => __( 'Custom Redirect URL', 'better-payment' ),
 			'show_external' => false,
 			'placeholder'   => __( 'eg. https://example.com/custom-page/', 'better-payment' ),
-			'description'   => __( 'Please note that only your current domain is allowed here to keep your site secure.', 'better-payment' ),
+			'description'   => __( 'Payers are sent to this page after a successful payment.', 'better-payment' ),
 		] );
 
         $this->end_controls_section();
@@ -2184,7 +2184,7 @@ class Better_Payment_Widget extends Widget_Base {
 			'label'         => __( 'Custom Redirect URL', 'better-payment' ),
 			'show_external' => false,
 			'placeholder'   => __( 'eg. https://example.com/custom-page/', 'better-payment' ),
-			'description'   => __( 'Please note that only your current domain is allowed here to keep your site secure.', 'better-payment' ),
+			'description'   => __( 'Payers are sent to this page after a failed payment.', 'better-payment' ),
 		] );
 
         $this->end_controls_section();

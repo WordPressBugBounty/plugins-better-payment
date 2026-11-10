@@ -168,7 +168,7 @@ import {
 				).then( function ( result ) {
 					if ( result?.error ) {
 						toastr.error(
-							result.error.message ||
+							custom_texts?.payment_start_failed ||
 								`${ somethingWentWrongText }!`
 						);
 						releaseCheckoutButton( button );

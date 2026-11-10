@@ -8124,3 +8124,27 @@ label.bp-cb-switch-wrap {
 	display: inline-block;
 	cursor: pointer;
 }
+
+// ── Settings tab — lifecycle notice (Campaign\CampaignLifecycle) ─────────────
+.bp-settings-lifecycle-notice,
+.bp-settings-currency-notice {
+	margin: 0;
+	padding: 10px 12px;
+	border: 1px solid #fcd34d;
+	border-radius: 6px;
+	background: #fffbeb;
+	color: #92400e;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+// Under the Currency select, after its hint.
+.bp-settings-currency-notice {
+	margin-top: 8px;
+}
+
+.bp-settings-col textarea {
+	width: 100%;
+	min-height: 60px;
+	resize: vertical;
+}

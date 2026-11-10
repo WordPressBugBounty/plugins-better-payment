@@ -2,6 +2,7 @@
 
 namespace Better_Payment\Lite;
 
+use Better_Payment\Lite\Classes\PaymentError;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 
 /**
@@ -279,6 +280,7 @@ class Assets extends Controller
                 'maximum_amount_is' => __('Maximum amount is %s', 'better-payment'),
                 'invalid_email' => __('Please enter a valid email address', 'better-payment'),
                 'something_went_wrong' => __('Something went wrong', 'better-payment'),
+                'payment_start_failed' => PaymentError::message( PaymentError::UNKNOWN ),
                 'paypal_payment_timeout' => __('Payment verification timed out. Please contact support if your payment was charged.', 'better-payment'),
             ],
             'currency_symbols' => $this->get_currency_symbols_list(),

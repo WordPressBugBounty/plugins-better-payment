@@ -93,7 +93,7 @@ class ProTemplateCatalog {
      * Path below Lite's assets/ where the full-page previews of the Pro templates
      * live, as `{key}-desktop.webp` and `{key}-mobile.webp`.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      */
     const FULL_PREVIEW_DIR = self::PREVIEW_DIR . '/full';
 
@@ -238,7 +238,7 @@ class ProTemplateCatalog {
      * Named by key, so a template added to the catalogue needs only its two
      * images — and `ProTemplateCatalogFullPreviewTest` fails until they exist.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      *
      * @param string $key Template key.
      * @return array{desktop: string, mobile: string} Plugin-relative paths.

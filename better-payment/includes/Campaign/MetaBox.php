@@ -28,11 +28,15 @@ class MetaBox extends Controller {
             '_bpc_minimum_amount'    => 'floatval',
             '_bpc_form_page_id'      => 'absint',
             '_bpc_fields_layout'     => [ self::class, 'sanitize_json' ],
-            '_bpc_status'            => 'sanitize_text_field',
+            '_bpc_status'            => [ CampaignLifecycle::class, 'normalize_status' ],
+            '_bpc_close_on_goal'     => 'absint',
+            '_bpc_closed_message'    => 'sanitize_textarea_field',
             '_bpc_color_primary'     => 'sanitize_hex_color',
             '_bpc_color_background'   => 'sanitize_hex_color',
             '_bpc_css_class'         => 'sanitize_html_class',
             '_bpc_template_key'      => 'sanitize_text_field',
+            // Stamped at creation; changes only while the campaign has no donation (CampaignCurrency).
+            CampaignCurrency::META_KEY => [ CampaignCurrency::class, 'sanitize' ],
         ] );
     }
 
@@ -63,6 +67,15 @@ class MetaBox extends Controller {
             }
 
             $value = wp_unslash( $_POST[ $key ] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized on the next line by the per-field callback from meta_fields(); nonce verified above.
+
+            if ( CampaignCurrency::META_KEY === $key ) {
+                $value = CampaignCurrency::enforce_lock( $post_id, $value );
+                if ( null !== $value ) {
+                    update_post_meta( $post_id, $key, $value );
+                }
+                continue;
+            }
+
             $value = is_callable( $sanitize ) ? call_user_func( $sanitize, $value ) : $value;
 
             if ( '_bpc_fields_layout' === $key ) {
@@ -86,6 +99,16 @@ class MetaBox extends Controller {
 
             if ( array_key_exists( $short_key, $data ) ) {
                 $raw   = $data[ $short_key ];
+
+                // Empty, unknown or locked: the stored currency stays (CampaignCurrency::enforce_lock()).
+                if ( CampaignCurrency::META_KEY === $key ) {
+                    $currency = CampaignCurrency::enforce_lock( $post_id, $raw );
+                    if ( null !== $currency ) {
+                        update_post_meta( $post_id, $key, $currency );
+                    }
+                    continue;
+                }
+
                 $value = is_callable( $sanitize ) ? call_user_func( $sanitize, $raw ) : sanitize_text_field( $raw );
 
                 if ( '_bpc_fields_layout' === $key ) {
@@ -121,6 +144,14 @@ class MetaBox extends Controller {
             : '';
         $result['bpc_form_page_id']        = (int) ( $result['bpc_form_page_id'] ?? 0 );
         $result['bpc_css_class']           = (string) ( $result['bpc_css_class'] ?? '' );
+        // Lifecycle (CampaignLifecycle): never saved → active, close-on-goal off, default message.
+        $result['bpc_status']              = CampaignLifecycle::normalize_status( $result['bpc_status'] ?? '' );
+        $result['bpc_close_on_goal']       = (int) ( $result['bpc_close_on_goal'] ?? 0 ) ? 1 : 0;
+        $result['bpc_closed_message']      = (string) ( $result['bpc_closed_message'] ?? '' );
+        // The STORED code, '' for a campaign created before 2.5.0 (it follows the site
+        // currency). Never the resolved one: the builder posts this back on every save, and
+        // a resolved value would stamp an old campaign the first time it is saved.
+        $result['bpc_currency']            = CampaignCurrency::sanitize( $result['bpc_currency'] ?? '' );
 
         // Parse JSON fields.
         if ( ! empty( $result['bpc_fields_layout'] ) && is_string( $result['bpc_fields_layout'] ) ) {

@@ -8,6 +8,7 @@ use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
+use Better_Payment\Lite\Classes\PaymentError;
 use Better_Payment\Lite\Classes\PaymentRateLimiter;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
@@ -179,7 +180,7 @@ class Paystack_Integration extends Action_Base {
         }
 
         if ( empty( $sent_data['payment_amount'] ) && empty( $sent_data['primary_payment_amount_radio'] ) ) {
-            $ajax_handler->add_error_message( 'Amount field is required!' );
+            $ajax_handler->add_error_message( esc_html__( 'Amount field is required!', 'better-payment' ) );
             return false;
         }
 
@@ -208,7 +209,7 @@ class Paystack_Integration extends Action_Base {
         $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paystack_currency' ) );
 
         if ( is_array( $paystack_supported_currencies ) && ! in_array( $currency_code, $paystack_supported_currencies ) ) {
-            $ajax_handler->add_error_message( 'Currency is not supported by Paystack!' );
+            $ajax_handler->add_error_message( esc_html__( 'Currency is not supported by Paystack!', 'better-payment' ) );
             return false;
         }
 
@@ -262,19 +263,19 @@ class Paystack_Integration extends Action_Base {
         );
 
         if ( is_wp_error( $response ) ) {
-            $ajax_handler->add_error_message( esc_html__( 'Could not connect to Paystack. Please try again.', 'better-payment' ) );
+            $ajax_handler->add_error_message( esc_html( PaymentError::paystack( $response, 'elementor_form', (int) $page_id ) ) );
             return false;
         }
 
         $response_ar = json_decode( wp_remote_retrieve_body( $response ) );
 
         if ( ! empty( $response_ar->error ) ) {
-            $ajax_handler->add_error_message( isset( $response_ar->error->message ) ? sanitize_text_field( $response_ar->error->message ) : esc_html__( 'Something went wrong!', 'better-payment' ) );
+            $ajax_handler->add_error_message( esc_html( PaymentError::paystack( $response, 'elementor_form', (int) $page_id ) ) );
             return false;
         }
 
         if ( empty( $response_ar->status ) || empty( $response_ar->data ) ) {
-            $ajax_handler->add_error_message( ! empty( $response_ar->message ) ? sanitize_text_field( $response_ar->message ) : esc_html__( 'Something went wrong!', 'better-payment' ) );
+            $ajax_handler->add_error_message( esc_html( PaymentError::paystack( $response, 'elementor_form', (int) $page_id ) ) );
             return false;
         }
 

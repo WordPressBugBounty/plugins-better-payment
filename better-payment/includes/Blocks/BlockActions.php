@@ -14,6 +14,7 @@ namespace Better_Payment\Lite\Blocks;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentEntitlement;
+use Better_Payment\Lite\Classes\PaymentError;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 use Better_Payment\Lite\Classes\PaymentRateLimiter;
@@ -528,7 +529,7 @@ class BlockActions {
         );
 
         if ( empty( $better_payment_keys['public_key'] ) || empty( $better_payment_keys['secret_key'] ) ) {
-            wp_send_json_error( esc_html__( 'Stripe Key missing', 'better-payment' ) );
+            wp_send_json_error( esc_html( PaymentError::not_configured( 'stripe', 'block', $page_id, __( 'The Stripe secret key is missing.', 'better-payment' ) ) ) );
         }
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
@@ -582,7 +583,7 @@ class BlockActions {
 
         $redirection_url_error = add_query_arg(
             array(
-                'better_payment_error_status' => 'error',
+                'better_payment_error_status' => 'cancelled',
                 'better_payment_widget_id'    => $widget_id,
             ),
             $redirection_url_error
@@ -683,14 +684,14 @@ class BlockActions {
         );
 
         if ( is_wp_error( $request ) ) {
-            wp_send_json_error( sanitize_text_field( $request->get_error_message() ) );
+            wp_send_json_error( esc_html( PaymentError::stripe( $request, 'block', $page_id ) ) );
             return;
         }
 
         $response_ar = json_decode( wp_remote_retrieve_body( $request ) );
 
         if ( null === $response_ar ) {
-            wp_send_json_error( esc_html__( 'Invalid response from Stripe.', 'better-payment' ) );
+            wp_send_json_error( esc_html( PaymentError::stripe( $request, 'block', $page_id ) ) );
             return;
         }
 
@@ -721,13 +722,7 @@ class BlockActions {
                 )
             );
         } else {
-            $error_message = 'Something went wrong!';
-
-            if ( isset( $response_ar->error->message ) ) {
-                $error_message = sanitize_text_field( $response_ar->error->message );
-            }
-
-            wp_send_json_error( $error_message );
+            wp_send_json_error( esc_html( PaymentError::stripe( $request, 'block', $page_id ) ) );
         }
         // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
@@ -754,7 +749,7 @@ class BlockActions {
         }
 
         if ( empty( $el_settings['better_payment_paystack_public_key'] ) || empty( $el_settings['better_payment_paystack_secret_key'] ) ) {
-            wp_send_json_error( esc_html__( 'Paystack Key missing', 'better-payment' ) );
+            wp_send_json_error( esc_html( PaymentError::not_configured( 'paystack', 'block', $page_id, __( 'The Paystack secret key is missing.', 'better-payment' ) ) ) );
         }
 
         // phpcs:disable WordPress.Security.NonceVerification.Missing
@@ -808,7 +803,7 @@ class BlockActions {
 
         $redirection_url_error = add_query_arg(
             array(
-                'better_payment_error_status' => 'error',
+                'better_payment_error_status' => 'cancelled',
                 'better_payment_widget_id'    => $widget_id,
             ),
             $redirection_url_error
@@ -860,25 +855,19 @@ class BlockActions {
         );
 
         if ( is_wp_error( $request ) ) {
-            wp_send_json_error( sanitize_text_field( $request->get_error_message() ) );
+            wp_send_json_error( esc_html( PaymentError::paystack( $request, 'block', $page_id ) ) );
             return;
         }
 
         $response_ar = json_decode( wp_remote_retrieve_body( $request ) );
 
         if ( null === $response_ar ) {
-            wp_send_json_error( esc_html__( 'Invalid response from Paystack.', 'better-payment' ) );
+            wp_send_json_error( esc_html( PaymentError::paystack( $request, 'block', $page_id ) ) );
             return;
         }
 
         if ( empty( $response_ar->status ) || empty( $response_ar->data ) ) {
-            $error_message = ! empty( $response_ar->message ) ? sanitize_text_field( $response_ar->message ) : 'Something went wrong!';
-
-            if ( isset( $response_ar->error->message ) ) {
-                $error_message = sanitize_text_field( $response_ar->error->message );
-            }
-
-            wp_send_json_error( $error_message );
+            wp_send_json_error( esc_html( PaymentError::paystack( $request, 'block', $page_id ) ) );
         }
 
         $campaign_id = $guarded['campaign_id'];

@@ -21,7 +21,7 @@ import RepeaterControl, {
 	liteDrawsRepeater,
 } from '../transitional/RepeaterControl';
 import { openWpMedia } from '../utils/media';
-import { getGlobalCurrencySymbol } from '../utils/currency';
+import { getCampaignCurrencySymbol } from '../utils/currency';
 import { isElementLocked, lockedElementFeatures } from '../utils/proEnabled';
 import {
 	BoxShadowControl,
@@ -1864,7 +1864,7 @@ function SettingsControl( {
 			{ type === 'currency' && (
 				<div className="bp-settings-prefix-input">
 					<span className="bp-settings-prefix">
-						{ getGlobalCurrencySymbol() }
+						{ getCampaignCurrencySymbol() }
 					</span>
 					<input
 						id={ `ctrl-${ key }` }

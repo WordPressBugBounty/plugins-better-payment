@@ -5,6 +5,7 @@ namespace Better_Payment\Lite\Admin;
 use Better_Payment\Lite\Controller;
 use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Classes\Helper;
+use Better_Payment\Lite\MCP\Admin\ConnectGuide;
 use Better_Payment\Lite\Traits\Helper as TraitsHelper;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
 
@@ -199,7 +200,7 @@ class ReactAdmin extends Controller
      * @param mixed    $submenu_page_list Filtered list, keyed by submenu slug.
      * @param callable $fallback          Callback for an entry whose own is not callable.
      * @return array
-     * @since 2.4.5
+     * @since 2.5.0
      */
     public static function sanitize_submenu_page_list( $submenu_page_list, $fallback )
     {
@@ -362,9 +363,26 @@ class ReactAdmin extends Controller
             // fixed offset such as `+06:00` (never '' — the `timezone_string` option is
             // empty on a site set to a manual UTC offset).
             'siteTimezone' => wp_timezone_string(),
+            'mcp' => self::get_mcp_info(),
         ];
     }
-    
+
+    /**
+     * What the Settings screen needs to describe MCP support on this site.
+     *
+     * Printed with wp_json_encode(), not wp_localize_script(), so the booleans
+     * arrive as booleans. localize() casts every scalar to a string, which is what
+     * made the campaign builder's proEnabled === true comparison false on every
+     * install ever shipped.
+     *
+     * @since 2.5.0
+     * @return array
+     */
+    public static function get_mcp_info()
+    {
+        return ConnectGuide::payload();
+    }
+
     /**
      * Get the site's user roles as a role_key => display_name map.
      *

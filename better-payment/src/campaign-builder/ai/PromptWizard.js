@@ -46,7 +46,7 @@
 
 import { useState, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { getGlobalCurrencySymbol } from '../utils/currency';
+import { getCampaignCurrencySymbol } from '../utils/currency';
 import { getCampaignCategories } from '../utils/campaignCategories';
 import ChoiceGroup from './ChoiceGroup';
 import SelectField from './SelectField';
@@ -347,7 +347,7 @@ export default function PromptWizard( {
 	activeLayoutKey = '__ai__',
 	onSelectLayout,
 } ) {
-	const currencySymbol = getGlobalCurrencySymbol();
+	const currencySymbol = getCampaignCurrencySymbol();
 	const startOfWeek = getStartOfWeek();
 
 	const [ cause, setCause ] = useState( ANY );

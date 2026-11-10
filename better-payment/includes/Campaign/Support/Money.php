@@ -64,4 +64,44 @@ class Money {
     public static function with_symbol( string $symbol, $amount, int $decimals = 2 ): string {
         return $symbol . self::format( $amount, $decimals );
     }
+
+    /**
+     * The symbol campaign surfaces print for a currency code; the code itself when unknown.
+     *
+     * @param string $code ISO currency code.
+     * @return string
+     */
+    public static function symbol( string $code ): string {
+        $map = [
+            'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥',
+            'CAD' => 'CA$', 'AUD' => 'A$', 'INR' => '₹', 'BRL' => 'R$',
+            'MXN' => 'MX$', 'SGD' => 'S$', 'CHF' => 'CHF', 'SEK' => 'kr',
+            'NOK' => 'kr', 'DKK' => 'kr', 'NZD' => 'NZ$', 'ZAR' => 'R',
+            'BDT' => '৳', 'PKR' => '₨', 'NGN' => '₦', 'KES' => 'KSh',
+        ];
+
+        return $map[ strtoupper( $code ) ] ?? $code;
+    }
+
+    /**
+     * Each currency's amount with its own symbol, joined for one line of text.
+     *
+     * Used where a campaign raised money in more than one currency: the amounts are listed
+     * side by side, never added. A symbol that is only the code itself gets a space after it
+     * ("CHF 20"), so the code and the digits do not run together.
+     *
+     * @param array<string, float> $by_currency Code => amount.
+     * @param string               $separator   Text between two amounts.
+     * @return string
+     */
+    public static function list_by_currency( array $by_currency, string $separator = ' + ' ): string {
+        $parts = [];
+        foreach ( $by_currency as $code => $amount ) {
+            $symbol  = self::symbol( (string) $code );
+            $symbol .= strtoupper( $symbol ) === strtoupper( (string) $code ) ? ' ' : '';
+            $parts[] = self::with_symbol( $symbol, $amount );
+        }
+
+        return implode( $separator, $parts );
+    }
 }

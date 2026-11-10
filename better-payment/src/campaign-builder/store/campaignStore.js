@@ -4,6 +4,7 @@ import { filterInitialMeta } from '../utils/builderHooks';
 import { getDefaultSettings, getElement } from '../fields/FieldRegistry';
 import { carryStyleSettings } from '../utils/styleControls';
 import { applyOperations } from '../ai/operationExecutor';
+import { opensOnTemplates } from '../utils/initialTab';
 
 /**
  * Campaign builder state — useReducer store.
@@ -38,6 +39,8 @@ export const BASE_META = {
 	bpc_goal_amount: '',
 	bpc_end_date: '',
 	bpc_status: 'active',
+	bpc_close_on_goal: 0,
+	bpc_closed_message: '',
 	bpc_allow_custom_amount: 1,
 	bpc_minimum_amount: '',
 	bpc_form_page_id: 0,
@@ -45,6 +48,9 @@ export const BASE_META = {
 	bpc_color_background: '',
 	bpc_css_class: '',
 	bpc_template_key: '',
+	// '' until the server stamps it: a new campaign takes the site currency at creation
+	// (Campaign\CampaignCurrency), and an old one keeps following it.
+	bpc_currency: '',
 	bpc_suggested_amounts: [
 		{ id: 'sa_1', amount: '5', description: '', is_default: false },
 		{ id: 'sa_2', amount: '10', description: '', is_default: false },
@@ -74,6 +80,8 @@ export const initialState = {
 	saveError: null,
 	postStatus: 'draft',
 	viewUrl: '',
+	// True once the campaign has an approved donation: Settings locks its currency.
+	currencyLocked: false,
 	isInitializing: false,
 	// AI-change reversibility + change highlighting.
 	aiUndoStack: [], // stack of { layout, meta } snapshots BEFORE each AI turn (undo target)
@@ -328,11 +336,18 @@ function baseReducer( state, action ) {
 				meta: { ...BASE_META, ...loadedMeta },
 				layout,
 				templateModalOpen: false,
-				templateChosen: !! loadedMeta.bpc_template_key,
+				// A saved page counts as chosen even without a key: a campaign
+				// built over MCP or the REST create route has a layout and no
+				// `bpc_template_key`, and must not have its Editor locked.
+				templateChosen: ! opensOnTemplates( {
+					bpc_template_key: loadedMeta.bpc_template_key,
+					bpc_fields_layout: layout,
+				} ),
 				appliedTemplateKey: loadedMeta.bpc_template_key || null,
 				isDirty: false,
 				postStatus: action.postStatus || 'draft',
 				viewUrl: action.viewUrl || '',
+				currencyLocked: !! action.currencyLocked,
 				isInitializing: false,
 				// Loading a campaign starts a fresh history — you must not be able to
 				// undo/redo into a different campaign's state.
@@ -763,6 +778,19 @@ function baseReducer( state, action ) {
 				// View Live button keeps linking to a page that no longer exists.
 				viewUrl:
 					'viewUrl' in action ? action.viewUrl ?? '' : state.viewUrl,
+				currencyLocked:
+					'currencyLocked' in action
+						? !! action.currencyLocked
+						: state.currencyLocked,
+				// The stored currency replaces the editor's when the server answered one and
+				// nothing was edited during the request, so a refused change does not linger
+				// and a newer pick is never overwritten.
+				meta:
+					typeof action.currency === 'string' &&
+					action.revision === ( state.revision ?? 0 ) &&
+					action.currency !== ( state.meta?.bpc_currency ?? '' )
+						? { ...state.meta, bpc_currency: action.currency }
+						: state.meta,
 			};
 
 		case 'SAVE_ERROR':

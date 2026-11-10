@@ -3,6 +3,9 @@ import { __ } from '@wordpress/i18n';
 import { toast } from 'react-toastify';
 import { campaignsAPI } from '../utils/api';
 import { rowMenuAnchor, useRowMenuFlip } from '../utils/popupPosition';
+import { transactionsUrlForCampaign } from '../utils/transactionCampaigns';
+import { campaignStatus } from '../utils/campaignStatus';
+import { otherCurrencyAmounts } from '../utils/campaignMoney';
 import DeleteConfirm from './DeleteConfirm';
 import FooterCards from '../components/settings/FooterCards';
 import FilterDropdown from '../components/FilterDropdown';
@@ -104,6 +107,23 @@ const IconView = () => (
 	</svg>
 );
 
+const IconTransactions = () => (
+	<svg
+		width="16"
+		height="16"
+		viewBox="0 0 16 16"
+		fill="none"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<path
+			d="M3 4.5H13M3 8H13M3 11.5H9"
+			stroke="currentColor"
+			strokeWidth="1.2"
+			strokeLinecap="round"
+		/>
+	</svg>
+);
+
 const IconEdit = () => (
 	<svg
 		width="16"
@@ -139,14 +159,6 @@ const IconDelete = () => (
 		/>
 	</svg>
 );
-
-const getStatus = ( postStatus, endDate ) => {
-	if ( postStatus === 'trash' ) return 'trash';
-	if ( postStatus === 'draft' ) return 'draft';
-	if ( ! endDate ) return 'active';
-	const end = new Date( endDate );
-	return end < new Date() ? 'finished' : 'active';
-};
 
 const formatEndDate = ( endDate ) => {
 	if ( ! endDate ) return '—';
@@ -823,8 +835,9 @@ const Campaigns = () => {
 																currency ||
 																'USD';
 															const status =
-																getStatus(
+																campaignStatus(
 																	post_status,
+																	campaign?.lifecycle,
 																	meta?.bpc_end_date
 																);
 															const endDate =
@@ -905,6 +918,15 @@ const Campaigns = () => {
 																					}
 																				) }
 																			</p>
+																			{ otherCurrencyAmounts(
+																				stats
+																			) && (
+																				<p className="bp-font_ibm fx-5 bp-campaigns_donations-other">
+																					{ `+ ${ otherCurrencyAmounts(
+																						stats
+																					) }` }
+																				</p>
+																			) }
 																			<p className="bp-font_ibm fx-5 bp-campaigns_donations-donors">
 																				{
 																					donors
@@ -925,7 +947,12 @@ const Campaigns = () => {
 																		{ /* Status */ }
 																		<div className="bp-campaigns_col-status">
 																			<span
-																				className={ `bp-campaigns_status-badge bp-campaigns_status-badge--${ status }` }
+																				className={ `bp-campaigns_status-badge bp-campaigns_status-badge--${
+																					status ===
+																					'closed'
+																						? 'finished'
+																						: status
+																				}` }
 																			>
 																				{ status ===
 																				'active'
@@ -943,6 +970,12 @@ const Campaigns = () => {
 																					  'trash'
 																					? __(
 																							'Trash',
+																							'better-payment'
+																					  )
+																					: status ===
+																					  'closed'
+																					? __(
+																							'Closed',
 																							'better-payment'
 																					  )
 																					: __(
@@ -1092,6 +1125,37 @@ const Campaigns = () => {
 																								<span className="bp-font_ibm fx-4 bp-data_setting-name">
 																									{ __(
 																										'Edit',
+																										'better-payment'
+																									) }
+																								</span>
+																							</a>
+																						</li>
+																						<li
+																							className="bp-flex align-items_center bp-data_setting-list_item"
+																							style={ {
+																								cursor: 'pointer',
+																							} }
+																						>
+																							<a
+																								href={ transactionsUrlForCampaign(
+																									window
+																										.betterPaymentAdmin
+																										?.adminUrl,
+																									id
+																								) }
+																								className="bp-flex align-items_center bp-campaigns_dropdown-link"
+																								onClick={ () =>
+																									setOpenActionMenu(
+																										null
+																									)
+																								}
+																							>
+																								<span className="bp-data_setting-logo">
+																									<IconTransactions />
+																								</span>
+																								<span className="bp-font_ibm fx-4 bp-data_setting-name">
+																									{ __(
+																										'Transactions',
 																										'better-payment'
 																									) }
 																								</span>

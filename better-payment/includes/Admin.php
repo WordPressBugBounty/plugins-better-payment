@@ -54,6 +54,9 @@ class Admin extends Controller{
         // Security notice, shown with or without Pro.
         \Better_Payment\Lite\Classes\SecretKeyRotationNotice::register();
 
+        // Campaigns the end date closed on update (Campaign\CampaignLifecycle), with or without Pro.
+        \Better_Payment\Lite\Campaign\EndedCampaignsNotice::register();
+
         // Usage tracking is NOT registered here any more. It is wired from
         // Better_Payment::init_plugin() for admin *and* cron requests, because
         // WP-Cron runs as a non-admin request and this gate hid the tracker's

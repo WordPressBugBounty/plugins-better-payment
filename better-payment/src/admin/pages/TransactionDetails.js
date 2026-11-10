@@ -11,6 +11,7 @@ import {
 import GetProCard from '../components/Transactions/Details/GetProCard.js';
 import { applyFilters } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
+import { campaignDisplay } from '../utils/transactionCampaigns';
 import { toast } from 'react-toastify';
 import FooterCards from '../components/settings/FooterCards.js';
 import Stripe from '../svg/Stripe';
@@ -908,22 +909,44 @@ const TransactionDetails = ( { transactionId, onBack } ) => {
 														</DetailValue>
 													</div>
 												</li>
-												{ transaction?.campaign_id && (
-													<li className="bp-row align-items_center bp-information_item">
-														<div className=" bp-col_4 bp-information_key-wrapper">
-															<h4 className="bp-font_ibm bp-information_key">
-																Campaign ID:
-															</h4>
-														</div>
-														<div className=" bp-col_8 bp-information_value-wrapper">
-															<p className="bp-information_value">
-																{
-																	transaction?.campaign_id
-																}
-															</p>
-														</div>
-													</li>
-												) }
+												{ ( () => {
+													const campaign =
+														campaignDisplay(
+															transaction
+														);
+													if ( ! campaign ) {
+														return null;
+													}
+													return (
+														<li className="bp-row align-items_center bp-information_item">
+															<div className=" bp-col_4 bp-information_key-wrapper">
+																<h4 className="bp-font_ibm bp-information_key">
+																	{ __(
+																		'Campaign:',
+																		'better-payment'
+																	) }
+																</h4>
+															</div>
+															<div className=" bp-col_8 bp-information_value-wrapper">
+																<p className="bp-information_value">
+																	{ campaign.url ? (
+																		<a
+																			href={
+																				campaign.url
+																			}
+																		>
+																			{
+																				campaign.title
+																			}
+																		</a>
+																	) : (
+																		campaign.title
+																	) }
+																</p>
+															</div>
+														</li>
+													);
+												} )() }
 											</ul>
 										</div>
 									</div>

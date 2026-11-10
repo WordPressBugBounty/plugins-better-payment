@@ -105,6 +105,15 @@ class DB {
             'better_payment_settings_general_general_user_dashboard' => 'yes',
             'better_payment_settings_general_general_fundraising_campaign' => 'yes',
             'better_payment_settings_general_general_email' => 'yes',
+            // The MCP server. Defaults to OFF: enabling it publishes an endpoint
+            // an authenticated AI client can read transactions and edit campaigns
+            // through, which must be a deliberate choice, never something a plugin
+            // update switches on. While it is off the route is not registered.
+            'better_payment_settings_general_general_mcp' => 'no',
+            // The optional OAuth authorization server, off even when MCP is on: it
+            // adds public authorization endpoints a site does not need unless it is
+            // connecting a client that refuses to carry a static credential.
+            'better_payment_settings_general_general_mcp_oauth' => 'no',
             'better_payment_settings_general_general_currency' => 'USD',
 
             'better_payment_settings_general_email_to' => '',
@@ -256,7 +265,7 @@ class DB {
      * Get all transactions from better payment table.
      *
      * @param array|string $args Filters, as wp_parse_args() reads them (every caller passes an array).
-     * @return array
+     * @return array|int Rows, or the matching count when $count_only is truthy.
      * @since 0.0.1
      */
     public static function get_transactions($args = [], $count_only=0, $version = 'v1', $fetchNull = 0, $transaction_type = '')
@@ -272,6 +281,7 @@ class DB {
             'order' => 'DESC',
             'currency' => 'all',
             'source' => '', 
+            'campaign_id' => '',
             'paged' => 1,
             'per_page' => 20, 
             'offset' => 0,
@@ -346,6 +356,13 @@ class DB {
 
         if( $args['currency'] != 'all' ){
             $whereQuery .= $wpdb->prepare(" AND currency = %s", $args['currency']); 
+        }
+
+        // One campaign's transactions: a `bp_campaign` post id or an Elementor Fundraising
+        // Campaign id, matched exactly. A value no row could hold is ignored, not "no rows".
+        $campaign_id = \Better_Payment\Lite\Classes\TransactionCampaign::sanitize_filter( $args['campaign_id'] );
+        if ( '' !== $campaign_id ) {
+            $whereQuery .= $wpdb->prepare( " AND campaign_id = %s", $campaign_id );
         }
 
         if( $status != 'all' ){
@@ -451,6 +468,7 @@ class DB {
     /**
      * Get the count of total transactions
      *
+     * @param array|string $args Filter array as accepted by get_transactions(), or '' for no filter.
      * @return int
      * @since 0.0.1
      */
@@ -537,8 +555,8 @@ class DB {
     /**
      * Get transaction details from better payment table.
      *
-     * @param string $args
-     * @return object 
+     * @param int|string $id Transaction id.
+     * @return object|null The row, or null when no transaction has that id.
      * @since 0.0.1
      */
     public static function get_transaction($id)

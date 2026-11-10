@@ -8,6 +8,7 @@ use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
+use Better_Payment\Lite\Classes\PaymentError;
 use Better_Payment\Lite\Classes\PaymentRateLimiter;
 use Elementor\Controls_Manager;
 use ElementorPro\Modules\Forms\Classes\Action_Base;
@@ -179,7 +180,7 @@ class Stripe_Integration extends Action_Base {
         }
 
         if ( empty( $sent_data['payment_amount'] ) && empty( $sent_data['primary_payment_amount_radio'] ) ) {
-            $ajax_handler->add_error_message( 'Amount field is required!' );
+            $ajax_handler->add_error_message( esc_html__( 'Amount field is required!', 'better-payment' ) );
             return false;
         }
 
@@ -212,7 +213,7 @@ class Stripe_Integration extends Action_Base {
                 'better_payment_widget_id'     => $widget_id
             ], get_permalink() ),
             'cancel_url'                 => add_query_arg( [
-                'better_payment_error_status' => 'error',
+                'better_payment_error_status' => 'cancelled',
                 'better_payment_stripe_id'    => $order_id,
                 'better_payment_widget_id'    => $widget_id
             ], get_permalink() ),
@@ -275,19 +276,19 @@ class Stripe_Integration extends Action_Base {
         );
 
         if ( is_wp_error( $response ) ) {
-            $ajax_handler->add_error_message( esc_html__( 'Could not connect to Stripe. Please try again.', 'better-payment' ) );
+            $ajax_handler->add_error_message( esc_html( PaymentError::stripe( $response, 'elementor_form', (int) $page_id ) ) );
             return false;
         }
 
         $response_ar = json_decode( wp_remote_retrieve_body( $response ) );
 
         if ( ! empty( $response_ar->error ) ) {
-            $ajax_handler->add_error_message( isset( $response_ar->error->message ) ? sanitize_text_field( $response_ar->error->message ) : esc_html__( 'Something went wrong!', 'better-payment' ) );
+            $ajax_handler->add_error_message( esc_html( PaymentError::stripe( $response, 'elementor_form', (int) $page_id ) ) );
             return false;
         }
 
         if ( empty( $response_ar->payment_intent ) ) {
-            $ajax_handler->add_error_message( esc_html__( 'Something went wrong!', 'better-payment' ) );
+            $ajax_handler->add_error_message( esc_html( PaymentError::stripe( $response, 'elementor_form', (int) $page_id ) ) );
             return false;
         }
 

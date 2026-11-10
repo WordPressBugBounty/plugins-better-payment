@@ -36,7 +36,7 @@ final class CampaignStyles {
     /**
      * The self-hosted typefaces the `-v3` template themes are set in.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      */
     const FONTS_HANDLE = 'better-payment-campaign-fonts';
 
@@ -47,7 +47,7 @@ final class CampaignStyles {
      * css-loader would try to resolve the woff2 URLs as modules, and a separate
      * file keeps the `@font-face` rules next to the fonts they point at.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      */
     const FONTS_FILE = '/fonts/campaign/fonts.css';
 
@@ -79,7 +79,7 @@ final class CampaignStyles {
      * until a rule uses the family, so a page whose campaign is on any other
      * theme loads this small stylesheet and no font file.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      * @return void
      */
     public static function enqueue_fonts(): void {
@@ -99,7 +99,7 @@ final class CampaignStyles {
      * The font stylesheet's URL, versioned, for a document that cannot enqueue
      * (a preview never runs wp_head). Empty when the file is missing.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      * @return string
      */
     public static function fonts_url(): string {
@@ -114,7 +114,7 @@ final class CampaignStyles {
      * Cache-buster for the font stylesheet: its own mtime, since the plugin
      * version changes far less often than the file.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      * @return string
      */
     public static function fonts_version(): string {

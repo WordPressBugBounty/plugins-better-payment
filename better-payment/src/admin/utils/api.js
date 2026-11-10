@@ -108,6 +108,25 @@ export const transactionsAPI = {
 	getTransactionCount: () => apiRequest( 'transactions/count' ),
 
 	/**
+	 * Campaigns the Transactions screen can filter by (every one with a transaction).
+	 * @returns {Promise} `{ campaigns: [ { id, type, title, edit_url, view_url, exists } ] }`
+	 */
+	getTransactionCampaigns: () => apiRequest( 'transactions/campaigns' ),
+
+	/**
+	 * Why payments failed to start, newest first.
+	 * @returns {Promise} `{ errors: [ { gateway, surface, kind, code, message, count, time, page_title, page_url } ] }`
+	 */
+	getPaymentErrors: () => apiRequest( 'payment-errors' ),
+
+	/**
+	 * Empty the payment error log.
+	 * @returns {Promise} `{ errors: [] }`
+	 */
+	clearPaymentErrors: () =>
+		apiMutation( 'payment-errors', { method: 'DELETE' } ),
+
+	/**
 	 * Get transactions with filters
 	 * @param {Object} filters - Filter parameters
 	 * @returns {Promise} Transactions list

@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.4.4
+ * Version: 2.5.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -36,7 +36,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.4.4';
+    const version = '2.5.0';
 
     /**
      * Class construcotr
@@ -207,6 +207,25 @@ final class Better_Payment {
 
         // ── WooCommerce gateway module (Better Payment as a WC gateway) ─
         $this->init_woocommerce_module();
+
+        // ── MCP module (Better Payment as an MCP server) ────────────────
+        $this->init_mcp_module();
+    }
+
+    /**
+     * Initialize the MCP module (Better Payment as an MCP server).
+     *
+     * Serves one Streamable HTTP endpoint that any MCP client — Claude, ChatGPT,
+     * Cursor, an IDE — connects to, so it can read transactions, settings,
+     * subscriptions and campaigns, and edit campaigns.
+     *
+     * Off by default: nothing is registered, and the endpoint does not exist, until
+     * an administrator switches it on under Settings → General.
+     *
+     * @return void
+     */
+    private function init_mcp_module() {
+        ( new Better_Payment\Lite\MCP\MCPManager() )->init();
     }
 
     /**
@@ -309,6 +328,9 @@ final class Better_Payment {
 
         // Bust campaign stats cache when a payment is confirmed by any gateway.
         Better_Payment\Lite\Campaign\CampaignStats::register_hooks();
+
+        // Stamp each new campaign with the site currency it keeps from then on.
+        Better_Payment\Lite\Campaign\CampaignCurrency::register_hooks();
     }
 }
 
@@ -354,6 +376,9 @@ add_action('wp_loaded', function () {
 
     // Once per site: ask owners whose secret keys 2.4.1 and earlier exposed in the Elementor editor to rotate them.
     Better_Payment\Lite\Classes\SecretKeyRotationNotice::maybe_flag();
+
+    // Once per site: list the published campaigns the now-enforced end date closed, so owners can extend them.
+    Better_Payment\Lite\Campaign\EndedCampaignsNotice::maybe_flag();
 
     $setup_wizard = get_option('better_payment_setup_wizard');
 

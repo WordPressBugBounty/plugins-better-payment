@@ -3,8 +3,6 @@
 namespace Better_Payment\Lite\Campaign;
 
 use Better_Payment\Lite\Campaign\Support\Money;
-
-use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Controller;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,10 +34,9 @@ class CampaignListColumns extends Controller {
             $stats    = CampaignStats::get_stats( $post_id );
             $meta     = MetaBox::get_all( $post_id );
             $goal     = (float) ( $meta['bpc_goal_amount'] ?? 0 );
-            // Campaigns have no currency of their own (there is no
-            // `bpc_currency` meta) — every campaign surface uses the site's
-            // general currency setting, so this column must too.
-            $currency = self::site_currency();
+            // The currency the total and the goal are in: the campaign's own
+            // (CampaignCurrency), which is also what the stats were summed in.
+            $currency = (string) ( $stats['currency'] ?? CampaignCurrency::of( $post_id ) );
             $raised   = $stats['total_raised'];
             $progress = $stats['progress'];
 
@@ -50,6 +47,12 @@ class CampaignListColumns extends Controller {
                 (int) $stats['donor_count'],
                 (int) $progress
             );
+
+            // Money raised in another currency is listed, never added to the total.
+            $others = CampaignStats::other_currencies( $stats );
+            if ( $others ) {
+                printf( '<br><small>+ %s</small>', esc_html( Money::list_by_currency( $others ) ) );
+            }
 
             if ( $goal > 0 ) {
                 printf( '<br><small>of %s %s goal</small>', esc_html( $currency ), esc_html( Money::format( $goal ) ) );
@@ -67,14 +70,12 @@ class CampaignListColumns extends Controller {
     }
 
     /**
-     * The site's general currency code (Settings → General), USD when unset —
-     * the same source RendererService and CampaignAPI use.
+     * The site's general currency code (Settings → General), USD when unset.
+     * A campaign's own currency is CampaignCurrency::of().
      *
      * @return string
      */
     public static function site_currency(): string {
-        $code = DB::get_settings( 'better_payment_settings_general_general_currency' );
-
-        return ( is_string( $code ) && '' !== $code ) ? $code : 'USD';
+        return CampaignCurrency::site();
     }
 }

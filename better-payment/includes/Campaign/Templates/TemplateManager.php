@@ -1135,7 +1135,7 @@ class TemplateManager {
 
             'charity-basic-v2' => [
                 'key'           => 'charity-basic-v2',
-                // Retired in 2.4.5 by `charity-basic-v3`. Frozen exactly as it
+                // Retired in 2.5.0 by `charity-basic-v3`. Frozen exactly as it
                 // shipped: campaigns built from it still render under
                 // `bp-v2-charity`, so neither this entry nor that class may change.
                 'hidden'        => true,
@@ -1281,7 +1281,7 @@ class TemplateManager {
 
             'child-healthcare-v2' => [
                 'key'           => 'child-healthcare-v2',
-                // Retired in 2.4.5 by `child-healthcare-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `child-healthcare-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'medical' ],
@@ -1433,7 +1433,7 @@ class TemplateManager {
 
             'disaster-relief-v2' => [
                 'key'           => 'disaster-relief-v2',
-                // Retired in 2.4.5 by `disaster-relief-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `disaster-relief-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'environmental' ],
@@ -1557,7 +1557,7 @@ class TemplateManager {
 
             'medical-relief-v2' => [
                 'key'           => 'medical-relief-v2',
-                // Retired in 2.4.5 by `medical-relief-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `medical-relief-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'medical' ],
@@ -1693,7 +1693,7 @@ class TemplateManager {
 
             'education-fund-v2' => [
                 'key'           => 'education-fund-v2',
-                // Retired in 2.4.5 by `education-fund-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `education-fund-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'education' ],
@@ -1855,7 +1855,7 @@ class TemplateManager {
 
             'golf-destinations-v2' => [
                 'key'           => 'golf-destinations-v2',
-                // Retired in 2.4.5 by `golf-destinations-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `golf-destinations-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'club-organizations' ],
@@ -1969,7 +1969,7 @@ class TemplateManager {
 
             'animal-rescue-v2' => [
                 'key'           => 'animal-rescue-v2',
-                // Retired in 2.4.5 by `animal-rescue-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `animal-rescue-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'charity' ],
@@ -2107,7 +2107,7 @@ class TemplateManager {
 
             'tree-plantation-v2' => [
                 'key'           => 'tree-plantation-v2',
-                // Retired in 2.4.5 by `tree-plantation-v3`. Frozen exactly as it shipped.
+                // Retired in 2.5.0 by `tree-plantation-v3`. Frozen exactly as it shipped.
                 'hidden'        => true,
                 'category'      => 'prebuilt',
                 'tags'          => [ 'environmental' ],

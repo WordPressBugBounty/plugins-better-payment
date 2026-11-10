@@ -14,7 +14,7 @@
  */
 
 import { getElement, getDefaultSettings } from '../fields/FieldRegistry';
-import { getGlobalCurrencySymbol } from '../utils/currency';
+import { getCampaignCurrencySymbol } from '../utils/currency';
 
 /**
  * Registry defaults under the model's own settings, so a key the model omitted
@@ -437,7 +437,7 @@ function formatItem( item ) {
 		item.amount !== ''
 	) {
 		const amount = formatNumber( item.amount );
-		if ( amount ) return `${ getGlobalCurrencySymbol() }${ amount }`;
+		if ( amount ) return `${ getCampaignCurrencySymbol() }${ amount }`;
 	}
 
 	for ( const key of ITEM_LABEL_KEYS ) {

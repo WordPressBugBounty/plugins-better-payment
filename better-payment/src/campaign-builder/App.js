@@ -37,6 +37,8 @@ import UpgradeModal from './components/UpgradeModal';
 import { isProEnabled } from './utils/proEnabled';
 import { createBeforeUnloadHandler } from './utils/unsavedChanges';
 import { dropInsertIndex } from './utils/dropIndex';
+import { setActiveCampaignCurrency } from './utils/currency';
+import { opensOnTemplates } from './utils/initialTab';
 
 // Read once at module scope — entitlement cannot change inside a page load.
 // Do NOT re-inline this as `proEnabled === true`; see utils/proEnabled.js for the
@@ -52,6 +54,10 @@ export default function App( {
 	start,
 } ) {
 	const [ state, dispatch ] = useReducer( reducer, initialState );
+
+	// Before any child renders: the amount editors and AI labels read the campaign's
+	// currency through utils/currency.js, not through props.
+	setActiveCampaignCurrency( state.meta );
 
 	// `start=ai` (from the "Campaign With AI" button) opens a new campaign straight
 	// into the editor with the AI Assistant ready, skipping the template picker.
@@ -160,8 +166,9 @@ export default function App( {
 					layout: data.meta?.bpc_fields_layout || null,
 					postStatus: data.post_status || 'draft',
 					viewUrl: data.view_url || '',
+					currencyLocked: !! data.currency_locked,
 				} );
-				if ( ! data.meta?.bpc_template_key ) {
+				if ( opensOnTemplates( data.meta ) ) {
 					setActiveTab( 'templates' );
 				}
 			} )
@@ -312,6 +319,10 @@ export default function App( {
 					type: 'SAVE_SUCCESS',
 					postStatus: data?.post_status || postStatus,
 					viewUrl: data?.view_url ?? '',
+					currencyLocked: !! data?.currency_locked,
+					// What the server stored: a currency change it refused (a donation
+					// arrived meanwhile) must not stay in the editor.
+					currency: data?.meta?.bpc_currency,
 					revision: savedRevision,
 				} );
 				setSavingAs( null );
@@ -643,6 +654,7 @@ export default function App( {
 						<SettingsTab
 							meta={ state.meta }
 							dispatch={ dispatch }
+							currencyLocked={ state.currencyLocked }
 						/>
 					</div>
 				) }

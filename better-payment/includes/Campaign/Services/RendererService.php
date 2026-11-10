@@ -2,7 +2,8 @@
 
 namespace Better_Payment\Lite\Campaign\Services;
 
-use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Campaign\CampaignCurrency;
+use Better_Payment\Lite\Campaign\CampaignLifecycle;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Campaign\MetaBox;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
@@ -85,8 +86,10 @@ class RendererService {
         $extra_class = self::css_class_attr( $meta );
 
         // The mobile "Donate" bar: one per page (the first campaign rendered), never
-        // in a preview, and only when the page has an ask to jump to.
-        $ask_target = ( ! $is_preview && ! self::$ask_bar_printed ) ? self::ask_target_id( $columns ) : '';
+        // in a preview, and only when the page has an ask to jump to. A closed
+        // campaign has none: its notice replaces the button and the amounts.
+        $accepting  = CampaignLifecycle::ACCEPTING === CampaignLifecycle::state_from( $meta, (float) ( $stats['total_raised'] ?? 0 ) );
+        $ask_target = ( ! $is_preview && $accepting && ! self::$ask_bar_printed ) ? self::ask_target_id( $columns ) : '';
         $ask_anchor = 'bp-campaign-ask-' . $campaign_id;
         if ( '' !== $ask_target ) {
             self::$ask_bar_printed = true;
@@ -101,7 +104,7 @@ class RendererService {
             <input type="hidden" class="better_payment_campaign_id"
                    value="<?php echo esc_attr( $campaign_id ); ?>">
             <input type="hidden" class="better_payment_campaign_currency"
-                   value="<?php echo esc_attr( self::global_currency() ); ?>">
+                   value="<?php echo esc_attr( self::meta_currency( $meta ) ); ?>">
             <div class="bp-campaign-columns">
                 <?php foreach ( $columns as $column ) :
                     if ( ! is_array( $column ) ) {
@@ -210,7 +213,7 @@ class RendererService {
      * (the ask starts with choosing an amount), else the first Donate Button.
      * '' when the layout has neither, and then no bar is printed.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      *
      * @param array $columns Layout columns.
      * @return string Element id, or ''.
@@ -244,7 +247,7 @@ class RendererService {
      * and the button it leads to say the same thing. A cleared label falls back to
      * the default — the bar must say something.
      *
-     * @since 2.4.5
+     * @since 2.5.0
      *
      * @param array $columns Layout columns.
      * @return string
@@ -501,7 +504,7 @@ class RendererService {
             case 'progress_bar':
                 $raised        = (float) $stats['total_raised'];
                 $goal          = (float) ( $meta['bpc_goal_amount'] ?? 0 );
-                $currency      = self::global_currency();
+                $currency      = self::stats_currency( $stats, $meta );
                 $progress      = $stats['progress'];
                 $primary       = $meta['bpc_color_primary'] ?: '#6b63f6';
                 $headline      = ! empty( $settings['headline'] ) ? $settings['headline'] : '';
@@ -607,8 +610,10 @@ class RendererService {
                 // no goal → no percentage; no end date → no "Days Left" (it used to
                 // read "0 Days Left", i.e. tell every visitor the appeal was over).
                 $show_percent  = $show_percent && $goal > 0;
-                $show_days     = $show_days && isset( $stats['days_remaining'] );
-                $sm_currency     = self::global_currency();
+                // A campaign that stopped taking donations has no days left to count.
+                $show_days     = $show_days && isset( $stats['days_remaining'] )
+                    && CampaignLifecycle::ACCEPTING === CampaignLifecycle::state_from( $meta, (float) ( $stats['total_raised'] ?? 0 ) );
+                $sm_currency     = self::stats_currency( $stats, $meta );
                 $sm_currency_sym = self::currency_symbol( $sm_currency );
 
                 $wrap_style = 'width:' . $sm_width . '%;';
@@ -623,6 +628,14 @@ class RendererService {
                         <?php if ( $show_raised ) : ?>
                             <div class="bp-summary-item bp-summary-item--raised">
                                 <strong><?php echo esc_html( Money::with_symbol( $sm_currency_sym, $stats['total_raised'] ) ); ?></strong>
+                                <?php
+                                // Money raised in another currency (the site currency was changed
+                                // after donations came in) is listed beside it, never added to it.
+                                $sm_others = CampaignStats::other_currencies( $stats );
+                                if ( $sm_others ) :
+                                    ?>
+                                    <small class="bp-summary-other-currencies"><?php echo esc_html( '+ ' . Money::list_by_currency( $sm_others ) ); ?></small>
+                                <?php endif; ?>
                                 <span><?php esc_html_e( 'Raised', 'better-payment' ); ?></span>
                             </div>
                         <?php endif; ?>
@@ -670,6 +683,33 @@ class RendererService {
                 $width        = self::resolve_element_width( $settings );
                 $align        = in_array( $settings['align'] ?? '', [ 'left', 'center', 'right' ], true )
                     ? $settings['align'] : 'center';
+
+                // A campaign that has ended or was closed takes no donations (CampaignLifecycle;
+                // the payment guard refuses them too). Visitors get the closed message in place
+                // of the button. The builder keeps the button, so the element stays editable,
+                // and says what visitors see instead.
+                $lifecycle           = CampaignLifecycle::state_from( $meta, (float) ( $stats['total_raised'] ?? 0 ) );
+                $preview_closed_note = '';
+                if ( CampaignLifecycle::ACCEPTING !== $lifecycle ) {
+                    $closed_message = CampaignLifecycle::closed_message( $meta, $lifecycle );
+
+                    if ( ! $is_preview ) {
+                        $closed_style = 'width:' . $width . '%;' . ( 'center' === $align ? 'margin:0 auto;' : ( 'right' === $align ? 'margin-left:auto;' : '' ) );
+                        ?>
+                        <div class="bp-campaign-donate-wrap bp-campaign-donate-wrap--closed" style="<?php echo esc_attr( $closed_style ); ?>">
+                            <p class="bp-campaign-closed-notice" role="status" data-state="<?php echo esc_attr( $lifecycle ); ?>"><?php echo esc_html( $closed_message ); ?></p>
+                        </div>
+                        <?php
+                        break;
+                    }
+
+                    $preview_closed_note = sprintf(
+                        /* translators: 1: why the campaign takes no donations, e.g. "Ended (end date passed)"; 2: the message visitors see. */
+                        __( '%1$s — visitors see “%2$s” instead of this button.', 'better-payment' ),
+                        CampaignLifecycle::label( $lifecycle ),
+                        $closed_message
+                    );
+                }
 
                 // URL: element setting takes priority; fall back to campaign meta page ID, then '#' default.
                 $donate_url = '';
@@ -738,7 +778,7 @@ class RendererService {
                     $min_amount     = isset( $meta['bpc_minimum_amount'] ) && $meta['bpc_minimum_amount'] !== ''
                         ? (float) $meta['bpc_minimum_amount']
                         : 0;
-                    $currency       = self::global_currency();
+                    $currency       = self::meta_currency( $meta );
                     $currency_symbol = self::currency_symbol( $currency );
 
                     $wrap_style = 'width:' . $width . '%;';
@@ -751,6 +791,9 @@ class RendererService {
                     $btn_class = 'bp-donate_btn' . ( $url_missing ? ' bp-donate_btn--no-url' : '' );
                     ?>
                     <div class="bp-campaign-donate-wrap">
+                        <?php if ( '' !== $preview_closed_note ) : ?>
+                            <p class="bp-campaign-closed-preview-note" style="margin:0 0 8px;padding:8px 12px;border:1px dashed #d97706;border-radius:6px;background:#fffbeb;color:#92400e;font-size:13px;line-height:1.4;"><?php echo esc_html( $preview_closed_note ); ?></p>
+                        <?php endif; ?>
                         <?php if ( $min_amount > 0 ) : ?>
                             <p class="bp-min-donation-notice" data-min="<?php echo esc_attr( $min_amount ); ?>">
                                 <?php
@@ -819,9 +862,14 @@ class RendererService {
                 break;
 
             case 'donate_amount':
+                // Nothing to pick on a campaign that takes no donations: the Donate Button's
+                // slot carries the closed message. Kept in the builder so it stays editable.
+                if ( ! $is_preview && CampaignLifecycle::ACCEPTING !== CampaignLifecycle::state_from( $meta, (float) ( $stats['total_raised'] ?? 0 ) ) ) {
+                    break;
+                }
                 $amounts_meta    = $meta['bpc_suggested_amounts'] ?? [];
                 $allow_custom    = (bool) ( $meta['bpc_allow_custom_amount'] ?? 1 );
-                $currency        = self::global_currency();
+                $currency        = self::meta_currency( $meta );
                 $currency_symbol = self::currency_symbol( $currency );
                 $da_headline     = isset( $settings['headline'] ) ? $settings['headline'] : __( 'Donate Amount', 'better-payment' );
                 $da_width        = self::resolve_element_width( $settings );
@@ -1511,20 +1559,40 @@ class RendererService {
     /**
      * Returns the global Better Payment currency code from plugin settings.
      */
-    private static function global_currency(): string {
-        $code = DB::get_settings( 'better_payment_settings_general_general_currency' );
-        return ( is_string( $code ) && $code !== '' ) ? $code : 'USD';
+    /**
+     * The currency a campaign's figures are in: the one its stats were summed in.
+     *
+     * The total, the progress and the "+ other currencies" list all come from the
+     * stats, so their symbol must too. Reading the setting instead printed one
+     * currency's symbol beside another currency's sum whenever the two disagreed.
+     * Stats without a `currency` (a template preview) use the campaign's currency.
+     *
+     * @param array $stats Campaign stats.
+     * @param array $meta  Campaign meta.
+     * @return string ISO code.
+     */
+    private static function stats_currency( array $stats, array $meta = [] ): string {
+        $code = isset( $stats['currency'] ) && is_string( $stats['currency'] ) ? trim( $stats['currency'] ) : '';
+
+        return '' !== $code ? $code : self::meta_currency( $meta );
+    }
+
+    /**
+     * The currency a campaign takes donations in, from the meta being rendered.
+     *
+     * The meta is the stored meta on a campaign page, and the builder's unsaved state in a
+     * preview, so a currency picked in Settings shows before it is saved. A campaign
+     * created before 2.5.0 has none and uses the site currency (CampaignCurrency).
+     *
+     * @param array $meta Campaign meta.
+     * @return string ISO code.
+     */
+    private static function meta_currency( array $meta ): string {
+        return CampaignCurrency::resolve( $meta['bpc_currency'] ?? '' );
     }
 
     private static function currency_symbol( string $code ): string {
-        $map = [
-            'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥',
-            'CAD' => 'CA$', 'AUD' => 'A$', 'INR' => '₹', 'BRL' => 'R$',
-            'MXN' => 'MX$', 'SGD' => 'S$', 'CHF' => 'CHF', 'SEK' => 'kr',
-            'NOK' => 'kr', 'DKK' => 'kr', 'NZD' => 'NZ$', 'ZAR' => 'R',
-            'BDT' => '৳', 'PKR' => '₨', 'NGN' => '₦', 'KES' => 'KSh',
-        ];
-        return $map[ strtoupper( $code ) ] ?? $code;
+        return Money::symbol( $code );
     }
 
     /**
@@ -1608,6 +1676,8 @@ class RendererService {
             'bpc_minimum_amount'      => '',
             'bpc_form_page_id'        => 0,
             'bpc_status'              => 'active',
+            'bpc_close_on_goal'       => 0,
+            'bpc_closed_message'      => '',
             'bpc_template_key'        => $key,
             'bpc_css_class'           => '',
         ];
@@ -1751,6 +1821,8 @@ class RendererService {
             'bpc_minimum_amount'      => '',
             'bpc_form_page_id'        => 0,
             'bpc_status'              => 'active',
+            'bpc_close_on_goal'       => 0,
+            'bpc_closed_message'      => '',
             'bpc_template_key'        => '',
             'bpc_css_class'           => '',
         ];
@@ -1761,6 +1833,17 @@ class RendererService {
             $meta = array_merge( $meta_defaults, MetaBox::get_all( $campaign_id ), $meta_input );
         } else {
             $meta = array_merge( $meta_defaults, $meta_input );
+        }
+
+        // The figures follow the currency picked in Settings before it is saved. Only for a
+        // campaign with nothing raised: its totals are all 0, so naming them in the new
+        // currency changes no amount (a campaign with donations cannot change currency).
+        $preview_currency = self::meta_currency( $meta );
+        if ( ( $stats['currency'] ?? '' ) !== $preview_currency
+            && 0.0 === (float) ( $stats['total_raised'] ?? 0 )
+            && empty( CampaignStats::other_currencies( $stats ) ) ) {
+            $stats['currency']           = $preview_currency;
+            $stats['raised_by_currency'] = [ $preview_currency => 0.0 ];
         }
 
         // ── Layout ───────────────────────────────────────────────────────────
@@ -1794,7 +1877,7 @@ class RendererService {
             <input type="hidden" class="better_payment_campaign_id"
                    value="<?php echo esc_attr( $campaign_id ); ?>">
             <input type="hidden" class="better_payment_campaign_currency"
-                   value="<?php echo esc_attr( self::global_currency() ); ?>">
+                   value="<?php echo esc_attr( self::meta_currency( $meta ) ); ?>">
             <div class="bp-campaign-columns">
                 <?php foreach ( $columns as $column ) :
                     if ( ! is_array( $column ) ) {

@@ -16,6 +16,12 @@ import { TransactionsSearchBar } from './TransactionsSearchBar';
 import ImportFile from './ImportFile';
 import DeleteConfirm from './DeleteConfirm';
 import FilterDropdown from './../components/FilterDropdown';
+import RecentPaymentErrors from './../components/Transactions/RecentPaymentErrors';
+import {
+	campaignDisplay,
+	campaignFilterOptions,
+	initialCampaignFilter,
+} from './../utils/transactionCampaigns';
 import DateRangeFilter from './../components/DateRangeFilter';
 import Pagination from 'rc-pagination';
 import TransactionDetails from './TransactionDetails';
@@ -44,6 +50,7 @@ const TABLE_COLUMN_WIDTHS = [
 	'116',
 	'214',
 	'114',
+	'180',
 	'200',
 ];
 
@@ -84,18 +91,23 @@ const Transactions = () => {
 		}
 	}, [] );
 
-	const [ filters, setFilters ] = useState( {
+	// Campaigns that have transactions, for the Campaign filter (empty until loaded).
+	const [ campaigns, setCampaigns ] = useState( [] );
+
+	const [ filters, setFilters ] = useState( () => ( {
 		search_text: '',
 		payment_date_from: '',
 		payment_date_to: '',
 		source: '',
+		// The Campaigns screen's "View transactions" link opens the list filtered.
+		campaign_id: initialCampaignFilter( window.location.search ),
 		currency: 'all',
 		status: 'all',
 		order_by: 'payment_date',
 		order: 'DESC',
 		paged: 1,
 		per_page: PER_PAGE,
-	} );
+	} ) );
 
 	// Pagination state
 	const [ paginationData, setPaginationData ] = useState( {
@@ -143,6 +155,11 @@ const Transactions = () => {
 			.finally( () => {
 				setCountLoading( false );
 			} );
+		transactionsAPI.getTransactionCampaigns().then( ( data ) => {
+			setCampaigns(
+				Array.isArray( data?.campaigns ) ? data.campaigns : []
+			);
+		} );
 	}, [] );
 
 	// Check URL parameters for view action
@@ -274,6 +291,11 @@ const Transactions = () => {
 		handleFilterChange( 'source', source );
 	};
 
+	// Handle campaign filter
+	const handleCampaignChange = ( campaignId ) => {
+		handleFilterChange( 'campaign_id', campaignId );
+	};
+
 	// Handle date range filter
 	const handleDateRangeChange = ( dateFrom, dateTo ) => {
 		setFilters( {
@@ -323,6 +345,7 @@ const Transactions = () => {
 			payment_date_from: '',
 			payment_date_to: '',
 			source: '',
+			campaign_id: '',
 			currency: 'all',
 			status: 'all',
 			order_by: 'payment_date',
@@ -385,6 +408,7 @@ const Transactions = () => {
 			filters.payment_date_from !== '' ||
 			filters.payment_date_to !== '' ||
 			filters.source !== '' ||
+			filters.campaign_id !== '' ||
 			filters.currency !== 'all' ||
 			filters.status !== 'all'
 		);
@@ -408,6 +432,7 @@ const Transactions = () => {
 			formData.append( 'payment_date_from', filters.payment_date_from );
 			formData.append( 'payment_date_to', filters.payment_date_to );
 			formData.append( 'source', filters.source );
+			formData.append( 'campaign_id', filters.campaign_id );
 			formData.append(
 				'currency',
 				filters.currency === 'all' ? '' : filters.currency
@@ -778,6 +803,7 @@ const Transactions = () => {
 								</div>
 							</div>
 						</div>
+						<RecentPaymentErrors />
 						<div className="bp-transactions_list-section">
 							<div>
 								<div className="bp-transactions_list-section_header">
@@ -913,6 +939,39 @@ const Transactions = () => {
 														closeAllDropdowns
 													}
 												/>
+
+												{ ( campaigns.length > 0 ||
+													filters.campaign_id !==
+														'' ) && (
+													<FilterDropdown
+														label={ __(
+															'Campaign',
+															'better-payment'
+														) }
+														value={
+															filters.campaign_id
+														}
+														options={ campaignFilterOptions(
+															campaigns,
+															filters.campaign_id
+														) }
+														onChange={
+															handleCampaignChange
+														}
+														isOpen={
+															openDropdown ===
+															'campaign'
+														}
+														onToggle={ () =>
+															toggleDropdown(
+																'campaign'
+															)
+														}
+														onClose={
+															closeAllDropdowns
+														}
+													/>
+												) }
 
 												<FilterDropdown
 													label="Currency"
@@ -1171,6 +1230,14 @@ const Transactions = () => {
 															Status
 														</h4>
 													</div>
+													<div className="bp-width_180">
+														<h4 className="fx-4 bp-font_ibm bp-transactions_list-table_header-title">
+															{ __(
+																'Campaign',
+																'better-payment'
+															) }
+														</h4>
+													</div>
 													<div className="bp-flex align-items_center gap-12 bp-width_200">
 														<h4 className="fx-4 bp-font_ibm bp-transactions_list-table_header-title">
 															Date
@@ -1319,6 +1386,9 @@ const Transactions = () => {
 																				) && (
 																					<h4
 																						className="fx-4 bp-font_ibm bp-transactions_list-table_header-title bp-transaction_name"
+																						title={ formateName(
+																							transaction?.form_fields_info
+																						) }
 																						onClick={ () =>
 																							handleViewTransaction(
 																								transaction.id
@@ -1334,7 +1404,16 @@ const Transactions = () => {
 																		</div>
 																		<div className="bp-width_226 bp-transaction_id">
 																			<div className="bp-flex align-items_center ">
-																				<h4 className="fx-4 bp-font_ibm bp-transactions_list-table_header-title">
+																				<h4
+																					className="fx-4 bp-font_ibm bp-transactions_list-table_header-title"
+																					title={
+																						emailAddress(
+																							transaction?.form_fields_info
+																						) ||
+																						transaction?.email ||
+																						undefined
+																					}
+																				>
 																					{ emailAddress(
 																						transaction?.form_fields_info
 																					) ||
@@ -1433,7 +1512,13 @@ const Transactions = () => {
 																		</div>
 																		<div className="bp-width_214 bp-transaction_id">
 																			<div className="bp-flex align-items_center ">
-																				<p className="fx-4 bp-font_ibm bp-transactions_list-table_header-title">
+																				<p
+																					className="fx-4 bp-font_ibm bp-transactions_list-table_header-title"
+																					title={
+																						transaction?.transaction_id ||
+																						undefined
+																					}
+																				>
 																					{
 																						transaction?.transaction_id
 																					}
@@ -1485,6 +1570,49 @@ const Transactions = () => {
 																					transaction?.status_type
 																				) }
 																			</span>
+																		</div>
+																		<div className="bp-width_180 bp-transaction_campaign">
+																			{ ( () => {
+																				const campaign =
+																					campaignDisplay(
+																						transaction
+																					);
+																				if (
+																					! campaign
+																				) {
+																					return (
+																						<span className="fx-4 bp-font_ibm bp-transactions_list-table_header-title">
+																							—
+																						</span>
+																					);
+																				}
+																				return campaign.url ? (
+																					<a
+																						className="fx-4 bp-font_ibm bp-transaction_campaign-link"
+																						href={
+																							campaign.url
+																						}
+																						title={
+																							campaign.title
+																						}
+																					>
+																						{
+																							campaign.title
+																						}
+																					</a>
+																				) : (
+																					<span
+																						className="fx-4 bp-font_ibm bp-transactions_list-table_header-title"
+																						title={
+																							campaign.title
+																						}
+																					>
+																						{
+																							campaign.title
+																						}
+																					</span>
+																				);
+																			} )() }
 																		</div>
 																		<div className="bp-width_200 position-relative">
 																			<div className="bp-flex align-items_center justify-content-space_between ">

@@ -2,7 +2,6 @@
 
 namespace Better_Payment\Lite\Campaign;
 
-use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\AI\AIManager;
 use Better_Payment\Lite\Controller;
 use Better_Payment\Lite\Campaign\Elements\ElementRegistry;
@@ -426,11 +425,7 @@ class CPT extends Controller {
             #wpfooter .bp-free-version { display: flex; align-items: center; gap: 2px; }
         ' );
 
-        // Global currency from plugin settings — builder uses this everywhere.
-        $global_currency = DB::get_settings( 'better_payment_settings_general_general_currency' );
-        if ( ! is_string( $global_currency ) || $global_currency === '' ) {
-            $global_currency = 'USD';
-        }
+        $global_currency = CampaignCurrency::site();
 
         $data = [
             'elements'       => array_values( ElementRegistry::get_all() ),
@@ -447,7 +442,14 @@ class CPT extends Controller {
             // the AI wizard's "What are you raising funds for?" tiles. Both used
             // to hardcode their own list and drifted apart; this is the one list.
             'categories'     => CategoryRegistry::for_client(),
+            // The SITE currency: what a new campaign is stamped with, and what a campaign
+            // created before 2.5.0 (no `bpc_currency`) still follows. A campaign's own
+            // currency is its `bpc_currency` meta (Campaign\CampaignCurrency).
             'globalCurrency' => $global_currency,
+            // Settings → Currency's choices, `code => name`.
+            'currencies'     => CampaignCurrency::currencies(),
+            // Which enabled gateway cannot charge which currency, for the Settings notice.
+            'gatewayCurrencies' => CampaignCurrency::gateway_currencies(),
             // Which weekday the AI wizard's calendar starts on (0 = Sunday), per
             // Settings → General. Without it the grid would always be Sunday-first.
             'startOfWeek'    => (int) get_option( 'start_of_week', 0 ),

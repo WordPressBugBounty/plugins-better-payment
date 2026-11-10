@@ -7,6 +7,7 @@ use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Classes\Handler;
 use Better_Payment\Lite\Classes\PayerEmail;
 use Better_Payment\Lite\Classes\PaymentRequestGuard;
+use Better_Payment\Lite\Classes\PaymentError;
 use Better_Payment\Lite\Classes\PaymentRateLimiter;
 use Better_Payment\Lite\Traits\Helper;
 use Elementor\Controls_Manager;
@@ -171,7 +172,7 @@ class Paypal_Integration extends Action_Base {
         }
 
         if ( empty( $email ) ) {
-            $ajax_handler->add_error_message( 'Business Email is required!' );
+            $ajax_handler->add_error_message( esc_html( PaymentError::message( PaymentError::CONFIG ) ) );
             return false;
         }
 
@@ -188,7 +189,7 @@ class Paypal_Integration extends Action_Base {
         }
 
         if ( empty( $sent_data['payment_amount'] ) && empty( $sent_data['primary_payment_amount_radio'] ) ) {
-            $ajax_handler->add_error_message( 'Amount field is required!' );
+            $ajax_handler->add_error_message( esc_html__( 'Amount field is required!', 'better-payment' ) );
             return false;
         }
 
@@ -211,7 +212,7 @@ class Paypal_Integration extends Action_Base {
         $paypal_unsupported_currencies = $this->bp_unsupported_currencies( 'paypal' );
         $currency_code                 = sanitize_text_field( $record->get_form_settings( 'better_payment_form_paypal_currency' ) );
         if ( is_array( $paypal_unsupported_currencies ) && in_array( $currency_code, $paypal_unsupported_currencies ) ) {
-            $ajax_handler->add_error_message( 'Currency is not supported by PayPal!' );
+            $ajax_handler->add_error_message( esc_html__( 'Currency is not supported by PayPal!', 'better-payment' ) );
             return false;
         }
 
@@ -231,7 +232,7 @@ class Paypal_Integration extends Action_Base {
         );
         $cancel_url = add_query_arg(
             [
-                'better_payment_error_status' => 'error',
+                'better_payment_error_status' => 'cancelled',
                 'better_payment_widget_id'    => $widget_id,
             ],
             get_the_permalink()

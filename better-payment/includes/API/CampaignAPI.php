@@ -2,10 +2,11 @@
 
 namespace Better_Payment\Lite\API;
 
+use Better_Payment\Lite\Campaign\CampaignLifecycle;
+use Better_Payment\Lite\Campaign\CampaignCurrency;
 use Better_Payment\Lite\Campaign\CampaignStats;
 use Better_Payment\Lite\Campaign\MetaBox;
 use Better_Payment\Lite\Campaign\Templates\TemplateManager;
-use Better_Payment\Lite\Admin\DB;
 use Better_Payment\Lite\Campaign\Services\RendererService;
 use WP_Error;
 use WP_REST_Controller;
@@ -185,7 +186,9 @@ class CampaignAPI extends WP_REST_Controller {
          * payment form this way.
          *
          * @param array           $params  Request params.
-         * @param WP_REST_Request $request The create request.
+         * @param WP_REST_Request|null $request The create request; null when the MCP
+         *                                     `campaign_create` tool creates it.
+         *                                     Its `$params` are then campaign meta.
          *
          * @var mixed $params A listener may return anything; checked below.
          */
@@ -412,8 +415,8 @@ class CampaignAPI extends WP_REST_Controller {
     private function prepare_campaign_response( \WP_Post $post ): array {
         $meta     = MetaBox::get_all( $post->ID );
         $stats    = CampaignStats::get_stats( $post->ID );
-        $code     = DB::get_settings( 'better_payment_settings_general_general_currency' );
-        $currency = ( is_string( $code ) && $code !== '' ) ? $code : 'USD';
+        // The campaign's own currency (stamped at creation; the site currency for an older one).
+        $currency = CampaignCurrency::for_client( $post->ID );
 
         return [
             'id'          => $post->ID,
@@ -423,9 +426,13 @@ class CampaignAPI extends WP_REST_Controller {
             'thumbnail'   => get_the_post_thumbnail_url( $post->ID, 'large' ) ?: '',
             'edit_url'    => admin_url( 'admin.php?page=bp-campaign-builder&campaign_id=' . $post->ID ),
             'view_url'    => $post->post_status === 'publish' ? ( get_permalink( $post->ID ) ?: '' ) : '',
-            'currency'    => $currency,
+            'currency'    => $currency['currency'],
+            // True once the campaign has an approved donation: its currency can no longer change.
+            'currency_locked' => $currency['locked'],
             'meta'        => $meta,
             'stats'       => $stats,
+            // Whether it takes donations: `accepting`, `ended_date`, `ended_goal`, `closed_manual`.
+            'lifecycle'   => CampaignLifecycle::state_from( $meta, (float) ( $stats['total_raised'] ?? 0 ) ),
         ];
     }
 }

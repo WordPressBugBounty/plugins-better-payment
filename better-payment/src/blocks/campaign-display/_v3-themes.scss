@@ -493,6 +493,16 @@ $bp-v3-icon-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 		}
 	}
 
+	// The closed notice takes the Donate button's place in the ask panel, so it
+	// wears the theme's tokens: the base rule's light fill breaks the dark design.
+	.bp-campaign-closed-notice {
+		padding: 14px 18px;
+		color: var(--bp-v3-ink);
+		background: var(--bp-v3-soft);
+		border: 1px solid var(--bp-v3-line);
+		border-radius: var(--bp-v3-radius);
+	}
+
 	// ── The ask panel ─────────────────────────────────────────────────────────
 	// The column that holds the Donate button is the ask, wherever the author
 	// put it and whatever the layout preset says: found by what it CONTAINS, so

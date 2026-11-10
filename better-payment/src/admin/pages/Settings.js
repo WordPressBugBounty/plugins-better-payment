@@ -6,6 +6,7 @@ import paypalLogo from './../images/bp-paypal.svg';
 import stripeLogo from './../images/st.svg';
 import paystackLogo from './../images/pay.svg';
 import FooterCards from '../components/settings/FooterCards';
+import McpSettings from '../components/settings/McpSettings';
 import General from '../svg/General';
 import Admin from '../svg/Admin';
 import Customer from '../svg/Customer';
@@ -95,6 +96,7 @@ const Settings = () => {
 			...emailTabs.map( ( t ) => t.id ),
 			'subscription',
 			'ai',
+			'mcp',
 		];
 		if ( section && valid.includes( section ) ) {
 			setActiveTab( section );
@@ -332,6 +334,54 @@ const Settings = () => {
 												<span className="bp-font_ibm bp-setting_features-name">
 													{ __(
 														'AI Assistant',
+														'better-payment'
+													) }
+												</span>
+											</li>
+											<li
+												className={ `bp-flex align-items_center bp-setting_features-list_item ${
+													activeTab === 'mcp'
+														? 'bp-tab_active'
+														: ''
+												}` }
+												data-tab="mcp"
+												onClick={ () =>
+													setActiveTab( 'mcp' )
+												}
+											>
+												<span className="bp-setting_features-logo">
+													<svg
+														width="20"
+														height="20"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="#6b63f6"
+														strokeWidth="2"
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														aria-hidden="true"
+														focusable="false"
+													>
+														<rect
+															x="3"
+															y="4"
+															width="18"
+															height="7"
+															rx="2"
+														/>
+														<rect
+															x="3"
+															y="13"
+															width="18"
+															height="7"
+															rx="2"
+														/>
+														<path d="M7 7.5h.01M7 16.5h.01" />
+													</svg>
+												</span>
+												<span className="bp-font_ibm bp-setting_features-name">
+													{ __(
+														'MCP Server',
 														'better-payment'
 													) }
 												</span>
@@ -2739,6 +2789,42 @@ const Settings = () => {
 												);
 											} )() }
 										</form>
+									</div>
+
+									<div
+										className={ `setting-tab-content ${
+											activeTab === 'mcp'
+												? 'bp-tab_active'
+												: ''
+										}` }
+										id="mcp"
+									>
+										<McpSettings
+											value={
+												settings?.better_payment_settings_general_general_mcp
+											}
+											savedValue={
+												savedSettings?.better_payment_settings_general_general_mcp
+											}
+											onChange={ ( next ) =>
+												handleSettingChange(
+													'better_payment_settings_general_general_mcp',
+													next
+												)
+											}
+											oauthValue={
+												settings?.better_payment_settings_general_general_mcp_oauth
+											}
+											savedOauthValue={
+												savedSettings?.better_payment_settings_general_general_mcp_oauth
+											}
+											onOauthChange={ ( next ) =>
+												handleSettingChange(
+													'better_payment_settings_general_general_mcp_oauth',
+													next
+												)
+											}
+										/>
 									</div>
 								</div>
 							</div>

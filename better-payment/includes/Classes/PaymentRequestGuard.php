@@ -7,7 +7,8 @@
 
 namespace Better_Payment\Lite\Classes;
 
-use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Campaign\CampaignCurrency;
+use Better_Payment\Lite\Campaign\CampaignLifecycle;
 use Better_Payment\Lite\Campaign\MetaBox;
 use Better_Payment\Lite\Campaign\Services\RendererService;
 use Better_Payment\Lite\Controller;
@@ -133,6 +134,12 @@ class PaymentRequestGuard {
             return self::form_unavailable();
         }
 
+        // A campaign that has ended (or was closed) takes no more donations, through any form.
+        $closed = self::campaign_refusal( $campaign );
+        if ( null !== $closed ) {
+            return $closed;
+        }
+
         $resolved = [
             'amount'               => 0.0,
             'unit_amount'          => 0.0,
@@ -215,6 +222,11 @@ class PaymentRequestGuard {
 
         $campaign = $this->resolve_campaign( self::field( $sent_data, 'campaign_id' ), $page_id );
 
+        $closed = self::campaign_refusal( $campaign );
+        if ( null !== $closed ) {
+            return $closed;
+        }
+
         return [
             'amount'      => $amount * $quantity,
             'unit_amount' => $amount,
@@ -235,7 +247,8 @@ class PaymentRequestGuard {
      *                            Fundraising Campaign id `bp_campaign_{page}_{postfix}`.
      * @param int    $page_id     The form's page.
      *
-     * @return array|null `id`, `currency` ('' = use the form's), `minimum`, `amounts` (float[]|null = any).
+     * @return array|null `id`, `currency` ('' = use the form's), `minimum`, `amounts` (float[]|null = any),
+     *                    `state` (a CampaignLifecycle state; `accepting` for a Fundraising widget, which has no end date).
      */
     public function resolve_campaign( $campaign_id, $page_id ) {
         $campaign_id = sanitize_text_field( (string) $campaign_id );
@@ -555,16 +568,19 @@ class PaymentRequestGuard {
             }
         }
 
-        $currency = DB::get_settings( 'better_payment_settings_general_general_currency' );
-
         return [
             'id'       => (string) $post_id,
-            'currency' => is_string( $currency ) && '' !== $currency ? sanitize_text_field( $currency ) : 'USD',
+            // The campaign's own currency, stamped at creation (the site currency for a
+            // campaign created before 2.5.0). It overrides the form page's currency: the
+            // goal and the totals are in it, so a donation must be too.
+            'currency' => CampaignCurrency::of( (int) $post_id ),
             // Never below 1: every form's browser check refuses an amount under 1 ("Minimum
             // amount is 1") and the popup prints min="1", so a lower floor here only let a
             // forged request through (0.01 "donations" padding the donor count).
             'minimum'  => max( 1.0, isset( $meta['bpc_minimum_amount'] ) && '' !== $meta['bpc_minimum_amount'] ? (float) $meta['bpc_minimum_amount'] : 0.0 ),
             'amounts'  => $amounts,
+            // Uncached total: the stats cache can lag a goal by two minutes.
+            'state'    => CampaignLifecycle::state( $post_id, true ),
         ];
     }
 
@@ -611,10 +627,49 @@ class PaymentRequestGuard {
                 // The widget's custom amount input is rendered with min="1".
                 'minimum'  => 1.0,
                 'amounts'  => null,
+                // The Fundraising widget has no end date, status or close-at-goal setting.
+                'state'    => CampaignLifecycle::ACCEPTING,
             ];
         }
 
         return null;
+    }
+
+    /**
+     * The refusal for a verified campaign that takes no more donations, or null.
+     *
+     * Lite refuses a campaign whose CampaignLifecycle state is not `accepting`
+     * (`bp_campaign_closed`). An add-on may refuse for its own reasons through
+     * `better_payment/payment_guard/campaign_refusal`; it is asked only for a campaign Lite
+     * would accept, and only a WP_Error answer refuses.
+     *
+     * @param array|null $campaign Resolved campaign (resolve_campaign()), or null.
+     * @return WP_Error|null
+     */
+    private static function campaign_refusal( $campaign ) {
+        if ( null === $campaign ) {
+            return null;
+        }
+
+        $state = isset( $campaign['state'] ) ? (string) $campaign['state'] : CampaignLifecycle::ACCEPTING;
+        if ( CampaignLifecycle::ACCEPTING !== $state ) {
+            return CampaignLifecycle::refusal( $state );
+        }
+
+        /**
+         * Filters whether a campaign that Better Payment would accept a donation for refuses it.
+         *
+         * Return a WP_Error to refuse (its message is shown to the donor); anything else
+         * leaves the payment alone. Default null.
+         *
+         * @since 2.5.0
+         *
+         * @param WP_Error|null $refusal  Default null.
+         * @param array         $campaign Resolved campaign: `id`, `currency`, `minimum`, `amounts`, `state`.
+         */
+        $refusal = apply_filters( 'better_payment/payment_guard/campaign_refusal', null, $campaign );
+
+        return $refusal instanceof WP_Error ? $refusal : null;
     }
 
     /**

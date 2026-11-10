@@ -67,7 +67,9 @@ class AIService {
 
         $text_only = in_array( $mode, self::$text_only_modes, true );
 
-        $system   = PromptBuilder::system_prompt( $mode, AIManager::system_prompt(), $target );
+        // The campaign's currency, so the model reasons about amounts in it ('' = the site's).
+        $currency = isset( $context['meta']['bpc_currency'] ) && is_string( $context['meta']['bpc_currency'] ) ? $context['meta']['bpc_currency'] : '';
+        $system   = PromptBuilder::system_prompt( $mode, AIManager::system_prompt(), $target, $currency );
         $messages = self::build_messages( $history, PromptBuilder::user_message( $message, $context ) );
 
         // Per-call options (e.g. a larger max_tokens for full-layout generation)

@@ -1548,7 +1548,7 @@ const Inspector = ( { attributes, setAttributes } ) => {
 						}
 						placeholder="eg. https://example.com/custom-page/"
 						help={ __(
-							'Please note that only your current domain is allowed here to keep your site secure.',
+							'Payers are sent to this page after a successful payment.',
 							'better-payment'
 						) }
 						showValidation={ true }
@@ -1648,7 +1648,7 @@ const Inspector = ( { attributes, setAttributes } ) => {
 						}
 						placeholder="eg. https://example.com/custom-page/"
 						help={ __(
-							'Please note that only your current domain is allowed here to keep your site secure.',
+							'Payers are sent to this page after a failed payment.',
 							'better-payment'
 						) }
 						showValidation={ true }

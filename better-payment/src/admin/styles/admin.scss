@@ -1322,6 +1322,14 @@
 		margin: 0;
 	}
 
+	// Money raised in another currency, listed, never added to the total.
+	.bp-campaigns_donations-other {
+		font-size: 12px;
+		font-weight: 600;
+		color: #394357;
+		margin: 0 0 2px;
+	}
+
 	// Status badge
 	.bp-campaigns_status-badge {
 		display: inline-flex;
@@ -1825,6 +1833,9 @@
 	}
 	.bp-campaigns_donations-donors {
 		color: #8f9ab0;
+	}
+	.bp-campaigns_donations-other {
+		color: #b9bfca;
 	}
 	.bp-campaigns_enddate {
 		color: #b9bfca;
@@ -2603,5 +2614,1092 @@
 				}
 			}
 		}
+	}
+}
+
+// ── Transactions table: columns stay aligned when the row is squeezed ─────────
+// The bp-width_* classes are flex BASES with the default flex-shrink (1). Without
+// `min-width: 0` a flex item cannot shrink below its content, so once the row's
+// basis sum outgrew the container (the Campaign column added 180px) each row
+// shrank by its OWN content: rows with no name or email collapsed those cells and
+// every later column drifted left. With `min-width: 0` on every cell and its text
+// clipped to one line, all rows shrink by the same proportions — identical bases,
+// identical widths — so header and data columns line up at any viewport, the same
+// rule the #subscriptions table uses above. The full value rides in each cell's
+// `title`. Amount, Status and Date (which holds the actions trigger) never shrink.
+#transactions .bp-transactions_list-table {
+	.bp-transactions_list-table_header,
+	.bp-transactions_list-table_data {
+		> .bp-flex {
+			flex-wrap: nowrap;
+		}
+
+		[class*="bp-width_"] {
+			min-width: 0;
+
+			.bp-flex {
+				min-width: 0;
+			}
+
+			h4,
+			p,
+			> span:not(.tag),
+			> a {
+				min-width: 0;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+
+		.bp-width_96,
+		.bp-width_114,
+		.bp-width_200 {
+			flex-shrink: 0;
+		}
+
+		// An amount is never clipped: "ZAR 9000.00" may wrap onto two lines, as before.
+		.bp-width_96 h4 {
+			white-space: normal;
+			overflow: visible;
+		}
+	}
+}
+
+// Smooth show/hide (components/settings/Collapse.js). The row animates from 0fr
+// to 1fr, so the block opens to its natural height with nothing measured in JS;
+// opacity and a short lift ride along. Keep the duration equal to
+// COLLAPSE_DURATION in Collapse.js, which unmounts the block when it has closed.
+$bp-collapse-duration: 320ms;
+$bp-collapse-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+.bp-collapse {
+	display: grid;
+	grid-template-rows: 0fr;
+	opacity: 0;
+	transform: translateY(-6px);
+	transition:
+		grid-template-rows $bp-collapse-duration $bp-collapse-ease,
+		opacity calc(#{$bp-collapse-duration} * 0.7) ease,
+		transform $bp-collapse-duration $bp-collapse-ease;
+
+	&.is-open {
+		grid-template-rows: 1fr;
+		opacity: 1;
+		transform: none;
+	}
+
+	> .bp-collapse__inner {
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
+
+// Settings → MCP Server tab (components/settings/McpSettings.js).
+//
+// Laid out like NotificationX's MCP screen — hero with steps, enable row, stat
+// cards, then one card per job — but in this screen's own vocabulary: the
+// #dfe2ed hairline, 8–10px radii, $bp-color-blue as the only accent, and the
+// standard feature row + Enabled/Disabled switch box for both switches.
+$bp-mcp-border: #dfe2ed;
+$bp-mcp-soft: #f8f9fc;
+$bp-mcp-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+.bp-mcp {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+
+	.bp-mcp__body {
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+		// Room for the cards' shadow inside the Collapse's clipping box.
+		padding: 2px 2px 4px;
+	}
+
+	.bp-mcp__icon {
+		flex: 0 0 auto;
+	}
+
+	.bp-mcp__help {
+		display: block;
+		margin: 4px 0 0;
+		font-size: 13px;
+		line-height: 1.55;
+		color: $bp-light-secondary-text-color;
+	}
+
+	.bp-mcp__link {
+		color: $bp-color-blue;
+		font-weight: 500;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	.bp-mcp__label {
+		display: block;
+		margin-bottom: 8px;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #8f9ab0;
+	}
+
+	// ── Hero ─────────────────────────────────────────────────────────────
+	.bp-mcp__hero {
+		border: 1px solid #e2ddfc;
+		border-radius: 12px;
+		background: linear-gradient(135deg, #f5f3ff 0%, #fbfaff 60%, #fff 100%);
+		overflow: hidden;
+	}
+
+	.bp-mcp__hero-main {
+		display: flex;
+		gap: 16px;
+		padding: 22px 24px;
+	}
+
+	.bp-mcp__hero-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 44px;
+		height: 44px;
+		border-radius: 10px;
+		background: $bp-color-blue;
+		box-shadow: 0 6px 16px rgba(107, 89, 238, 0.3);
+		color: #fff;
+
+		.bp-mcp__icon {
+			width: 22px;
+			height: 22px;
+		}
+	}
+
+	.bp-mcp__hero-title {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+		margin: 0 0 4px;
+		font-size: 17px;
+		font-weight: 600;
+		color: $bp-light-primary-text-color;
+	}
+
+	// "Learn how it works →" under the hero description (the public setup guide).
+	.bp-mcp__learn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 10px;
+		font-size: 14px;
+		font-weight: 600;
+		color: $bp-color-blue;
+		text-decoration: none;
+
+		// The underline is on the words only, never under the arrow. An underline
+		// set on the link reaches every child, so the link never carries one and
+		// its text span does (wp-admin underlines a bare `a`, hence `none` on
+		// every state).
+		&:hover,
+		&:focus,
+		&:active {
+			text-decoration: none;
+		}
+
+		&:hover .bp-mcp__learn-text,
+		&:focus-visible .bp-mcp__learn-text {
+			text-decoration: underline;
+			text-underline-offset: 3px;
+		}
+
+		&:hover .bp-mcp__learn-arrow {
+			transform: translateX(3px);
+		}
+
+		&:focus {
+			box-shadow: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid $bp-color-blue;
+			outline-offset: 2px;
+			border-radius: 2px;
+		}
+	}
+
+	.bp-mcp__learn-arrow {
+		transition: transform 0.15s ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+
+	.bp-mcp__status {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 10px;
+		border-radius: 999px;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+
+		&::before {
+			content: "";
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: currentColor;
+		}
+
+		&--active {
+			background: #e3f7e9;
+			color: #1a7f37;
+		}
+
+		&--pending {
+			background: #fff4d6;
+			color: #8a6100;
+		}
+
+		&--off {
+			background: #eef0f4;
+			color: #6a758c;
+		}
+	}
+
+	.bp-mcp__steps {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid #e2ddfc;
+		list-style: none;
+		counter-reset: none;
+
+		@media (max-width: 782px) {
+			grid-template-columns: 1fr;
+		}
+
+		li {
+			display: flex;
+			gap: 12px;
+			margin: 0;
+			padding: 16px 24px;
+			border-left: 1px solid #e2ddfc;
+
+			&:first-child {
+				border-left: none;
+			}
+
+			@media (max-width: 782px) {
+				border-left: none;
+				border-top: 1px solid #e2ddfc;
+
+				&:first-child {
+					border-top: none;
+				}
+			}
+
+			strong {
+				display: block;
+				font-size: 13px;
+				font-weight: 600;
+				color: $bp-light-primary-text-color;
+			}
+
+			.bp-mcp__help {
+				margin-top: 2px;
+				font-size: 12px;
+			}
+		}
+	}
+
+	.bp-mcp__step-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 32px;
+		height: 32px;
+		border-radius: 8px;
+		background: #fff;
+		border: 1px solid #e2ddfc;
+		color: $bp-color-blue;
+	}
+
+	// The enable row is a standard feature row; the tab has only one, so it
+	// needs no bottom rule.
+	.bp-mcp__enable.bp-general_features {
+		padding-bottom: 0;
+		border-bottom: none;
+	}
+
+	// ── Notices ──────────────────────────────────────────────────────────
+	.bp-mcp__notice {
+		margin: 0;
+		padding: 12px 16px;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		font-size: 13px;
+		line-height: 1.5;
+
+		&--info {
+			background: #f3f1fe;
+			border-color: #e2ddfc;
+			color: #4b3bc4;
+		}
+
+		&--warning {
+			margin-top: 12px;
+			background: #fff8e6;
+			border-color: #f6e3b0;
+			color: #8a6100;
+		}
+	}
+
+	// ── Stat cards ───────────────────────────────────────────────────────
+	.bp-mcp__stats {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 12px;
+
+		@media (max-width: 1100px) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		@media (max-width: 480px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.bp-mcp__stat {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding: 16px;
+		border: 1px solid $bp-mcp-border;
+		border-left: 3px solid $bp-color-blue;
+		border-radius: 10px;
+		background: #fff;
+	}
+
+	.bp-mcp__stat-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		color: $bp-color-blue;
+	}
+
+	.bp-mcp__stat-label {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #8f9ab0;
+	}
+
+	.bp-mcp__stat-value {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 20px;
+		font-weight: 600;
+		line-height: 1.2;
+		color: $bp-light-primary-text-color;
+	}
+
+	.bp-mcp__stat-sub {
+		font-size: 12px;
+		color: $bp-light-secondary-text-color;
+	}
+
+	.bp-mcp__dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #1a7f37;
+		box-shadow: 0 0 0 4px rgba(26, 127, 55, 0.15);
+	}
+
+	// ── Cards ────────────────────────────────────────────────────────────
+	.bp-mcp__card {
+		border: 1px solid $bp-mcp-border;
+		border-radius: 10px;
+		background: #fff;
+		box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+	}
+
+	.bp-mcp__card-head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 18px 22px;
+		border-bottom: 1px solid #eceef5;
+	}
+
+	.bp-mcp__card-title {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 600;
+		color: $bp-light-primary-text-color;
+	}
+
+	.bp-mcp__card-action {
+		flex: 0 0 auto;
+	}
+
+	.bp-mcp__card-body {
+		padding: 18px 22px 22px;
+	}
+
+	.bp-mcp__connection-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 14px;
+
+		@media (max-width: 960px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.bp-mcp__tile {
+		padding: 16px;
+		border: 1px solid #eceef5;
+		border-radius: 8px;
+		background: $bp-mcp-soft;
+	}
+
+	.bp-mcp__field {
+		display: flex;
+		gap: 8px;
+	}
+
+	// wp-admin styles bare `input[type="text"]` at (0,1,1), which outranks a
+	// single class — answer every property it sets, not just the border.
+	.bp-mcp__endpoint-input {
+		flex: 1 1 auto;
+		min-width: 0;
+		height: 40px;
+		margin: 0;
+		padding: 0 12px !important;
+		border: 1px solid $bp-mcp-border !important;
+		border-radius: 8px !important;
+		background: #fff !important;
+		box-shadow: none !important;
+		font-family: $bp-mcp-mono;
+		font-size: 13px;
+		color: $bp-light-primary-text-color;
+
+		&:focus {
+			border-color: $bp-color-blue !important;
+			box-shadow: 0 0 0 3px rgba(107, 89, 238, 0.15) !important;
+		}
+	}
+
+	.bp-mcp__oauth {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+
+		strong {
+			display: block;
+			font-size: 13px;
+			color: $bp-light-primary-text-color;
+		}
+
+		.bp-content_wrapper {
+			flex: 0 0 150px;
+			background: #fff;
+		}
+
+		.bp-content_setting {
+			padding: 10px 12px;
+		}
+	}
+
+	.bp-mcp__oauth + .bp-mcp__help {
+		margin-top: 12px;
+	}
+
+	.bp-mcp__test {
+		margin-top: 16px;
+	}
+
+	// ── Buttons ──────────────────────────────────────────────────────────
+	.bp-mcp__button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		height: 40px;
+		padding: 0 18px;
+		border: 1px solid transparent;
+		border-radius: 8px;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1;
+		white-space: nowrap;
+		cursor: pointer;
+		transition:
+			background-color 0.15s,
+			border-color 0.15s,
+			color 0.15s,
+			box-shadow 0.15s;
+
+		&:focus-visible {
+			outline: 2px solid $bp-color-blue;
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: default;
+		}
+
+		&--primary {
+			background: $bp-color-blue;
+			color: #fff;
+
+			&:hover:not(:disabled) {
+				background: #5a47e0;
+				box-shadow: 0 4px 12px rgba(107, 89, 238, 0.25);
+			}
+		}
+
+		&--secondary {
+			border-color: $bp-mcp-border;
+			background: #fff;
+			color: $bp-light-primary-text-color;
+
+			&:hover:not(:disabled) {
+				border-color: $bp-color-blue;
+				color: $bp-color-blue;
+			}
+		}
+
+		&--danger {
+			height: 34px;
+			padding: 0 14px;
+			border-color: #f3c7c3;
+			background: #fff;
+			color: #c9372c;
+
+			&:hover:not(:disabled) {
+				background: #fdf1f0;
+			}
+		}
+
+		&--danger-solid {
+			background: #c9372c;
+			color: #fff;
+
+			&:hover:not(:disabled) {
+				background: #b02f25;
+			}
+		}
+
+		&--small {
+			height: 30px;
+			padding: 0 12px;
+			font-size: 12px;
+		}
+	}
+
+	.bp-mcp__confirm {
+		display: inline-flex;
+		align-items: center;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 8px;
+		animation: bp-mcp-confirm-in 0.18s ease-out;
+
+		@media (prefers-reduced-motion: reduce) {
+			animation: none;
+		}
+	}
+
+	.bp-mcp__confirm-text {
+		font-size: 12px;
+		color: #c9372c;
+	}
+
+	// ── Client snippets ──────────────────────────────────────────────────
+	// A segmented control. Seven client names wrap rather than scroll, so every
+	// client stays visible without a horizontal scrollbar to discover.
+	.bp-mcp__tabs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		padding: 4px;
+		border-radius: 8px;
+		background: #f0f3f7;
+	}
+
+	.bp-mcp__tab {
+		padding: 7px 14px;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		font-size: 13px;
+		font-weight: 500;
+		color: $bp-light-secondary-text-color;
+		cursor: pointer;
+		transition:
+			background-color 0.15s,
+			color 0.15s;
+
+		&:hover {
+			color: $bp-light-primary-text-color;
+		}
+
+		&:focus-visible {
+			outline: 2px solid $bp-color-blue;
+			outline-offset: 1px;
+		}
+
+		&.is-active {
+			background: #fff;
+			color: $bp-color-blue;
+			box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+		}
+	}
+
+	.bp-mcp__snippet {
+		margin-top: 12px;
+		border: 1px solid $bp-mcp-border;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.bp-mcp__snippet-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 6px 6px 6px 14px;
+		border-bottom: 1px solid $bp-mcp-border;
+		background: $bp-mcp-soft;
+	}
+
+	.bp-mcp__snippet-file {
+		font-family: $bp-mcp-mono;
+		font-size: 12px;
+		color: $bp-light-secondary-text-color;
+	}
+
+	// A snippet is pasted, so it must be selectable in full: wrap rather than
+	// clip, and never let a long URL push the panel wider than its column.
+	.bp-mcp__snippet-body {
+		margin: 0;
+		padding: 14px;
+		background: #fff;
+		font-family: $bp-mcp-mono;
+		font-size: 12.5px;
+		line-height: 1.65;
+		color: $bp-light-primary-text-color;
+		white-space: pre-wrap;
+		word-break: break-all;
+		overflow-wrap: anywhere;
+	}
+
+	.bp-mcp__snippet-note {
+		margin-top: 10px;
+	}
+
+	// ── Connected applications ───────────────────────────────────────────
+	.bp-mcp__skeleton {
+		height: 56px;
+		border-radius: 8px;
+		background: linear-gradient(
+			90deg,
+			#f0f3f7 25%,
+			#f8f9fc 50%,
+			#f0f3f7 75%
+		);
+		background-size: 200% 100%;
+		animation: bp-mcp-shimmer 1.2s linear infinite;
+
+		@media (prefers-reduced-motion: reduce) {
+			animation: none;
+		}
+	}
+
+	.bp-mcp__empty {
+		margin: 0;
+		padding: 18px;
+		border: 1px dashed $bp-mcp-border;
+		border-radius: 8px;
+		font-size: 13px;
+		text-align: center;
+		color: $bp-light-secondary-text-color;
+	}
+
+	.bp-mcp__connection-list,
+	.bp-mcp__checks,
+	.bp-mcp__health-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 13px;
+	}
+
+	// The protocol revision after the endpoint: for support, not a check.
+	.bp-mcp__endpoint-meta {
+		font-size: 12px;
+		opacity: 0.7;
+		white-space: nowrap;
+	}
+
+	.bp-mcp__connection-list {
+		border: 1px solid $bp-mcp-border;
+		border-radius: 8px;
+
+		li {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin: 0;
+			padding: 12px 14px;
+			border-top: 1px solid #eceef5;
+
+			&:first-child {
+				border-top: none;
+			}
+
+			strong {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				color: $bp-light-primary-text-color;
+			}
+
+			.bp-mcp__help {
+				margin: 2px 0 0;
+			}
+		}
+	}
+
+	.bp-mcp__connection-main {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	// What the application is ("Command line, on your computer").
+	.bp-mcp__connection-surface {
+		margin-top: 2px;
+		font-size: 13px;
+		color: $bp-light-primary-text-color;
+		opacity: 0.8;
+	}
+
+	.bp-mcp__connection-warning {
+		margin-top: 4px;
+		font-size: 12px;
+		color: #9a3412;
+	}
+
+	.bp-mcp__pill {
+		padding: 2px 8px;
+		border-radius: 999px;
+		font-size: 11px;
+		font-weight: 600;
+
+		&--write {
+			background: #e3f7e9;
+			color: #1a7f37;
+		}
+
+		&--read {
+			background: #eef0f4;
+			color: #6a758c;
+		}
+
+		&--unverified {
+			background: #fff4e5;
+			color: #9a3412;
+		}
+	}
+
+	.bp-mcp__checks {
+		margin-top: 12px;
+
+		li {
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+			margin: 0 0 6px;
+			padding: 10px 12px;
+			border-radius: 6px;
+			background: #effaf2;
+			color: #1a5d2c;
+
+			&.is-failed {
+				background: #fdf1f0;
+				color: #8f2a22;
+			}
+		}
+	}
+
+	.bp-mcp__check-icon {
+		flex: 0 0 18px;
+		font-weight: 700;
+		text-align: center;
+	}
+
+	// ── Connection health ────────────────────────────────────────────────
+	.bp-mcp__health-list li {
+		position: relative;
+		margin: 0;
+		padding: 6px 0 6px 20px;
+		color: $bp-light-primary-text-color;
+
+		&::before {
+			content: "";
+			position: absolute;
+			top: 12px;
+			left: 2px;
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: #b9bfca;
+		}
+
+		&.is-ok::before {
+			background: #1a7f37;
+		}
+
+		&.is-warn {
+			color: #8a6100;
+
+			&::before {
+				background: #e0a100;
+			}
+		}
+
+		code {
+			padding: 2px 6px;
+			border-radius: 4px;
+			background: #f0f3f7;
+			font-family: $bp-mcp-mono;
+			font-size: 12px;
+			word-break: break-all;
+		}
+	}
+
+	.bp-mcp__danger {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		margin-top: 16px;
+		padding: 16px;
+		border: 1px solid #f3c7c3;
+		border-radius: 8px;
+		background: #fdf5f4;
+
+		strong {
+			display: block;
+			color: #b02f25;
+		}
+
+		@media (max-width: 600px) {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+	}
+
+	.bp-mcp__footnote {
+		margin: 0;
+		padding: 12px 16px;
+		border-radius: 8px;
+		background: $bp-mcp-soft;
+		font-size: 12px;
+		line-height: 1.55;
+		color: $bp-light-secondary-text-color;
+	}
+}
+
+@keyframes bp-mcp-confirm-in {
+	from {
+		opacity: 0;
+		transform: translateX(6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes bp-mcp-shimmer {
+	from {
+		background-position: 200% 0;
+	}
+
+	to {
+		background-position: -200% 0;
+	}
+}
+
+// Dark mode — same scope plus the theme class on the app root (App.js).
+.better-payment-dark .bp-mcp {
+	.bp-mcp__hero {
+		border-color: #2e2960;
+		background: linear-gradient(135deg, #1a1733 0%, #141826 100%);
+	}
+
+	.bp-mcp__learn {
+		color: #b3a9ff;
+	}
+
+	.bp-mcp__learn:focus-visible {
+		outline-color: #b3a9ff;
+	}
+
+	.bp-mcp__steps,
+	.bp-mcp__steps li {
+		border-color: #2e2960;
+	}
+
+	.bp-mcp__step-icon {
+		border-color: #2e2960;
+		background: #111621;
+		color: #b3a9ff;
+	}
+
+	.bp-mcp__card,
+	.bp-mcp__stat,
+	.bp-mcp__snippet,
+	.bp-mcp__snippet-body,
+	.bp-mcp__connection-list,
+	.bp-mcp__endpoint-input,
+	.bp-mcp__button--secondary,
+	.bp-mcp__button--danger,
+	.bp-mcp__oauth .bp-content_wrapper {
+		border-color: #292e39 !important;
+		background: $bp-dark-bg-color !important;
+	}
+
+	.bp-mcp__stat {
+		border-left-color: $bp-color-blue !important;
+	}
+
+	.bp-mcp__card-head,
+	.bp-mcp__snippet-bar,
+	.bp-mcp__connection-list li,
+	.bp-mcp__empty {
+		border-color: #292e39;
+	}
+
+	.bp-mcp__tile,
+	.bp-mcp__snippet-bar,
+	.bp-mcp__tabs,
+	.bp-mcp__footnote,
+	.bp-mcp__health-list code {
+		border-color: #292e39;
+		background: #161b25;
+	}
+
+	.bp-mcp__tab.is-active {
+		background: #232a37;
+		color: #b3a9ff;
+	}
+
+	.bp-mcp__hero-title,
+	.bp-mcp__card-title,
+	.bp-mcp__stat-value,
+	.bp-mcp__steps strong,
+	.bp-mcp__oauth strong,
+	.bp-mcp__snippet-body,
+	.bp-mcp__connection-list strong,
+	.bp-mcp__health-list li,
+	.bp-mcp__endpoint-input,
+	.bp-mcp__button--secondary {
+		color: $bp-dark-primary-text-color;
+	}
+
+	.bp-mcp__connection-surface {
+		color: $bp-dark-primary-text-color;
+	}
+
+	.bp-mcp__connection-warning {
+		color: #fdba74;
+	}
+
+	.bp-mcp__pill--unverified {
+		background: #3b2410;
+		color: #fdba74;
+	}
+
+	.bp-mcp__help,
+	.bp-mcp__stat-sub,
+	.bp-mcp__tab,
+	.bp-mcp__snippet-file,
+	.bp-mcp__empty,
+	.bp-mcp__footnote {
+		color: #89909d;
+	}
+
+	.bp-mcp__notice--info {
+		background: #1d1a3a;
+		border-color: #2e2960;
+		color: #b3a9ff;
+	}
+
+	.bp-mcp__notice--warning,
+	.bp-mcp__health-list li.is-warn {
+		background: transparent;
+		color: #e5c46b;
+	}
+
+	.bp-mcp__notice--warning {
+		background: #2b2410;
+		border-color: #4a3d16;
+	}
+
+	.bp-mcp__danger {
+		border-color: #4a2320;
+		background: #241311;
+
+		strong {
+			color: #f19b93;
+		}
+	}
+
+	.bp-mcp__checks li {
+		background: #10261a;
+		color: #7fd69a;
+
+		&.is-failed {
+			background: #2d1513;
+			color: #f19b93;
+		}
+	}
+
+	.bp-mcp__skeleton {
+		background: linear-gradient(
+			90deg,
+			#161b25 25%,
+			#1c2230 50%,
+			#161b25 75%
+		);
+		background-size: 200% 100%;
 	}
 }

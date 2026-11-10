@@ -2,7 +2,7 @@
 
 namespace Better_Payment\Lite\AI\Prompt;
 
-use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Campaign\CampaignCurrency;
 use Better_Payment\Lite\AI\AIManager;
 use Better_Payment\Lite\AI\Operations\OperationRegistry;
 use Better_Payment\Lite\AI\Schema\CampaignSchema;
@@ -33,9 +33,11 @@ class PromptBuilder {
      * @param string $custom Optional admin-configured system prompt appended at the end.
      * @param array  $target Optional focused element: [ 'id' => ..., 'type' => ..., 'settings' => [...] ].
      *                       When given, a "Target element" section pins the turn to that one widget.
+     * @param string $currency The campaign's currency (`bpc_currency` from the trusted context);
+     *                         '' = the site currency (a new campaign, or one from before 2.5.0).
      * @return string
      */
-    public static function system_prompt( string $mode = 'edit', string $custom = '', array $target = [] ): string {
+    public static function system_prompt( string $mode = 'edit', string $custom = '', array $target = [], string $currency = '' ): string {
         // The brief writer produces prose, not operations. It has no use for the
         // element schema, the operation catalog or the operation-output rules —
         // handing it every widget schema would only tempt it to describe a
@@ -44,7 +46,7 @@ class PromptBuilder {
         if ( 'brief' === $mode ) {
             $parts   = [];
             $parts[] = self::load_template( 'brief' );
-            $parts[] = "## Site settings\n" . self::describe_site();
+            $parts[] = "## Site settings\n" . self::describe_site( $currency );
             if ( '' !== trim( $custom ) ) {
                 $parts[] = "## Additional instructions\n" . trim( $custom );
             }
@@ -56,7 +58,7 @@ class PromptBuilder {
 
         $parts   = [];
         $parts[] = self::load_template( $mode );
-        $parts[] = "## Site settings\n" . self::describe_site();
+        $parts[] = "## Site settings\n" . self::describe_site( $currency );
         $parts[] = "## Campaign schema you may produce\n" . self::describe_schema( $schema );
 
         $pro = self::describe_pro_widgets( $mode );
@@ -104,14 +106,14 @@ class PromptBuilder {
      * the model can *reason* about amounts (a "€10,000 goal" reads differently from
      * a "$10,000" one), not so it can format them.
      *
+     * It is the campaign's own currency (CampaignCurrency), the one its goal and its
+     * donations are in, which can differ from the site's.
+     *
+     * @param string $currency Campaign currency; '' = the site currency.
      * @return string
      */
-    private static function describe_site(): string {
-        $currency = DB::get_settings( 'better_payment_settings_general_general_currency' );
-
-        if ( ! is_string( $currency ) || '' === $currency ) {
-            $currency = 'USD';
-        }
+    private static function describe_site( string $currency = '' ): string {
+        $currency = CampaignCurrency::resolve( $currency );
 
         return "- Campaign currency: {$currency}. The renderer applies this itself — never write a"
             . ' currency symbol or an amount into any text or label setting.';

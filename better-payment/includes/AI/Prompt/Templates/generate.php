@@ -25,6 +25,7 @@ CRITICAL: You MUST call the `set_layout` operation with the full page — it is 
 OPTIONAL CAMPAIGN DETAILS — follow the brief exactly. Today\'s date is ' . $today . '.
 - `bpc_goal_amount`: set it ONLY if the brief states a fundraising target. If the brief gives no amount, do not call `update_meta` for this key at all — do not estimate one from the story, the cause, or comparable campaigns. A campaign with no goal is a valid campaign.
 - `bpc_end_date`: set it ONLY if the brief states an end date or deadline. If the brief says there is no fixed end date, or says nothing about one, do not call `update_meta` for this key at all. When you do set one it must be AFTER ' . $today . ' — never a past date.
+- `bpc_status`: never set it. A generated campaign starts active; the user closes it later.
 - These two are the user\'s own decisions. Silence in the brief means they chose to leave the field empty; it is not an invitation to pick a value for them. Omit the operation entirely rather than sending an empty string or a placeholder.
 
 Guidelines:
