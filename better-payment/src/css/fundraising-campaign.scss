@@ -1857,4 +1857,11 @@
 		}
 	}
 	// Layout 3: Font-size , button style ends
+
+	// Amounts raised in other currencies, listed beside the raised figure, never added to it.
+	.bp-campaign-other-currencies {
+		font-size: 0.85em;
+		opacity: 0.75;
+		overflow-wrap: anywhere;
+	}
 }

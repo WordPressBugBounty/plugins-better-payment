@@ -1,6 +1,7 @@
 <?php
 
 use Better_Payment\Lite\Admin\DB;
+use Better_Payment\Lite\Classes\CurrencyTotals;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,12 +21,9 @@ $completed_transactions_count = isset($transactions_analytics['completed_transac
 $incomplete_transactions_count = isset($transactions_analytics['incomplete_transactions_count']) ? $transactions_analytics['incomplete_transactions_count'] : 0;
 $refunded_transactions_count = isset($transactions_analytics['refunded_transactions_count']) ? $transactions_analytics['refunded_transactions_count'] : 0;
 
-$total_transactions_amount = isset($transactions_analytics['total_transactions_amount']) ? number_format($transactions_analytics['total_transactions_amount'], 2) : 0;
-$completed_transactions_amount = isset($transactions_analytics['completed_transactions_amount']) ? number_format($transactions_analytics['completed_transactions_amount'], 2) : 0;
-$incomplete_transactions_amount = isset($transactions_analytics['incomplete_transactions_amount']) ? number_format($transactions_analytics['incomplete_transactions_amount'], 2) : 0;
-$refunded_transactions_amount = isset($transactions_analytics['refunded_transactions_amount']) ? number_format($transactions_analytics['refunded_transactions_amount'], 2) : 0;
-
-$transaction_amount_currency = isset($transaction_amount_currency) ? $transaction_amount_currency : '$';
+// Amounts are per currency (Classes\CurrencyTotals): the headline is the primary currency, and any
+// other currency the user paid in is listed under it, never added to it.
+$transactions_amounts = CurrencyTotals::format_analytics( $transactions_analytics );
 ?>
 
 <!-- Need to replace with action -->
@@ -49,8 +47,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                 <div class="bp-amount">
                     <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_total_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
-                        <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $total_transactions_amount ) ); ?></span>
+                        <span><?php echo esc_html( $transactions_amounts['total']['primary'] ); ?></span>
                     </div>
+                    <?php if ( '' !== $transactions_amounts['total']['others'] ) : ?>
+                    <div class="bp-amount_other-currencies">+ <?php echo esc_html( $transactions_amounts['total']['others'] ); ?></div>
+                    <?php endif; ?>
                     <div class="bp-transaction">
                         <span class="bp-transaction_title">No of Transaction:</span>
                         <span class="bp-transaction_number"> <?php printf('%s', esc_html( $total_transactions_count ) ); ?></span>
@@ -61,8 +62,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                 <div class="bp-amount">
                     <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_completed_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
-                        <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $completed_transactions_amount ) ); ?></span>
+                        <span><?php echo esc_html( $transactions_amounts['completed']['primary'] ); ?></span>
                     </div>
+                    <?php if ( '' !== $transactions_amounts['completed']['others'] ) : ?>
+                    <div class="bp-amount_other-currencies">+ <?php echo esc_html( $transactions_amounts['completed']['others'] ); ?></div>
+                    <?php endif; ?>
                     <div class="bp-transaction">
                         <span class="bp-transaction_title">No of Transaction:</span>
                         <span class="bp-transaction_number"> <?php printf('%s', esc_html( $completed_transactions_count ) ); ?></span>
@@ -73,8 +77,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                 <div class="bp-amount">
                     <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_incomplete_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
-                        <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $incomplete_transactions_amount ) ); ?></span>
+                        <span><?php echo esc_html( $transactions_amounts['incomplete']['primary'] ); ?></span>
                     </div>
+                    <?php if ( '' !== $transactions_amounts['incomplete']['others'] ) : ?>
+                    <div class="bp-amount_other-currencies">+ <?php echo esc_html( $transactions_amounts['incomplete']['others'] ); ?></div>
+                    <?php endif; ?>
                     <div class="bp-transaction">
                         <span class="bp-transaction_title">No of Transaction:</span>
                         <span class="bp-transaction_number"> <?php printf('%s', esc_html( $incomplete_transactions_count ) ); ?></span>
@@ -85,8 +92,11 @@ $transaction_amount_currency = isset($transaction_amount_currency) ? $transactio
                 <div class="bp-amount">
                     <h4 class="mb-0 pb-0"><?php echo esc_html( $bp_settings['dashboard_refunded_amount_label'] ); ?></h4>
                     <div class="bp-amount_price mb-0 pb-0">
-                        <span><?php printf('%s%s', esc_html( $transaction_amount_currency ), esc_html( $refunded_transactions_amount ) ); ?></span>
+                        <span><?php echo esc_html( $transactions_amounts['refunded']['primary'] ); ?></span>
                     </div>
+                    <?php if ( '' !== $transactions_amounts['refunded']['others'] ) : ?>
+                    <div class="bp-amount_other-currencies">+ <?php echo esc_html( $transactions_amounts['refunded']['others'] ); ?></div>
+                    <?php endif; ?>
                     <div class="bp-transaction">
                         <span class="bp-transaction_title">No of Transaction:</span>
                         <span class="bp-transaction_number"> <?php printf('%s', esc_html( $refunded_transactions_count ) ); ?></span>

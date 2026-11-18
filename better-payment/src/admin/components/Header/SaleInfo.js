@@ -5,15 +5,32 @@ import {
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { dashboardAPI } from '../../utils/api';
+import { isProEnabled } from '../../utils/proEnabled';
 
+/**
+ * The sale banner above Better Payment's header: free upsell UI for the running campaign.
+ *
+ * A site with Pro active never sees it. It used to show to everyone until dismissed, so a paying
+ * customer was offered a discount on what they already own.
+ */
 const SaleInfo = () => {
+	const proEnabled = isProEnabled();
 	const [ isSaleInfoDismissed, setIsSaleInfoDismissed ] = useState( false );
 
 	useEffect( () => {
+		// With Pro there is no banner to show or hide: ask nothing.
+		if ( proEnabled ) {
+			return;
+		}
+
 		dashboardAPI.isSaleInfoDismissed().then( ( data ) => {
 			setIsSaleInfoDismissed( data?.isSaleInfoDismissed );
 		} );
-	}, [] );
+	}, [ proEnabled ] );
+
+	if ( proEnabled ) {
+		return null;
+	}
 
 	const handleDismissSaleInfo = () => {
 		dashboardAPI.dismissSaleInfo().then( ( data ) => {
@@ -31,7 +48,7 @@ const SaleInfo = () => {
 							{ createInterpolateElement(
 								/* translators: <highlight> wraps the discount text. */
 								__(
-									'Unlock premium features with Halloween Special Sale: <highlight>Grab up to 35% OFF</highlight>',
+									'Unlock premium features with Black Friday Special Sale: <highlight>Grab up to 40% OFF</highlight>',
 									'better-payment'
 								),
 								{

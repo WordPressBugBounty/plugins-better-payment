@@ -4,8 +4,19 @@ import {
 	useLayoutEffect,
 	useState,
 } from '@wordpress/element';
-import { DateRangePicker } from 'react-date-range';
-import { toIsoDate, parseIsoDate } from './../utils/helper';
+import { __ } from '@wordpress/i18n';
+import {
+	DateRangePicker,
+	defaultStaticRanges,
+	createStaticRanges,
+} from 'react-date-range';
+import {
+	allTimeStart as allTimeStartDate,
+	dateRangeLabel,
+	filterFromSelection,
+	isAllTimeSelection,
+	selectionFromFilter,
+} from './../utils/dateRange';
 import { horizontalPopupOffset, contentBounds } from './../utils/popupPosition';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -13,7 +24,11 @@ import 'react-date-range/dist/theme/default.css';
 /**
  * DateRangeFilter Component
  *
- * A date range filter with calendar picker
+ * The Transactions and Subscriptions lists' date filter (2.5.1: the look of Pro's Analytics date
+ * range — brand-colour selection, divided presets, typed dates, Reset + Apply — plus **All Time**).
+ * A list with no date filter shows every row, so All Time is the empty filter ('' / ''), which is
+ * also what the trigger shows by default. The calendar shows it, like Analytics, as the list's
+ * span: its oldest day (`allTimeStart`) to today, selected, both dates in the inputs.
  *
  * @param {string} dateFrom - Start date (YYYY-MM-DD format)
  * @param {string} dateTo - End date (YYYY-MM-DD format)
@@ -21,6 +36,8 @@ import 'react-date-range/dist/theme/default.css';
  * @param {boolean} isOpen - Whether the dropdown is currently open
  * @param {function} onToggle - Callback to toggle dropdown open/closed
  * @param {function} onClose - Callback to close the dropdown
+ * @param {string} allTimeStart - The list's oldest day (`YYYY-MM-DD`, its count route's
+ *                                `first_date`): where All Time starts; '' = today.
  */
 const DateRangeFilter = ( {
 	dateFrom,
@@ -29,28 +46,52 @@ const DateRangeFilter = ( {
 	isOpen,
 	onToggle,
 	onClose,
+	allTimeStart = '',
 } ) => {
 	const dropdownRef = useRef( null );
 	const popupRef = useRef( null );
-	// Both ends are parsed from LOCAL calendar parts, never `new Date('Y-m-d')`
-	// (parsed as UTC midnight, so the calendar opens on the previous day west
-	// of Greenwich).
-	const selectionFrom = ( from, to ) => ( {
-		startDate: parseIsoDate( from ) ?? new Date(),
-		endDate: parseIsoDate( to ) ?? new Date(),
-		key: 'selection',
-	} );
+	const allTimeLabel = __( 'All Time', 'better-payment' );
+
+	// All Time's span: the list's oldest day to today (local midnight).
+	const today = new Date();
+	today.setHours( 0, 0, 0, 0 );
+	const allStart = allTimeStartDate( allTimeStart, today );
+
+	// Both ends are parsed from LOCAL calendar parts (selectionFromFilter), never
+	// `new Date('Y-m-d')`, which is UTC midnight and opens the calendar on the
+	// previous day west of Greenwich.
+	const selectionFrom = ( from, to ) =>
+		selectionFromFilter( from, to, allStart, today );
 
 	const [ state, setState ] = useState( [
 		selectionFrom( dateFrom, dateTo ),
 	] );
 
-	// The calendar follows the filter it displays. Without this the picker
-	// keeps its last selection after the list's Reset button clears the range,
-	// so reopening it shows a range that is no longer applied.
+	// The picker's presets plus All Time, which clears the filter and shows the
+	// list's whole span on the calendar.
+	const staticRanges = [
+		...defaultStaticRanges,
+		...createStaticRanges( [
+			{
+				label: allTimeLabel,
+				range: () => ( {
+					startDate: allStart,
+					endDate: today,
+					allTime: true,
+				} ),
+				isSelected: ( range ) =>
+					isAllTimeSelection( range, allStart, today ),
+			},
+		] ),
+	];
+
+	// The calendar follows the filter it displays (and All Time's start once the
+	// list's oldest day arrives). Without this the picker keeps its last selection
+	// after the list's Reset button clears the range, so reopening it shows a
+	// range that is no longer applied.
 	useEffect( () => {
 		setState( [ selectionFrom( dateFrom, dateTo ) ] );
-	}, [ dateFrom, dateTo ] );
+	}, [ dateFrom, dateTo, allTimeStart ] );
 
 	// Where the popup sits, measured once it is open: right-aligned to the
 	// trigger when that fits, otherwise moved right so it never slides under the
@@ -102,25 +143,38 @@ const DateRangeFilter = ( {
 	}, [ isOpen, onClose ] );
 
 	const handleDateChange = ( item ) => {
-		setState( [ item.selection ] );
+		// A picked range keeps the previous one's fields: All Time holds only while
+		// the dates are still its span.
+		const { startDate, endDate } = item.selection;
+		setState( [
+			{
+				startDate,
+				endDate,
+				key: 'selection',
+				allTime: isAllTimeSelection( item.selection, allStart, today ),
+			},
+		] );
 	};
 
 	const handleApply = () => {
-		// Local calendar parts, NOT toISOString(): that converts to UTC first,
-		// so a user in UTC+6 picking 16 Aug sent 15 Aug to the server and the
-		// list came back for the wrong day.
-		onChange(
-			toIsoDate( state[ 0 ].startDate ),
-			toIsoDate( state[ 0 ].endDate )
-		);
+		// Local calendar parts (toIsoDate), NOT toISOString(): that converts to
+		// UTC first, so a user in UTC+6 picking 16 Aug sent 15 Aug to the server
+		// and the list came back for the wrong day. All Time sends '' / ''.
+		const filter = filterFromSelection( state[ 0 ] );
+		onChange( filter.dateFrom, filter.dateTo );
 		onClose();
 	};
 
-	const displayLabel =
-		dateFrom && dateTo ? `${ dateFrom } to ${ dateTo }` : 'Date Range';
+	// Reset: back to All Time, the lists' default.
+	const handleReset = () => {
+		onChange( '', '' );
+		onClose();
+	};
+
+	const displayLabel = dateRangeLabel( dateFrom, dateTo, allTimeLabel );
 
 	// Check if filter has non-default values
-	const hasValue = dateFrom && dateTo;
+	const hasValue = displayLabel !== allTimeLabel;
 	const isActive = isOpen || hasValue;
 
 	return (
@@ -162,52 +216,44 @@ const DateRangeFilter = ( {
 			{ isOpen && (
 				<div
 					ref={ popupRef }
-					className="bp-date-range-dropdown"
-					style={ {
-						position: 'absolute',
-						top: '100%',
-						...( popupLeft === null
+					className={ `bp-date-range-dropdown${
+						state[ 0 ]?.allTime ? ' is-all-time' : ''
+					}` }
+					style={
+						popupLeft === null
 							? { right: 0 }
-							: { left: popupLeft, right: 'auto' } ),
-						zIndex: 1000,
-						marginTop: '8px',
-						backgroundColor: '#fff',
-						borderRadius: '8px',
-						boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-						padding: '16px',
-					} }
+							: { left: popupLeft, right: 'auto' }
+					}
 					onClick={ ( e ) => e.stopPropagation() }
 				>
 					<DateRangePicker
 						onChange={ handleDateChange }
 						ranges={ state }
+						staticRanges={ staticRanges }
 						months={ 1 }
+						direction="horizontal"
+						moveRangeOnFirstSelection={ false }
+						showSelectionPreview={ false }
+						editableDateInputs={ true }
+						rangeColors={ [ '#6B59EE' ] }
+						// All Time spans years: open on this month, where a new
+						// pick usually starts, not on the oldest row's month.
+						shownDate={ state[ 0 ]?.allTime ? today : undefined }
 					/>
-					<div
-						style={ {
-							display: 'flex',
-							justifyContent: 'flex-end',
-							gap: '8px',
-							marginTop: '16px',
-							paddingTop: '16px',
-							borderTop: '1px solid #E5E7EB',
-						} }
-					>
+					<div className="bp-date-range-dropdown_footer">
+						<button
+							type="button"
+							onClick={ handleReset }
+							className="bp-font_ibm fx-4 bp-date-range-dropdown_reset"
+						>
+							{ __( 'Reset', 'better-payment' ) }
+						</button>
 						<button
 							type="button"
 							onClick={ handleApply }
-							className="bp-font_ibm fx-4"
-							style={ {
-								padding: '8px 16px',
-								backgroundColor: '#6B59EE',
-								border: 'none',
-								borderRadius: '6px',
-								cursor: 'pointer',
-								color: '#fff',
-								fontWeight: '500',
-							} }
+							className="bp-font_ibm fx-4 bp-date-range-dropdown_apply"
 						>
-							Apply
+							{ __( 'Apply', 'better-payment' ) }
 						</button>
 					</div>
 				</div>

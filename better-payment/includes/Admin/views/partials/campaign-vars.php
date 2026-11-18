@@ -243,6 +243,10 @@ if( ! empty( $related_campaigns_ids ) ) {
             if( ! empty( $related_campaign_settings ) && $page_url ) {
                 $related_campaign_layout = $related_campaign_settings['better_payment_campaign_layout'];
                 $related_campaign_currency = $related_campaign_settings['better_payment_campaign_currency'];
+                // raised_amount is in `raised_currency` (2.5.1+): one currency, never a sum of several.
+                if ( ! empty( $related_campaign_data['raised_currency'] ) ) {
+                    $related_campaign_currency = $related_campaign_data['raised_currency'];
+                }
                 $related_campaign_currency_symbol = $this->get_currency_symbol( $related_campaign_currency );
 
                 $related_campaign_title = $related_campaign_settings['better_payment_campaign_header_title_text'];

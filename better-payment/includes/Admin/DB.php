@@ -2,6 +2,7 @@
 
 namespace Better_Payment\Lite\Admin;
 
+use Better_Payment\Lite\Classes\CurrencyTotals;
 use Better_Payment\Lite\Classes\Helper;
 
 /**
@@ -497,59 +498,96 @@ class DB {
     }
 
     /**
-     * Get transactions analytics
+     * The site-local day of the oldest transaction (`Y-m-d`), where the Transactions list's
+     * "All Time" range starts; '' when there is none. Every row counts, as the list's All tab
+     * shows every row. `payment_date` is stored in UTC.
      *
+     * @since 2.5.1
+     *
+     * @return string
+     */
+    public static function first_transaction_date(): string
+    {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- custom table (no WP API); table name from $wpdb->prefix; uncached on purpose (live payment data).
+        $first = (string) $wpdb->get_var( "SELECT MIN(payment_date) FROM $table WHERE payment_date IS NOT NULL AND payment_date > '1970-01-02'" );
+
+        if ( '' === $first || false === strtotime( $first ) ) {
+            return '';
+        }
+
+        return get_date_from_gmt( $first, 'Y-m-d' );
+    }
+
+    /**
+     * Get transactions analytics from loaded rows.
+     *
+     * Same shape as get_user_analytics_by_email(): counts over every currency, each `*_amount`
+     * key in the primary currency only, `*_amount_by_currency` per currency (since 2.5.1).
+     *
+     * Every row is read once: it is counted in each status bucket it belongs to, and its amount
+     * is added to that bucket's sum for the row's currency. The work is the same for one currency
+     * or twenty. It used to read the list about ten times over (four count passes, one pass to
+     * split it by currency, then five passes over each currency's rows; issue #170). The counting
+     * rule is unchanged: an unconfirmed legacy free checkout is no row to count, a confirmed one
+     * adds 0 (Helper::is_unconfirmed_legacy_free_checkout() / Helper::countable_amount()).
+     *
+     * @param mixed $filtered_transactions Transaction rows (objects); anything else reads as none.
      * @return array<string, mixed>
      * @since 0.0.1
      */
-    public static function get_transactions_analytics_dashboard($filtered_transactions = array())
+    public static function get_transactions_analytics_dashboard($filtered_transactions = array()): array
     {
-        global $wpdb;
-        $transaction_analytics = [];
-
-        $table = self::get_table_name();
-        $better_payment_db_obj = new DB();
-
-        $total_transactions_count = 0;
-        $completed_transactions_count = 0;
-        $incomplete_transactions_count = 0;
-        $refunded_transactions_count = 0;
-
-        $total_transactions_amount = 0;
-        $completed_transactions_amount = 0;
-        $incomplete_transactions_amount = 0;
-        $refunded_transactions_amount = 0;
+        $buckets = array( 'total', 'completed', 'incomplete', 'refunded' );
+        $counts  = array_fill_keys( $buckets, 0 );
+        $sums    = array_fill_keys( $buckets, array() );
+        $present = array();
+        $site    = CurrencyTotals::site();
 
         if ( is_array( $filtered_transactions ) && count( $filtered_transactions ) ) {
-            $total_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'count', 1, $filtered_transactions );
-            $total_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses(array(), '', '', 'amount', 1, $filtered_transactions );
-    
-            $completed_statuses = $better_payment_db_obj->allowed_statuses('completed', 'v2');
-            $completed_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'count', 0, $filtered_transactions );
-            $completed_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $completed_statuses, '', '', 'amount', 0, $filtered_transactions );
-    
-            $incomplete_statuses = $better_payment_db_obj->allowed_statuses('incomplete', 'v2');
-            $incomplete_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'count', 1, $filtered_transactions );
-            $incomplete_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $incomplete_statuses, '', '', 'amount', 1, $filtered_transactions );
-            
-            $refunded_statuses = $better_payment_db_obj->allowed_statuses('refunded', 'v2');
-            $refunded_transactions_count = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'count', 0, $filtered_transactions );
-            $refunded_transactions_amount = $better_payment_db_obj->get_transactions_amount_by_statuses( $refunded_statuses, '', '', 'amount', 0, $filtered_transactions );
+            $db = new DB();
+
+            // "Total" is every status the plugin knows, not the three buckets added together.
+            $statuses = array(
+                'total'      => $db->allowed_statuses( 'all', 'v2' ),
+                'completed'  => $db->allowed_statuses( 'completed', 'v2' ),
+                'incomplete' => $db->allowed_statuses( 'incomplete', 'v2' ),
+                'refunded'   => $db->allowed_statuses( 'refunded', 'v2' ),
+            );
+
+            foreach ( $filtered_transactions as $row ) {
+                if ( Helper::is_unconfirmed_legacy_free_checkout( $row ) ) {
+                    continue;
+                }
+
+                $is_row = is_object( $row );
+                $status = $is_row && isset( $row->status ) ? $row->status : null;
+                $code   = CurrencyTotals::code( $is_row && isset( $row->currency ) ? $row->currency : '', $site );
+                $amount = null;
+
+                foreach ( $buckets as $bucket ) {
+                    // A loose match, as get_transactions_amount_by_statuses() has always made.
+                    if ( ! in_array( $status, $statuses[ $bucket ] ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict -- keeps the counting rule the figures were always built on.
+                        continue;
+                    }
+
+                    if ( null === $amount ) {
+                        $amount = Helper::countable_amount( $row );
+                    }
+
+                    ++$counts[ $bucket ];
+                    $sums[ $bucket ][ $code ] = ( $sums[ $bucket ][ $code ] ?? 0 ) + $amount;
+
+                    if ( 'total' === $bucket ) {
+                        $present[ $code ] = ( $present[ $code ] ?? 0 ) + 1;
+                    }
+                }
+            }
         }
 
-        $transaction_analytics['total_transactions_count']        = $total_transactions_count;
-        $transaction_analytics['completed_transactions_count']    = $completed_transactions_count;
-        $transaction_analytics['incomplete_transactions_count']   = $incomplete_transactions_count;
-        $transaction_analytics['refunded_transactions_count']     = $refunded_transactions_count;
-        
-        $transaction_analytics['total_transactions_amount']        = $total_transactions_amount;
-        $transaction_analytics['completed_transactions_amount']    = $completed_transactions_amount;
-        $transaction_analytics['incomplete_transactions_amount']   = $incomplete_transactions_amount;
-        $transaction_analytics['refunded_transactions_amount']     = $refunded_transactions_amount;
-
-        // Recent transactions
-        
-        return $transaction_analytics;
+        return self::analytics_shape( $counts, $sums, $present, $site );
     }
 
     /**
@@ -585,6 +623,11 @@ class DB {
      * one counts as completed and adds 0 to the amounts (Helper::COUNTED_ROW_SQL /
      * Helper::COUNTABLE_AMOUNT_SQL).
      *
+     * Amounts are never added across currencies (Classes\CurrencyTotals). Counts cover every
+     * currency. `currency` names the primary currency — the site currency when the user paid in
+     * it, else the one they paid most in — and each `*_amount` key is that currency's sum only.
+     * `*_amount_by_currency` holds every currency, primary first (since 2.5.1).
+     *
      * @param string $email
      * @return array
      */
@@ -604,9 +647,10 @@ class DB {
         // spread from $email_params, which the placeholder sniff can neither see nor count.
         // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- see the comments above.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table, no WP API, uncached on purpose; $countable_amount is built from Helper constants above.
-        $row = '' === $email ? null : $wpdb->get_row(
+        $rows = '' === $email ? array() : $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT
+                    UPPER(TRIM(COALESCE(currency, ''))) AS currency,
                     COUNT(*) AS total_count,
                     SUM({$countable_amount}) AS total_amount,
                     SUM(CASE WHEN {$completed}
@@ -620,29 +664,100 @@ class DB {
                     SUM(CASE WHEN status = 'refunded' THEN 1 ELSE 0 END) AS refunded_count,
                     SUM(CASE WHEN status = 'refunded'
                         THEN CAST(amount AS DECIMAL(10,2)) ELSE 0 END) AS refunded_amount
-                FROM $table WHERE {$email_where} AND {$counted_row}",
+                FROM $table WHERE {$email_where} AND {$counted_row}
+                GROUP BY UPPER(TRIM(COALESCE(currency, '')))",
                 ...$email_params
             )
         );
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
-        if ( ! $row ) {
-            $row = (object) array_fill_keys(
-                array( 'total_count', 'total_amount', 'completed_count', 'completed_amount', 'incomplete_count', 'incomplete_amount', 'refunded_count', 'refunded_amount' ),
-                0
-            );
+        return self::analytics_from_currency_rows( is_array( $rows ) ? $rows : array(), CurrencyTotals::site() );
+    }
+
+    /**
+     * The currency codes transactions are stored in, upper case, sorted; blank codes left out.
+     *
+     * Feeds the Transactions screen's currency filter, so it offers the currencies a site has
+     * taken payments in rather than every code Better Payment knows.
+     *
+     * @since 2.5.1
+     *
+     * @return string[]
+     */
+    public static function currencies_in_use(): array {
+        global $wpdb;
+        $table = self::get_table_name();
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- custom table (name from $wpdb->prefix), no user input; uncached on purpose (live payment data).
+        $codes = $wpdb->get_col( "SELECT DISTINCT UPPER(TRIM(currency)) FROM $table WHERE TRIM(COALESCE(currency, '')) <> ''" );
+
+        $codes = array_values( array_unique( array_filter( array_map( 'strval', is_array( $codes ) ? $codes : array() ) ) ) );
+        sort( $codes );
+
+        return $codes;
+    }
+
+    /**
+     * Build the analytics shape from per-currency aggregate rows.
+     *
+     * Each row carries `currency` plus `{total,completed,incomplete,refunded}_{count,amount}`.
+     * Counts are summed over every currency; amounts stay per currency. A blank currency reads as
+     * the site currency.
+     *
+     * @since 2.5.1
+     *
+     * @param array  $rows Aggregate rows, one per currency (objects or arrays).
+     * @param string $site Site currency code.
+     * @return array
+     */
+    public static function analytics_from_currency_rows( array $rows, string $site ): array {
+        $buckets = array( 'total', 'completed', 'incomplete', 'refunded' );
+        $counts  = array_fill_keys( $buckets, 0 );
+        $sums    = array_fill_keys( $buckets, array() );
+        $present = array();
+
+        foreach ( $rows as $row ) {
+            $row  = (array) $row;
+            $code = CurrencyTotals::code( $row['currency'] ?? '', $site );
+
+            $present[ $code ] = ( $present[ $code ] ?? 0 ) + (int) ( $row['total_count'] ?? 0 );
+
+            foreach ( $buckets as $bucket ) {
+                $counts[ $bucket ]         += (int) ( $row[ $bucket . '_count' ] ?? 0 );
+                $sums[ $bucket ][ $code ]   = ( $sums[ $bucket ][ $code ] ?? 0.0 ) + (float) ( $row[ $bucket . '_amount' ] ?? 0 );
+            }
         }
 
-        return [
-            'total_transactions_count'        => (int) $row->total_count,
-            'total_transactions_amount'        => (float) $row->total_amount,
-            'completed_transactions_count'     => (int) $row->completed_count,
-            'completed_transactions_amount'    => (float) $row->completed_amount,
-            'incomplete_transactions_count'    => (int) $row->incomplete_count,
-            'incomplete_transactions_amount'   => (float) $row->incomplete_amount,
-            'refunded_transactions_count'      => (int) $row->refunded_count,
-            'refunded_transactions_amount'     => (float) $row->refunded_amount,
-        ];
+        return self::analytics_shape( $counts, $sums, $present, $site );
+    }
+
+    /**
+     * The analytics array every caller reads: the original count / amount keys (amounts in the
+     * primary currency only) plus `currency` and `*_amount_by_currency`.
+     *
+     * @since 2.5.1
+     *
+     * @param array<string, int>                  $counts  Bucket => count over every currency.
+     * @param array<string, array<string, float>> $sums    Bucket => code => sum.
+     * @param array<string, int>                  $present Code => rows counted in it.
+     * @param string                              $site    Site currency code.
+     * @return array
+     */
+    private static function analytics_shape( array $counts, array $sums, array $present, string $site ): array {
+        $primary = CurrencyTotals::choose_primary( $present, $sums['total'] ?? array(), $site );
+        $result  = array();
+
+        foreach ( array( 'total', 'completed', 'incomplete', 'refunded' ) as $bucket ) {
+            $by_currency = CurrencyTotals::order( $sums[ $bucket ] ?? array(), $primary );
+
+            $result[ $bucket . '_transactions_count' ]              = (int) ( $counts[ $bucket ] ?? 0 );
+            $result[ $bucket . '_transactions_amount' ]             = (float) $by_currency[ $primary ];
+            $result[ $bucket . '_transactions_amount_by_currency' ] = $by_currency;
+        }
+
+        $result['currency'] = $primary;
+
+        return $result;
     }
 
     /**
@@ -835,10 +950,11 @@ class DB {
     /**
      * Get transactions amount
      *
-     * Lite's caller, get_transactions_analytics_dashboard(), always passes
-     * $filtered_transactions and is answered from that array. Without it the answer is
-     * 0 — the call shape only Better Payment Pro <= 1.4.3's AnalyticsModel used, kept as
-     * a fatal guard (ProCouplingContractTest).
+     * Answered from $filtered_transactions. Without it the answer is 0 — the call shape only
+     * Better Payment Pro <= 1.4.3's AnalyticsModel used, kept as a fatal guard
+     * (ProCouplingContractTest). Lite no longer calls it: since 2.5.1
+     * get_transactions_analytics_dashboard() reads its rows once and applies this same counting
+     * rule itself (AnalyticsDashboardSinglePassTest holds the two to the same figures).
      *
      * @return mixed
      * @since 0.0.1

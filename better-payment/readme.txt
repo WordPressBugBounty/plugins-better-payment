@@ -1,11 +1,11 @@
-=== Better Payment – Instant Payments, Donations, Fundraising with Subscriptions & More ===
+=== Better Payment – Donation Forms, AI Fundraising Campaigns, Recurring Donations & Payment Forms ===
 Contributors: wpdevteam, re_enter_rupok, asif2bd, fuadragib, rahatsheikhleon
 Donate link: https://wpdeveloper.com
-Tags: donation, fundraising, recurring donations, payments, stripe-payment
+Tags: donation, fundraising, donate, charity, crowdfunding
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -258,6 +258,12 @@ The JavaScript and CSS files in `assets/` are compiled with `@wordpress/scripts`
 * `src/controls/` — the shared block editor controls, compiled into `assets/blocks/`
 
 == Changelog ==
+
+= 2.5.1 - 18/11/2026 =
+- Added: Currency filter on Transactions and an All Time date range on Transactions and Subscriptions
+- Improved: Totals keep each currency separate in the User Dashboard, the Fundraising Campaign widget and the MCP tools
+- Improved: Settings sidebar icons follow the active tab
+- Few minor bug fixes and improvements
 
 = 2.5.0 - 10/11/2026 =
 - Added: Campaign auto-closure based on end date, Closed status, or reached goal

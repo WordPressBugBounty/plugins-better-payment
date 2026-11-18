@@ -66,7 +66,10 @@ if ( ! defined( 'ABSPATH' ) ) {
                                 <div class="bp-flex bp-justify_content-space_between bp-align_items-center">
                                     <?php if( $form_goal_amount_raised_enable ): ?>
                                         <label for="bpProgressBar" class="bp-flex bp-text_m  bp-ibm_font " style="gap: 3px;">
-                                            <span><?php echo esc_html( $better_payment_campaign_currency_symbol ); ?><?php echo esc_html( $bpc_total_amount_raised );?></span> <span><?php echo esc_html( $form_goal_amount_raised_label );?></span>
+                                            <span><?php echo esc_html( isset( $bpc_raised_currency_symbol ) ? $bpc_raised_currency_symbol : $better_payment_campaign_currency_symbol ); ?><?php echo esc_html( $bpc_total_amount_raised );?></span> <span><?php echo esc_html( $form_goal_amount_raised_label );?></span>
+                                            <?php if ( ! empty( $bpc_raised_other_currencies ) ) : ?>
+                                                <span class="bp-campaign-other-currencies">+ <?php echo esc_html( $bpc_raised_other_currencies ); ?></span>
+                                            <?php endif; ?>
                                         </label>
                                     <?php endif; ?>
 

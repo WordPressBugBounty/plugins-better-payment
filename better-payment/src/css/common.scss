@@ -3708,6 +3708,17 @@
 		padding: 16px;
 	}
 
+	// Amounts in other currencies, listed under the primary figure, never added to it.
+	.bp-amount_price + .bp-amount_other-currencies {
+		margin-top: -10px;
+		padding: 0 16px 12px;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.4;
+		color: #667085;
+		overflow-wrap: anywhere;
+	}
+
 	.bp-transaction {
 		padding: 10px 16px;
 		background-color: #fafafc;

@@ -105,7 +105,7 @@ class Customers implements ToolProvider {
 
 			'customer_analytics'    => array(
 				'title'       => __( 'Customer payment totals', 'better-payment' ),
-				'description' => __( 'Totals and counts for one payer, found by exact e-mail address: how much they have paid, how many payments completed, and how many are incomplete or refunded.', 'better-payment' ),
+				'description' => __( 'Totals and counts for one payer, found by exact e-mail address: how much they have paid, how many payments completed, and how many are incomplete or refunded. Amounts are never added across currencies: each *_transactions_amount is in the currency named by `currency`, and *_transactions_amount_by_currency lists every currency separately.', 'better-payment' ),
 				'inputSchema' => Schema::object( array( 'email' => $email ), array( 'email' ) ),
 				'capability'  => self::CAPABILITY,
 				'callback'    => array( self::class, 'analytics' ),
@@ -204,10 +204,13 @@ class Customers implements ToolProvider {
 			);
 		}
 
+		$analytics = DB::get_user_analytics_by_email( $email );
+
 		return array(
 			'email'     => $email,
-			'analytics' => Result::plain( DB::get_user_analytics_by_email( $email ) ),
-			'currency'  => (string) DB::get_settings( 'better_payment_settings_general_general_currency' ),
+			'analytics' => Result::plain( $analytics ),
+			// The currency the *_transactions_amount figures are in (never a mix of several).
+			'currency'  => (string) $analytics['currency'],
 		);
 	}
 }

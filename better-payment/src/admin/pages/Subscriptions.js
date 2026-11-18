@@ -104,6 +104,8 @@ const Subscriptions = () => {
 		cancelled: 0,
 	} );
 	const [ countLoading, setCountLoading ] = useState( true );
+	// The oldest subscription's start day: where the date filter's All Time starts (2.5.1).
+	const [ firstDate, setFirstDate ] = useState( '' );
 
 	// Refetched after any mutation that can change a status or remove a row:
 	// delete here, cancel/reactivate on the details page (via the back
@@ -116,6 +118,7 @@ const Subscriptions = () => {
 			.then( ( data ) => {
 				if ( data?.count ) {
 					setSubscriptionCount( data.count );
+					setFirstDate( data?.first_date ?? '' );
 				}
 			} )
 			.finally( () => {
@@ -598,6 +601,7 @@ const Subscriptions = () => {
 													onClose={
 														closeAllDropdowns
 													}
+													allTimeStart={ firstDate }
 												/>
 
 												<FilterDropdown

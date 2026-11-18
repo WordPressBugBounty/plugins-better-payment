@@ -5,7 +5,7 @@
  * Description: Better Payment allows you to automate payment transactions to manage donations, make payments, sell products, and more on your Elementor and Gutenberg website.
  * Plugin URI: https://wpdeveloper.com/
  * Author: WPDeveloper
- * Version: 2.5.0
+ * Version: 2.5.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author URI: https://wpdeveloper.com/
@@ -36,7 +36,7 @@ final class Better_Payment {
      * @var string
      * @since 0.0.1
      */
-    const version = '2.5.0';
+    const version = '2.5.1';
 
     /**
      * Class construcotr
@@ -379,6 +379,9 @@ add_action('wp_loaded', function () {
 
     // Once per site: list the published campaigns the now-enforced end date closed, so owners can extend them.
     Better_Payment\Lite\Campaign\EndedCampaignsNotice::maybe_flag();
+
+    // Once per site: explain to owners whose payments span several currencies that totals now keep them apart.
+    Better_Payment\Lite\Classes\MultiCurrencyTotalsNotice::maybe_flag();
 
     $setup_wizard = get_option('better_payment_setup_wizard');
 

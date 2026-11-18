@@ -267,32 +267,50 @@ class Helper extends Controller
      * `success`, `Completed`, …) or a confirmed legacy free checkout, which adds 0. It used to
      * count only `paid`, so Paystack and manually completed donations never moved the bar.
      *
+     * Amounts are never added across currencies (since 2.5.1, Classes\CurrencyTotals). `amount`
+     * is the primary currency's sum: the widget's own currency when any counted row is in it,
+     * else the currency holding the most (a widget whose rows predate its currency setting keeps
+     * the figure it always showed). `currency` names it, `by_currency` lists every currency
+     * (primary first), and `count` covers every currency. A blank row currency is the widget's.
+     *
      * @since 2.4.0
      *
-     * @param mixed $rows Transaction rows (objects or arrays).
-     * @return array{amount: float, count: int}
+     * @param mixed  $rows     Transaction rows (objects or arrays).
+     * @param string $currency The widget's currency; '' reads as the site currency.
+     * @return array{amount: float, count: int, currency: string, by_currency: array<string, float>}
      */
-    public static function campaign_totals_from_rows( $rows ): array {
-        $totals = array(
-            'amount' => 0.0,
-            'count'  => 0,
-        );
+    public static function campaign_totals_from_rows( $rows, string $currency = '' ): array {
+        $preferred = '' !== trim( $currency ) ? strtoupper( trim( $currency ) ) : CurrencyTotals::site();
+        $counted   = array();
 
         foreach ( is_array( $rows ) ? $rows : array() as $row ) {
             $status = self::row_value( $row, 'status' );
 
-            $counted = in_array( $status, self::APPROVED_DONATION_STATUSES, true )
+            $is_counted = in_array( $status, self::APPROVED_DONATION_STATUSES, true )
                 || ( self::LEGACY_FREE_CHECKOUT_STATUS === $status && ! self::is_unconfirmed_legacy_free_checkout( $row ) );
 
-            if ( ! $counted ) {
-                continue;
+            if ( $is_counted ) {
+                $counted[] = $row;
             }
-
-            $totals['amount'] += self::countable_amount( $row );
-            ++$totals['count'];
         }
 
-        return $totals;
+        $grouped = CurrencyTotals::group_rows(
+            $counted,
+            $preferred,
+            static function ( $row ) {
+                return self::countable_amount( $row );
+            }
+        );
+
+        $primary     = CurrencyTotals::choose_primary( $grouped['counts'], $grouped['sums'], $preferred );
+        $by_currency = CurrencyTotals::order( $grouped['sums'], $primary );
+
+        return array(
+            'amount'      => $by_currency[ $primary ],
+            'count'       => count( $counted ),
+            'currency'    => $primary,
+            'by_currency' => $by_currency,
+        );
     }
 
     /**

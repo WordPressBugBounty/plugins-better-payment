@@ -14,6 +14,7 @@ import SubscriptionsTab from './SubscriptionsTab';
 import { useLegacySubscriptionProps } from './transitional/legacySubscriptionProps';
 import { getBpStatusInfo } from './statusInfo';
 import { avatarFor } from './defaultAvatar';
+import { amountTexts } from './analyticsAmounts';
 
 const DashboardSVGIcons = {
 	dashboard: () => (
@@ -193,6 +194,8 @@ export default function DashboardPreview( { attributes } ) {
 		user_avatar_url: '',
 	};
 	const analytics = blockData.userAnalytics || {};
+	// The four amount cards' strings, read once per render.
+	const amounts = amountTexts( analytics );
 	const assetUrl = blockData.assetUrl || blockData.assetsUrl || '';
 	const proAssets = blockData.proAssets || {};
 	const proEnabled = blockData.proEnabled === true;
@@ -450,13 +453,21 @@ export default function DashboardPreview( { attributes } ) {
 													</h4>
 													<div className="bp-amount_price mb-0 pb-0">
 														<span>
-															$
-															{ parseFloat(
-																analytics.total_transactions_amount ||
-																	0
-															).toFixed( 2 ) }
+															{
+																amounts.total
+																	.primary
+															}
 														</span>
 													</div>
+													{ amounts.total.others && (
+														<div className="bp-amount_other-currencies">
+															+{ ' ' }
+															{
+																amounts.total
+																	.others
+															}
+														</div>
+													) }
 													<div className="bp-transaction">
 														<span className="bp-transaction_title">
 															No of Transaction:
@@ -481,13 +492,24 @@ export default function DashboardPreview( { attributes } ) {
 													</h4>
 													<div className="bp-amount_price mb-0 pb-0">
 														<span>
-															$
-															{ parseFloat(
-																analytics.completed_transactions_amount ||
-																	0
-															).toFixed( 2 ) }
+															{
+																amounts
+																	.completed
+																	.primary
+															}
 														</span>
 													</div>
+													{ amounts.completed
+														.others && (
+														<div className="bp-amount_other-currencies">
+															+{ ' ' }
+															{
+																amounts
+																	.completed
+																	.others
+															}
+														</div>
+													) }
 													<div className="bp-transaction">
 														<span className="bp-transaction_title">
 															No of Transaction:
@@ -512,13 +534,24 @@ export default function DashboardPreview( { attributes } ) {
 													</h4>
 													<div className="bp-amount_price mb-0 pb-0">
 														<span>
-															$
-															{ parseFloat(
-																analytics.incomplete_transactions_amount ||
-																	0
-															).toFixed( 2 ) }
+															{
+																amounts
+																	.incomplete
+																	.primary
+															}
 														</span>
 													</div>
+													{ amounts.incomplete
+														.others && (
+														<div className="bp-amount_other-currencies">
+															+{ ' ' }
+															{
+																amounts
+																	.incomplete
+																	.others
+															}
+														</div>
+													) }
 													<div className="bp-transaction">
 														<span className="bp-transaction_title">
 															No of Transaction:
@@ -543,13 +576,22 @@ export default function DashboardPreview( { attributes } ) {
 													</h4>
 													<div className="bp-amount_price mb-0 pb-0">
 														<span>
-															$
-															{ parseFloat(
-																analytics.refunded_transactions_amount ||
-																	0
-															).toFixed( 2 ) }
+															{
+																amounts.refunded
+																	.primary
+															}
 														</span>
 													</div>
+													{ amounts.refunded
+														.others && (
+														<div className="bp-amount_other-currencies">
+															+{ ' ' }
+															{
+																amounts.refunded
+																	.others
+															}
+														</div>
+													) }
 													<div className="bp-transaction">
 														<span className="bp-transaction_title">
 															No of Transaction:

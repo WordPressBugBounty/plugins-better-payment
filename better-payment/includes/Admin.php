@@ -51,11 +51,18 @@ class Admin extends Controller{
             $this->admin_notice();
         }
 
+        // The campaign's pointer beside the menu item. Registered with or without Pro: it shows
+        // only without Pro, and with Pro it gives back a pointer slot it still holds.
+        \Better_Payment\Lite\Classes\OfferPointer::register();
+
         // Security notice, shown with or without Pro.
         \Better_Payment\Lite\Classes\SecretKeyRotationNotice::register();
 
         // Campaigns the end date closed on update (Campaign\CampaignLifecycle), with or without Pro.
         \Better_Payment\Lite\Campaign\EndedCampaignsNotice::register();
+
+        // Totals now keep each currency apart (Classes\CurrencyTotals); told once, with or without Pro.
+        \Better_Payment\Lite\Classes\MultiCurrencyTotalsNotice::register();
 
         // Usage tracking is NOT registered here any more. It is wired from
         // Better_Payment::init_plugin() for admin *and* cron requests, because
@@ -164,22 +171,22 @@ class Admin extends Controller{
 		);
 
 		/**
-		 * Halloween Offer Notice
+		 * Black Friday / Cyber Monday 2026 Offer Notice
 		 */
-		$purchase_url = 'https://betterpayment.co/halloween2026/admin-notice';
-		$halloween_notice_message = "<p><span class='bp-notice-emoji wp-exclude-emoji' aria-hidden='true'>&#x1F47B;</span> <strong>Halloween Sale:</strong> Streamline transactions with fast, optimized payment forms on your WordPress sites – now <strong>up to 35% OFF!</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I Don't Want Any Discount</button></div>";
+		$purchase_url = 'https://betterpayment.co/bfcm2026/admin-notice';
+		$bfcm2026_notice_message = "<p><span class='bp-notice-emoji wp-exclude-emoji' aria-hidden='true'>&#x1F6CD;&#xFE0F;</span> <strong>Black Friday Sale:</strong> Collect payments with PayPal, Stripe &amp; Paystack, and launch instant campaigns with AI Campaign Builder – <strong>now up to 40% OFF!</strong> </p><div class='wpsp-notice-action-button' style='display: inline-flex;column-gap:5px;'><a class='button button-primary' href='{$purchase_url}' target='_blank'>Upgrade To Pro Now</a> <button class='wpsp-notice-action-dismiss dismiss-btn' data-dismiss='true' target='_blank'>I Want To Pay Full Price</button></div>";
 
-		$halloween_notice = [
+		$bfcm2026_notice = [
 			'thumbnail' => plugins_url( 'assets/img/logo.svg', BETTER_PAYMENT_BASENAME ),
-			'html'      => $halloween_notice_message,
+			'html'      => $bfcm2026_notice_message,
 		];
 
         $notices->add(
-			'bp_halloween_notice',
-			$halloween_notice,
+			'bp_bfcm2026_notice',
+			$bfcm2026_notice,
 			[
-				'start'       => strtotime( '12:00:00am 14th October, 2026' ),
-				'expire'      => strtotime( '11:59:59pm 5th November, 2026' ),
+				'start'       => strtotime( '12:00:00am 15th November, 2026' ),
+				'expire'      => strtotime( '11:59:59pm 14th December, 2026' ),
 				'refresh'     => BETTER_PAYMENT_VERSION,
 				'dismissible' => true,
 				'screens' 	  => [ 'dashboard' ],

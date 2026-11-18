@@ -32,6 +32,7 @@ import illustrationdark from './../images/illustrationdark.webp';
 import locale from './../utils/locale/en-US';
 import { scrollAdminToTop, useListScrollRestore } from '../utils/scroll';
 import { rowMenuAnchor, useRowMenuFlip } from '../utils/popupPosition';
+import { currencyFilterOptions } from '../utils/currencyFilter';
 
 // Rows the list requests, and therefore rows the skeleton draws. One constant so
 // the placeholder can't promise more rows than the request can return.
@@ -68,28 +69,18 @@ const Transactions = () => {
 	// flag — tying them to `loading` would blank them on every filter change,
 	// and the counts are unfiltered totals that never change with the filters.
 	const [ countLoading, setCountLoading ] = useState( true );
+	// The oldest transaction's day: where the date filter's All Time starts (2.5.1).
+	const [ firstDate, setFirstDate ] = useState( '' );
 	// payment_date is UTC; it is shown in the site's timezone (offset sites included).
 	const timezone = siteTimezone();
 	const [ isImportModalOpen, setIsImportModalOpen ] = useState( false );
-	const allCurrencies = window?.betterPaymentAdmin?.currencies || {};
-	const [ currencyOptions, setCurrencyOptions ] = useState( [
-		{ label: 'All', value: 'all' },
-	] );
-
-	useEffect( () => {
-		// Convert currencies object to array of currency codes
-		const currenciesArray = Object.values( allCurrencies );
-		if ( currenciesArray?.length > 0 ) {
-			const newOptions = currenciesArray.map( ( currency ) => ( {
-				label: currency,
-				value: currency,
-			} ) );
-			setCurrencyOptions( [
-				{ label: 'All', value: 'all' },
-				...newOptions,
-			] );
-		}
-	}, [] );
+	// The currencies this site has taken payments in (every known code as a fallback).
+	const [ currencyOptions ] = useState( () =>
+		currencyFilterOptions(
+			window?.betterPaymentAdmin?.currenciesInUse,
+			window?.betterPaymentAdmin?.currencies
+		)
+	);
 
 	// Campaigns that have transactions, for the Campaign filter (empty until loaded).
 	const [ campaigns, setCampaigns ] = useState( [] );
@@ -148,6 +139,7 @@ const Transactions = () => {
 				setTransactionCount(
 					data?.count || { all: 0, completed: 0, incomplete: 0 }
 				);
+				setFirstDate( data?.first_date ?? '' );
 			} )
 			.catch( () => {
 				// Leave the seeded zeroes rather than shimmering forever.
@@ -527,6 +519,7 @@ const Transactions = () => {
 			setTransactionCount(
 				countData?.count || { all: 0, completed: 0, incomplete: 0 }
 			);
+			setFirstDate( countData?.first_date ?? '' );
 		} catch ( error ) {
 			console.error( 'Delete error:', error );
 
@@ -862,6 +855,7 @@ const Transactions = () => {
 													onClose={
 														closeAllDropdowns
 													}
+													allTimeStart={ firstDate }
 												/>
 
 												<FilterDropdown

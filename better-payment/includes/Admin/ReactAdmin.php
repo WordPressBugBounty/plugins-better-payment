@@ -350,6 +350,8 @@ class ReactAdmin extends Controller
                 'email' => wp_get_current_user()->user_email
             ],
             'currencies' => $this->get_currency_list(),
+            // The codes transactions are actually stored in, for the Transactions currency filter.
+            'currenciesInUse' => DB::currencies_in_use(),
             'userRoles' => $this->get_user_roles_list(),
             // What Role After Subscription Ends falls back to: `customer` only
             // where WooCommerce has created it, `subscriber` otherwise.

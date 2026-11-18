@@ -118,11 +118,15 @@ class Transactions implements ToolProvider {
 
 			'transactions_count'        => array(
 				'title'       => __( 'Count transactions', 'better-payment' ),
-				'description' => __( 'Count Better Payment transactions matching a status bucket, gateway and date range. Cheaper than listing when only the total is needed.', 'better-payment' ),
+				'description' => __( 'Count Better Payment transactions matching a status bucket, gateway, currency and date range. Cheaper than listing when only the total is needed.', 'better-payment' ),
 				'inputSchema' => Schema::object(
 					array(
 						'status'    => Schema::transaction_status(),
 						'gateway'   => Schema::gateway(),
+						'currency'  => array(
+							'type'        => 'string',
+							'description' => 'Three-letter currency code to count only that currency, or "all".',
+						),
 						'date_from' => Schema::date( 'Earliest payment date to include (YYYY-MM-DD).' ),
 						'date_to'   => Schema::date( 'Latest payment date to include (YYYY-MM-DD).' ),
 					)
@@ -136,12 +140,16 @@ class Transactions implements ToolProvider {
 
 			'transactions_analytics'    => array(
 				'title'       => __( 'Transaction totals', 'better-payment' ),
-				'description' => __( 'Totals and counts for Better Payment transactions, split into completed, incomplete and refunded, over an optional date range.', 'better-payment' ),
+				'description' => __( 'Totals and counts for Better Payment transactions, split into completed, incomplete and refunded, over an optional date range. Amounts are never added across currencies: each *_transactions_amount is in the currency named by `currency`, and *_transactions_amount_by_currency lists every currency separately. Counts cover all currencies. Pass `currency` to total one currency only.', 'better-payment' ),
 				'inputSchema' => Schema::object(
 					array(
 						'date_from' => Schema::date( 'Earliest payment date to include (YYYY-MM-DD).' ),
 						'date_to'   => Schema::date( 'Latest payment date to include (YYYY-MM-DD).' ),
 						'gateway'   => Schema::gateway(),
+						'currency'  => array(
+							'type'        => 'string',
+							'description' => 'Three-letter currency code to total only that currency, or "all".',
+						),
 					)
 				),
 				'callback'    => array( self::class, 'analytics' ),
@@ -398,10 +406,13 @@ class Transactions implements ToolProvider {
 		$rows = DB::get_transactions( $filters, 0, 'v2' );
 		$rows = is_array( $rows ) ? $rows : array();
 
+		$analytics = DB::get_transactions_analytics_dashboard( $rows );
+
 		return array(
-			'analytics' => Result::plain( DB::get_transactions_analytics_dashboard( $rows ) ),
+			'analytics' => Result::plain( $analytics ),
 			'matched'   => count( $rows ),
-			'currency'  => (string) DB::get_settings( 'better_payment_settings_general_general_currency' ),
+			// The currency the *_transactions_amount figures are in (never a mix of several).
+			'currency'  => (string) $analytics['currency'],
 		);
 	}
 

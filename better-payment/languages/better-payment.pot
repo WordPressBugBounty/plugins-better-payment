@@ -13,11 +13,11 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../includes/Admin.php:82, ../includes/Admin/ReactAdmin.php:171
+#: ../includes/Admin.php:89, ../includes/Admin/ReactAdmin.php:171
 msgid "Settings"
 msgstr ""
 
-#: ../includes/Admin.php:85
+#: ../includes/Admin.php:92
 msgid "Go Pro"
 msgstr ""
 
@@ -67,7 +67,7 @@ msgstr ""
 msgid "Payment verification timed out. Please contact support if your payment was charged."
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:135, ../includes/Admin/ReactAdmin.php:136, ../includes/Blocks/BlockActions.php:361, ../includes/Blocks/BlockActions.php:611, ../includes/Blocks/BlockManager.php:2094, ../includes/Classes/Actions.php:139, ../includes/Classes/Actions.php:317, ../includes/Classes/Actions.php:323, ../includes/Traits/ElementorHelper.php:218, ../includes/WooCommerce/Blocks.php:106, ../includes/WooCommerce/Gateway.php:80, ../includes/Admin/Elementor/Better_Payment_Widget.php:710, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:252
+#: ../includes/Admin/ReactAdmin.php:135, ../includes/Admin/ReactAdmin.php:136, ../includes/Blocks/BlockActions.php:361, ../includes/Blocks/BlockActions.php:611, ../includes/Blocks/BlockManager.php:2098, ../includes/Classes/Actions.php:139, ../includes/Classes/Actions.php:317, ../includes/Classes/Actions.php:323, ../includes/Traits/ElementorHelper.php:218, ../includes/WooCommerce/Blocks.php:106, ../includes/WooCommerce/Gateway.php:80, ../includes/Admin/Elementor/Better_Payment_Widget.php:710, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:34, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:46, ../includes/Admin/Elementor/Form_Actions/Payment_Amount_Integration.php:107, ../includes/Admin/Elementor/Form_Actions/Paypal_Integration.php:252
 msgid "Better Payment"
 msgstr ""
 
@@ -91,21 +91,21 @@ msgstr ""
 msgid "Analytics"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:434
+#: ../includes/Admin/ReactAdmin.php:436
 msgid "Thank you for using <a href=\"https://betterpayment.co/\" target=\"_blank\">Better Payment</a>"
 msgstr ""
 
 #. translators: %s: Better Payment (free) version number, wrapped in a badge.
-#: ../includes/Admin/ReactAdmin.php:452
+#: ../includes/Admin/ReactAdmin.php:454
 msgid "Free Version %s"
 msgstr ""
 
 #. translators: %s: Better Payment Pro version number, wrapped in a badge.
-#: ../includes/Admin/ReactAdmin.php:455
+#: ../includes/Admin/ReactAdmin.php:457
 msgid "Pro Version %s"
 msgstr ""
 
-#: ../includes/Admin/ReactAdmin.php:459
+#: ../includes/Admin/ReactAdmin.php:461
 msgid "Free Version"
 msgstr ""
 
@@ -133,71 +133,71 @@ msgstr ""
 msgid "Tracking data saved successfully."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:325
+#: ../includes/API/AdminAPI.php:327
 msgid "Sale info dismissed"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:345
+#: ../includes/API/AdminAPI.php:347
 msgid "Dismissible section dismissed"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:757
+#: ../includes/API/AdminAPI.php:783
 msgid "A subscription id and source are required."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:763
+#: ../includes/API/AdminAPI.php:789
 msgid "Subscription not found."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:910
+#: ../includes/API/AdminAPI.php:936
 msgid "A subscription action is required."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:933
+#: ../includes/API/AdminAPI.php:959
 msgid "This subscription cannot be managed from here — its integration does not support status changes."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:944
+#: ../includes/API/AdminAPI.php:970
 msgid "Subscription cancelled — no further renewals will be charged."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:945
+#: ../includes/API/AdminAPI.php:971
 msgid "Subscription updated successfully."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:979
+#: ../includes/API/AdminAPI.php:1005
 msgid "Better Payment: subscription cancelled — it was deleted from the Better Payment admin. No further automatic renewals will be charged."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:999
+#: ../includes/API/AdminAPI.php:1025
 msgid "Failed to delete subscription."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1004
+#: ../includes/API/AdminAPI.php:1030
 msgid "Subscription deleted successfully."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1156, ../includes/MCP/Tools/Transactions.php:439
+#: ../includes/API/AdminAPI.php:1182, ../includes/MCP/Tools/Transactions.php:450
 msgid "This free checkout cannot be marked as completed: its stored amount was never charged."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1169
+#: ../includes/API/AdminAPI.php:1195
 msgid "Transaction marked as completed!"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1213, ../includes/API/AdminAPI.php:1215, ../includes/API/AdminAPI.php:1227, ../includes/Classes/Handler.php:2495, ../includes/Classes/Handler.php:2582, ../includes/Classes/Handler.php:2856
+#: ../includes/API/AdminAPI.php:1239, ../includes/API/AdminAPI.php:1241, ../includes/API/AdminAPI.php:1253, ../includes/Classes/Handler.php:2495, ../includes/Classes/Handler.php:2582, ../includes/Classes/Handler.php:2856
 msgid "N/A"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1286
+#: ../includes/API/AdminAPI.php:1312
 msgid "Transaction deleted successfully"
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1336, ../includes/API/AdminAPI.php:1345
+#: ../includes/API/AdminAPI.php:1362, ../includes/API/AdminAPI.php:1371
 msgid "Settings must be sent as a JSON object."
 msgstr ""
 
-#: ../includes/API/AdminAPI.php:1361
+#: ../includes/API/AdminAPI.php:1387
 msgid "Settings updated successfully"
 msgstr ""
 
@@ -590,7 +590,7 @@ msgstr ""
 msgid "Keep them closed, dismiss"
 msgstr ""
 
-#: ../includes/Campaign/EndedCampaignsNotice.php:229, ../includes/Campaign/EndedCampaignsNotice.php:261, ../includes/Classes/SecretKeyRotationNotice.php:201
+#: ../includes/Campaign/EndedCampaignsNotice.php:229, ../includes/Campaign/EndedCampaignsNotice.php:261, ../includes/Classes/MultiCurrencyTotalsNotice.php:218, ../includes/Classes/SecretKeyRotationNotice.php:201
 msgid "You are not allowed to do that."
 msgstr ""
 
@@ -765,6 +765,42 @@ msgstr ""
 
 #: ../includes/Classes/Import.php:179
 msgid "%d rows inserted successfully!"
+msgstr ""
+
+#. translators: 1: comma-separated currency codes, e.g. "USD, EUR, GBP". 2: the number of currencies not listed; always printed from this placeholder, never written out as a word or a fixed digit.
+#: ../includes/Classes/MultiCurrencyTotalsNotice.php:150
+msgid "%1$s and %2$d more"
+msgid_plural "%1$s and %2$d more"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../includes/Classes/MultiCurrencyTotalsNotice.php:181
+msgid "Better Payment: totals now keep each currency separate"
+msgstr ""
+
+#. translators: %s: currency codes, e.g. "USD, ZAR, EUR".
+#: ../includes/Classes/MultiCurrencyTotalsNotice.php:187
+msgid "Your site has taken payments in more than one currency (%s). Totals used to add these amounts together as if they were one currency. Now each total shows one currency, and payments in other currencies are listed beside it. Nothing stored was changed, but a total may look lower than before because it no longer includes other currencies."
+msgstr ""
+
+#: ../includes/Classes/MultiCurrencyTotalsNotice.php:193, ../includes/Classes/OfferPointer.php:170
+msgid "Dismiss"
+msgstr ""
+
+#: ../includes/Classes/OfferPointer.php:167
+msgid "Black Friday Is On!"
+msgstr ""
+
+#: ../includes/Classes/OfferPointer.php:168
+msgid "Up to 40% off Better Payment Pro. Unlock donation campaigns, subscriptions and an AI campaign builder."
+msgstr ""
+
+#: ../includes/Classes/OfferPointer.php:169
+msgid "View Deals"
+msgstr ""
+
+#: ../includes/Classes/OfferPointer.php:296
+msgid "You are not allowed to do this."
 msgstr ""
 
 #: ../includes/Classes/PayerEmail.php:93
@@ -1588,19 +1624,19 @@ msgstr ""
 msgid "Better Payment: the customer was given the \"%s\" role — subscription ended. Their other roles are unchanged."
 msgstr ""
 
-#: ../includes/WooCommerce/Subscriptions.php:3667
+#: ../includes/WooCommerce/Subscriptions.php:3725
 msgid "WooCommerce is not active, so this subscription cannot be managed."
 msgstr ""
 
-#: ../includes/WooCommerce/Subscriptions.php:3673
+#: ../includes/WooCommerce/Subscriptions.php:3731
 msgid "Subscription order not found."
 msgstr ""
 
-#: ../includes/WooCommerce/Subscriptions.php:3679
+#: ../includes/WooCommerce/Subscriptions.php:3737
 msgid "This action is not available for the subscription's current status."
 msgstr ""
 
-#: ../includes/WooCommerce/Subscriptions.php:3683
+#: ../includes/WooCommerce/Subscriptions.php:3741
 msgid "Better Payment: subscription cancelled from the Better Payment admin — no further automatic renewals will be charged."
 msgstr ""
 
@@ -4089,35 +4125,35 @@ msgstr ""
 msgid "Choose what this application may do with your payment data. Transaction records include payer names and e-mail addresses."
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:168
+#: ../includes/MCP/OAuth/Consent.php:170
 msgid "Read"
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:169
+#: ../includes/MCP/OAuth/Consent.php:171
 msgid "Transactions, customers, campaigns, settings and gateway status. Gateway credentials are never readable."
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:173
+#: ../includes/MCP/OAuth/Consent.php:175
 msgid "Write"
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:174
+#: ../includes/MCP/OAuth/Consent.php:176
 msgid "Edit and publish campaigns, change allowlisted settings, mark transactions complete or delete them. No tool can take a payment or issue a refund."
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:179
+#: ../includes/MCP/OAuth/Consent.php:182
 msgid "Cancel"
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:180
+#: ../includes/MCP/OAuth/Consent.php:183
 msgid "Allow"
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:254
+#: ../includes/MCP/OAuth/Consent.php:257
 msgid "An application"
 msgstr ""
 
-#: ../includes/MCP/OAuth/Consent.php:255
+#: ../includes/MCP/OAuth/Consent.php:258
 msgid "an unknown address"
 msgstr ""
 
@@ -4435,7 +4471,7 @@ msgid "Customer payment totals"
 msgstr ""
 
 #: ../includes/MCP/Tools/Customers.php:108
-msgid "Totals and counts for one payer, found by exact e-mail address: how much they have paid, how many payments completed, and how many are incomplete or refunded."
+msgid "Totals and counts for one payer, found by exact e-mail address: how much they have paid, how many payments completed, and how many are incomplete or refunded. Amounts are never added across currencies: each *_transactions_amount is in the currency named by `currency`, and *_transactions_amount_by_currency lists every currency separately."
 msgstr ""
 
 #: ../includes/MCP/Tools/Customers.php:131
@@ -4573,65 +4609,65 @@ msgid "Count transactions"
 msgstr ""
 
 #: ../includes/MCP/Tools/Transactions.php:121
-msgid "Count Better Payment transactions matching a status bucket, gateway and date range. Cheaper than listing when only the total is needed."
+msgid "Count Better Payment transactions matching a status bucket, gateway, currency and date range. Cheaper than listing when only the total is needed."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:138
+#: ../includes/MCP/Tools/Transactions.php:142
 msgid "Transaction totals"
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:139
-msgid "Totals and counts for Better Payment transactions, split into completed, incomplete and refunded, over an optional date range."
+#: ../includes/MCP/Tools/Transactions.php:143
+msgid "Totals and counts for Better Payment transactions, split into completed, incomplete and refunded, over an optional date range. Amounts are never added across currencies: each *_transactions_amount is in the currency named by `currency`, and *_transactions_amount_by_currency lists every currency separately. Counts cover all currencies. Pass `currency` to total one currency only."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:155
+#: ../includes/MCP/Tools/Transactions.php:163
 msgid "Export transactions as CSV"
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:156
+#: ../includes/MCP/Tools/Transactions.php:164
 msgid "Build the Better Payment transactions CSV — the same file the admin Export button downloads — and return it as text. Personal data (payer name, email and submitted form fields) is withheld unless include_customer_data is true. Bounded by max_rows; the result says whether it was truncated."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:189
+#: ../includes/MCP/Tools/Transactions.php:197
 msgid "Mark a transaction complete"
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:190
+#: ../includes/MCP/Tools/Transactions.php:198
 msgid "Mark one Better Payment transaction as completed. Use only for payments confirmed outside the gateway; it records a status, it does not capture money."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:205
+#: ../includes/MCP/Tools/Transactions.php:213
 msgid "Delete a transaction"
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:206
+#: ../includes/MCP/Tools/Transactions.php:214
 msgid "Permanently delete one Better Payment transaction record. This removes the payment history row only; it does not refund the payer. Cannot be undone."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:340, ../includes/MCP/Tools/Transactions.php:419, ../includes/MCP/Tools/Transactions.php:493
+#: ../includes/MCP/Tools/Transactions.php:348, ../includes/MCP/Tools/Transactions.php:430, ../includes/MCP/Tools/Transactions.php:504
 msgid "A transaction id is required."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:344, ../includes/MCP/Tools/Transactions.php:423, ../includes/MCP/Tools/Transactions.php:497
+#: ../includes/MCP/Tools/Transactions.php:352, ../includes/MCP/Tools/Transactions.php:434, ../includes/MCP/Tools/Transactions.php:508
 msgid "No transaction records exist on this site."
 msgstr ""
 
-#: ../includes/MCP/Tools/Transactions.php:350, ../includes/MCP/Tools/Transactions.php:429, ../includes/MCP/Tools/Transactions.php:501
+#: ../includes/MCP/Tools/Transactions.php:358, ../includes/MCP/Tools/Transactions.php:440, ../includes/MCP/Tools/Transactions.php:512
 msgid "Transaction not found."
 msgstr ""
 
 #. translators: %s: transaction status.
-#: ../includes/MCP/Tools/Transactions.php:445
+#: ../includes/MCP/Tools/Transactions.php:456
 msgid "A %s transaction cannot be marked as completed."
 msgstr ""
 
 #. translators: %d: transaction id.
-#: ../includes/MCP/Tools/Transactions.php:460
+#: ../includes/MCP/Tools/Transactions.php:471
 msgid "Transaction %d would be marked completed."
 msgstr ""
 
 #. translators: %d: transaction id.
-#: ../includes/MCP/Tools/Transactions.php:507
+#: ../includes/MCP/Tools/Transactions.php:518
 msgid "Transaction %d would be permanently deleted."
 msgstr ""
 

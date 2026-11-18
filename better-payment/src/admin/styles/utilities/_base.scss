@@ -855,15 +855,85 @@ body {
 		background: #fff;
 	}
 
+	// The Transactions / Subscriptions date filter's popup (components/DateRangeFilter.js), in
+	// the look of Pro's Analytics date range (2.5.1): divided presets incl. All Time, brand-colour
+	// selection, typed dates, Reset + Apply. Its `left` / `right` are set inline (popupPosition).
 	.bp-date-range-dropdown {
+		position: absolute;
+		top: 100%;
+		z-index: 1000;
+		margin-top: 8px;
+		overflow: hidden;
+		background-color: #fff;
+		border-radius: 8px;
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+		cursor: default;
+
 		span {
 			display: flex !important;
 		}
 
+		.rdrDateDisplayWrapper {
+			background-color: transparent !important;
+		}
+
 		.rdrStaticRange {
+			border-bottom: 1px solid #eff2f7 !important;
+
 			span {
-				padding: 10px;
+				padding: 10px 20px;
 			}
+		}
+
+		.bp-date-range-dropdown_footer {
+			display: flex;
+			justify-content: space-between;
+			gap: 8px;
+			padding: 12px 16px;
+			border-top: 1px solid #e5e7eb;
+		}
+
+		.bp-date-range-dropdown_reset,
+		.bp-date-range-dropdown_apply {
+			padding: 8px 16px;
+			border-radius: 4px;
+			font-size: 14px;
+			font-weight: 500;
+			line-height: 1.4;
+			cursor: pointer;
+			transition:
+				background 0.2s ease,
+				border-color 0.2s ease;
+		}
+
+		.bp-date-range-dropdown_reset {
+			color: #6a758c;
+			background: transparent;
+			border: 1px solid #e5e7eb;
+
+			&:hover,
+			&:focus-visible {
+				border-color: #b9bfca;
+				background: #f9fafb;
+			}
+		}
+
+		.bp-date-range-dropdown_apply {
+			color: #fff;
+			background: #6b59ee;
+			border: 1px solid #6b59ee;
+
+			&:hover,
+			&:focus-visible {
+				background: #5a48dd;
+				border-color: #5a48dd;
+			}
+		}
+
+		.bp-date-range-dropdown_reset:focus-visible,
+		.bp-date-range-dropdown_apply:focus-visible {
+			outline: 2px solid #6b59ee;
+			outline-offset: 2px;
 		}
 	}
 }

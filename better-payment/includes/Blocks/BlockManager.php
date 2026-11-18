@@ -1887,7 +1887,9 @@ class BlockManager {
         // Entitlement is part of the key: subscription rows are fetched only for
         // Pro (below), so a cached free payload must never be served to Pro.
         $pro_enabled = (bool) apply_filters( 'better_payment/pro_enabled', false );
-        $cache_key   = 'bp_editor_dash_' . ( $current_user->ID ?? 0 ) . ( $pro_enabled ? '_pro' : '' );
+        // `v2`: analytics carry per-currency amounts and `formatted` strings (2.5.1); a payload
+        // cached before that would print the old mixed total under a `$`.
+        $cache_key   = 'bp_editor_dash_v2_' . ( $current_user->ID ?? 0 ) . ( $pro_enabled ? '_pro' : '' );
         $cache_group = 'better_payment';
         $cached      = wp_cache_get( $cache_key, $cache_group );
         if ( false !== $cached ) {
@@ -1908,6 +1910,8 @@ class BlockManager {
         // false before first save, leaving the block with empty data on insertion.
         if ( $current_user && $current_user->ID ) {
             $user_analytics = \Better_Payment\Lite\Admin\DB::get_user_analytics_by_email( $current_user->user_email );
+            // Display strings per bucket (primary currency + others), the same the widget prints.
+            $user_analytics['formatted'] = \Better_Payment\Lite\Classes\CurrencyTotals::format_analytics( $user_analytics );
 
             $paged_result = \Better_Payment\Lite\Admin\DB::get_user_transactions_paginated(
                 $current_user->user_email,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { toast } from 'react-toastify';
@@ -16,7 +16,12 @@ import {
 	readSavedSettings,
 	rememberSavedSettings,
 } from '../utils/savedSettings';
-import { PAYPAL_REFUND_CREDENTIALS_SETTINGS_FILTER } from '../utils/proHandoff';
+import {
+	PAYPAL_REFUND_CREDENTIALS_SETTINGS_FILTER,
+	SETTINGS_TABS_FILTER,
+	settingsTabsFrom,
+	groupSettingsTabs,
+} from '../utils/proHandoff';
 import { roleOptions } from '../utils/roleOptions';
 
 const Settings = () => {
@@ -81,6 +86,24 @@ const Settings = () => {
 		document.title = __( 'Settings - Better Payment', 'better-payment' );
 	}, [] );
 
+	const builtInTabIds = [
+		'general',
+		...gatewayTabs.map( ( t ) => t.id ),
+		...emailTabs.map( ( t ) => t.id ),
+		'subscription',
+		'ai',
+		'mcp',
+	];
+
+	// Tabs an add-on registers (Pro's Currency conversion). Each owns its content and its save;
+	// a free install registers none.
+	const [ addonTabs ] = useState( () =>
+		settingsTabsFrom(
+			applyFilters( SETTINGS_TABS_FILTER, [] ),
+			builtInTabIds
+		)
+	);
+
 	// Deep-link support: `&section=ai` (or any valid sub-tab id) lands the user
 	// directly on that section instead of the default General one. The AI
 	// assistant panel's "Enable it in AI settings" link uses this. Guard against
@@ -90,14 +113,7 @@ const Settings = () => {
 		const section = new URLSearchParams( window.location.search ).get(
 			'section'
 		);
-		const valid = [
-			'general',
-			...gatewayTabs.map( ( t ) => t.id ),
-			...emailTabs.map( ( t ) => t.id ),
-			'subscription',
-			'ai',
-			'mcp',
-		];
+		const valid = [ ...builtInTabIds, ...addonTabs.map( ( t ) => t.id ) ];
 		if ( section && valid.includes( section ) ) {
 			setActiveTab( section );
 		}
@@ -109,6 +125,32 @@ const Settings = () => {
 			...prev,
 			[ key ]: value,
 		} ) );
+	};
+
+	// An add-on tab hands this page its own save (`render( { registerSave } )`); the header's Save
+	// Changes runs it while that tab is open, and Lite's own save everywhere else.
+	const addonSaves = useRef( {} );
+	const registerAddonSave = ( id ) => ( save ) => {
+		addonSaves.current[ id ] = typeof save === 'function' ? save : null;
+	};
+	const handleHeaderSave = () => {
+		if ( ! addonTabs.some( ( tab ) => tab.id === activeTab ) ) {
+			handleSaveSettings();
+			return;
+		}
+
+		// An add-on tab never saves Lite's settings: before it has registered (still loading),
+		// Save does nothing.
+		const addonSave = addonSaves.current[ activeTab ];
+		if ( ! addonSave ) {
+			return;
+		}
+
+		setSaving( true );
+		Promise.resolve()
+			.then( () => addonSave() )
+			.catch( () => {} )
+			.finally( () => setSaving( false ) );
 	};
 
 	const handleSaveSettings = () =>
@@ -155,9 +197,10 @@ const Settings = () => {
 									) }
 									<button
 										className="bp-btn bp-font_ibm fx-4 bp-save_changes-btn"
+										disabled={ saving }
 										onClick={ ( e ) => {
 											e.preventDefault();
-											handleSaveSettings();
+											handleHeaderSave();
 										} }
 									>
 										{ __(
@@ -280,7 +323,6 @@ const Settings = () => {
 														height="20"
 														viewBox="0 0 24 24"
 														fill="none"
-														stroke="#6b63f6"
 														strokeWidth="2"
 														strokeLinecap="round"
 														strokeLinejoin="round"
@@ -318,12 +360,11 @@ const Settings = () => {
 													setActiveTab( 'ai' )
 												}
 											>
-												<span className="bp-setting_features-logo">
+												<span className="bp-setting_features-logo bp-logo_fill-color">
 													<svg
 														width="20"
 														height="20"
 														viewBox="0 0 24 24"
-														fill="#6b63f6"
 														aria-hidden="true"
 														focusable="false"
 													>
@@ -355,7 +396,6 @@ const Settings = () => {
 														height="20"
 														viewBox="0 0 24 24"
 														fill="none"
-														stroke="#6b63f6"
 														strokeWidth="2"
 														strokeLinecap="round"
 														strokeLinejoin="round"
@@ -388,6 +428,46 @@ const Settings = () => {
 											</li>
 										</ul>
 									</li>
+									{ groupSettingsTabs( addonTabs ).map(
+										( { group, tabs } ) => (
+											<li
+												className="margin-bottom_20"
+												key={ group }
+											>
+												<span className="bp-font_ibm fx-6 feature-type">
+													{ group }
+												</span>
+												<ul>
+													{ tabs.map( ( tab ) => (
+														<li
+															key={ tab.id }
+															className={ `bp-flex align-items_center bp-setting_features-list_item ${
+																activeTab ===
+																tab.id
+																	? 'bp-tab_active'
+																	: ''
+															}` }
+															data-tab={ tab.id }
+															onClick={ () =>
+																setActiveTab(
+																	tab.id
+																)
+															}
+														>
+															{ tab.icon && (
+																<span className="bp-setting_features-logo">
+																	{ tab.icon }
+																</span>
+															) }
+															<span className="bp-font_ibm bp-setting_features-name">
+																{ tab.label }
+															</span>
+														</li>
+													) ) }
+												</ul>
+											</li>
+										)
+									) }
 								</ul>
 							</div>
 							<div className="bp-col bp-custome_col-10">
@@ -2826,6 +2906,26 @@ const Settings = () => {
 											}
 										/>
 									</div>
+
+									{ addonTabs.map( ( tab ) => (
+										<div
+											key={ tab.id }
+											className={ `setting-tab-content ${
+												activeTab === tab.id
+													? 'bp-tab_active'
+													: ''
+											}` }
+											id={ tab.id }
+										>
+											{ activeTab === tab.id &&
+												tab.render( {
+													registerSave:
+														registerAddonSave(
+															tab.id
+														),
+												} ) }
+										</div>
+									) ) }
 								</div>
 							</div>
 						</div>

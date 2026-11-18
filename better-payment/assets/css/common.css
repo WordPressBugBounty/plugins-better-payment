@@ -3352,6 +3352,15 @@
   color: #2a3256;
   padding: 16px;
 }
+.better-payment .bp-amount_price + .bp-amount_other-currencies {
+  margin-top: -10px;
+  padding: 0 16px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #667085;
+  overflow-wrap: anywhere;
+}
 .better-payment .bp-transaction {
   padding: 10px 16px;
   background-color: #fafafc;

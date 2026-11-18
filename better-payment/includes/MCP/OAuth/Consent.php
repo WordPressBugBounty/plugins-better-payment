@@ -162,17 +162,20 @@ class Consent {
 			<?php endforeach; ?>
 
 			<?php
-			// Every value is escaped inside scope_option().
-			echo self::scope_option( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			// Every value is escaped inside scope_option(). Both calls span several lines, so the
+			// code is switched off for the whole block.
+			// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside scope_option().
+			echo self::scope_option(
 				Context::SCOPE_READ,
 				__( 'Read', 'better-payment' ),
 				__( 'Transactions, customers, campaigns, settings and gateway status. Gateway credentials are never readable.', 'better-payment' )
 			);
-			echo self::scope_option( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo self::scope_option(
 				Context::SCOPE_WRITE,
 				__( 'Write', 'better-payment' ),
 				__( 'Edit and publish campaigns, change allowlisted settings, mark transactions complete or delete them. No tool can take a payment or issue a refund.', 'better-payment' )
 			);
+			// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 			?>
 
 			<div class="bp-consent__actions">

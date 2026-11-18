@@ -269,7 +269,9 @@ class AdminAPI extends WP_REST_Controller
                 'all' => $all,
                 'completed' => $completed,
                 'incomplete' => $incomplete
-            ]
+            ],
+            // Where the date filter's All Time starts (site-local Y-m-d, '' for none). 2.5.1.
+            'first_date' => DB::first_transaction_date(),
         ]);
     }
 
@@ -674,7 +676,8 @@ class AdminAPI extends WP_REST_Controller
      * Summary counts for the admin Subscriptions tab's stat cards: every
      * recorded e-commerce subscription, plus how many are currently active
      * or cancelled. Status comes from each subscription's integration —
-     * 'woo' via a light order-meta read (WooSubscriptions::admin_status()),
+     * 'woo' via a light order read (WooSubscriptions::admin_summary(), which
+     * answers the status and the start day from one order load),
      * anything else via the `better_payment/admin/subscription_status`
      * filter — so a row whose integration is inactive still counts toward
      * `all` but toward neither status bucket, mirroring how the list shows
@@ -695,13 +698,34 @@ class AdminAPI extends WP_REST_Controller
 
             $active = 0;
             $cancelled = 0;
+            $first_date = '';
 
             foreach ($pairs as $pair) {
                 $source = (string) $pair->source;
                 $status = '';
+                $start = '';
 
                 if (SubscriptionRelationModel::SOURCE_WOO === $source) {
-                    $status = WooSubscriptions::admin_status((int) $pair->subscription_id);
+                    // Status and start day from one order load, not one each.
+                    $summary = WooSubscriptions::admin_summary((int) $pair->subscription_id);
+                    $status = $summary['status'];
+                    $start = $summary['start_date'];
+                }
+
+                /**
+                 * Lets an e-commerce integration report the day one subscription started
+                 * (site-local `Y-m-d`, the list's Started column), for the date filter's All
+                 * Time. Return '' when unknown.
+                 *
+                 * @since 2.5.1
+                 *
+                 * @param string $start           Start day resolved so far ('' unless woo).
+                 * @param int    $subscription_id Subscription id (within its source).
+                 * @param string $source          Source slug.
+                 */
+                $start = (string) apply_filters('better_payment/admin/subscription_start_date', $start, (int) $pair->subscription_id, $source);
+                if (1 === preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) && ('' === $first_date || $start < $first_date)) {
+                    $first_date = $start;
                 }
 
                 /**
@@ -732,6 +756,8 @@ class AdminAPI extends WP_REST_Controller
                     'active' => $active,
                     'cancelled' => $cancelled,
                 ],
+                // Where the date filter's All Time starts (site-local Y-m-d, '' for none). 2.5.1.
+                'first_date' => $first_date,
             ]);
         } catch (\Exception $e) {
             return new WP_Error('subscription_count_error', $e->getMessage(), ['status' => 500]);

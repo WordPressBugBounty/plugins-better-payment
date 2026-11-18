@@ -1743,3 +1743,8 @@
     margin-bottom: 20px;
   }
 }
+.better-payment.better-payment-campaign .bp-campaign-other-currencies {
+  font-size: 0.85em;
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}

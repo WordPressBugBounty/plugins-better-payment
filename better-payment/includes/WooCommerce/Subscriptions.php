@@ -3399,27 +3399,85 @@ class Subscriptions {
     }
 
     /**
+     * What the admin Subscriptions tab's summary needs from one subscription, from ONE order
+     * load: its raw status and the day it started.
+     *
+     * The summary route (`GET /subscriptions/count`) asks this for every recorded subscription
+     * on every load of the tab. It used to call admin_status() and admin_start_date() one after
+     * the other, and each ran its own wc_get_order() on the same id (issue #171). Where
+     * WooCommerce's order cache is on, the second call is answered from it with no query; where
+     * it is off, the order was read from the database twice. Ask for both here and the order is
+     * loaded once either way.
+     *
+     * @param int $subscription_id Parent (subscription) order id.
+     * @return array{status: string, start_date: string} Both '' when WooCommerce or the order is gone.
+     * @since 2.5.1
+     */
+    public static function admin_summary( $subscription_id ) {
+        $unknown = array(
+            'status'     => '',
+            'start_date' => '',
+        );
+
+        if ( ! function_exists( 'wc_get_order' ) ) {
+            return $unknown;
+        }
+
+        $order = wc_get_order( absint( $subscription_id ) );
+
+        if ( ! $order instanceof \WC_Order ) {
+            return $unknown;
+        }
+
+        return self::admin_summary_of( $order );
+    }
+
+    /**
+     * Pure: the summary fields of a loaded subscription order.
+     *
+     * `status` is the raw `_bp_subscription_status` meta, lowercased. `start_date` is the order's
+     * creation date, site-local `Y-m-d`, the same day as the admin list's Started column
+     * (`admin_list_row()`); '' when the order has none.
+     *
+     * @param \WC_Order $order The subscription's parent order.
+     * @return array{status: string, start_date: string}
+     * @since 2.5.1
+     */
+    public static function admin_summary_of( $order ) {
+        $created = $order->get_date_created();
+
+        return array(
+            'status'     => strtolower( (string) $order->get_meta( self::STATUS_META ) ),
+            'start_date' => $created ? (string) $created->date( 'Y-m-d' ) : '',
+        );
+    }
+
+    /**
+     * The day one subscription started — its parent order's creation date, site-local
+     * `Y-m-d`, the same value as the admin list's Started column (`admin_list_row()`).
+     *
+     * Loads the order. A caller that also needs the status asks admin_summary() for both.
+     *
+     * @param int $subscription_id Parent (subscription) order id.
+     * @return string `Y-m-d` ('' when WooCommerce or the order is gone).
+     * @since 2.5.1
+     */
+    public static function admin_start_date( $subscription_id ) {
+        return self::admin_summary( $subscription_id )['start_date'];
+    }
+
+    /**
      * Light status lookup for one subscription — just the raw
      * `_bp_subscription_status` meta, lowercased, with no row hydration.
-     * Used by the admin Subscriptions tab's summary counts, which need
-     * every subscription's status but nothing else from the order.
+     *
+     * Loads the order. A caller that also needs the start day asks admin_summary() for both.
      *
      * @param int $subscription_id Parent (subscription) order id.
      * @return string Raw status ('' when WooCommerce or the order is gone).
      * @since 2.4.0
      */
     public static function admin_status( $subscription_id ) {
-        if ( ! function_exists( 'wc_get_order' ) ) {
-            return '';
-        }
-
-        $order = wc_get_order( absint( $subscription_id ) );
-
-        if ( ! $order instanceof \WC_Order ) {
-            return '';
-        }
-
-        return strtolower( (string) $order->get_meta( self::STATUS_META ) );
+        return self::admin_summary( $subscription_id )['status'];
     }
 
     /**

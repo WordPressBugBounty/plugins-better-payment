@@ -3705,10 +3705,15 @@ class Fundraising_Campaign_Widget extends Widget_Base {
         );
 
         // The same rows CampaignStats counts (approved statuses incl. Paystack's `success`,
-        // a confirmed legacy free checkout worth 0), not only Stripe's `paid`.
-        $bpc_totals              = \Better_Payment\Lite\Classes\Helper::campaign_totals_from_rows( $bpc_raised_amount_data );
+        // a confirmed legacy free checkout worth 0), not only Stripe's `paid`. Amounts are kept
+        // per currency: the raised figure and the goal % read the widget currency's sum only
+        // (Classes\CurrencyTotals), and any other currency is listed beside it, never added.
+        $bpc_totals              = \Better_Payment\Lite\Classes\Helper::campaign_totals_from_rows( $bpc_raised_amount_data, $bp_currency );
         $bpc_total_amount_raised = $bpc_totals['amount'];
         $bpc_total_payment_count = $bpc_totals['count'];
+        $bpc_raised_currency     = $bpc_totals['currency'];
+        $bpc_raised_currency_symbol = $this->get_currency_symbol( $bpc_raised_currency );
+        $bpc_raised_other_currencies = \Better_Payment\Lite\Classes\CurrencyTotals::format_others( $bpc_totals['by_currency'], $bpc_raised_currency );
 
         $bpc_goal_percentage = 0;
         if ( ! empty( $bp_goal_amount ) && $bp_goal_amount > 0 && $bpc_total_amount_raised > 0 ) {
@@ -3728,6 +3733,8 @@ class Fundraising_Campaign_Widget extends Widget_Base {
             'campaign_id_prefix' => esc_attr( $campaign_id_prefix ),
             'campaign_id_postfix' => esc_attr( $campaign_id_postfix ),
             'raised_amount' => esc_attr( $bpc_total_amount_raised ),
+            // The currency raised_amount is in (related campaigns print its symbol), since 2.5.1.
+            'raised_currency' => esc_attr( $bpc_raised_currency ),
         ] );
 
         $better_payment_campaigns = get_option( 'better_payment_campaigns', [] );
